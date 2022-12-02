@@ -22,10 +22,13 @@ namespace VoiceCraftProximityChat_Server
             }
             var s = new Server();
             s.Setup(Port);
-            new Thread(e =>
+            var thread = new Thread(e =>
             {
                 new WebServer(Port, s);
-            }).Start();
+            });
+
+            thread.IsBackground = true;
+            thread.Start();
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Server Started. Press any key to shutdown...");
             Console.ResetColor();
