@@ -15,7 +15,7 @@ namespace VoiceCraftProximityChat_Server.Servers
         public void Setup(int Port)
         {
             //Developer Keys
-            //SessionKeys.Add(new SessionKey() { Key = "hy67a", PlayerId = "EEEE", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
+            SessionKeys.Add(new SessionKey() { Key = "hy67a", PlayerId = "EEEE", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
             SessionKeys.Add(new SessionKey() { Key = "x456j", PlayerId = "EEEEE", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
 
             packets = new Packet();
@@ -112,7 +112,8 @@ namespace VoiceCraftProximityChat_Server.Servers
                                     AudioPacket.VCVolume = volume;
                                 }
 
-                                serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                if(volume > 0.0f)
+                                    serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
                             }
                         }
                         break;
