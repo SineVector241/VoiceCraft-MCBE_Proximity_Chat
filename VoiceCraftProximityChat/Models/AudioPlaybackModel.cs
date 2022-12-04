@@ -10,11 +10,15 @@ namespace VoiceCraftProximityChat.Models
     {
         private readonly IWavePlayer outputDevice;
         private readonly MixingSampleProvider mixer;
+        private readonly BufferedWaveProvider waveProvider;
 
         public AudioPlaybackModel(int sampleRate = 44100, int channelCount = 2)
         {
             outputDevice = new WaveOutEvent();
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
+            waveProvider = new BufferedWaveProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
+            waveProvider.DiscardOnBufferOverflow = false;
+            waveProvider.ReadFully = false;
             mixer.ReadFully = true;
             outputDevice.Init(mixer);
             outputDevice.Play();
@@ -24,14 +28,9 @@ namespace VoiceCraftProximityChat.Models
         {
             Task.Run(() =>
             {
-                var provider = new BufferedWaveProvider(new WaveFormat(32000, 1))
-                {
-                    DiscardOnBufferOverflow = false,
-                    ReadFully = false
-                };
-                provider.AddSamples(buffer, 0, 3200);
-                var media = new MediaFoundationResampler(provider, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
-                mixer.AddMixerInput(media);
+                var provider = new RawSourceWaveStream(buffer, 0, 3200, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
+                waveProvider.AddSamples(buffer, 0, 3200);
+                mixer.AddMixerInput(waveProvider);
             });
         }
 

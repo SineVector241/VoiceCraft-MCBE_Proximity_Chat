@@ -32,7 +32,7 @@ namespace VoiceCraftProximityChat.ViewModels
             DeafenCommand = new DelegateCommand(ExecuteDeafenCommand);
 
             //Audio Display Settings
-            input.WaveFormat = new WaveFormat(32000, 1);
+            input.WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(16000,1);
             input.BufferMilliseconds = 50;
             input.DeviceNumber = 0;
             input.DataAvailable += SendAudio;
@@ -55,6 +55,7 @@ namespace VoiceCraftProximityChat.ViewModels
         //Sending Audio
         public void SendAudio(object? sender, WaveInEventArgs args)
         {
+            Debug.WriteLine(args.BytesRecorded);
             if (UdpClientModel.IsConnected && !IsMuted)
                 udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = args.Buffer });
 
