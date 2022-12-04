@@ -12,7 +12,7 @@ namespace VoiceCraftProximityChat.Models
         private readonly MixingSampleProvider mixer;
         private readonly BufferedWaveProvider waveProvider;
 
-        public AudioPlaybackModel(int sampleRate = 44100, int channelCount = 2)
+        public AudioPlaybackModel()
         {
             outputDevice = new WaveOutEvent();
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
@@ -30,10 +30,12 @@ namespace VoiceCraftProximityChat.Models
             {
                 var provider = new RawSourceWaveStream(buffer, 0, 3200, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
                 waveProvider.AddSamples(buffer, 0, 3200);
-                mixer.AddMixerInput(waveProvider);
+                var volume = new VolumeSampleProvider(waveProvider.ToSampleProvider());
+                volume.Volume = Volume;
+                mixer.AddMixerInput(volume);
             });
         }
 
-        public static readonly AudioPlaybackModel Instance = new AudioPlaybackModel(16000, 1);
+        public static readonly AudioPlaybackModel Instance = new AudioPlaybackModel();
     }
 }

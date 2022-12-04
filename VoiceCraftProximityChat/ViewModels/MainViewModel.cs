@@ -55,7 +55,6 @@ namespace VoiceCraftProximityChat.ViewModels
         //Sending Audio
         public void SendAudio(object? sender, WaveInEventArgs args)
         {
-            Debug.WriteLine(args.BytesRecorded);
             if (UdpClientModel.IsConnected && !IsMuted)
                 udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = args.Buffer });
 

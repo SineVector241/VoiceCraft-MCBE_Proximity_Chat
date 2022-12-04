@@ -114,7 +114,6 @@ namespace VoiceCraftProximityChat_Server.Servers
 
                                 if (volume != 0.0f)
                                 {
-                                    Console.WriteLine("Sending Data");
                                     serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
                                 }
                             }
