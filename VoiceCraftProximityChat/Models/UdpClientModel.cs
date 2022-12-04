@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace VoiceCraftProximityChat.Models
@@ -17,8 +18,6 @@ namespace VoiceCraftProximityChat.Models
         private static UdpClient client { get; set; } = new UdpClient();
         private static DateTime LastPing { get; set; } = DateTime.UtcNow;
         private static Timer? pingChecker { get; set; } = null;
-
-        private AudioPlaybackModel audioPlayer = new AudioPlaybackModel();
 
         public void Connect(IPAddress IPAddress, int Port)
         {
@@ -70,7 +69,14 @@ namespace VoiceCraftProximityChat.Models
                     break;
 
                 case PacketIdentifier.AudioStream:
-                    audioPlayer.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume);
+                    try
+                    {
+                        AudioPlaybackModel.Instance.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
                     break;
             }
         }
@@ -88,7 +94,7 @@ namespace VoiceCraftProximityChat.Models
         {
             try
             {
-                if ((DateTime.Now - LastPing).Seconds > 5)
+                if ((DateTime.Now - LastPing).Seconds > 10)
                     IsConnected = false;
 
                 Packet packet = new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ping, VCSessionKey = _Key };

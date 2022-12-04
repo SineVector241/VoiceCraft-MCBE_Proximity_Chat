@@ -1,9 +1,8 @@
-﻿using NAudio.Wave;
+﻿using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using System.Diagnostics;
-using System.Printing;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
-using VoiceCraftProximityChat.Views;
 
 namespace VoiceCraftProximityChat.ViewModels
 {
@@ -15,7 +14,7 @@ namespace VoiceCraftProximityChat.ViewModels
         private bool _isDeafened;
         private string _title = "VoiceCraft - CONNECTED";
         private UdpClientModel udpClient = new UdpClientModel();
-        private WaveIn waveIn = new WaveIn();
+        private WaveIn input = new WaveIn();
 
         public float MicrophoneInput { get => _microphoneInput; set { _microphoneInput = value; OnPropertyChanged(nameof(MicrophoneInput)); } }
         public bool IsMuted { get => _isMuted; set { _isMuted = value; OnPropertyChanged(nameof(IsMuted)); } }
@@ -33,11 +32,11 @@ namespace VoiceCraftProximityChat.ViewModels
             DeafenCommand = new DelegateCommand(ExecuteDeafenCommand);
 
             //Audio Display Settings
-            waveIn.BufferMilliseconds = 50;
-            waveIn.DeviceNumber = 0;
-            waveIn.WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(16000, 1);
-            waveIn.DataAvailable += SendAudio;
-            waveIn.StartRecording();
+            input.WaveFormat = new WaveFormat(32000, 1);
+            input.BufferMilliseconds = 50;
+            input.DeviceNumber = 0;
+            input.DataAvailable += SendAudio;
+            input.StartRecording();
 
             udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ready, VCSessionKey = UdpClientModel._Key });
         }

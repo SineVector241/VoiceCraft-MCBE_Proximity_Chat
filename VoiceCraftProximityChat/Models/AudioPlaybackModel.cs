@@ -2,49 +2,39 @@
 using NAudio.Wave;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace VoiceCraftProximityChat.Models
 {
     class AudioPlaybackModel
     {
-        public AudioPlaybackModel()
+        private readonly IWavePlayer outputDevice;
+        private readonly MixingSampleProvider mixer;
+
+        public AudioPlaybackModel(int sampleRate = 44100, int channelCount = 2)
         {
-            /*
             outputDevice = new WaveOutEvent();
-            mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channelCount));
+            mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
             mixer.ReadFully = true;
             outputDevice.Init(mixer);
             outputDevice.Play();
-            */
         }
 
-        public void PlaySound(byte[] bytes, float volume)
+        public void PlaySound(byte[] buffer, float Volume)
         {
             Task.Run(() =>
             {
-                for (int i = 0; i < 20; i++)
+                var provider = new BufferedWaveProvider(new WaveFormat(32000, 1))
                 {
-                    Buffer.SetByte(bytes, i, 0);
-                }
-                for (int i = 0; i < 20; i++)
-                {
-                    Buffer.SetByte(bytes, bytes.Length - (i + 1), 0);
-                }
-                var ms = new MemoryStream(bytes);
-                var rs = new RawSourceWaveStream(ms, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
-                var wo = new DirectSoundOut();
-                wo.Volume = volume;
-                wo.Init(rs);
-                wo.Play();
-                while (wo.PlaybackState == PlaybackState.Playing)
-                {
-                    Thread.Sleep(50);
-                }
-                wo.Dispose();
+                    DiscardOnBufferOverflow = false,
+                    ReadFully = false
+                };
+                provider.AddSamples(buffer, 0, 3200);
+                var media = new MediaFoundationResampler(provider, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
+                mixer.AddMixerInput(media);
             });
         }
+
+        public static readonly AudioPlaybackModel Instance = new AudioPlaybackModel(16000, 1);
     }
 }

@@ -52,7 +52,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
                 SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
 
-                var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 0);
+                var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
                 if(removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
 
                 switch (receivedData.VCPacketDataIdentifier)
@@ -112,8 +112,11 @@ namespace VoiceCraftProximityChat_Server.Servers
                                     AudioPacket.VCVolume = volume;
                                 }
 
-                                if(volume > 0.0f)
+                                if (volume != 0.0f)
+                                {
+                                    Console.WriteLine("Sending Data");
                                     serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                }
                             }
                         }
                         break;
