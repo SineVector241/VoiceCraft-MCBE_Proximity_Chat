@@ -16,9 +16,10 @@ namespace VoiceCraftProximityChat.Models
         {
             outputDevice = new WaveOutEvent();
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
-            waveProvider = new BufferedWaveProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
+            waveProvider = new BufferedWaveProvider(new WaveFormat(16000,1));
             waveProvider.DiscardOnBufferOverflow = false;
             waveProvider.ReadFully = false;
+            waveProvider.BufferLength = 1024 * 16;
             mixer.ReadFully = true;
             outputDevice.Init(mixer);
             outputDevice.Play();
@@ -28,11 +29,11 @@ namespace VoiceCraftProximityChat.Models
         {
             Task.Run(() =>
             {
-                var provider = new RawSourceWaveStream(buffer, 0, 3200, WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
-                waveProvider.AddSamples(buffer, 0, 3200);
-                var volume = new VolumeSampleProvider(waveProvider.ToSampleProvider());
-                volume.Volume = Volume;
-                mixer.AddMixerInput(volume);
+                var provider = new RawSourceWaveStream(buffer, 0, 1600, new WaveFormat(16000, 1));
+                waveProvider.AddSamples(buffer, 0, 1600);
+                var buff = new Wave16ToFloatProvider(waveProvider);
+                buff.Volume = Volume;
+                mixer.AddMixerInput(buff);
             });
         }
 

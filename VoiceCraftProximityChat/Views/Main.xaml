@@ -133,10 +133,41 @@
 
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="60"/>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="5"/>
                 </Grid.ColumnDefinitions>
+
+                <Button x:Name="btnMute"
+                        Command="{Binding MuteCommand}"
+                        Margin="5,5,5,5"
+                        BorderThickness="1"
+                        Grid.Column="0"
+                        Content="{Binding MuteButtonContent}"
+                        Foreground="#F76E11"
+                        FontSize="12">
+                    <Button.Style >
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="AliceBlue"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border CornerRadius="3"
+                                    Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center"
+                                                  HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
                 <ProgressBar Height="8" 
                              Grid.Column="1" 
                              x:Name="MicrophoneLevel"
