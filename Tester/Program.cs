@@ -1,53 +1,45 @@
-﻿using System.Net.Sockets;
-using System.Net;
+﻿using NAudio.Wave.Compression;
+using NAudio.Wave;
 using System.Text;
-using System.Web;
 
-namespace Tester
+foreach (var driver in AcmDriver.EnumerateAcmDrivers())
 {
-    public class Program
+    StringBuilder builder = new StringBuilder();
+    builder.AppendFormat("Long Name: {0}\r\n", driver.LongName);
+    builder.AppendFormat("Short Name: {0}\r\n", driver.ShortName);
+    builder.AppendFormat("Driver ID: {0}\r\n", driver.DriverId);
+    driver.Open();
+    builder.AppendFormat("FormatTags:\r\n");
+    foreach (AcmFormatTag formatTag in driver.FormatTags)
     {
-        public static void Main(string[] args)
+        builder.AppendFormat("===========================================\r\n");
+        builder.AppendFormat("Format Tag {0}: {1}\r\n", formatTag.FormatTagIndex, formatTag.FormatDescription);
+        builder.AppendFormat("   Standard Format Count: {0}\r\n", formatTag.StandardFormatsCount);
+        builder.AppendFormat("   Support Flags: {0}\r\n", formatTag.SupportFlags);
+        builder.AppendFormat("   Format Tag: {0}, Format Size: {1}\r\n", formatTag.FormatTag, formatTag.FormatSize);
+        builder.AppendFormat("   Formats:\r\n");
+        foreach (AcmFormat format in driver.GetFormats(formatTag))
         {
-            new TcpWebServer(9050);
-        }
-    }
-    public class TcpWebServer
-    {
-        private HttpListener listener;
-        private byte[] dataStream = new byte[1024];
-        private bool isConnected = false;
-        public TcpWebServer(int Port)
-        {
-            listener = new HttpListener();
-            listener.Prefixes.Add($"http://*:{Port}/");
-            try
+            builder.AppendFormat("   ===========================================\r\n");
+            builder.AppendFormat("   Format {0}: {1}\r\n", format.FormatIndex, format.FormatDescription);
+            builder.AppendFormat("      FormatTag: {0}, Support Flags: {1}\r\n", format.FormatTag, format.SupportFlags);
+            builder.AppendFormat("      WaveFormat: {0} {1}Hz Channels: {2} Bits: {3} Block Align: {4}, AverageBytesPerSecond: {5} ({6:0.0} kbps), Extra Size: {7}\r\n",
+                format.WaveFormat.Encoding, format.WaveFormat.SampleRate, format.WaveFormat.Channels,
+                format.WaveFormat.BitsPerSample, format.WaveFormat.BlockAlign, format.WaveFormat.AverageBytesPerSecond,
+                (format.WaveFormat.AverageBytesPerSecond * 8) / 1000.0,
+                format.WaveFormat.ExtraSize);
+            if (format.WaveFormat is WaveFormatExtraData && format.WaveFormat.ExtraSize > 0)
             {
-                listener.Start();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Started HttpServer - Bound to address: {listener.Prefixes.First()}");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("* Means that it is listening both local and remote");
-                Console.ResetColor();
-            }
-            catch (HttpListenerException ex)
-            {
-                if (ex.ErrorCode == 5)
+                WaveFormatExtraData wfed = (WaveFormatExtraData)format.WaveFormat;
+                builder.Append("      Extra Bytes:\r\n      ");
+                for (int n = 0; n < format.WaveFormat.ExtraSize; n++)
                 {
-                    var username = Environment.GetEnvironmentVariable("USERNAME");
-                    var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Error. Could not start server: Missing Permissions");
-                    Console.WriteLine($"Missing permissions to listen on http://*:{Port}/\n");
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"Please give access by typing in the following command in a command prompt\nnetsh http add urlacl url=http://*:{Port}/ user={userdomain}\\{username} listen=yes\n");
-                    Console.WriteLine("Or run this application as Administrator.");
-
-                    Console.ResetColor();
-                    Console.WriteLine("\nPress any key to close the application...");
+                    builder.AppendFormat("{0:X2} ", wfed.ExtraData[n]);
                 }
+                builder.Append("\r\n");
             }
         }
     }
+    driver.Close();
+    Console.WriteLine(builder.ToString());
 }

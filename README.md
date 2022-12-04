@@ -11,4 +11,4 @@ INSTALLATION GUIDE GOES HERE - TODO
 - [x] Server to Client verification
 - [x] Server to Server Linking/Verification
 - [x] Addon -- https://github.com/SineVector241/VoiceCraft-MCBE_ProximityChat_Addon
-- [ ] Rewrite/Improve Client side software
+- [x] Rewrite/Improve Client side software
