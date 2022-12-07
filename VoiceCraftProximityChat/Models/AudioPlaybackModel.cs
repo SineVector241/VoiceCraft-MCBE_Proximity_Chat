@@ -3,6 +3,7 @@ using NAudio.Wave;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.Models
 {

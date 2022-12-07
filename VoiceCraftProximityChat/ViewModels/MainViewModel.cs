@@ -4,6 +4,7 @@ using NAudio.Wave;
 using System.Diagnostics;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.ViewModels
 {

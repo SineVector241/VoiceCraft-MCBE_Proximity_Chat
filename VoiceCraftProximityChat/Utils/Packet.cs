@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace VoiceCraftProximityChat
+namespace VoiceCraftProximityChat.Utils
 {
     public enum PacketIdentifier
     {
