@@ -198,10 +198,11 @@ namespace VoiceCraftProximityChat_Server.Servers
 
         private void ClearTimeoutSessions()
         {
-            SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
+            var kremoved = SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
+            if (kremoved > 0) Console.WriteLine($"[HTTP] Removed Session Key(s): {kremoved} keys removed - Timeout.");
 
-            var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
-            if (removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
+            var cremoved = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
+            if (cremoved > 0) Console.WriteLine($"[UDP] Removed Client(s): {cremoved} clients removed - Disconnect.");
         }
     }
 
