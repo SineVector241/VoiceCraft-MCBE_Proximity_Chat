@@ -16,7 +16,7 @@ namespace VoiceCraftProximityChat.Models
         {
             outputDevice = new WaveOutEvent();
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
-            waveProvider = new BufferedWaveProvider(new WaveFormat(16000,1));
+            waveProvider = new BufferedWaveProvider(G722ChatCodec.CodecInstance.RecordFormat);
             waveProvider.DiscardOnBufferOverflow = false;
             waveProvider.ReadFully = false;
             waveProvider.BufferLength = 1024 * 16;
@@ -29,8 +29,9 @@ namespace VoiceCraftProximityChat.Models
         {
             Task.Run(() =>
             {
-                var provider = new RawSourceWaveStream(buffer, 0, 1600, new WaveFormat(16000, 1));
-                waveProvider.AddSamples(buffer, 0, 1600);
+                var decoded = G722ChatCodec.CodecInstance.Decode(buffer, 0, 400);
+                var provider = new RawSourceWaveStream(decoded, 0, 1600, G722ChatCodec.CodecInstance.RecordFormat);
+                waveProvider.AddSamples(decoded, 0, 1600);
                 var buff = new Wave16ToFloatProvider(waveProvider);
                 buff.Volume = Volume;
                 mixer.AddMixerInput(buff);
