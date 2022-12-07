@@ -100,23 +100,27 @@ namespace VoiceCraftProximityChat_Server.Servers
                     case PacketIdentifier.AudioStream:
                         var AudioPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCAudioBuffer = receivedData.VCAudioBuffer };
                         var volume = 0.0f;
+                        // Create a task for each client
                         foreach (Client client in clientList)
                         {
-                            // Broadcast to all logged on users
-                            var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
-                            if (client.Key != receivedData.VCSessionKey && client.isReady)
+                            Task.Factory.StartNew(() =>
                             {
-                                if (selfClient != null)
+                                // Broadcast to all logged on users
+                                var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
+                                if (client.Key != receivedData.VCSessionKey && client.isReady)
                                 {
-                                    volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
-                                    AudioPacket.VCVolume = volume;
-                                }
+                                    if (selfClient != null)
+                                    {
+                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
+                                        AudioPacket.VCVolume = volume;
+                                    }
 
-                                if (volume != 0.0f)
-                                {
-                                    serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                    if (volume != 0.0f)
+                                    {
+                                        serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                    }
                                 }
-                            }
+                            });
                         }
                         break;
 
