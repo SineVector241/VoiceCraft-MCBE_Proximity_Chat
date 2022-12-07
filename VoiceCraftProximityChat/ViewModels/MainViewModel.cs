@@ -1,8 +1,10 @@
-﻿using NAudio.CoreAudioApi;
+﻿using NAudio.Codecs;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Diagnostics;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.ViewModels
 {
@@ -34,7 +36,7 @@ namespace VoiceCraftProximityChat.ViewModels
             DeafenCommand = new DelegateCommand(ExecuteDeafenCommand);
 
             //Audio Display Settings
-            input.WaveFormat = new WaveFormat(16000, 1);
+            input.WaveFormat = G722ChatCodec.CodecInstance.RecordFormat;
             input.BufferMilliseconds = 50;
             input.DeviceNumber = 0;
             input.DataAvailable += SendAudio;
@@ -68,9 +70,10 @@ namespace VoiceCraftProximityChat.ViewModels
                 if (sample32 > max) max = sample32;
             }
             MicrophoneInput = max * 100;
+            var encoded = G722ChatCodec.CodecInstance.Encode(args.Buffer, 0, args.BytesRecorded);
 
             if (UdpClientModel.IsConnected && !IsMuted && MicrophoneInput > 5)
-                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = args.Buffer });
+                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = encoded });
 
             if (!UdpClientModel.IsConnected)
             {

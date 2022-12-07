@@ -49,11 +49,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
                 // Receive all data
                 serverSocket.EndReceiveFrom(asyncResult, ref epSender);
-
-                SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
-
-                var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
-                if(removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
+                ClearTimeoutSessions();
 
                 switch (receivedData.VCPacketDataIdentifier)
                 {
@@ -100,23 +96,27 @@ namespace VoiceCraftProximityChat_Server.Servers
                     case PacketIdentifier.AudioStream:
                         var AudioPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCAudioBuffer = receivedData.VCAudioBuffer };
                         var volume = 0.0f;
+                        // Create a task for each client
                         foreach (Client client in clientList)
                         {
-                            // Broadcast to all logged on users
-                            var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
-                            if (client.Key != receivedData.VCSessionKey && client.isReady)
+                            Task.Factory.StartNew(() =>
                             {
-                                if (selfClient != null)
+                                // Broadcast to all logged on users
+                                var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
+                                if (client.Key != receivedData.VCSessionKey && client.isReady)
                                 {
-                                    volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
-                                    AudioPacket.VCVolume = volume;
-                                }
+                                    if (selfClient != null)
+                                    {
+                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
+                                        AudioPacket.VCVolume = volume;
+                                    }
 
-                                if (volume != 0.0f)
-                                {
-                                    serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                    if (volume != 0.0f)
+                                    {
+                                        serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                                    }
                                 }
-                            }
+                            });
                         }
                         break;
 
@@ -152,6 +152,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
         public string? CreateSessionKey(string PlayerId)
         {
+            ClearTimeoutSessions();
             if (clientList.Exists(x => x.PlayerId == PlayerId) || SessionKeys.Exists(x => x.PlayerId == PlayerId))
                 return null;
 
@@ -193,6 +194,14 @@ namespace VoiceCraftProximityChat_Server.Servers
             }
 
             return RandomString;
+        }
+
+        private void ClearTimeoutSessions()
+        {
+            SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
+
+            var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
+            if (removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
         }
     }
 

@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace VoiceCraftProximityChat
+namespace VoiceCraftProximityChat.Utils
 {
     public enum PacketIdentifier
     {
@@ -58,7 +58,7 @@ namespace VoiceCraftProximityChat
 
         public Packet(byte[] dataStream)
         {
-            AudioBuffer = new byte[1600];
+            AudioBuffer = new byte[400];
             VCPacketDataIdentifier = (PacketIdentifier)BitConverter.ToInt32(dataStream, 0); //Read packet identifier - 4 bytes.
             VCVolume = BitConverter.ToSingle(dataStream, 4); //Read Before Volume - 4 bytes
             int sessionKeyLength = BitConverter.ToInt32(dataStream, 8); //Read session key length - 4 bytes.
