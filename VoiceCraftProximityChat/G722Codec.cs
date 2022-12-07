@@ -65,3 +65,5 @@ namespace VoiceCraftProximityChat
         public static readonly G722ChatCodec CodecInstance = new G722ChatCodec();
     }
 }
+
+//Credit to: https://github.com/naudio/NAudio/blob/master/NAudioDemo/NetworkChatDemo/G722ChatCodec.cs
