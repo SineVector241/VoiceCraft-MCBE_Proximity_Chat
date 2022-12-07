@@ -49,11 +49,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
                 // Receive all data
                 serverSocket.EndReceiveFrom(asyncResult, ref epSender);
-
-                SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
-
-                var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
-                if(removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
+                ClearTimeoutSessions();
 
                 switch (receivedData.VCPacketDataIdentifier)
                 {
@@ -156,6 +152,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
         public string? CreateSessionKey(string PlayerId)
         {
+            ClearTimeoutSessions();
             if (clientList.Exists(x => x.PlayerId == PlayerId) || SessionKeys.Exists(x => x.PlayerId == PlayerId))
                 return null;
 
@@ -197,6 +194,14 @@ namespace VoiceCraftProximityChat_Server.Servers
             }
 
             return RandomString;
+        }
+
+        private void ClearTimeoutSessions()
+        {
+            SessionKeys.RemoveAll(x => (DateTime.UtcNow - x.RegisteredAt).Seconds > 0);
+
+            var removed = clientList.RemoveAll(x => (DateTime.UtcNow - x.lastPing).Seconds > 10);
+            if (removed > 0) Console.WriteLine($"[UDP] Removed Client(s): {removed} clients removed - Disconnect.");
         }
     }
 
