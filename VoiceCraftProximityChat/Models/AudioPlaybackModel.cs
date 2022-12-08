@@ -15,7 +15,7 @@ namespace VoiceCraftProximityChat.Models
 
         public AudioPlaybackModel()
         {
-            outputDevice = new WaveOutEvent();
+            outputDevice = new WaveOutEvent() { DesiredLatency = 600, NumberOfBuffers = 3 };
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
             waveProvider = new BufferedWaveProvider(G722ChatCodec.CodecInstance.RecordFormat);
             waveProvider.DiscardOnBufferOverflow = false;

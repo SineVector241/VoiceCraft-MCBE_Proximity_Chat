@@ -1,4 +1,5 @@
-﻿using NAudio.Wave;
+﻿using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using System.Collections.Generic;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
@@ -71,7 +72,7 @@ namespace VoiceCraftProximityChat.ViewModels
             MicrophoneInput = max * 100;
             var encoded = G722ChatCodec.CodecInstance.Encode(args.Buffer, 0, args.BytesRecorded);
 
-            if (UdpClientModel.IsConnected && !IsMuted && MicrophoneInput > 5)
+            if (UdpClientModel.IsConnected && !IsMuted && MicrophoneInput > 2)
                 udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = encoded });
 
             if (!UdpClientModel.IsConnected)

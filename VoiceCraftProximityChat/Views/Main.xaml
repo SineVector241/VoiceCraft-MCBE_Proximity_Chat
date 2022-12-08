@@ -133,8 +133,7 @@
 
             <ListView x:Name="userList" 
                       Grid.Row="1" 
-                      Background="Transparent" 
-                      ItemsSource="{Binding UserList}"
+                      Background="Transparent"
                       IsHitTestVisible="False"
                       HorizontalContentAlignment="Stretch">
 

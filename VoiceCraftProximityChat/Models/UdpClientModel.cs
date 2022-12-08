@@ -37,6 +37,7 @@ namespace VoiceCraftProximityChat.Models
                 var TimePoint = DateTime.UtcNow;
                 while (!IsConnected && (DateTime.UtcNow - TimePoint).Seconds < 5)
                 {}
+                LastPing = DateTime.UtcNow;
                 func(IsConnected);
             });
         }
@@ -96,7 +97,7 @@ namespace VoiceCraftProximityChat.Models
         {
             try
             {
-                if ((DateTime.Now - LastPing).Seconds > 10)
+                if ((DateTime.UtcNow - LastPing).Seconds > 10)
                     IsConnected = false;
 
                 Packet packet = new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ping, VCSessionKey = _Key };
