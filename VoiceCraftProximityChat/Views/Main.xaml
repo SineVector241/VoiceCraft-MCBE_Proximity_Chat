@@ -166,7 +166,8 @@
                         Grid.Column="0"
                         Content="{Binding MuteButtonContent}"
                         Foreground="{StaticResource btnTextColor}"
-                        FontSize="12">
+                        FontSize="12"
+                        FontWeight="Medium">
                     <Button.Style >
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="{StaticResource buttonColor}"/>

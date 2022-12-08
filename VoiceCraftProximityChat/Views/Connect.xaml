@@ -203,7 +203,8 @@
                         Content="{Binding ConnectButtonMessage}"
                         Foreground="{StaticResource btnTextColor}"
                         FontSize="18"
-                        Height="30">
+                        Height="30"
+                        FontWeight="Medium">
                     <Button.Style >
                         <Style TargetType="Button">
                             <Setter Property="Background" Value="{StaticResource buttonColor}"/>
