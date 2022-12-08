@@ -20,8 +20,8 @@
 
     <Window.Resources>
         <LinearGradientBrush StartPoint="1,0" EndPoint="0,0" x:Key="ProgressBarBackground">
-            <GradientStop Color="Aqua" Offset="1"></GradientStop>
-            <GradientStop Color="Yellow" Offset="0"></GradientStop>
+            <GradientStop Color="{StaticResource volumeBar1}" Offset="1"></GradientStop>
+            <GradientStop Color="{StaticResource volumeBar2}" Offset="0"></GradientStop>
         </LinearGradientBrush>
 
         <SolidColorBrush x:Key="ProgressBarIndicator" Color="Gray"/>
@@ -31,16 +31,16 @@
             BorderThickness="3">
         <Border.BorderBrush>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#FFBC80" Offset="0" />
-                <GradientStop Color="#FC4F4F" Offset="0.75" />
-                <GradientStop Color="#FF9F45" Offset="1" />
+                <GradientStop Color="{StaticResource backgroundLighter}" Offset="0" />
+                <GradientStop Color="{StaticResource backgroundPrimary}" Offset="0.75" />
+                <GradientStop Color="{StaticResource backgroundDarker}" Offset="1" />
             </LinearGradientBrush>
         </Border.BorderBrush>
 
         <Border.Background>
             <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
-                <GradientStop Color="#F76E11" Offset="0" />
-                <GradientStop Color="#FC4F4F" Offset="1" />
+                <GradientStop Color="{StaticResource backgroundPrimary2}" Offset="0" />
+                <GradientStop Color="{StaticResource backgroundPrimary}" Offset="1" />
             </LinearGradientBrush>
         </Border.Background>
         <Grid>
@@ -59,7 +59,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Text="{Binding Title}"
-                           Foreground="#FFBC80"
+                           Foreground="{StaticResource textColor}"
                            FontSize="20"
                            Grid.Column="0"
                            VerticalAlignment="Center"
@@ -70,16 +70,16 @@
                         BorderThickness="1"
                         Grid.Column="1"
                         Content="-"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="16"
                         Click="btnMinimize_Click">
 
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#80489C"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -102,16 +102,16 @@
                         BorderThickness="1"
                         Grid.Column="2"
                         Content="X"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="12"
                         Click="btnClose_Click">
 
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#80489C"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -131,6 +131,27 @@
                 </Button>
             </Grid>
 
+            <ListView x:Name="userList" 
+                      Grid.Row="1" 
+                      Background="Transparent" 
+                      ItemsSource="{Binding UserList}"
+                      IsHitTestVisible="False"
+                      HorizontalContentAlignment="Stretch">
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Background="{StaticResource containerBackground}">
+                            <TextBlock 
+                                Text="{Binding Name}" 
+                                FontWeight="Medium"
+                                FontSize="20"
+                                Foreground="{StaticResource textColor}"
+                                HorizontalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60"/>
@@ -144,14 +165,14 @@
                         BorderThickness="1"
                         Grid.Column="0"
                         Content="{Binding MuteButtonContent}"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="12">
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="AliceBlue"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>

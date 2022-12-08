@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -15,7 +16,7 @@ namespace VoiceCraftProximityChat.Models
     {
         private static IPEndPoint endPoint;
         public static string _Key { get; set; }
-        public static bool IsConnected { get; set; }
+        public static bool IsConnected { get; private set; }
         private static UdpClient client { get; set; } = new UdpClient();
         private static DateTime LastPing { get; set; } = DateTime.UtcNow;
         private static Timer? pingChecker { get; set; } = null;

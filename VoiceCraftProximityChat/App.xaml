@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:VoiceCraftProximityChat"
              Startup="ApplicationStart">
     <Application.Resources>
-         
+        <ResourceDictionary Source="/Styles/UIColors.xaml"/>
     </Application.Resources>
 </Application>

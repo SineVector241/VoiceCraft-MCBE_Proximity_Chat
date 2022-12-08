@@ -1,7 +1,5 @@
-﻿using NAudio.Codecs;
-using NAudio.CoreAudioApi;
-using NAudio.Wave;
-using System.Diagnostics;
+﻿using NAudio.Wave;
+using System.Collections.Generic;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
 using VoiceCraftProximityChat.Utils;
@@ -42,7 +40,8 @@ namespace VoiceCraftProximityChat.ViewModels
             input.DataAvailable += SendAudio;
             input.StartRecording();
 
-            udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ready, VCSessionKey = UdpClientModel._Key });
+            if(UdpClientModel.IsConnected)
+                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ready, VCSessionKey = UdpClientModel._Key });
         }
 
         //Command Functions

@@ -96,10 +96,9 @@ namespace VoiceCraftProximityChat_Server.Servers
                     case PacketIdentifier.AudioStream:
                         var AudioPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCAudioBuffer = receivedData.VCAudioBuffer };
                         var volume = 0.0f;
-                        // Create a task for each client
-                        foreach (Client client in clientList)
+                        Task.Factory.StartNew(() =>
                         {
-                            Task.Factory.StartNew(() =>
+                            foreach (Client client in clientList)
                             {
                                 // Broadcast to all logged on users
                                 var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
@@ -109,6 +108,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                                     {
                                         volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
                                         AudioPacket.VCVolume = volume;
+                                        AudioPacket.VCSessionKey = client.Key;
                                     }
 
                                     if (volume != 0.0f)
@@ -116,8 +116,8 @@ namespace VoiceCraftProximityChat_Server.Servers
                                         serverSocket.BeginSendTo(AudioPacket.GetPacketDataStream(), 0, AudioPacket.GetPacketDataStream().Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
                                     }
                                 }
-                            });
-                        }
+                            }
+                        });
                         break;
 
                     case PacketIdentifier.Ping:
