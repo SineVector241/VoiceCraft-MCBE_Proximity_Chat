@@ -61,6 +61,10 @@ namespace VoiceCraftProximityChat.ViewModels
             {
                 MessageBox.Show(ex.Message, "An error has occured...", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                ConnectButtonMessage = "Connect";
+            }
         }
 
         private void CheckForConnection(bool isConnected)
