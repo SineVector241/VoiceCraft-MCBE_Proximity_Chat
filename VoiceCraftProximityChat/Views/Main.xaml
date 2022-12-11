@@ -47,6 +47,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" />
                 <RowDefinition/>
+                <RowDefinition Height="30"/>
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
 
@@ -152,6 +153,28 @@
             </ListView>
 
             <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                    <Slider
+                        VerticalAlignment="Center"
+                        Grid.Column="1"
+                        Value="{Binding Path=OutputGain, UpdateSourceTrigger=PropertyChanged}"
+                        ValueChanged="Slider_ValueChanged"
+                        Minimum="-1.0"
+                        Maximum="2.0"
+                    ></Slider>
+
+                <TextBlock Text="{Binding OutputGain, StringFormat={}{0:F2}}"
+                           FontWeight="Medium"
+                           FontSize="20"
+                           Foreground="{StaticResource textColor}"
+                           HorizontalAlignment="Center"
+                           ></TextBlock>
+            </Grid>
+
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition/>

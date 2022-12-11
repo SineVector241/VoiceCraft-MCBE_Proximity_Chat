@@ -17,6 +17,7 @@ namespace VoiceCraftProximityChat.Models
         private static IPEndPoint endPoint;
         public static string _Key { get; set; }
         public static bool IsConnected { get; private set; }
+        public static float VolumeGain { get; set; } = 0.0f;
         private static UdpClient client { get; set; } = new UdpClient();
         private static DateTime LastPing { get; set; } = DateTime.UtcNow;
         private static Timer? pingChecker { get; set; } = null;
@@ -74,7 +75,8 @@ namespace VoiceCraftProximityChat.Models
                 case PacketIdentifier.AudioStream:
                     try
                     {
-                        AudioPlaybackModel.Instance.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume, packetData.VCSessionKey);
+                        
+                        AudioPlaybackModel.Instance.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume + VolumeGain, packetData.VCSessionKey);
                     }
                     catch (Exception ex)
                     {

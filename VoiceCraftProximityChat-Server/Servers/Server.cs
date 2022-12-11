@@ -50,6 +50,7 @@ namespace VoiceCraftProximityChat_Server.Servers
 
                 // Receive all data
                 serverSocket.EndReceiveFrom(asyncResult, ref epSender);
+                serverSocket.BeginReceiveFrom(dataStream, 0, dataStream.Length, SocketFlags.None, ref epSender, new AsyncCallback(ReceiveData), epSender);
                 ClearTimeoutSessions();
 
                 switch (receivedData.VCPacketDataIdentifier)
@@ -127,7 +128,6 @@ namespace VoiceCraftProximityChat_Server.Servers
                         clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey).lastPing = DateTime.Now;
                         break;
                 }
-                serverSocket.BeginReceiveFrom(dataStream, 0, dataStream.Length, SocketFlags.None, ref epSender, new AsyncCallback(ReceiveData), epSender);
             }
             catch (Exception ex)
             {

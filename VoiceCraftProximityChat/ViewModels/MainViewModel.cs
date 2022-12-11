@@ -1,5 +1,6 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System.Collections.Generic;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
@@ -10,6 +11,7 @@ namespace VoiceCraftProximityChat.ViewModels
     public class MainViewModel : ViewModelBase
     {
         //Fields
+        private float _outputGain = 0f;
         private float _microphoneInput;
         private bool _isMuted;
         private bool _isDeafened;
@@ -18,6 +20,7 @@ namespace VoiceCraftProximityChat.ViewModels
         private UdpClientModel udpClient = new UdpClientModel();
         private WaveIn input = new WaveIn();
 
+        public float OutputGain { get => _outputGain; set { _outputGain = value; OnPropertyChanged(nameof(OutputGain)); } }
         public float MicrophoneInput { get => _microphoneInput; set { _microphoneInput = value; OnPropertyChanged(nameof(MicrophoneInput)); } }
         public bool IsMuted { get => _isMuted; set { _isMuted = value; OnPropertyChanged(nameof(IsMuted)); } }
         public bool IsDeafened { get => _isDeafened; set { _isDeafened = value; OnPropertyChanged(nameof(IsDeafened)); } }
