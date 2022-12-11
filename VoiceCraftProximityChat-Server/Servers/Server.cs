@@ -17,6 +17,7 @@ namespace VoiceCraftProximityChat_Server.Servers
             //Developer Keys
             SessionKeys.Add(new SessionKey() { Key = "hy67a", PlayerId = "EEEE", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
             SessionKeys.Add(new SessionKey() { Key = "x456j", PlayerId = "EEEEE", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
+            SessionKeys.Add(new SessionKey() { Key = "x456i", PlayerId = "EEEEEA", RegisteredAt = DateTime.UtcNow.AddMinutes(5) });
 
             packets = new Packet();
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -108,7 +109,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                                     {
                                         volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
                                         AudioPacket.VCVolume = volume;
-                                        AudioPacket.VCSessionKey = client.Key;
+                                        AudioPacket.VCSessionKey = selfClient.Key;
                                     }
 
                                     if (volume != 0.0f)

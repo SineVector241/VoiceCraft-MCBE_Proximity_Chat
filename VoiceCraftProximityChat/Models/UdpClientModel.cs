@@ -74,7 +74,7 @@ namespace VoiceCraftProximityChat.Models
                 case PacketIdentifier.AudioStream:
                     try
                     {
-                        AudioPlaybackModel.Instance.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume);
+                        AudioPlaybackModel.Instance.PlaySound(packetData.VCAudioBuffer, packetData.VCVolume, packetData.VCSessionKey);
                     }
                     catch (Exception ex)
                     {
