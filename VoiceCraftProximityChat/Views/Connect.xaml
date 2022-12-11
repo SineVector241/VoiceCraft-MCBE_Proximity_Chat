@@ -139,6 +139,14 @@
                            HorizontalAlignment="Center"
                            FontWeight="Bold"/>
 
+                <TextBlock Text="Proximity chat for minecraft bedrock"
+                           Foreground="{StaticResource textColor}"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           FontWeight="SemiBold"/>
+
                 <TextBlock Text="Server IP"
                            Foreground="{StaticResource textColor}"
                            FontSize="18"
