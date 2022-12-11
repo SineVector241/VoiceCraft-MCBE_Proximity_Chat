@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Network;
+using VoiceCraftProximityChat.Repositories;
 
 namespace VoiceCraftProximityChat.Views
 {
@@ -30,9 +31,9 @@ namespace VoiceCraftProximityChat.Views
             Application.Current.Shutdown();
         }
 
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void VolumeGainChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            UdpClientModel.VolumeGain = (float)e.NewValue;
+            AudioPlayback.volumeGain = (float)e.NewValue;
         }
     }
 }

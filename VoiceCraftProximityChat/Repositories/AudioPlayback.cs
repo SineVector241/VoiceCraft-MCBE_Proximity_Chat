@@ -7,15 +7,16 @@ using VoiceCraftProximityChat.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VoiceCraftProximityChat.Models
+namespace VoiceCraftProximityChat.Repositories
 {
-    class AudioPlaybackModel
+    class AudioPlayback
     {
         private readonly IWavePlayer outputDevice;
         private readonly MixingSampleProvider mixer;
         private List<Client> waveProviders = new List<Client>();
+        public static float volumeGain { get; set; } = 0.0f;
 
-        public AudioPlaybackModel()
+        public AudioPlayback()
         {
             outputDevice = new WaveOutEvent() { DesiredLatency = 600, NumberOfBuffers = 3 };
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
@@ -31,7 +32,6 @@ namespace VoiceCraftProximityChat.Models
                 var waveProvider = waveProviders.FirstOrDefault(x => x.SessionKey == SessionKey);
                 if (waveProvider == null)
                 {
-                    Debug.WriteLine($"Created new session with: {SessionKey}");
                     waveProvider = new Client() { SessionKey = SessionKey };
                     waveProviders.Add(waveProvider);
                 }
@@ -41,7 +41,7 @@ namespace VoiceCraftProximityChat.Models
                 var provider = new RawSourceWaveStream(decoded, 0, 1600, G722ChatCodec.CodecInstance.RecordFormat);
                 waveProvider.waveProvider.AddSamples(decoded, 0, 1600);
                 var buff = new Wave16ToFloatProvider(waveProvider.waveProvider);
-                buff.Volume = Volume;
+                buff.Volume = Volume + volumeGain;
                 mixer.AddMixerInput(buff);
 
                 for (int i = 0; i < waveProviders.Count; i++)
@@ -54,7 +54,7 @@ namespace VoiceCraftProximityChat.Models
             });
         }
 
-        public static readonly AudioPlaybackModel Instance = new AudioPlaybackModel();
+        public static readonly AudioPlayback Instance = new AudioPlayback();
     }
 
     public class Client

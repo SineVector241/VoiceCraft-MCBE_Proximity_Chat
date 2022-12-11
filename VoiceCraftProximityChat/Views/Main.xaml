@@ -161,7 +161,7 @@
                         VerticalAlignment="Center"
                         Grid.Column="1"
                         Value="{Binding Path=OutputGain, UpdateSourceTrigger=PropertyChanged}"
-                        ValueChanged="Slider_ValueChanged"
+                        ValueChanged="VolumeGainChanged"
                         Minimum="-1.0"
                         Maximum="2.0"
                     ></Slider>

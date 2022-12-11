@@ -3,7 +3,8 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System.Collections.Generic;
 using System.Windows.Input;
-using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Network;
+using VoiceCraftProximityChat.Repositories;
 using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.ViewModels
@@ -17,7 +18,6 @@ namespace VoiceCraftProximityChat.ViewModels
         private bool _isDeafened;
         private string _title = "VoiceCraft - CONNECTED";
         private string _muteButtonContent = "Mute";
-        private UdpClientModel udpClient = new UdpClientModel();
         private WaveIn input = new WaveIn();
 
         public float OutputGain { get => _outputGain; set { _outputGain = value; OnPropertyChanged(nameof(OutputGain)); } }
@@ -44,8 +44,13 @@ namespace VoiceCraftProximityChat.ViewModels
             input.DataAvailable += SendAudio;
             input.StartRecording();
 
-            if(UdpClientModel.IsConnected)
-                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ready, VCSessionKey = UdpClientModel._Key });
+            UdpNetworkHandler.Instance.Ready();
+            UdpNetworkHandler.Instance.Logout += OnLogout;
+        }
+
+        private void OnLogout(object? sender, System.EventArgs e)
+        {
+            Title = "VoiceCraft - DISCONNECTED";
         }
 
         //Command Functions
@@ -75,14 +80,8 @@ namespace VoiceCraftProximityChat.ViewModels
             MicrophoneInput = max * 100;
             var encoded = G722ChatCodec.CodecInstance.Encode(args.Buffer, 0, args.BytesRecorded);
 
-            if (UdpClientModel.IsConnected && !IsMuted && MicrophoneInput > 2)
-                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = encoded });
-
-            if (!UdpClientModel.IsConnected)
-            {
-                udpClient.Dispose();
-                Title = "VoiceCraft - DISCONNECTED";
-            }
+            if (UdpNetworkHandler.Instance._IsLoggedIn && !IsMuted && MicrophoneInput > 2)
+                UdpNetwork.Instance.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpNetworkHandler.Instance._Key, VCAudioBuffer = encoded });
         }
     }
 }
