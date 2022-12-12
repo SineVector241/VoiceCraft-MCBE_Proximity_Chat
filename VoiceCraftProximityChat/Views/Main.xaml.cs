@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using VoiceCraftProximityChat.Network;
+using VoiceCraftProximityChat.Repositories;
 
 namespace VoiceCraftProximityChat.Views
 {
@@ -27,6 +29,11 @@ namespace VoiceCraftProximityChat.Views
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void VolumeGainChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            AudioPlayback.volumeGain = (float)e.NewValue;
         }
     }
 }

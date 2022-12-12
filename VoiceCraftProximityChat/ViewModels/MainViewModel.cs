@@ -1,9 +1,10 @@
-﻿using NAudio.Codecs;
-using NAudio.CoreAudioApi;
+﻿using NAudio.CoreAudioApi;
 using NAudio.Wave;
-using System.Diagnostics;
+using NAudio.Wave.SampleProviders;
+using System.Collections.Generic;
 using System.Windows.Input;
-using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Network;
+using VoiceCraftProximityChat.Repositories;
 using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.ViewModels
@@ -11,14 +12,15 @@ namespace VoiceCraftProximityChat.ViewModels
     public class MainViewModel : ViewModelBase
     {
         //Fields
+        private float _outputGain = 0f;
         private float _microphoneInput;
         private bool _isMuted;
         private bool _isDeafened;
         private string _title = "VoiceCraft - CONNECTED";
         private string _muteButtonContent = "Mute";
-        private UdpClientModel udpClient = new UdpClientModel();
         private WaveIn input = new WaveIn();
 
+        public float OutputGain { get => _outputGain; set { _outputGain = value; OnPropertyChanged(nameof(OutputGain)); } }
         public float MicrophoneInput { get => _microphoneInput; set { _microphoneInput = value; OnPropertyChanged(nameof(MicrophoneInput)); } }
         public bool IsMuted { get => _isMuted; set { _isMuted = value; OnPropertyChanged(nameof(IsMuted)); } }
         public bool IsDeafened { get => _isDeafened; set { _isDeafened = value; OnPropertyChanged(nameof(IsDeafened)); } }
@@ -42,7 +44,13 @@ namespace VoiceCraftProximityChat.ViewModels
             input.DataAvailable += SendAudio;
             input.StartRecording();
 
-            udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.Ready, VCSessionKey = UdpClientModel._Key });
+            UdpNetworkHandler.Instance.Ready();
+            UdpNetworkHandler.Instance.Logout += OnLogout;
+        }
+
+        private void OnLogout(object? sender, System.EventArgs e)
+        {
+            Title = "VoiceCraft - DISCONNECTED";
         }
 
         //Command Functions
@@ -72,14 +80,8 @@ namespace VoiceCraftProximityChat.ViewModels
             MicrophoneInput = max * 100;
             var encoded = G722ChatCodec.CodecInstance.Encode(args.Buffer, 0, args.BytesRecorded);
 
-            if (UdpClientModel.IsConnected && !IsMuted && MicrophoneInput > 5)
-                udpClient.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpClientModel._Key, VCAudioBuffer = encoded });
-
-            if (!UdpClientModel.IsConnected)
-            {
-                udpClient.Dispose();
-                Title = "VoiceCraft - DISCONNECTED";
-            }
+            if (UdpNetworkHandler.Instance._IsLoggedIn && !IsMuted && MicrophoneInput > 2)
+                UdpNetwork.Instance.SendPacket(new Packet() { VCPacketDataIdentifier = PacketIdentifier.AudioStream, VCSessionKey = UdpNetworkHandler.Instance._Key, VCAudioBuffer = encoded });
         }
     }
 }

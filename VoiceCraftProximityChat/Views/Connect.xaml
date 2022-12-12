@@ -30,16 +30,16 @@
             BorderThickness="3">
         <Border.BorderBrush>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#FFBC80" Offset="0" />
-                <GradientStop Color="#FC4F4F" Offset="0.75" />
-                <GradientStop Color="#FF9F45" Offset="1" />
+                <GradientStop Color="{StaticResource backgroundLighter}" Offset="0" />
+                <GradientStop Color="{StaticResource backgroundPrimary}" Offset="0.75" />
+                <GradientStop Color="{StaticResource backgroundDarker}" Offset="1" />
             </LinearGradientBrush>
         </Border.BorderBrush>
         
         <Border.Background>
             <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
-                <GradientStop Color="#F76E11" Offset="0" />
-                <GradientStop Color="#FC4F4F" Offset="1" />
+                <GradientStop Color="{StaticResource backgroundPrimary2}" Offset="0" />
+                <GradientStop Color="{StaticResource backgroundPrimary}" Offset="1" />
             </LinearGradientBrush>
         </Border.Background>
         <Grid>
@@ -57,7 +57,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Text="VoiceCraft - CONNECT"
-                           Foreground="#FFBC80"
+                           Foreground="{StaticResource textColor}"
                            FontSize="20"
                            Grid.Column="0"
                            VerticalAlignment="Center"
@@ -68,16 +68,16 @@
                         BorderThickness="1"
                         Grid.Column="1"
                         Content="-"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="16"
                         Click="btnMinimize_Click">
                     
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#80489C"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -100,16 +100,16 @@
                         BorderThickness="1"
                         Grid.Column="2"
                         Content="X"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="12"
                         Click="btnClose_Click">
 
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#80489C"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -134,20 +134,28 @@
                         Orientation="Vertical"
                         Margin="0,100,0,0">
                 <TextBlock Text="VoiceCraft"
-                           Foreground="White"
+                           Foreground="{StaticResource textColor}"
                            FontSize="40"
                            HorizontalAlignment="Center"
                            FontWeight="Bold"/>
 
+                <TextBlock Text="Proximity chat for minecraft bedrock"
+                           Foreground="{StaticResource textColor}"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           FontWeight="SemiBold"/>
+
                 <TextBlock Text="Server IP"
-                           Foreground="LightGray"
+                           Foreground="{StaticResource textColor}"
                            FontSize="18"
                            Margin="0,10,0,0"/>
 
                 <TextBox x:Name="txtSIP"
                          FontSize="18"
                          FontWeight="Medium"
-                         Foreground="White"
+                         Foreground="{StaticResource textColor}"
                          Background="Transparent"
                          CaretBrush="LightGray"
                          BorderBrush="DarkGray"
@@ -158,7 +166,7 @@
                          Text="{Binding Ip, UpdateSourceTrigger=PropertyChanged}"></TextBox>
 
                 <TextBlock Text="Server Port"
-                           Foreground="LightGray"
+                           Foreground="{StaticResource textColor}"
                            FontSize="18"
                            Margin="0,15,0,0"/>
 
@@ -166,7 +174,7 @@
                          PreviewTextInput="NumbersOnlyTextInput"
                          FontSize="18"
                          FontWeight="Medium"
-                         Foreground="White"
+                         Foreground="{StaticResource textColor}"
                          Background="Transparent"
                          CaretBrush="LightGray"
                          BorderBrush="DarkGray"
@@ -177,14 +185,14 @@
                          Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}"></TextBox>
 
                 <TextBlock Text="Connection Key"
-                           Foreground="LightGray"
+                           Foreground="{StaticResource textColor}"
                            FontSize="18"
                            Margin="0,15,0,0"/>
 
                 <TextBox x:Name="txtSKey"
                          FontSize="18"
                          FontWeight="Medium"
-                         Foreground="White"
+                         Foreground="{StaticResource textColor}"
                          Background="Transparent"
                          CaretBrush="LightGray"
                          BorderBrush="DarkGray"
@@ -201,15 +209,16 @@
                         BorderThickness="1"
                         Grid.Column="2"
                         Content="{Binding ConnectButtonMessage}"
-                        Foreground="#F76E11"
+                        Foreground="{StaticResource btnTextColor}"
                         FontSize="18"
-                        Height="30">
+                        Height="30"
+                        FontWeight="Medium">
                     <Button.Style >
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FFBC80"/>
+                            <Setter Property="Background" Value="{StaticResource buttonColor}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="AliceBlue"/>
+                                    <Setter Property="Background" Value="{StaticResource buttonColorHover}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -229,7 +238,7 @@
                 <TextBlock Text="{Binding ErrorMessage}"
                            FontWeight="Medium"
                            TextAlignment="Center"
-                           Foreground="#ffff8a"
+                           Foreground="{StaticResource textColor}"
                            FontSize="13"
                            Margin="0,3,0,0"
                            TextWrapping="Wrap"/>

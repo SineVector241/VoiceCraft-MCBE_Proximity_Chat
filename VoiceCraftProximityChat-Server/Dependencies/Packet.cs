@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace VoiceCraftProximityChat_Server
+namespace VoiceCraftProximityChat_Server.Dependencies
 {
     public enum PacketIdentifier
     {
@@ -17,8 +17,9 @@ namespace VoiceCraftProximityChat_Server
     public class Packet
     {
         //Packet Data
-        private PacketIdentifier packetIdentifier;
-        private float Volume;
+        private PacketIdentifier packetIdentifier; //PacketIdentifier - Data containing data to identify what packet is received/sent
+        private float Volume; //Volume - Data containing volume info when server sends AudioStream Packet to client
+        private string? Name; //Name - Data containing each players Ingame Name.
         private string? SessionKey; //Session key - Data containing the key which identifies the user's session.
         private byte[]? AudioBuffer; //Microphone Audio - Data containing audio data to either forward or play.
 
@@ -32,6 +33,12 @@ namespace VoiceCraftProximityChat_Server
         {
             get { return Volume; }
             set { Volume = value; }
+        }
+
+        public string VCName
+        {
+            get { return Name; }
+            set { Name = value; }
         }
 
         public string VCSessionKey
@@ -58,9 +65,9 @@ namespace VoiceCraftProximityChat_Server
         {
             AudioBuffer = new byte[400];
             VCPacketDataIdentifier = (PacketIdentifier)BitConverter.ToInt32(dataStream, 0); //Read packet identifier - 4 bytes.
-            VCVolume = BitConverter.ToSingle(dataStream, 4); //Read Before Volume - 4 bytes
+            VCVolume = BitConverter.ToSingle(dataStream, 4); //Read Before Volume - 4 bytes.
             int sessionKeyLength = BitConverter.ToInt32(dataStream, 8); //Read session key length - 4 bytes.
-            int audioBufferLength = BitConverter.ToInt32(dataStream, 12); //Read audio data length - 4 bytes
+            int audioBufferLength = BitConverter.ToInt32(dataStream, 12); //Read audio data length - 4 bytes.
 
             if (sessionKeyLength > 0)
                 SessionKey = Encoding.UTF8.GetString(dataStream, 16, sessionKeyLength);

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
-using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Network;
 
 namespace VoiceCraftProximityChat.ViewModels
 {
@@ -15,7 +16,6 @@ namespace VoiceCraftProximityChat.ViewModels
         private string _errorMessage;
         private string _connectButtonMessage = "Connect";
         private bool _isViewVisible = true;
-        private UdpClientModel udpClient = new UdpClientModel();
 
         public string Ip { get => _ip; set { _ip = value; OnPropertyChanged(nameof(Ip)); } }
         public string Port { get => _port; set { _port = value; OnPropertyChanged(nameof(Port)); } }
@@ -51,13 +51,19 @@ namespace VoiceCraftProximityChat.ViewModels
                 {
                     ErrorMessage = "";
                     ConnectButtonMessage = "Connecting...";
-                    udpClient.Connect(IPAddress.Parse(_ip), Convert.ToInt16(_port));
-                    udpClient.Login(_key, CheckForConnection);
+                    Task.Run(() => {
+                        UdpNetwork.Instance.Connect(IPAddress.Parse(_ip), Convert.ToInt16(_port), Key);
+                        UdpNetwork.Instance.Authenticate(CheckForConnection);
+                    });
                 }
             }
             catch(Exception ex)
             {
                 MessageBox.Show(ex.Message, "An error has occured...", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                ConnectButtonMessage = "Connect";
             }
         }
 
@@ -72,7 +78,7 @@ namespace VoiceCraftProximityChat.ViewModels
             {
                 ErrorMessage = "Error: Could not connect to server or key was invalid";
                 ConnectButtonMessage = "Connect";
-                udpClient.Dispose();
+                UdpNetworkHandler.Instance.Disconnect();
             }
         }
     }
