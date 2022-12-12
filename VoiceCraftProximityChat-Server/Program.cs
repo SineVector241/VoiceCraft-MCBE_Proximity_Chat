@@ -20,15 +20,8 @@ namespace VoiceCraftProximityChat_Server
                     Console.WriteLine("Error. Invalid port number. Try Again");
                 }
             }
-            var s = new Server();
-            s.Setup(Port);
-            var thread = new Thread(e =>
-            {
-                new WebServer(Port, s);
-            });
-
-            thread.IsBackground = true;
-            thread.Start();
+            new Thread(() => { new UdpServer(Port); }) { IsBackground = true}.Start();
+            new Thread(() => { new WebServer(Port); }) { IsBackground = true }.Start();
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Server Started. Press any key to shutdown...");
             Console.ResetColor();

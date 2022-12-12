@@ -2,6 +2,7 @@
 using System.Net;
 using System.Numerics;
 using System.Text;
+using VoiceCraftProximityChat_Server.Dependencies;
 
 namespace VoiceCraftProximityChat_Server.Servers
 {
@@ -9,8 +10,7 @@ namespace VoiceCraftProximityChat_Server.Servers
     {
         private HttpListener listener;
         private string SessionKey;
-        private Server UdpServer;
-        public WebServer(int Port, Server udpServer)
+        public WebServer(int Port)
         {
             SessionKey = Guid.NewGuid().ToString();
             listener = new HttpListener();
@@ -46,7 +46,6 @@ namespace VoiceCraftProximityChat_Server.Servers
                     throw;
                 }
             }
-            UdpServer = udpServer;
         }
         public void listen(IAsyncResult result)
         {
@@ -68,7 +67,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                         switch (json.Type)
                         {
                             case PacketType.CreateSessionKey:
-                                var login = UdpServer.CreateSessionKey(json.PlayerId);
+                                var login = ServerData.Data.CreateNewSessionKey(json.PlayerId);
                                 if (login == null)
                                 {
                                     SendResponse(ctx, HttpStatusCode.Conflict, "Player already logged in/requested");
@@ -80,7 +79,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                                 break;
 
                             case PacketType.Update:
-                                UdpServer.UpdateClientList(json.Players);
+                                ServerData.Data.UpdateClientList(json.Players);
                                 SendResponse(ctx, HttpStatusCode.Accepted, "OK");
                                 break;
 

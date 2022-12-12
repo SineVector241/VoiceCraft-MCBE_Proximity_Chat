@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace VoiceCraftProximityChat_Server
+namespace VoiceCraftProximityChat_Server.Dependencies
 {
     public enum PacketIdentifier
     {

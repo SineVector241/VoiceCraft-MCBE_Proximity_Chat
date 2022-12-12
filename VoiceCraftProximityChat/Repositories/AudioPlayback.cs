@@ -18,7 +18,7 @@ namespace VoiceCraftProximityChat.Repositories
 
         public AudioPlayback()
         {
-            outputDevice = new WaveOutEvent() { DesiredLatency = 700, NumberOfBuffers = 3 };
+            outputDevice = new WaveOutEvent() { DesiredLatency = 600, NumberOfBuffers = 3 };
             mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(16000, 1));
             mixer.ReadFully = true;
             outputDevice.Init(mixer);
