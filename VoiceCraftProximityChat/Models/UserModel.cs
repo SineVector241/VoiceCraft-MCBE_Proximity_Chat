@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace VoiceCraftProximityChat.Models
 {
-    public class UserModel
+    public class Client
     {
-        public string? SessionKey { get; set; }
-        public string? Username { get; set; }
+        public string? Username { get; set; } = "";
+        public string? SessionKey { get; set; } = "";
     }
 }

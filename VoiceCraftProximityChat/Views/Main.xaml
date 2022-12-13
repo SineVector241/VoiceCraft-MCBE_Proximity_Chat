@@ -136,13 +136,14 @@
                       Grid.Row="1" 
                       Background="Transparent"
                       IsHitTestVisible="False"
-                      HorizontalContentAlignment="Stretch">
+                      HorizontalContentAlignment="Stretch"
+                      ItemsSource="{Binding Path=Clients}">
 
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid Background="{StaticResource containerBackground}">
                             <TextBlock 
-                                Text="{Binding Name}" 
+                                Text="{Binding Username}" 
                                 FontWeight="Medium"
                                 FontSize="20"
                                 Foreground="{StaticResource textColor}"

@@ -129,6 +129,24 @@
                 </Button>
             </Grid>
 
+            <TextBlock Grid.Row="2"
+                       Text="Developed by: SineVector241"
+                       Foreground="{StaticResource textColor}"
+                       FontSize="15"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       FontWeight="Bold"
+                       Margin="4" />
+
+            <TextBlock Grid.Row="2"
+                       Text="Version: v1.2.0-alpha"
+                       Foreground="{StaticResource textColor}"
+                       FontSize="15"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Bottom"
+                       FontWeight="Bold"
+                       Margin="4" />
+
             <StackPanel Width="250"
                         Grid.Row="2"
                         Orientation="Vertical"

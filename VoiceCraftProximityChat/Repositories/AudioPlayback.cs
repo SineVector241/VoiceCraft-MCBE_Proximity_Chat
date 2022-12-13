@@ -1,7 +1,6 @@
 ﻿using NAudio.Wave.SampleProviders;
 using NAudio.Wave;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using VoiceCraftProximityChat.Utils;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ namespace VoiceCraftProximityChat.Repositories
     {
         private readonly IWavePlayer outputDevice;
         private readonly MixingSampleProvider mixer;
-        private List<Client> waveProviders = new List<Client>();
+        private List<AudioClient> waveProviders = new List<AudioClient>();
         public static float volumeGain { get; set; } = 0.0f;
 
         public AudioPlayback()
@@ -32,7 +31,7 @@ namespace VoiceCraftProximityChat.Repositories
                 var waveProvider = waveProviders.FirstOrDefault(x => x.SessionKey == SessionKey);
                 if (waveProvider == null)
                 {
-                    waveProvider = new Client() { SessionKey = SessionKey };
+                    waveProvider = new AudioClient() { SessionKey = SessionKey };
                     waveProviders.Add(waveProvider);
                 }
                 waveProvider.LastUsed = DateTime.UtcNow;
@@ -57,7 +56,7 @@ namespace VoiceCraftProximityChat.Repositories
         public static readonly AudioPlayback Instance = new AudioPlayback();
     }
 
-    public class Client
+    public class AudioClient
     {
         public BufferedWaveProvider waveProvider { get; set; } = new BufferedWaveProvider(G722ChatCodec.CodecInstance.RecordFormat) { DiscardOnBufferOverflow = false, ReadFully = false };
         public string SessionKey { get; set; } = "";

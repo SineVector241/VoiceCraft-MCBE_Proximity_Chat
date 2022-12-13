@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using VoiceCraftProximityChat.Repositories;
 using VoiceCraftProximityChat.Utils;
 
@@ -16,8 +11,13 @@ namespace VoiceCraftProximityChat.Network
         public bool _IsLoggedIn { get; set; }
         public Timer? _Pinger { get; set; } = null;
         public string? _Key { get; set; } = null;
+        
+        //Events
         public event EventHandler Logout;
+        public event EventHandler<ClientLoginEventArgs> ClientLogin;
+        public event EventHandler<ClientLogoutEventArgs> ClientLogout;
 
+        //Event Methods
         protected virtual void OnLogout()
         {
             EventHandler handler = Logout;
@@ -27,6 +27,25 @@ namespace VoiceCraftProximityChat.Network
             }
         }
 
+        protected virtual void OnClientLogin(ClientLoginEventArgs e)
+        {
+            EventHandler<ClientLoginEventArgs> handler = ClientLogin;
+            if(handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
+        protected virtual void OnClientLogout(ClientLogoutEventArgs e)
+        {
+            EventHandler<ClientLogoutEventArgs> handler = ClientLogout;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
+        //Methods
         public void HandlePacket(Packet packet)
         {
             switch (packet.VCPacketDataIdentifier)
@@ -47,6 +66,14 @@ namespace VoiceCraftProximityChat.Network
                         AudioPlayback.Instance.PlaySound(packet.VCAudioBuffer, packet.VCVolume, packet.VCSessionKey);
                     }
                     catch { }
+                    break;
+
+                case PacketIdentifier.Login:
+                    OnClientLogin(new ClientLoginEventArgs() { Username = packet.VCName, SessionKey = packet.VCSessionKey });
+                    break;
+
+                case PacketIdentifier.Logout:
+                    OnClientLogout(new ClientLogoutEventArgs() { SessionKey = packet.VCSessionKey });
                     break;
             }
         }
@@ -82,5 +109,16 @@ namespace VoiceCraftProximityChat.Network
         }
 
         public static UdpNetworkHandler Instance { get; } = new UdpNetworkHandler();
+    }
+
+    public class ClientLoginEventArgs : EventArgs
+    {
+        public string Username { get; set; } = "";
+        public string SessionKey { get; set; } = "";
+    }
+
+    public class ClientLogoutEventArgs : EventArgs
+    {
+        public string SessionKey { get; set; } = "";
     }
 }
