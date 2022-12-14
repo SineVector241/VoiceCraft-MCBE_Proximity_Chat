@@ -13,7 +13,7 @@ namespace VoiceCraftProximityChat.Repositories
         private readonly IWavePlayer outputDevice;
         private readonly MixingSampleProvider mixer;
         private List<AudioClient> waveProviders = new List<AudioClient>();
-        public static float volumeGain { get; set; } = 0.0f;
+        public static float volumeGain { get; set; } = 1.0f;
 
         public AudioPlayback()
         {
@@ -40,8 +40,9 @@ namespace VoiceCraftProximityChat.Repositories
                 var provider = new RawSourceWaveStream(decoded, 0, 1600, G722ChatCodec.CodecInstance.RecordFormat);
                 waveProvider.waveProvider.AddSamples(decoded, 0, 1600);
                 var buff = new Wave16ToFloatProvider(waveProvider.waveProvider);
-                buff.Volume = Volume + volumeGain;
-                mixer.AddMixerInput(buff);
+                buff.Volume = Volume;
+                var volumeProvider = new VolumeSampleProvider(buff.ToSampleProvider()) { Volume = volumeGain };
+                mixer.AddMixerInput(volumeProvider);
 
                 for (int i = 0; i < waveProviders.Count; i++)
                 {

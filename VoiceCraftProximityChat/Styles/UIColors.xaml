@@ -17,7 +17,7 @@
     <Color x:Key="volumeBar2">Yellow</Color>
     
     <!-- User Container Background -->
-    <SolidColorBrush x:Key="containerBackground" Color="#81b9bf"/>
+    <SolidColorBrush x:Key="containerBackground" Color="DarkCyan"/>
 
     <!-- Text Color -->
     <SolidColorBrush x:Key="textColor" Color="White"/>

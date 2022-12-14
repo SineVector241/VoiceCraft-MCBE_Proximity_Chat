@@ -1,5 +1,7 @@
 ﻿using NAudio.Wave;
+using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using VoiceCraftProximityChat.Models;
@@ -11,7 +13,7 @@ namespace VoiceCraftProximityChat.ViewModels
     public class MainViewModel : ViewModelBase
     {
         //Fields
-        private float _outputGain = 0f;
+        private float _outputGain = 1.0f;
         private float _microphoneInput;
         private bool _isMuted;
         private bool _isDeafened;

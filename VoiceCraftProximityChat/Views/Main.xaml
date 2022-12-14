@@ -46,6 +46,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" />
+                <RowDefinition Height="20" />
                 <RowDefinition/>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="40"/>
@@ -131,9 +132,15 @@
                     </Button.Template>
                 </Button>
             </Grid>
+            <TextBlock FontWeight="Medium"
+                       Text="Connected Users"
+                       Grid.Row="1"
+                       FontSize="15"
+                       Foreground="{StaticResource textColor}"
+                       HorizontalAlignment="Center" />
 
             <ListView x:Name="userList" 
-                      Grid.Row="1" 
+                      Grid.Row="2" 
                       Background="Transparent"
                       IsHitTestVisible="False"
                       HorizontalContentAlignment="Stretch"
@@ -153,7 +160,7 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60" />
                     <ColumnDefinition />
@@ -163,8 +170,8 @@
                         Grid.Column="1"
                         Value="{Binding Path=OutputGain, UpdateSourceTrigger=PropertyChanged}"
                         ValueChanged="VolumeGainChanged"
-                        Minimum="-1.0"
-                        Maximum="2.0"
+                        Minimum="0.0"
+                        Maximum="10.0"
                     ></Slider>
 
                 <TextBlock Text="{Binding OutputGain, StringFormat={}{0:F2}}"
@@ -175,7 +182,7 @@
                            ></TextBlock>
             </Grid>
 
-            <Grid Grid.Row="3">
+            <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition/>

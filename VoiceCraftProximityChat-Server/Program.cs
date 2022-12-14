@@ -28,7 +28,7 @@ namespace VoiceCraftProximityChat_Server
             new Thread(() => { new WebServer(Port); }) { IsBackground = true }.Start();
             Console.Title = $"VoiceCraft - {Version}: Running";
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Server Started. Press any key to shutdown...");
+            Console.WriteLine("Server Started. type Exit to shutdown the application...");
             Console.ResetColor();
             while(true)
             {
