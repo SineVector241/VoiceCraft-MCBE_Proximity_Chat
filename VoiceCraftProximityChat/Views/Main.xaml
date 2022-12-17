@@ -171,7 +171,7 @@
                         Value="{Binding Path=OutputGain, UpdateSourceTrigger=PropertyChanged}"
                         ValueChanged="VolumeGainChanged"
                         Minimum="0.0"
-                        Maximum="10.0"
+                        Maximum="30.0"
                     ></Slider>
 
                 <TextBlock Text="{Binding OutputGain, StringFormat={}{0:F2}}"

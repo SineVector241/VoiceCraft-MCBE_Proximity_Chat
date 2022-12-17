@@ -72,7 +72,7 @@ namespace VoiceCraftProximityChat_Server
             int audioBufferLength = BitConverter.ToInt32(dataStream, 16); //Read audio data length - 4 bytes.
 
             if (usernameLength > 0)
-                Name = Encoding.UTF8.GetString(dataStream, 20, sessionKeyLength);
+                Name = Encoding.UTF8.GetString(dataStream, 20, usernameLength);
             else
                 Name = null;
 
