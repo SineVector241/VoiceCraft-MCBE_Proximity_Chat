@@ -131,6 +131,7 @@ namespace VoiceCraftProximityChat_Server.Servers
     public class Player
     {
         public string PlayerId { get; set; } = "";
+        public string EnviromentId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
     }
 

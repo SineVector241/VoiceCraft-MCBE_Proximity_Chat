@@ -55,7 +55,7 @@ namespace VoiceCraftProximityChat_Server
                     var clients = ServerData.Data.ClientList;
                     Console.WriteLine("--- Start ---\n");
                     foreach (var client in clients)
-                        Console.WriteLine($"Username: {client.Username} | Key: {client.Key} | PlayerId: {client.PlayerId} | LastPing: {client.lastPing} | Ready: {client.isReady} | Location: {client.Location}");
+                        Console.WriteLine($"Username: {client.Username} | Key: {client.Key} | PlayerId: {client.PlayerId} | Ready: {client.isReady} | EnviromentId: {client.EnviromentId} | Location: {client.Location}");
                     Console.WriteLine("\n---- End ----");
                     Console.WriteLine($"Online Clients: {clients.Count}");
                     break;

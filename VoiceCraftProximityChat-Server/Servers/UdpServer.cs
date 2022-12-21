@@ -150,7 +150,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                             {
                                 // Broadcast to all logged on users
                                 var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
-                                if (client.Key != receivedData.VCSessionKey && client.isReady)
+                                if (client.Key != receivedData.VCSessionKey && client.isReady && client.EnviromentId == selfClient.EnviromentId)
                                 {
                                     if (selfClient != null)
                                     {

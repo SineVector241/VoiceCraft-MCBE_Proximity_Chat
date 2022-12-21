@@ -82,6 +82,7 @@ namespace VoiceCraftProximityChat_Server.Dependencies
                 if (player != null)
                 {
                     client.Location = player.Location;
+                    client.EnviromentId = player.EnviromentId;
                 }
             }
         }
@@ -151,6 +152,7 @@ namespace VoiceCraftProximityChat_Server.Dependencies
         public string Username { get; set; } = "";
         public bool isReady { get; set; }
 
+        public string EnviromentId { get; set; } = "minecraft:overworld";
         public Vector3 Location { get; set; }
         public DateTime lastPing { get; set; } = DateTime.UtcNow;
     }
