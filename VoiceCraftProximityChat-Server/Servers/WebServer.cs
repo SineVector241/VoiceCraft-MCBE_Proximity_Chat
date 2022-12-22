@@ -91,7 +91,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                                 SendResponse(ctx, HttpStatusCode.Accepted, "OK");
 
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine($"[HTTP] Accpeted Login Request: Key: {json.Key}");
+                                Console.WriteLine($"[HTTP] Accepted Login Request: Key: {json.Key}");
                                 Console.ResetColor();
                                 break;
                         }

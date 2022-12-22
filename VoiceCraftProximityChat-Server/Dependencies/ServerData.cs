@@ -8,6 +8,7 @@ namespace VoiceCraftProximityChat_Server.Dependencies
     {
         public List<SessionKey> SessionKeys { get; set; } = new List<SessionKey>();
         public List<Client> ClientList { get; set; } = new List<Client>();
+        public int ProximityDistance { get; set; } = 25;
         public event EventHandler<ClientConnectEventArgs> ClientConnect;
         public event EventHandler<ClientDisconnectEventArgs> ClientDisconnect;
 

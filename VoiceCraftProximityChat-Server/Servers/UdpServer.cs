@@ -154,7 +154,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                                 {
                                     if (selfClient != null)
                                     {
-                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
+                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / ServerData.Data.ProximityDistance, 0.0f, 1.0f);
                                         AudioPacket.VCVolume = volume;
                                         AudioPacket.VCSessionKey = selfClient.Key;
                                     }
