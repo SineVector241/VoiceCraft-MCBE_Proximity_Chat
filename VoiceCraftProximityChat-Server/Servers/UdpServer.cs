@@ -10,15 +10,19 @@ namespace VoiceCraftProximityChat_Server.Servers
         private Socket serverSocket;
         private Packet packets;
         private byte[] dataStream = new byte[4824];
+        private EndPoint endPoint;
 
         public UdpServer(int Port)
         {
+            ServerData.Data.ClientConnect += ClientConnect;
+            ServerData.Data.ClientDisconnect += ClientDisconnect;
+
             packets = new Packet();
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPEndPoint serverEp = new IPEndPoint(IPAddress.Any, Port);
             serverSocket.Bind(serverEp);
             IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
-            EndPoint endPoint = clients;
+            endPoint = clients;
             serverSocket.BeginReceiveFrom(dataStream, 0, dataStream.Length, SocketFlags.None, ref endPoint, new AsyncCallback(ReceiveData), endPoint);
 
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -26,6 +30,46 @@ namespace VoiceCraftProximityChat_Server.Servers
             Console.ResetColor();
         }
 
+        //Event Handlers
+        private void ClientDisconnect(object? sender, ClientDisconnectEventArgs e)
+        {
+            Console.WriteLine($"[UDP] Client Disconnected: Key: {e.SessionKey} | Username: {e.Username}");
+            var LogoutPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.Logout, VCSessionKey = e.SessionKey }.GetPacketDataStream();
+            Task.Factory.StartNew(() =>
+            {
+                var clientList = ServerData.Data.ClientList;
+                foreach (Client client in clientList)
+                {
+                    // Broadcast to all logged on users
+                    if (client.Key != e.SessionKey && client.isReady)
+                    {
+                        serverSocket.BeginSendTo(LogoutPacket, 0, LogoutPacket.Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                    }
+                }
+            });
+        }
+
+        private void ClientConnect(object? sender, ClientConnectEventArgs e)
+        {
+            Console.WriteLine($"[UDP] Client Connected: Key: {e.SessionKey} | Username: {e.Username}");
+            var LoginPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.Login, VCSessionKey = e.SessionKey, VCName = e.Username }.GetPacketDataStream();
+
+            //Broadcast Login to all other clients
+            Task.Factory.StartNew(() =>
+            {
+                var clientList = ServerData.Data.ClientList;
+                foreach (Client client in clientList)
+                {
+                    // Broadcast to all logged on users
+                    if (client.Key != e.SessionKey && client.isReady)
+                    {
+                        serverSocket.BeginSendTo(LoginPacket, 0, LoginPacket.Length, SocketFlags.None, client.endPoint, new AsyncCallback(SendData), client.endPoint);
+                    }
+                }
+            });
+        }
+
+        //Core Methods
         private void ReceiveData(IAsyncResult asyncResult)
         {
             try
@@ -73,6 +117,20 @@ namespace VoiceCraftProximityChat_Server.Servers
                             var client = ServerData.Data.GetClientBySessionKey(receivedData.VCSessionKey);
                             client.isReady = true;
                             ServerData.Data.UpdateClient(client);
+
+                            //Send client list to the client that just connected.
+                            Task.Factory.StartNew(() =>
+                            {
+                                var clientList = ServerData.Data.ClientList;
+                                foreach (Client client in clientList)
+                                {
+                                    var InfoPacket = new Packet() { VCPacketDataIdentifier = PacketIdentifier.Login, VCSessionKey = client.Key, VCName = client.Username }.GetPacketDataStream();
+                                    if (client.Key != receivedData.VCSessionKey)
+                                    {
+                                        serverSocket.BeginSendTo(InfoPacket, 0, InfoPacket.Length, SocketFlags.None, epSender, new AsyncCallback(SendData), epSender);
+                                    }
+                                }
+                            });
                         }
                         catch
                         {
@@ -92,11 +150,11 @@ namespace VoiceCraftProximityChat_Server.Servers
                             {
                                 // Broadcast to all logged on users
                                 var selfClient = clientList.FirstOrDefault(x => x.Key == receivedData.VCSessionKey);
-                                if (client.Key != receivedData.VCSessionKey && client.isReady)
+                                if (client.Key != receivedData.VCSessionKey && client.isReady && client.EnviromentId == selfClient.EnviromentId)
                                 {
                                     if (selfClient != null)
                                     {
-                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / 20, 0.0f, 1.0f);
+                                        volume = 1.0f - Math.Clamp(Vector3.Distance(client.Location, selfClient.Location) / ServerData.Data.ProximityDistance, 0.0f, 1.0f);
                                         AudioPacket.VCVolume = volume;
                                         AudioPacket.VCSessionKey = selfClient.Key;
                                     }
@@ -133,6 +191,10 @@ namespace VoiceCraftProximityChat_Server.Servers
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("[UDP] ReceiveData Error: " + ex.Message, "UDP Server");
                 Console.ResetColor();
+            }
+            finally
+            {
+                serverSocket.BeginReceiveFrom(dataStream, 0, dataStream.Length, SocketFlags.None, ref endPoint, new AsyncCallback(ReceiveData), endPoint);
             }
         }
 

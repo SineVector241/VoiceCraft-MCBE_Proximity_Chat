@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraftProximityChat", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraftProximityChat-Server", "VoiceCraftProximityChat-Server\VoiceCraftProximityChat-Server.csproj", "{15DDECF5-EBA3-4B8B-911D-508C194DA769}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester", "Tester\Tester.csproj", "{CDABD119-7176-4519-9373-737969A99ACE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tester", "Tester\Tester.csproj", "{CDABD119-7176-4519-9373-737969A99ACE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

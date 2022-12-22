@@ -67,7 +67,7 @@ namespace VoiceCraftProximityChat_Server.Servers
                         switch (json.Type)
                         {
                             case PacketType.CreateSessionKey:
-                                var login = ServerData.Data.CreateNewSessionKey(json.PlayerId);
+                                var login = ServerData.Data.CreateNewSessionKey(json.PlayerId, json.Username);
                                 if (login == null)
                                 {
                                     SendResponse(ctx, HttpStatusCode.Conflict, "Player already logged in/requested");
@@ -87,7 +87,12 @@ namespace VoiceCraftProximityChat_Server.Servers
                                 Console.ForegroundColor = ConsoleColor.Yellow;
                                 Console.WriteLine($"[HTTP] Recieved Login Request: Key: {json.Key}");
                                 Console.ResetColor();
+
                                 SendResponse(ctx, HttpStatusCode.Accepted, "OK");
+
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"[HTTP] Accepted Login Request: Key: {json.Key}");
+                                Console.ResetColor();
                                 break;
                         }
                     }
@@ -119,12 +124,14 @@ namespace VoiceCraftProximityChat_Server.Servers
         public PacketType Type { get; set; }
         public string Key { get; set; } = "";
         public string PlayerId { get; set; } = "";
+        public string Username { get; set; } = "";
         public List<Player> Players { get; set; } = new List<Player>();
     }
 
     public class Player
     {
         public string PlayerId { get; set; } = "";
+        public string EnviromentId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
     }
 

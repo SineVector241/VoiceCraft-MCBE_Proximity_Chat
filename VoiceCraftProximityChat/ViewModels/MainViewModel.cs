@@ -1,10 +1,9 @@
-﻿using NAudio.CoreAudioApi;
-using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
-using System.Collections.Generic;
+﻿using NAudio.Wave;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
+using VoiceCraftProximityChat.Models;
 using VoiceCraftProximityChat.Network;
-using VoiceCraftProximityChat.Repositories;
 using VoiceCraftProximityChat.Utils;
 
 namespace VoiceCraftProximityChat.ViewModels
@@ -12,13 +11,14 @@ namespace VoiceCraftProximityChat.ViewModels
     public class MainViewModel : ViewModelBase
     {
         //Fields
-        private float _outputGain = 0f;
+        private float _outputGain = 1.0f;
         private float _microphoneInput;
         private bool _isMuted;
         private bool _isDeafened;
         private string _title = "VoiceCraft - CONNECTED";
         private string _muteButtonContent = "Mute";
         private WaveIn input = new WaveIn();
+        private ObservableCollection<Client> _clients = new ObservableCollection<Client>();
 
         public float OutputGain { get => _outputGain; set { _outputGain = value; OnPropertyChanged(nameof(OutputGain)); } }
         public float MicrophoneInput { get => _microphoneInput; set { _microphoneInput = value; OnPropertyChanged(nameof(MicrophoneInput)); } }
@@ -26,6 +26,7 @@ namespace VoiceCraftProximityChat.ViewModels
         public bool IsDeafened { get => _isDeafened; set { _isDeafened = value; OnPropertyChanged(nameof(IsDeafened)); } }
         public string Title { get => _title; set { _title = value; OnPropertyChanged(nameof(Title)); } }
         public string MuteButtonContent { get => _muteButtonContent; set { _muteButtonContent = value; OnPropertyChanged(nameof(MuteButtonContent)); } }
+        public ObservableCollection<Client> Clients { get => _clients; set { _clients = value; OnPropertyChanged(nameof(Clients)); } }
 
         //Commands
         public ICommand MuteCommand { get; }
@@ -46,6 +47,21 @@ namespace VoiceCraftProximityChat.ViewModels
 
             UdpNetworkHandler.Instance.Ready();
             UdpNetworkHandler.Instance.Logout += OnLogout;
+            UdpNetworkHandler.Instance.ClientLogin += OnClientLogin;
+            UdpNetworkHandler.Instance.ClientLogout += OnClientLogout;
+        }
+
+        private void OnClientLogout(object? sender, ClientLogoutEventArgs e)
+        {
+            App.Current.Dispatcher.Invoke(delegate {
+                var client = Clients.FirstOrDefault(x => x.SessionKey == e.SessionKey );
+                if (client != null) Clients.Remove(client);
+            });
+        }
+
+        private void OnClientLogin(object? sender, ClientLoginEventArgs e)
+        {
+            App.Current.Dispatcher.Invoke(delegate { Clients.Add(new Client() { Username = e.Username, SessionKey = e.SessionKey }); });
         }
 
         private void OnLogout(object? sender, System.EventArgs e)
