@@ -9,7 +9,7 @@ namespace VoiceCraftProximityChat_Server
         {
             //Print VoiceCraft Text
             CommandSystem commandSystem = new CommandSystem();
-            string Version = "v1.2.0-alpha";
+            string Version = "v1.3.0-alpha";
             Console.Title = $"VoiceCraft - {Version}: Idle";
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("---VoiceCraft---");

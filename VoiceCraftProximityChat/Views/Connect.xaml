@@ -139,7 +139,7 @@
                        Margin="4" />
 
             <TextBlock Grid.Row="2"
-                       Text="Version: v1.2.0-alpha"
+                       Text="Version: v1.3.0-alpha"
                        Foreground="{StaticResource textColor}"
                        FontSize="15"
                        HorizontalAlignment="Right"
