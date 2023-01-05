@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraftProximityChat-Ser
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tester", "Tester\Tester.csproj", "{CDABD119-7176-4519-9373-737969A99ACE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft-Mobile", "VoiceCraft-Mobile\VoiceCraft-Mobile.csproj", "{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,12 @@ Global
 		{CDABD119-7176-4519-9373-737969A99ACE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDABD119-7176-4519-9373-737969A99ACE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDABD119-7176-4519-9373-737969A99ACE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CBD6A4D-7658-4031-ADDE-C6FB764FCEEA}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

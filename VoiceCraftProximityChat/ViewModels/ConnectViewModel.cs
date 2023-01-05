@@ -59,25 +59,21 @@ namespace VoiceCraftProximityChat.ViewModels
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message, "An error has occured...", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
                 ConnectButtonMessage = "Connect";
+                MessageBox.Show(ex.Message, "An error has occured...", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void CheckForConnection(bool isConnected)
         {
+            ConnectButtonMessage = "Connect";
             if (isConnected)
             {
-                ConnectButtonMessage = "Connect";
                 IsViewVisible = false;
             }
             else
             {
                 ErrorMessage = "Error: Could not connect to server or key was invalid";
-                ConnectButtonMessage = "Connect";
                 UdpNetworkHandler.Instance.Disconnect();
             }
         }
