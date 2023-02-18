@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VoiceCraft_Mobile.Views.ServersPage"
+             xmlns:local="clr-namespace:VoiceCraft_Mobile.ViewModels"
+             Title="Servers"
+             x:Name="Servers">
+    <ContentPage.BindingContext>
+        <local:ServersPageViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <StackLayout Background="{StaticResource BackgroundGradient}">
+            <ScrollView>
+                <CollectionView ItemsSource="{Binding Servers}"
+                                SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <ContentView>
+                                <Frame Padding="0"
+                                       Margin="10"
+                                       CornerRadius="10"
+                                       BackgroundColor="#11FFFFFF">
+                                    <StackLayout Padding="15">
+                                        <Label Text="{Binding Name}"
+                                           FontSize="30"
+                                           FontAttributes="Bold"/>
+
+                                        <Label Text="{Binding Ip, StringFormat='IP: {0:F0}'}"
+                                           FontSize="Medium"
+                                           FontAttributes="Bold"/>
+
+                                        <Label Text="{Binding Port, StringFormat='Port: {0:F0}'}" 
+                                           FontSize="Medium"
+                                           FontAttributes="Bold"/>
+
+                                        <Label Text="{Binding Id, StringFormat='Login ID: {0:F0}'}" 
+                                           FontSize="Medium"
+                                           FontAttributes="Bold"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Button TextColor="#72ca9d"
+                                                    CornerRadius="15"
+                                                    BackgroundColor="#662e6dcb"
+                                                    Text="Connect"
+                                                    Grid.Column="0"
+                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.ConnectCommand}"
+                                                    CommandParameter="{Binding LocalId}">
+                                            </Button>
+
+                                            <Button TextColor="#e85353"
+                                                    CornerRadius="15"
+                                                    BackgroundColor="#662e6dcb"
+                                                    Text="Delete"
+                                                    Grid.Column="1"
+                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
+                                                    CommandParameter="{Binding LocalId}"/>
+                                        </Grid>
+                                    </StackLayout>
+                                </Frame>
+                            </ContentView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </ScrollView>
+            <Button BackgroundColor="{StaticResource BtnPrimary}"
+                    Command="{Binding GoToAddServerCommand}"
+                    HorizontalOptions="FillAndExpand"
+                    VerticalOptions="EndAndExpand"
+                    Text="Add Server"
+                    CornerRadius="15"
+                    HeightRequest="70"
+                    Margin="5,5">
+            </Button>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
