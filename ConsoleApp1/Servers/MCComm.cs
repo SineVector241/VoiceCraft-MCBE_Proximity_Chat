@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VoiceCraft_Server.Servers
 {
-    public class TCP
+    public class MCComm
     {
     }
 }

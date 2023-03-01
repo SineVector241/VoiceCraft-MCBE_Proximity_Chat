@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using VoiceCraft_Mobile.Views;
 using VoiceCraft_Mobile.Repositories;
 using System.Linq;
@@ -28,7 +29,8 @@ namespace VoiceCraft_Mobile.ViewModels
         [RelayCommand]
         async void Connect(string localId)
         {
-            await App.Current.MainPage.Navigation.PushAsync(new VoicePage(localId));
+            Network.Network.Current.localServerId = localId;
+            await App.Current.MainPage.Navigation.PushAsync(new VoicePage());
         }
     }
 }

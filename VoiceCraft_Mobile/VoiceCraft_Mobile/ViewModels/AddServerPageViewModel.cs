@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Linq;
 using VoiceCraft_Mobile.Models;
 using VoiceCraft_Mobile.Repositories;
 
@@ -35,7 +34,7 @@ namespace VoiceCraft_Mobile.ViewModels
             Servers.Add(Server);
             Database.AddServer(Server);
             OnPropertyChanged(nameof(Servers));
-            await App.Current.MainPage.Navigation.NavigationStack.LastOrDefault().Navigation.PopAsync();
+            await Utils.GoToPreviousPageAsync();
         }
     }
 }

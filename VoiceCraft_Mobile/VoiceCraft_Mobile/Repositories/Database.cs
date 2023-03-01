@@ -44,9 +44,11 @@ namespace VoiceCraft_Mobile.Repositories
                 data = JsonConvert.DeserializeObject<ServersDataModel>(json);
             }
 
-            var found = data.Servers.Find(x => x.LocalId== server.LocalId);
-            if(found != null)
-                found = server;
+            var found = data.Servers.FindIndex(x => x.LocalId == server.LocalId);
+            if (found != -1)
+            {
+                data.Servers[found] = server;
+            }
             else
                 return;
 
