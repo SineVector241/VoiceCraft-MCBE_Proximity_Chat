@@ -29,8 +29,12 @@ namespace VoiceCraft_Mobile.ViewModels
         [RelayCommand]
         async void Connect(string localId)
         {
-            Network.Network.Current.localServerId = localId;
             await App.Current.MainPage.Navigation.PushAsync(new VoicePage());
+            var server = Database.GetServers().FirstOrDefault(x => x.LocalId == localId);
+            if(server != null)
+            {
+                Network.Network.Current.signallingClient.Connect(server.Ip, server.Port, server.Id, localId);
+            }
         }
     }
 }

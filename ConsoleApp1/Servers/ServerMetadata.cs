@@ -29,9 +29,12 @@ namespace VoiceCraft_Server
         public string Name { get; set; }
         public EndPoint SignallingAddress { get; set; }
         public EndPoint VoiceAddress { get; set; }
+
         public string LoginId { get; set; }
         public bool Binded { get; set; }
         public Vector3 Position { get; set; }
+        public string EnvId { get; set; }
+
         public DateTime LastPing { get; set; } = DateTime.UtcNow;
     }
 }

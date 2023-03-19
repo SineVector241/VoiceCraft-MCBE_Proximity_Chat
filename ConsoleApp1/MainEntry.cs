@@ -8,6 +8,7 @@ namespace VoiceCraft_Server
     public class MainEntry
     {
         public const string Version = "v1.3.0-alpha";
+        private bool failed = false;
         public MainEntry()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -27,9 +28,16 @@ namespace VoiceCraft_Server
                 return;
             }
 
-            new Thread(async () => { await new Voice().StartServer(); }) { IsBackground = true }.Start();
-            //new Thread(() => { new TCP(); }) { IsBackground = true }.Start();
-            new Thread(async () => { await new Signalling().StartServer(); }) { IsBackground = true }.Start();
+            var voice = new Voice();
+            var mcComm = new MCComm();
+            var signalling = new Signalling();
+
+            voice.StartServer();
+            signalling.StartServer();
+
+            voice.OnFail += OnFail;
+            mcComm.OnFail += OnFail;
+            signalling.OnFail += OnFail;
 
             Console.Title = $"VoiceCraft - {Version}: Running";
             Logger.LogToConsole(LogType.Success, "Server Started: Type EXIT to shutdown the server...", nameof(MainEntry));
@@ -44,6 +52,14 @@ namespace VoiceCraft_Server
                     break;
                 }
             }
+        }
+
+        private async void OnFail(string reason)
+        {
+            Console.Title = $"VoiceCraft - {Version}: Failed";
+            Logger.LogToConsole(LogType.Error, "Failed to start server. Closing server in 10 seconds...", nameof(MainEntry));
+            await Task.Delay(10000);
+            Environment.Exit(0);
         }
     }
 }

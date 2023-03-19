@@ -16,49 +16,50 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <ContentView>
-                                <Frame Padding="0"
+                                <Frame Padding="15"
                                        Margin="10"
                                        CornerRadius="10"
                                        BackgroundColor="#11FFFFFF">
-                                    <StackLayout Padding="15">
+                                    <StackLayout>
                                         <Label Text="{Binding Name}"
-                                           FontSize="30"
-                                           FontAttributes="Bold"/>
+                                               FontSize="30"
+                                               FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Ip, StringFormat='IP: {0:F0}'}"
-                                           FontSize="Medium"
-                                           FontAttributes="Bold"/>
+                                               FontSize="Medium"
+                                               FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Port, StringFormat='Port: {0:F0}'}" 
-                                           FontSize="Medium"
-                                           FontAttributes="Bold"/>
+                                               FontSize="Medium"
+                                               FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Id, StringFormat='Login ID: {0:F0}'}" 
-                                           FontSize="Medium"
-                                           FontAttributes="Bold"/>
+                                               FontSize="Medium"
+                                               FontAttributes="Bold" />
 
-                                        <Grid>
+                                        <Grid Margin="0,20,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />
                                                 <ColumnDefinition />
                                             </Grid.ColumnDefinitions>
 
-                                            <Button TextColor="#72ca9d"
-                                                    CornerRadius="15"
-                                                    BackgroundColor="#662e6dcb"
+                                            <Button TextColor="White"
+                                                    CornerRadius="5"
+                                                    BackgroundColor="#247f25"
                                                     Text="Connect"
                                                     Grid.Column="0"
                                                     Command="{Binding Source={x:Reference Servers}, Path=BindingContext.ConnectCommand}"
-                                                    CommandParameter="{Binding LocalId}">
-                                            </Button>
+                                                    CommandParameter="{Binding LocalId}"
+                                                    FontAttributes="Bold"/>
 
-                                            <Button TextColor="#e85353"
-                                                    CornerRadius="15"
-                                                    BackgroundColor="#662e6dcb"
+                                            <Button TextColor="White"
+                                                    CornerRadius="5"
+                                                    BackgroundColor="#d02f2f"
                                                     Text="Delete"
                                                     Grid.Column="1"
                                                     Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
-                                                    CommandParameter="{Binding LocalId}"/>
+                                                    CommandParameter="{Binding LocalId}"
+                                                    FontAttributes="Bold"/>
                                         </Grid>
                                     </StackLayout>
                                 </Frame>
@@ -72,7 +73,7 @@
                     HorizontalOptions="FillAndExpand"
                     VerticalOptions="EndAndExpand"
                     Text="Add Server"
-                    CornerRadius="15"
+                    CornerRadius="5"
                     HeightRequest="70"
                     Margin="5,5">
             </Button>

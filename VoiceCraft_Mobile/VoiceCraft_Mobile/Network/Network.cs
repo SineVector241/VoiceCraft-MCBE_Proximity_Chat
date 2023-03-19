@@ -1,158 +1,262 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using VCSignalling_Packet;
 using VCVoice_Packet;
-using VoiceCraft_Mobile.ViewModels;
+using VoiceCraft_Mobile.Models;
+using Xamarin.Forms;
 
 namespace VoiceCraft_Mobile.Network
 {
     public class Network
     {
-        public UdpClient signallingClient { get; private set; }
-        public UdpClient voiceClient { get; private set; }
-        public string serverIp { get; set; } = "";
-        public string loginId { get; set; } = "";
-        public string localServerId { get; set; } = "";
+        public const string Version = "v1.3.0-alpha";
+        public SignallingClient signallingClient { get; private set; }
+        public VoiceClient voiceClient { get; private set; }
+
+        //Users
+        public List<ParticipantModel> participants { get; private set; }
+
         public Network()
         {
-            signallingClient = new UdpClient();
-            voiceClient = new UdpClient();
-        }
-
-        public async Task<bool> ConnectAndLoginAsync(string IP, int PORT, string LOGINID)
-        {
-            try
-            {
-                serverIp = IP;
-                signallingClient.Connect(IP, PORT);
-                var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketLoginId = LOGINID, PacketVersion = "v1.3.0-alpha" }.GetPacketDataStream();
-                await signallingClient.SendAsync(packet, packet.Length);
-
-                var operation = signallingClient.ReceiveAsync();
-                var result = await Task.WhenAny(operation, Task.Delay(5000));
-                if(result != operation)
-                {
-                    Disconnect();
-                    throw new Exception("Could not reach server: Timed Out");
-                }
-                var dataReceived = await operation;
-                var packetReceived = new SignallingPacket(dataReceived.Buffer);
-
-                if (packetReceived.PacketDataIdentifier == VCSignalling_Packet.PacketIdentifier.Deny)
-                {
-                    Disconnect();
-                    throw new Exception("Server denied login");
-                }
-                loginId = packetReceived.PacketLoginId;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Disconnect();
-                await Utils.DisplayAlertAsync("Error", ex.Message);
-                return false; 
-            }
-        }
-
-        public async Task<bool> ConnectToVoiceAsync(string IP, int PORT)
-        {
-            try
-            {
-                voiceClient.Connect(IP, PORT);
-                var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketLoginId = loginId, PacketVersion = "v1.3.0-alpha" }.GetPacketDataStream();
-                await voiceClient.SendAsync(packet, packet.Length);
-
-                var operation = voiceClient.ReceiveAsync();
-                var result = await Task.WhenAny(operation, Task.Delay(5000));
-                if (result != operation)
-                {
-                    Disconnect();
-                    throw new Exception("Could not reach server: Timed Out");
-                }
-                var dataReceived = await operation;
-                var packetReceived = new VoicePacket(dataReceived.Buffer);
-
-                if (packetReceived.PacketDataIdentifier == VCVoice_Packet.PacketIdentifier.Deny)
-                {
-                    Disconnect();
-                    throw new Exception("Server denied login");
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Disconnect();
-                await Utils.DisplayAlertAsync("Error", $"Could not connect Voice:{ex.Message}");
-                return false;
-            }
+            signallingClient = new SignallingClient();
+            voiceClient = new VoiceClient();
         }
 
         public void Disconnect()
         {
-            loginId = "";
-            if (signallingClient.Client != null && signallingClient.Client.Connected)
+            try
             {
-                signallingClient.Close();
-                voiceClient.Dispose();
-                signallingClient = new UdpClient();
+                signallingClient.Disconnect();
+                voiceClient.Disconnect();
             }
-            if(voiceClient.Client != null && voiceClient.Client.Connected)
-            {
-                voiceClient.Close();
-                voiceClient.Dispose();
-                voiceClient = new UdpClient();
-            }
-                
+            catch
+            { }
         }
 
-        public static Network Current { get; private set; } = new Network();
+        public static Network Current { get; } = new Network();
     }
 
-    public class SignallingNetworkHandler
+    public class SignallingClient
     {
-        public static async Task Listen()
+        private UdpClient Client = new UdpClient();
+        private bool isConnecting = false;
+        private bool isConnected = false;
+        private string localId = string.Empty;
+
+        public string Key { get; private set; } = string.Empty;
+        public string hostName { get; private set; } = string.Empty;
+        public int VoicePort { get; private set; } = 0;
+
+        //Heartbeat Variables
+        private DateTime lastPing;
+        private bool stopTimer = false;
+
+        //Events
+        public delegate void Connected(string key, string localServerId);
+        public delegate void Disconnected(string reason);
+
+        public event Connected OnConnect;
+        public event Disconnected OnDisconnect;
+
+        public void Connect(string IP, int PORT, string Key = null, string localServerId = null)
         {
-            while(Network.Current.signallingClient.Client.Connected)
-            {
-                var result = await Network.Current.signallingClient.ReceiveAsync();
-                var packet = new SignallingPacket(result.Buffer);
-                HandlePacket(packet);
-            }
+            localId = localServerId;
+            hostName = IP;
+            isConnecting = true;
+
+            Client.Connect(IP, PORT);
+            StartListeningAsync();
+            lastPing = DateTime.UtcNow;
+            stopTimer = false;
+
+            var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+            Client.Send(packet, packet.Length);
+
+            Device.StartTimer(TimeSpan.FromSeconds(2), SendHeartbeatAsync);
         }
 
-        private static async Task HandlePacket(SignallingPacket packet)
+        public void Disconnect(string reason = null)
         {
-            switch(packet.PacketDataIdentifier)
+            OnDisconnect?.Invoke(reason);
+
+            Client.Close();
+            Client.Dispose();
+            Client = new UdpClient();
+
+            Key = string.Empty;
+            VoicePort = 0;
+            isConnected = false;
+            isConnecting = false;
+            stopTimer = true;
+        }
+
+        public void Send(SignallingPacket packet)
+        {
+            if (!isConnected)
+                return;
+
+            var stream = packet.GetPacketDataStream();
+            Client.Send(stream, stream.Length);
+        }
+
+        private async Task StartListeningAsync()
+        {
+            try
             {
-                case VCSignalling_Packet.PacketIdentifier.Binded:
-                    await Network.Current.ConnectToVoiceAsync(Network.Current.serverIp, packet.PacketVoicePort);
-                    break;
-                case VCSignalling_Packet.PacketIdentifier.Login:
-                    BaseViewModel.participants.Add(new Models.ParticipantModel() { LoginId = packet.PacketLoginId, Name = packet.PacketName});
-                    break;
+                while (true)
+                {
+                    var data = await Client.ReceiveAsync();
+                    var packet = new SignallingPacket(data.Buffer);
+                    lastPing = DateTime.UtcNow;
+
+                    //Handle Packet Here
+                    switch (packet.PacketDataIdentifier)
+                    {
+                        case VCSignalling_Packet.PacketIdentifier.Accept:
+                            Key = packet.PacketLoginId;
+                            VoicePort = packet.PacketVoicePort;
+                            isConnected = true;
+                            isConnecting = false;
+                            OnConnect?.Invoke(Key, localId);
+                            break;
+
+                        case VCSignalling_Packet.PacketIdentifier.Ping:
+                            lastPing = DateTime.UtcNow;
+                            break;
+
+                        case VCSignalling_Packet.PacketIdentifier.Deny:
+                            Disconnect("Server Denied Login Request. Possible LoginId Conflict");
+                            break;
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            { //Ignore this exception. Usually means when the client is disposed this will throw. 
+            }
+            catch { }
+            //Handle everything else but do nothing for the moment.
+        }
+
+        private bool SendHeartbeatAsync()
+        {
+            try
+            {
+                if (!isConnected && !isConnecting)
+                    stopTimer = true;
+
+                var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Ping }.GetPacketDataStream();
+                Client.Send(packet, packet.Length);
+
+                if (DateTime.UtcNow.Subtract(lastPing).Seconds > 10)
+                {
+                    Disconnect("Connection Timed Out.");
+                    stopTimer = true;
+                }
+
+                return !stopTimer;
+            }
+            catch
+            {
+                return !stopTimer;
             }
         }
     }
 
-    public class VoiceNetworkHandler
+
+    public class VoiceClient
     {
-        public static async Task Listen()
+        public UdpClient Client { get; private set; } = new UdpClient();
+        
+        private bool isConnected = false;
+        private DateTime startedConnection = DateTime.UtcNow;
+
+        //Events
+        public delegate void Connected();
+        public delegate void Disconnected(string reason);
+
+        public event Connected OnConnect;
+        public event Disconnected OnDisconnect;
+
+        public void Connect(string IP, int PORT, string Key = null)
         {
-            while(Network.Current.voiceClient.Client.Connected)
-            {
-                var result = await Network.Current.voiceClient.ReceiveAsync();
-                var packet = new VoicePacket(result.Buffer);
-                HandlePacket(packet);
-            }
+            isConnected = false;
+            startedConnection = DateTime.UtcNow;
+
+            Client.Connect(IP, PORT);
+            StartListeningAsync();
+
+            var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+            Client.Send(packet, packet.Length);
+
+            Device.StartTimer(TimeSpan.FromSeconds(1), WaitForConnection);
         }
 
-        private static async Task HandlePacket(VoicePacket packet)
+        public void Disconnect(string reason = null)
         {
-            switch(packet.PacketDataIdentifier)
+            isConnected = false;
+
+            OnDisconnect?.Invoke(reason);
+
+            Client.Close();
+            Client.Dispose();
+            Client = new UdpClient();
+        }
+
+        public void Send(VoicePacket packet)
+        {
+            var stream = packet.GetPacketDataStream();
+            Client.Send(stream, stream.Length);
+        }
+
+        private async Task StartListeningAsync()
+        {
+            try
             {
-                //Do Stuff
+                while (true)
+                {
+                    var data = await Client.ReceiveAsync();
+                    var packet = new VoicePacket(data.Buffer);
+
+                    //Handle Packet Here
+                    switch (packet.PacketDataIdentifier)
+                    {
+                        case VCVoice_Packet.PacketIdentifier.Accept:
+                            OnConnect?.Invoke();
+                            isConnected = true;
+                            break;
+
+                        case VCVoice_Packet.PacketIdentifier.Deny:
+                            Disconnect("Voice Server Denied Login Request.");
+                            break;
+
+                        case VCVoice_Packet.PacketIdentifier.Audio:
+                            Console.WriteLine("Received Audio");
+                            break;
+                    }
+                }
             }
+            catch (ObjectDisposedException)
+            { //Ignore this exception. Usually means when the client is disposed this will throw. 
+            }
+            catch { }
+            //Handle everything else but do nothing for the moment.
+        }
+
+        private bool WaitForConnection()
+        {
+            if (isConnected)
+            {
+                OnConnect?.Invoke();
+                return false;
+            }
+            if (DateTime.UtcNow.Subtract(startedConnection).Seconds > 5)
+            {
+                Disconnect("Voice Connection Timed Out.");
+                return false;
+            }
+            return true;
         }
     }
 }
