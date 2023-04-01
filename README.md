@@ -11,7 +11,7 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 2. Install the addon onto a world with Beta API's enabled and put it onto a Bedrock Dedicated Server with "@minecraft/server-net" enabled in config/default/permissions.json
 3. Extract and run VoiceCraft_Server.exe.
 4. Connect to the minecraft server via minecraft and use the Key/LoginId given in the VoiceCraft server to type the following command `!vclink <IP> <Port> <Key>` (IP and Port is the address for the voicecraft server)
-5. Congratulations. You Minecraft Server and VoiceCraft server are now linked and your members can now start using voice proximity chat in your server!
+5. Congratulations. Your Minecraft Server and VoiceCraft server are now linked and your members can now start using voice proximity chat in your server!
 
 ## TODO LIST
 - [x] Server to Server Commmunication
