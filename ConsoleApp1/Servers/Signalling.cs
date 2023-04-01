@@ -29,6 +29,8 @@ namespace VoiceCraft_Server.Servers
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 IPEndPoint serverEp = new IPEndPoint(IPAddress.Any, ServerProperties._serverProperties.SignallingPort_UDP);
                 serverSocket.Bind(serverEp);
+
+                MCComm.OnBind += OnParticipantBinded;
             }
             catch (Exception ex)
             {
@@ -102,14 +104,6 @@ namespace VoiceCraft_Server.Servers
                                 await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Accept, PacketLoginId = _packet.PacketLoginId, PacketVoicePort = ServerProperties._serverProperties.VoicePort_UDP }.GetPacketDataStream()), SocketFlags.None, _endPoint);
                                 Logger.LogToConsole(LogType.Success, $"Accepted Login: Key: {_packet.PacketLoginId}, Version: {_packet.PacketVersion}", nameof(Signalling));
                             }
-                            
-
-                            var list = ServerMetadata.voiceParticipants.Where(x => x.LoginId != _packet.PacketLoginId).ToList();
-                            for(int i = 0; i < list.Count; i++)
-                            {
-                                await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = _packet.PacketLoginId, PacketName = _packet.PacketName }.GetPacketDataStream()), SocketFlags.None, list[i].SignallingAddress);
-                                await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = list[i].LoginId, PacketName = list[i].Name }.GetPacketDataStream()), SocketFlags.None, _endPoint);
-                            }
                         }
                     }
                     break;
@@ -139,6 +133,17 @@ namespace VoiceCraft_Server.Servers
             }
 
             return RandomString;
+        }
+
+        private async void OnParticipantBinded(Participant participant)
+        {
+            await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Binded, PacketName = participant.Name }.GetPacketDataStream()), SocketFlags.None, participant.SignallingAddress);
+            var list = ServerMetadata.voiceParticipants.Where(x => x.LoginId != participant.LoginId).ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = participant.LoginId, PacketName = participant.Name }.GetPacketDataStream()), SocketFlags.None, list[i].SignallingAddress);
+                await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = list[i].LoginId, PacketName = list[i].Name }.GetPacketDataStream()), SocketFlags.None, participant.SignallingAddress);
+            }
         }
     }
 }

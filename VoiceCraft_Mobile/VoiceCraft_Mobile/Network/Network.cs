@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using VCSignalling_Packet;
 using VCVoice_Packet;
+using VoiceCraft_Mobile.Audio;
 using VoiceCraft_Mobile.Models;
 using Xamarin.Forms;
 
@@ -56,9 +57,13 @@ namespace VoiceCraft_Mobile.Network
         //Events
         public delegate void Connected(string key, string localServerId);
         public delegate void Disconnected(string reason);
+        public delegate void Binded(string name);
+        public delegate void AddParticipant(ParticipantModel participant);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
+        public event Binded OnBinded;
+        public event AddParticipant OnParticipantLogin;
 
         public void Connect(string IP, int PORT, string Key = null, string localServerId = null)
         {
@@ -128,6 +133,18 @@ namespace VoiceCraft_Mobile.Network
 
                         case VCSignalling_Packet.PacketIdentifier.Deny:
                             Disconnect("Server Denied Login Request. Possible LoginId Conflict");
+                            break;
+
+                        case VCSignalling_Packet.PacketIdentifier.Binded:
+                            OnBinded?.Invoke(packet.PacketName);
+                            break;
+
+                        case VCSignalling_Packet.PacketIdentifier.Login:
+                            OnParticipantLogin?.Invoke(new ParticipantModel() { 
+                                LoginId = packet.PacketLoginId, 
+                                Name = packet.PacketName,
+                                WaveProvider = new NAudio.Wave.BufferedWaveProvider(AudioPlayback.Current.recordFormat)
+                            });
                             break;
                     }
                 }

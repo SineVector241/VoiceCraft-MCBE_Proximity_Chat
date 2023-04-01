@@ -16,8 +16,10 @@ namespace VoiceCraft_Server.Servers
 
         //Events Here
         public delegate void Fail(string reason);
+        public delegate void Bind(Participant participant);
 
         public event Fail OnFail;
+        public static event Bind OnBind;
         
         public MCComm()
         {
@@ -62,10 +64,11 @@ namespace VoiceCraft_Server.Servers
                 try
                 {
                     var content = new StreamReader(ctx.Request.InputStream).ReadToEnd();
+                    Console.WriteLine(content);
                     var json = JsonConvert.DeserializeObject<WebserverPacket>(content);
 
                     //If json is not null and key matches then continue. If one or the other is invalid it will respond differently to each one and return.
-                    if(json != null)
+                    if(json == null)
                     {
                         SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Content");
                         return;
@@ -73,6 +76,7 @@ namespace VoiceCraft_Server.Servers
                     else if(json.LoginKey != sessionKey)
                     {
                         SendResponse(ctx, HttpStatusCode.Forbidden, "Invalid Login Key");
+                        return;
                     }
 
                     switch(json.Type)
@@ -86,6 +90,9 @@ namespace VoiceCraft_Server.Servers
                                 SendResponse(ctx, HttpStatusCode.Accepted, "Successfully Binded");
                                 var element = ServerMetadata.voiceParticipants.FindIndex(x => x.LoginId == json.PlayerKey);
                                 ServerMetadata.voiceParticipants[element] = participant;
+
+                                Logger.LogToConsole(LogType.Success, $"Successfully binded user: Username: {participant.Name}, Key: {participant.LoginId}", nameof(MCComm));
+                                OnBind?.Invoke(participant);
                             }
                             else
                             {

@@ -9,8 +9,5 @@ namespace VoiceCraft_Mobile.ViewModels
     {
         [ObservableProperty]
         static ObservableCollection<ServerModel> servers = new ObservableCollection<ServerModel>(Database.GetServers());
-
-        [ObservableProperty]
-        public static ObservableCollection<ParticipantModel> participants;
     }
 }

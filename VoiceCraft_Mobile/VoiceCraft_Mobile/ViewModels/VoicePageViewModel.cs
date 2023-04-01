@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 using System.Linq;
+using VoiceCraft_Mobile.Audio;
+using VoiceCraft_Mobile.Models;
 using VoiceCraft_Mobile.Repositories;
 using VoiceCraft_Mobile.Views;
-using Xamarin.Essentials;
 using Xamarin.Forms;
-using Xamarin.Forms.Internals;
 
 namespace VoiceCraft_Mobile.ViewModels
 {
@@ -14,12 +15,18 @@ namespace VoiceCraft_Mobile.ViewModels
         [ObservableProperty]
         string statusMessage = "Connecting...";
 
+        [ObservableProperty]
+        public ObservableCollection<ParticipantModel> participants;
+
+
         public VoicePageViewModel()
         {
             App.Current.PageDisappearing += OnPageDisappearing;
 
             Network.Network.Current.signallingClient.OnDisconnect += OnDisconnect;
             Network.Network.Current.signallingClient.OnConnect += OnConnect;
+            Network.Network.Current.signallingClient.OnBinded += OnBinded;
+            Network.Network.Current.signallingClient.OnParticipantLogin += OnParticipantLogin;
 
             Network.Network.Current.voiceClient.OnConnect += VCConnected;
             Network.Network.Current.voiceClient.OnDisconnect += VCDisconnected;
@@ -41,6 +48,8 @@ namespace VoiceCraft_Mobile.ViewModels
 
                 Network.Network.Current.signallingClient.OnDisconnect -= OnDisconnect;
                 Network.Network.Current.signallingClient.OnConnect -= OnConnect;
+                Network.Network.Current.signallingClient.OnBinded -= OnBinded;
+                Network.Network.Current.signallingClient.OnParticipantLogin -= OnParticipantLogin;
 
                 Network.Network.Current.voiceClient.OnConnect -= VCConnected;
                 Network.Network.Current.voiceClient.OnDisconnect -= VCDisconnected;
@@ -73,6 +82,17 @@ namespace VoiceCraft_Mobile.ViewModels
             OnPropertyChanged(nameof(Servers));
 
             Network.Network.Current.voiceClient.Connect(Network.Network.Current.signallingClient.hostName, Network.Network.Current.signallingClient.VoicePort, key);
+        }
+
+        private void OnParticipantLogin(ParticipantModel participant)
+        {
+            participants.Add(participant);
+            AudioPlayback.Current.AddMixerInput(participant.WaveProvider);
+        }
+
+        private void OnBinded(string name)
+        {
+            StatusMessage = $"Connected, Key: {Network.Network.Current.signallingClient.Key}\n Username: {name}";
         }
 
         private void VCDisconnected(string reason)

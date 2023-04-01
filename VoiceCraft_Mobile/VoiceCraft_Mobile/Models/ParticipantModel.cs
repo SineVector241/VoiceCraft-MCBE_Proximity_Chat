@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using NAudio.Wave;
 
 namespace VoiceCraft_Mobile.Models
 {
@@ -6,5 +6,6 @@ namespace VoiceCraft_Mobile.Models
     {
         public string Name { get; set; }
         public string LoginId { get; set; }
+        public BufferedWaveProvider WaveProvider { get; set; }
     }
 }
