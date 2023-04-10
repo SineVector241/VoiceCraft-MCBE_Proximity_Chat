@@ -22,18 +22,22 @@
                                        BackgroundColor="#11FFFFFF">
                                     <StackLayout>
                                         <Label Text="{Binding Name}"
+                                               TextColor="White"
                                                FontSize="30"
                                                FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Ip, StringFormat='IP: {0:F0}'}"
+                                               TextColor="White"
                                                FontSize="Medium"
                                                FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Port, StringFormat='Port: {0:F0}'}" 
+                                               TextColor="White"
                                                FontSize="Medium"
                                                FontAttributes="Bold"/>
 
                                         <Label Text="{Binding Id, StringFormat='Login ID: {0:F0}'}" 
+                                               TextColor="White"
                                                FontSize="Medium"
                                                FontAttributes="Bold" />
 
@@ -69,6 +73,7 @@
                 </CollectionView>
             </ScrollView>
             <Button BackgroundColor="{StaticResource BtnPrimary}"
+                    TextColor="White"
                     Command="{Binding GoToAddServerCommand}"
                     HorizontalOptions="FillAndExpand"
                     VerticalOptions="EndAndExpand"

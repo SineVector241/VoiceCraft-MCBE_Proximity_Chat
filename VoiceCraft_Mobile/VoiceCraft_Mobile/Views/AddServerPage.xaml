@@ -19,6 +19,7 @@
                            TextColor="White"
                            FontSize="15"></Label>
                     <Entry Placeholder="Server Name"
+                           TextColor="White"
                            Keyboard="Plain"
                            MaxLength="30"
                            Text="{Binding Server.Name}"
@@ -28,6 +29,7 @@
                            TextColor="White"
                            FontSize="15"></Label>
                     <Entry Placeholder="127.0.0.1"
+                           TextColor="White"
                            Keyboard="Plain"
                            MaxLength="30"
                            Text="{Binding Server.Ip}"
@@ -37,11 +39,13 @@
                            TextColor="White"
                            FontSize="15"></Label>
                     <Entry Placeholder="9050"
+                           TextColor="White"
                            Keyboard="Numeric"
                            Text="{Binding Server.Port}"
                            Margin="0,0,0,20"></Entry>
 
                     <Button BackgroundColor="{StaticResource BtnPrimary}"
+                            TextColor="White"
                             HorizontalOptions="Center"
                             VerticalOptions="Center"
                             Text="Save"

@@ -127,7 +127,7 @@ namespace NAudio.Wave
             }
 
             //Initialize the wave provider
-            Android.Media.Encoding encoding;
+            Encoding encoding;
             if (waveProvider == null)
             {
                 throw new ArgumentNullException(nameof(waveProvider));
@@ -136,9 +136,9 @@ namespace NAudio.Wave
             {
                 encoding = waveProvider.WaveFormat.BitsPerSample switch
                 {
-                    8 => Android.Media.Encoding.Pcm8bit,
-                    16 => Android.Media.Encoding.Pcm16bit,
-                    32 => Android.Media.Encoding.PcmFloat,
+                    8 => Encoding.Pcm8bit,
+                    16 => Encoding.Pcm16bit,
+                    32 => Encoding.PcmFloat,
                     _ => throw new ArgumentException("Input wave provider must be 8-bit, 16-bit, or 32-bit", nameof(waveProvider))
                 };
             }

@@ -64,7 +64,6 @@ namespace VoiceCraft_Server.Servers
                 try
                 {
                     var content = new StreamReader(ctx.Request.InputStream).ReadToEnd();
-                    Console.WriteLine(content);
                     var json = JsonConvert.DeserializeObject<WebserverPacket>(content);
 
                     //If json is not null and key matches then continue. If one or the other is invalid it will respond differently to each one and return.

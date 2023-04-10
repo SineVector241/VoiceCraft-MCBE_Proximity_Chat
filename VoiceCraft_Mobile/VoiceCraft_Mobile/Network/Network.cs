@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using VCSignalling_Packet;
@@ -15,9 +14,6 @@ namespace VoiceCraft_Mobile.Network
         public const string Version = "v1.3.0-alpha";
         public SignallingClient signallingClient { get; private set; }
         public VoiceClient voiceClient { get; private set; }
-
-        //Users
-        public List<ParticipantModel> participants { get; private set; }
 
         public Network()
         {
@@ -59,27 +55,36 @@ namespace VoiceCraft_Mobile.Network
         public delegate void Disconnected(string reason);
         public delegate void Binded(string name);
         public delegate void AddParticipant(ParticipantModel participant);
+        public delegate void RemoveParticipant(string key);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
         public event Binded OnBinded;
         public event AddParticipant OnParticipantLogin;
+        public event RemoveParticipant OnParticipantLogout;
 
         public void Connect(string IP, int PORT, string Key = null, string localServerId = null)
         {
-            localId = localServerId;
-            hostName = IP;
-            isConnecting = true;
+            try
+            {
+                localId = localServerId;
+                hostName = IP;
+                isConnecting = true;
 
-            Client.Connect(IP, PORT);
-            StartListeningAsync();
-            lastPing = DateTime.UtcNow;
-            stopTimer = false;
+                Client.Connect(IP, PORT);
+                StartListeningAsync();
+                lastPing = DateTime.UtcNow;
+                stopTimer = false;
 
-            var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
-            Client.Send(packet, packet.Length);
+                var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+                Client.Send(packet, packet.Length);
 
-            Device.StartTimer(TimeSpan.FromSeconds(2), SendHeartbeatAsync);
+                Device.StartTimer(TimeSpan.FromSeconds(2), SendHeartbeatAsync);
+            }
+            catch(Exception ex)
+            {
+                OnDisconnect?.Invoke(ex.Message);
+            }
         }
 
         public void Disconnect(string reason = null)
@@ -108,9 +113,10 @@ namespace VoiceCraft_Mobile.Network
 
         private async Task StartListeningAsync()
         {
-            try
+
+            while (true)
             {
-                while (true)
+                try
                 {
                     var data = await Client.ReceiveAsync();
                     var packet = new SignallingPacket(data.Buffer);
@@ -140,20 +146,26 @@ namespace VoiceCraft_Mobile.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Login:
-                            OnParticipantLogin?.Invoke(new ParticipantModel() { 
-                                LoginId = packet.PacketLoginId, 
+                            OnParticipantLogin?.Invoke(new ParticipantModel()
+                            {
+                                LoginId = packet.PacketLoginId,
                                 Name = packet.PacketName,
                                 WaveProvider = new NAudio.Wave.BufferedWaveProvider(AudioPlayback.Current.recordFormat)
                             });
                             break;
+
+                        case VCSignalling_Packet.PacketIdentifier.Logout:
+                            OnParticipantLogout?.Invoke(packet.PacketLoginId);
+                            break;
                     }
                 }
+                catch (ObjectDisposedException)
+                { //Ignore this exception. Usually means when the client is disposed this will throw.
+                    break; //Should break out actually.
+                }
+                catch { }
+                //Handle everything else but do nothing for the moment.
             }
-            catch (ObjectDisposedException)
-            { //Ignore this exception. Usually means when the client is disposed this will throw. 
-            }
-            catch { }
-            //Handle everything else but do nothing for the moment.
         }
 
         private bool SendHeartbeatAsync()
@@ -161,7 +173,7 @@ namespace VoiceCraft_Mobile.Network
             try
             {
                 if (!isConnected && !isConnecting)
-                    stopTimer = true;
+                    return false;
 
                 var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Ping }.GetPacketDataStream();
                 Client.Send(packet, packet.Length);
@@ -185,29 +197,38 @@ namespace VoiceCraft_Mobile.Network
     public class VoiceClient
     {
         public UdpClient Client { get; private set; } = new UdpClient();
-        
+
         private bool isConnected = false;
         private DateTime startedConnection = DateTime.UtcNow;
 
         //Events
         public delegate void Connected();
         public delegate void Disconnected(string reason);
+        public delegate void AudioReceived(byte[] Audio, string Key);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
+        public event AudioReceived OnAudioReceived;
 
         public void Connect(string IP, int PORT, string Key = null)
         {
-            isConnected = false;
-            startedConnection = DateTime.UtcNow;
+            try
+            {
+                isConnected = false;
+                startedConnection = DateTime.UtcNow;
 
-            Client.Connect(IP, PORT);
-            StartListeningAsync();
+                Client.Connect(IP, PORT);
+                StartListeningAsync();
 
-            var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
-            Client.Send(packet, packet.Length);
+                var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+                Client.Send(packet, packet.Length);
 
-            Device.StartTimer(TimeSpan.FromSeconds(1), WaitForConnection);
+                Device.StartTimer(TimeSpan.FromSeconds(1), WaitForConnection);
+            }
+            catch(Exception ex)
+            {
+                OnDisconnect?.Invoke(ex.Message);
+            }
         }
 
         public void Disconnect(string reason = null)
@@ -229,9 +250,9 @@ namespace VoiceCraft_Mobile.Network
 
         private async Task StartListeningAsync()
         {
-            try
+            while (true)
             {
-                while (true)
+                try
                 {
                     var data = await Client.ReceiveAsync();
                     var packet = new VoicePacket(data.Buffer);
@@ -249,23 +270,25 @@ namespace VoiceCraft_Mobile.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            Console.WriteLine("Received Audio");
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginId);
                             break;
                     }
                 }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
-            catch (ObjectDisposedException)
-            { //Ignore this exception. Usually means when the client is disposed this will throw. 
-            }
-            catch { }
-            //Handle everything else but do nothing for the moment.
         }
 
         private bool WaitForConnection()
         {
             if (isConnected)
             {
-                OnConnect?.Invoke();
                 return false;
             }
             if (DateTime.UtcNow.Subtract(startedConnection).Seconds > 5)

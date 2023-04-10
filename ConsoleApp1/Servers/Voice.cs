@@ -43,10 +43,17 @@ namespace VoiceCraft_Server.Servers
             Logger.LogToConsole(LogType.Success, "Voice server successfully initialised.", nameof(Voice));
             while (true)
             {
-                ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[2024]);
-                SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
-                var packet = new VoicePacket(buffer.Array);
-                HandlePacket(packet, result.RemoteEndPoint);
+                try
+                {
+                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[6024]);
+                    SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
+                    var packet = new VoicePacket(buffer.Array);
+                    HandlePacket(packet, result.RemoteEndPoint);
+                }
+                catch(Exception ex)
+                {
+                    Logger.LogToConsole(LogType.Error, ex.Message, nameof(Voice));
+                }
             }
         }
 

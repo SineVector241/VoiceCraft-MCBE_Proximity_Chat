@@ -85,6 +85,7 @@ namespace VCVoice_Packet
             int loginIdLength = BitConverter.ToInt32(dataStream, 12); // Read login Id Length - 4 bytes.
             int versionLength = BitConverter.ToInt32(dataStream, 16); //Read Version Length - 4 bytes.
             int audioLength = BitConverter.ToInt32(dataStream, 20); //Read audio data length - 4 bytes.
+            Audio = new byte[audioLength];
 
             if (loginIdLength > 0)
                 LoginId = Encoding.UTF8.GetString(dataStream, 24, loginIdLength);

@@ -82,9 +82,10 @@ namespace VCVoice_Packet
             PacketDataIdentifier = (PacketIdentifier)BitConverter.ToInt32(dataStream, 0); //Read packet identifier - 4 bytes.
             PacketStateIdentifier = (StateIdentifier)BitConverter.ToInt32(dataStream, 4); //Read packet state - 4 bytes.
             Volume = BitConverter.ToSingle(dataStream, 8); //Read volume value - 4 bytes.
-            int loginIdLength = BitConverter.ToInt32 (dataStream, 12); // Read login Id Length - 4 bytes.
+            int loginIdLength = BitConverter.ToInt32(dataStream, 12); // Read login Id Length - 4 bytes.
             int versionLength = BitConverter.ToInt32(dataStream, 16); //Read Version Length - 4 bytes.
             int audioLength = BitConverter.ToInt32(dataStream, 20); //Read audio data length - 4 bytes.
+            Audio = new byte[audioLength];
 
             if (loginIdLength > 0)
                 LoginId = Encoding.UTF8.GetString(dataStream, 24, loginIdLength);

@@ -10,6 +10,11 @@ namespace VoiceCraft_Server
     {
         public static List<Participant> voiceParticipants { get; set; } = new List<Participant>();
         public static Timer timer = null;
+
+        //Events
+        public delegate void ParicipantLogout(Participant participant);
+
+        public static event ParicipantLogout OnParticipantLogout;
             
         public static void CheckParticipants(object state)
         {
@@ -18,6 +23,7 @@ namespace VoiceCraft_Server
                 if (DateTime.UtcNow.Subtract(voiceParticipants[i].LastPing).Seconds > 10)
                 {
                     Logger.LogToConsole(LogType.Warn, $"Removed Client - Username: {voiceParticipants[i].Name} Key:{voiceParticipants[i].LoginId} Reason: TimeOut", nameof(ServerMetadata));
+                    OnParticipantLogout?.Invoke(voiceParticipants[i]);
                     voiceParticipants.RemoveAt(i);
                 }
             }

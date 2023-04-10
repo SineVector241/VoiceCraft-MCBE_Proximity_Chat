@@ -67,7 +67,8 @@
                         Text="Mute"
                         TextTransform="None"
                         CornerRadius="5" 
-                        Grid.Column="1"/>
+                        Grid.Column="1"
+                        Command="{Binding MuteUnmuteCommand}"/>
 
                 <Button BackgroundColor="#44666666"
                         TextColor="White"

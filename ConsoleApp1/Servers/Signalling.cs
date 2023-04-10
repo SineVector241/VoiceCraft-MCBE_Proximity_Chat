@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using System;
 using VCSignalling_Packet;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace VoiceCraft_Server.Servers
 {
     public class Signalling
     {
-        private Socket serverSocket;
+        public Socket serverSocket;
         private EndPoint endPoint;
 
         //Events Here TODO
@@ -31,6 +32,7 @@ namespace VoiceCraft_Server.Servers
                 serverSocket.Bind(serverEp);
 
                 MCComm.OnBind += OnParticipantBinded;
+                ServerMetadata.OnParticipantLogout += OnParticipantLogout;
             }
             catch (Exception ex)
             {
@@ -43,10 +45,17 @@ namespace VoiceCraft_Server.Servers
             Logger.LogToConsole(LogType.Success, "Signalling server successfully initialised.", nameof(Signalling));
             while (true)
             {
-                ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
-                SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
-                var packet = new SignallingPacket(buffer.Array);
-                HandlePacket(packet, result.RemoteEndPoint);
+                try
+                {
+                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
+                    SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
+                    var packet = new SignallingPacket(buffer.Array);
+                    HandlePacket(packet, result.RemoteEndPoint);
+                }
+                catch(Exception ex)
+                {
+                    Logger.LogToConsole(LogType.Error, ex.Message, nameof(Signalling));
+                }
             }
         }
 
@@ -78,7 +87,7 @@ namespace VoiceCraft_Server.Servers
                         }
                         else
                         {
-                            if (ServerMetadata.voiceParticipants.Exists(x => x.LoginId == _packet.PacketLoginId && x.SignallingAddress.ToString() == _endPoint.ToString()))
+                            if (ServerMetadata.voiceParticipants.Exists(x => x.LoginId == _packet.PacketLoginId))
                             {
                                 await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Deny }.GetPacketDataStream()), SocketFlags.None, _endPoint);
                                 Logger.LogToConsole(LogType.Warn, $"Denied Login: Key: {_packet.PacketLoginId}, Version: {_packet.PacketVersion} - Conflict Detected!", nameof(Signalling));
@@ -143,6 +152,14 @@ namespace VoiceCraft_Server.Servers
             {
                 await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = participant.LoginId, PacketName = participant.Name }.GetPacketDataStream()), SocketFlags.None, list[i].SignallingAddress);
                 await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = list[i].LoginId, PacketName = list[i].Name }.GetPacketDataStream()), SocketFlags.None, participant.SignallingAddress);
+            }
+        }
+
+        private async void OnParticipantLogout(Participant participant)
+        {
+            for (int i = 0; i < ServerMetadata.voiceParticipants.Count; i++)
+            {
+                await serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Logout, PacketLoginId = participant.LoginId, PacketName = participant.LoginId }.GetPacketDataStream()), SocketFlags.None, ServerMetadata.voiceParticipants[i].SignallingAddress);
             }
         }
     }
