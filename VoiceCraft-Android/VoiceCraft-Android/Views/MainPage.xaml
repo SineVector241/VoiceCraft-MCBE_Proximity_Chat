@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:VoiceCraft_Android.ViewModels"
+             x:Class="VoiceCraft_Android.MainPage"
+             x:Name="Servers"
+             NavigationPage.HasNavigationBar="False">
+    <ContentPage.BindingContext>
+        <local:MainPageViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Content>
+        <StackLayout>
+            <Button TextColor="White"
+                    Background="Transparent"
+                    FontSize="35"
+                    HorizontalOptions="End"
+                    Text="+"
+                    CornerRadius="5"
+                    Command="{Binding GoToAddServerCommand}"/>
+            <CollectionView ItemsSource="{Binding Servers}"
+                                SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <ContentView>
+                            <Frame Margin="10,0,10,30"
+                                   Padding="15"
+                                   CornerRadius="10"
+                                   Background="{StaticResource BackgroundGradientReversed}"
+                                   BorderColor="#331b70d7">
+                                <StackLayout>
+                                    <Label Text="{Binding Name}"
+                                               TextColor="White"
+                                               FontSize="35"
+                                               FontAttributes="Bold"/>
+
+                                    <Label Text="{Binding IP, StringFormat='IP: {0:F0}'}"
+                                               TextColor="White"
+                                               FontSize="Medium"
+                                               FontAttributes="Bold"/>
+
+                                    <Label Text="{Binding Port, StringFormat='Port: {0:F0}'}" 
+                                               TextColor="White"
+                                               FontSize="Medium"
+                                               FontAttributes="Bold"/>
+
+                                    <Label Text="{Binding LoginKey, StringFormat='Login ID: {0:F0}'}" 
+                                               TextColor="White"
+                                               FontSize="Medium"
+                                               FontAttributes="Bold" />
+
+
+                                    <Button TextColor="White"
+                                                    Margin="0,20,0,0"
+                                                    CornerRadius="3"
+                                                    BackgroundColor="{StaticResource BtnTransparentLight}"
+                                                    Text="Connect"
+                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.ConnectCommand}"
+                                                    CommandParameter="{Binding Name}"
+                                                    FontAttributes="Bold"/>
+
+                                    <Button TextColor="White"
+                                                    CornerRadius="3"
+                                                    BackgroundColor="{StaticResource BtnTransparentLight}"
+                                                    Text="Delete"
+                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
+                                                    CommandParameter="{Binding Name}"
+                                                    FontAttributes="Bold"/>
+                                </StackLayout>
+                            </Frame>
+                        </ContentView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
