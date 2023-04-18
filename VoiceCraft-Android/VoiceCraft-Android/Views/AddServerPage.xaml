@@ -26,7 +26,7 @@
                        TextColor="White"
                        FontSize="15"
                        FontAttributes="Bold"/>
-                <Entry Placeholder="Ip"
+                <Entry Placeholder="IP"
                        TextColor="White"
                        Keyboard="Plain"
                        MaxLength="30"

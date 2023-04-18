@@ -6,8 +6,10 @@ using Android.Runtime;
 using Android.OS;
 using Android.Content;
 using Xamarin.Forms;
-using static VoiceCraft_Android.Services.Messages;
 using VoiceCraft_Android.Droid.Services;
+using Android;
+using VoiceCraft_Android.Services;
+using Xamarin.Essentials;
 
 namespace VoiceCraft_Android.Droid
 {
@@ -27,6 +29,19 @@ namespace VoiceCraft_Android.Droid
 
             LoadApplication(new App());
         }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            const int requestNotifId = 0;
+            string[] notifPerm = { Manifest.Permission.PostNotifications };
+
+            if ((int)Build.VERSION.SdkInt < 33) return;
+
+            if(this.CheckSelfPermission(Manifest.Permission.PostNotifications) != Permission.Granted)
+                this.RequestPermissions(notifPerm, requestNotifId);
+        }
+
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -41,6 +56,7 @@ namespace VoiceCraft_Android.Droid
                 {
                     serviceIntent.PutExtra("ServerName", message.ServerName);
                     StartForegroundService(serviceIntent);
+                    Preferences.Set("VoipServiceRunning", true);
                 }
             });
 
@@ -48,6 +64,7 @@ namespace VoiceCraft_Android.Droid
                 if (IsServiceRunning(typeof(VoipForegroundService)))
                 {
                     StopService(serviceIntent);
+                    Preferences.Set("VoipServiceRunning", false);
                 }
             });
         }

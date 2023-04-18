@@ -4,11 +4,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using VoiceCraft_Android.Models;
+using VoiceCraft_Android.Services;
 using VoiceCraft_Android.Storage;
 using VoiceCraft_Android.Views;
 using Xamarin.Essentials;
 using Xamarin.Forms;
-using static VoiceCraft_Android.Services.Messages;
 
 namespace VoiceCraft_Android.ViewModels
 {
@@ -30,18 +30,16 @@ namespace VoiceCraft_Android.ViewModels
             if (!perm)
                 return;
 
-            if(Preferences.Get("VoipServiceRunning", false) == false)
+            if (Preferences.Get("VoipServiceRunning", false) == false)
             {
                 StartService(name);
             }
-            else
-            {
-                StopService();
-            }
+
+            Utils.PushPage(new VoicePage());
         }
 
         [RelayCommand]
-        public async Task DeleteServer(string name)
+        public void DeleteServer(string name)
         {
             try
             {
@@ -51,19 +49,20 @@ namespace VoiceCraft_Android.ViewModels
             }
             catch(InvalidOperationException ex)
             {
-                await Utils.DisplayAlertAsync("Error", ex.Message);
+                Utils.DisplayAlert("Error", ex.Message);
             }
         }
 
-        public MainPageViewModel()
-        {
-            App.Current.PageAppearing += Appearing;
-        }
-
-        private void Appearing(object sender, Page e)
+        //Page codebehind to viewmodel communication
+        [RelayCommand]
+        public void OnAppearing()
         {
             Servers = new ObservableCollection<ServerModel>(Database.GetServers().Servers);
             OnPropertyChanged(nameof(Servers));
+            if (Preferences.Get("VoipServiceRunning", false) == true)
+            {
+                Utils.PushPage(new VoicePage());
+            }
         }
 
         private void StartService(string serverName)
@@ -71,13 +70,6 @@ namespace VoiceCraft_Android.ViewModels
             var message = new StartServiceMessage() { ServerName = serverName };
             MessagingCenter.Send(message, "ServiceStarted");
             Preferences.Set("VoipServiceRunning", true);
-        }
-
-        private void StopService()
-        {
-            var message = new StopServiceMessage();
-            MessagingCenter.Send(message, "ServiceStopped");
-            Preferences.Set("VoipServiceRunning", false);
         }
     }
 }

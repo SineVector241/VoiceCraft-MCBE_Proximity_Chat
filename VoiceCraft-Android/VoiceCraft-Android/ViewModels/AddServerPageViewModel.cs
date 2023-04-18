@@ -18,21 +18,21 @@ namespace VoiceCraft_Android.ViewModels
         int port = 9050;
 
         [RelayCommand]
-        public async void Save()
+        public void Save()
         {
             if (string.IsNullOrEmpty(Name))
             {
-                await Utils.DisplayAlertAsync("Error", "Name cannot be empty!");
+                Utils.DisplayAlert("Error", "Name cannot be empty!");
                 return;
             }
             if(string.IsNullOrEmpty(Ip))
             {
-                await Utils.DisplayAlertAsync("Error", "IP cannot be empty!");
+                Utils.DisplayAlert("Error", "IP cannot be empty!");
                 return;
             }
             if(Port <= 1025 || Port >= 65535)
             {
-                await Utils.DisplayAlertAsync("Error", "Port cannot be lower than 1025 or higher than 65535");
+                Utils.DisplayAlert("Error", "Port cannot be lower than 1025 or higher than 65535");
                 return;
             }
 
@@ -41,15 +41,15 @@ namespace VoiceCraft_Android.ViewModels
             try
             {
                 Database.AddServer(server);
-                await Utils.GoToPreviousPageAsync();
+                Utils.GoToPreviousPage();
             }
             catch (InvalidOperationException ex)
             {
-                await Utils.DisplayAlertAsync("Invalid Operation", ex.Message);
+                Utils.DisplayAlert("Invalid Operation", ex.Message);
             }
             catch(Exception ex)
             {
-                await Utils.DisplayAlertAsync("Error", ex.Message);
+                Utils.DisplayAlert("Error", ex.Message);
             }
         }
     }

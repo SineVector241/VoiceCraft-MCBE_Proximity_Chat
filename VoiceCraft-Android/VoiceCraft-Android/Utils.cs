@@ -7,15 +7,35 @@ namespace VoiceCraft_Android
 {
     public class Utils
     {
-        public static async Task DisplayAlertAsync(string Title, string Description, string cancellationButton = "OK")
+        public static Task DisplayAlert(string Title, string Description, string cancellationButton = "OK")
         {
-            await App.Current.MainPage.Navigation.NavigationStack.LastOrDefault().DisplayAlert(Title, Description, cancellationButton);
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                await App.Current.MainPage.Navigation.NavigationStack.LastOrDefault().DisplayAlert(Title, Description, cancellationButton);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public static async Task GoToPreviousPageAsync()
+        public static Task GoToPreviousPage()
         {
-            var page = App.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
-            await page.Navigation.PopAsync();
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                var page = App.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                await page.Navigation.PopAsync();
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public static Task PushPage(Page page)
+        {
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                await App.Current.MainPage.Navigation.PushAsync(page);
+            });
+
+            return Task.CompletedTask;
         }
 
         public static async Task<bool> CheckAndRequestPermissions()
@@ -35,7 +55,7 @@ namespace VoiceCraft_Android
 
             if (status != PermissionStatus.Granted)
             {
-                await Shell.Current.DisplayAlert("Needs Permission", "Could not login as microphone access was denied", "OK");
+                await Shell.Current.DisplayAlert("Needs Permission", "Could not connect as microphone access was denied", "OK");
                 return await Task.FromResult(false);
             }
 

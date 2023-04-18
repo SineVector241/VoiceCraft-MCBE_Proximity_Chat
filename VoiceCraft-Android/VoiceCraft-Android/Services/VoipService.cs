@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 using VoiceCraft_Android.Interfaces;
 using VoiceCraft_Android.Models;
 using VoiceCraft_Android.Storage;
-using VoiceCraft_Mobile.Network;
+using VoiceCraft_Android.Network;
 using Xamarin.Forms;
-using static VoiceCraft_Android.Services.Messages;
 
 namespace VoiceCraft_Android.Services
 {
@@ -35,13 +34,15 @@ namespace VoiceCraft_Android.Services
 
         public async Task Run(CancellationToken ct, string serverName)
         {
-            await Task.Run(async () => {
+            await Task.Run(async () =>
+            {
                 //Get server information first
                 var server = Database.GetServerByName(serverName);
-                if(server == null)
+                if (server == null)
                 {
                     var message = new ServiceFailedMessage() { Message = "Cannot find server information!" };
-                    Device.BeginInvokeOnMainThread(() => {
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
                         MessagingCenter.Send(message, "Update");
                     });
                     return;
@@ -68,9 +69,22 @@ namespace VoiceCraft_Android.Services
                 VCClient.OnDisconnect += VC_OnDisconnect;
                 VCClient.OnAudioReceived += VC_OnAudioReceived;
 
+                AudioRecorder.DataAvailable += AudioDataAvailable;
+
+                MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message => {
+                    var p = new ParticipantModel()
+                    {
+                        LoginKey = "AAAAA",
+                        Name = "Dummy",
+                        WaveProvider = new BufferedWaveProvider(GetRecordFormat)
+                    };
+
+                    Mixer.AddMixerInput(p.WaveProvider);
+                    Participants.Add(p);
+                });
+
                 //Connection/Verification starts right at this point.
                 SignalClient.Connect(server.IP, server.Port, server.LoginKey, serverName);
-
                 try
                 {
                     while (!Stopping)
@@ -101,7 +115,9 @@ namespace VoiceCraft_Android.Services
                         }
                     }
                 }
-                catch(OperationCanceledException)
+                catch (OperationCanceledException)
+                { }
+                finally
                 {
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
@@ -109,6 +125,8 @@ namespace VoiceCraft_Android.Services
                     Mixer = null;
                     AudioRecorder = null;
                     AudioPlayer = null;
+                    Participants.Clear();
+                    Participants = null;
                     try
                     {
                         SignalClient.Disconnect();
@@ -124,8 +142,6 @@ namespace VoiceCraft_Android.Services
                     }
                     catch
                     { }
-
-                    throw;
                 }
             });
         }
@@ -136,6 +152,10 @@ namespace VoiceCraft_Android.Services
         {
             VCClient.Connect(SignalClient.hostName, SignalClient.VoicePort, SignalClient.Key);
             StatusMessage = $"Voice Connecting\nPort: {SignalClient.VoicePort}";
+
+            var server = Database.GetServerByName(serverName);
+            server.LoginKey = key;
+            Database.EditServer(server);
 
             //Fire message event here
             Device.BeginInvokeOnMainThread(() =>
@@ -203,6 +223,7 @@ namespace VoiceCraft_Android.Services
             AudioRecorder.StartRecording();
             AudioPlayer.Play();
             StatusMessage = $"Connected - Key: {SignalClient.Key}\nWaiting For Binding...";
+
             //Fire event message here.
             Device.BeginInvokeOnMainThread(() =>
             {
@@ -239,5 +260,9 @@ namespace VoiceCraft_Android.Services
             return Task.CompletedTask;
         }
         #endregion
+
+        private void AudioDataAvailable(object sender, WaveInEventArgs e)
+        {
+        }
     }
 }

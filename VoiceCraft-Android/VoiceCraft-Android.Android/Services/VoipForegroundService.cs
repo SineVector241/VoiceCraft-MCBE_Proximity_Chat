@@ -2,12 +2,11 @@
 using Android.Content;
 using Android.OS;
 using Android.Runtime;
-using Java.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft_Android.Services;
+using Xamarin.Essentials;
 using Xamarin.Forms;
-using static VoiceCraft_Android.Services.Messages;
 
 namespace VoiceCraft_Android.Droid.Services
 {
@@ -28,7 +27,8 @@ namespace VoiceCraft_Android.Droid.Services
             Notification notification = new NotificationHelper().GetServiceStartedNotification();
             StartForeground(ServiceRunningNotificationId, notification);
 
-            Task.Run(() => {
+            Task.Run(() =>
+            {
                 try
                 {
                     var voipShared = new VoipService();
@@ -39,12 +39,11 @@ namespace VoiceCraft_Android.Droid.Services
                 }
                 finally
                 {
-                    if (cts.IsCancellationRequested)
-                    {
-                        System.Console.WriteLine("Service Stopped");
-                        var message = new StopServiceMessage();
-                        Device.BeginInvokeOnMainThread(() => MessagingCenter.Send(message, "ServiceStopped"));
-                    }
+                    var message = new StopServiceMessage();
+                    Device.BeginInvokeOnMainThread(() => { 
+                        MessagingCenter.Send(message, "ServiceStopped");
+                        Preferences.Set("VoipServiceRunning", false);
+                    });
                 }
             }, cts.Token);
             return StartCommandResult.Sticky;
@@ -52,10 +51,11 @@ namespace VoiceCraft_Android.Droid.Services
 
         public override void OnDestroy()
         {
-            if(cts != null)
+            if (cts != null)
             {
                 cts.Token.ThrowIfCancellationRequested();
                 cts.Cancel();
+                Preferences.Set("VoipServiceRunning", false);
             }
             base.OnDestroy();
         }

@@ -7,7 +7,7 @@ using VoiceCraft_Android.Models;
 using VoiceCraft_Android.Services;
 using Xamarin.Forms;
 
-namespace VoiceCraft_Mobile.Network
+namespace VoiceCraft_Android.Network
 {
     public class Network
     {
