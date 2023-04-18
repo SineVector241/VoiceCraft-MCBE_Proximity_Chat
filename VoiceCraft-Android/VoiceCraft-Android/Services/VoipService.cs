@@ -10,6 +10,7 @@ using VoiceCraft_Android.Models;
 using VoiceCraft_Android.Storage;
 using VoiceCraft_Android.Network;
 using Xamarin.Forms;
+using VCVoice_Packet;
 
 namespace VoiceCraft_Android.Services
 {
@@ -263,6 +264,13 @@ namespace VoiceCraft_Android.Services
 
         private void AudioDataAvailable(object sender, WaveInEventArgs e)
         {
+            var voicePacket = new VoicePacket()
+            {
+                PacketAudio = e.Buffer,
+                PacketDataIdentifier = PacketIdentifier.Audio,
+                PacketVersion = Network.Network.Version
+            };
+            VCClient.Send(voicePacket);
         }
     }
 }
