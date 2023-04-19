@@ -23,19 +23,48 @@
 
             <Grid Padding="10">
                 <Button Text="Disconnect"
+                        CornerRadius="5"
                         BackgroundColor="#CF00"
                         Grid.Column="0"
                         Command="{Binding DisconnectCommand}" />
 
-                <Button Text="Mute"
-                        BackgroundColor="#A555"
-                        Grid.Column="1"
-                        Command="{Binding MuteUnmuteCommand}"/>
+                <Button Grid.Column="1"
+                        CornerRadius="5"
+                        Command="{Binding MuteUnmuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#A555"/>
+                                    <Setter Property="Text" Value="Unmute"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#A111"/>
+                                    <Setter Property="Text" Value="Mute"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
 
-                <Button Text="Deafen"
-                        BackgroundColor="#A555"
-                        Grid.Column="2"
-                        Command="{Binding DeafenUndeafenCommand}"/>
+                <Button Grid.Column="2"
+                        CornerRadius="5"
+                        Command="{Binding DeafenUndeafenCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#A555"/>
+                                    <Setter Property="Text" Value="Undeafen"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#A111"/>
+                                    <Setter Property="Text" Value="Deafen"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </Grid>
         </StackLayout>
     </ContentPage.Content>

@@ -9,8 +9,11 @@ namespace VoiceCraft_Android.ViewModels
 {
     public partial class VoicePageViewModel : ObservableObject
     {
-        private bool IsDeafened = false;
-        private bool IsMuted = false;
+        [ObservableProperty]
+        bool isDeafened = false;
+
+        [ObservableProperty]
+        bool isMuted = false;
 
         [ObservableProperty]
         string statusText = "Connecting...";

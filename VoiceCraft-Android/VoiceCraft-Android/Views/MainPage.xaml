@@ -19,27 +19,27 @@
                     </Grid.ColumnDefinitions>
 
                     <Button Grid.Column="1"
-                        TextColor="White"
-                        Background="Transparent"
-                        FontSize="35"
-                        HorizontalOptions="End"
-                        Text="+"
-                        CornerRadius="5"
-                        Command="{Binding GoToAddServerCommand}"/>
+                            TextColor="White"
+                            Background="Transparent"
+                            FontSize="35"
+                            HorizontalOptions="End"
+                            Text="+"
+                            CornerRadius="5"
+                            Command="{Binding GoToAddServerCommand}"/>
 
                     <Button Grid.Column="0"
-                        TextColor="White"
-                        Background="Transparent"
-                        FontSize="35"
-                        HorizontalOptions="Start"
-                        Text="i"
-                        TextTransform="None"
-                        CornerRadius="5"
-                        Command="{Binding GoToCreditsPageCommand}"/>
+                            TextColor="White"
+                            Background="Transparent"
+                            FontSize="35"
+                            HorizontalOptions="Start"
+                            Text="i"
+                            TextTransform="None"
+                            CornerRadius="5"
+                            Command="{Binding GoToCreditsPageCommand}"/>
                 </Grid>
 
                 <CollectionView ItemsSource="{Binding Servers}"
-                            SelectionMode="None">
+                                SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <ContentView>
@@ -71,21 +71,21 @@
 
 
                                         <Button TextColor="White"
-                                                    Margin="0,20,0,0"
-                                                    CornerRadius="3"
-                                                    BackgroundColor="{StaticResource BtnTransparentLight}"
-                                                    Text="Connect"
-                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.ConnectCommand}"
-                                                    CommandParameter="{Binding Name}"
-                                                    FontAttributes="Bold"/>
+                                                Margin="0,20,0,0"
+                                                CornerRadius="3"
+                                                BackgroundColor="{StaticResource BtnTransparentLight}"
+                                                Text="Connect"
+                                                Command="{Binding Source={x:Reference Servers}, Path=BindingContext.ConnectCommand}"
+                                                CommandParameter="{Binding Name}"
+                                                FontAttributes="Bold"/>
 
                                         <Button TextColor="White"
-                                                    CornerRadius="3"
-                                                    BackgroundColor="{StaticResource BtnTransparentLight}"
-                                                    Text="Delete"
-                                                    Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
-                                                    CommandParameter="{Binding Name}"
-                                                    FontAttributes="Bold"/>
+                                                CornerRadius="3"
+                                                BackgroundColor="{StaticResource BtnTransparentLight}"
+                                                Text="Delete"
+                                                Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
+                                                CommandParameter="{Binding Name}"
+                                                FontAttributes="Bold"/>
                                     </StackLayout>
                                 </Frame>
                             </ContentView>

@@ -77,11 +77,11 @@ namespace VoiceCraft_Android.Services
                 AudioRecorder.DataAvailable += AudioDataAvailable;
 
                 MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message => {
-                    IsDeafened = !IsDeafened;
+                    IsMuted = !IsMuted;
                 });
 
                 MessagingCenter.Subscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen", message => {
-                    IsMuted = !IsMuted;
+                    IsDeafened = !IsDeafened;
                 });
 
                 //Connection/Verification starts right at this point.
