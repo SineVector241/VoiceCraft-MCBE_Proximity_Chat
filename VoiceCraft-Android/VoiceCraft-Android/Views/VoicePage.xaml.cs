@@ -1,6 +1,4 @@
-﻿
-using VoiceCraft_Android.ViewModels;
-using Xamarin.Essentials;
+﻿using VoiceCraft_Android.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -28,6 +26,11 @@ namespace VoiceCraft_Android.Views
             var viewModel = (VoicePageViewModel)BindingContext;
             if (viewModel.DisappearingCommand.CanExecute(null))
                 viewModel.DisappearingCommand.Execute(null);
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            return true;
         }
     }
 }

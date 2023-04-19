@@ -21,6 +21,17 @@
                    FontAttributes="Bold"
                    TextColor="White"/>
 
+            <CollectionView ItemsSource="{Binding Participants}"
+                            SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <ContentView>
+                            
+                        </ContentView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
             <Grid Padding="10">
                 <Button Text="Disconnect"
                         CornerRadius="5"
