@@ -21,11 +21,22 @@
                    FontAttributes="Bold"
                    TextColor="White"/>
 
-            <Button Text="Disconnect"
-                    Command="{Binding DisconnectCommand}" />
-            
-            <Button Text="Mute"
-                    Command="{Binding MuteUnmuteCommand}"/>
+            <Grid Padding="10">
+                <Button Text="Disconnect"
+                        BackgroundColor="#CF00"
+                        Grid.Column="0"
+                        Command="{Binding DisconnectCommand}" />
+
+                <Button Text="Mute"
+                        BackgroundColor="#A555"
+                        Grid.Column="1"
+                        Command="{Binding MuteUnmuteCommand}"/>
+
+                <Button Text="Deafen"
+                        BackgroundColor="#A555"
+                        Grid.Column="2"
+                        Command="{Binding DeafenUndeafenCommand}"/>
+            </Grid>
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

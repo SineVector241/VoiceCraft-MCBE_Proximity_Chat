@@ -23,15 +23,19 @@ namespace VoiceCraft_Android.ViewModels
         {
             var message = new MuteUnmuteMessage();
             MessagingCenter.Send(message, "MuteUnmute");
+            IsMuted = !IsMuted;
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
+            var message = new DeafenUndeafenMessage();
+            MessagingCenter.Send(message, "DeafenUndeafen");
+            IsDeafened = !IsDeafened;
         }
 
         [RelayCommand]
-        public void Disconnect() 
+        public void Disconnect()
         {
             StopService();
         }
@@ -46,24 +50,36 @@ namespace VoiceCraft_Android.ViewModels
                 return;
             }
 
-            MessagingCenter.Subscribe<StopServiceMessage>(this, "ServiceStopped", message => {
+            MessagingCenter.Subscribe<StopServiceMessage>(this, "ServiceStopped", message =>
+            {
                 Utils.GoToPreviousPage();
             });
 
             MessagingCenter.Subscribe<UpdateUIMessage>(this, "Update", message =>
             {
-                    if (StatusText != message.StatusMessage)
-                        StatusText = message.StatusMessage;
+                if (StatusText != message.StatusMessage)
+                    StatusText = message.StatusMessage;
 
-                    var list = new ObservableCollection<string>();
-                    foreach (var part in message.Participants)
-                    {
-                        list.Add(part.Name);
-                    }
-                    if (list != Participants)
-                    {
-                        Participants = list;
-                    }
+                if (IsMuted != message.IsMuted)
+                    IsMuted = message.IsMuted;
+
+                if (IsDeafened != message.IsDeafened)
+                    IsDeafened = message.IsDeafened;
+
+                var list = new ObservableCollection<string>();
+                foreach (var part in message.Participants)
+                {
+                    list.Add(part.Name);
+                }
+                if (list != Participants)
+                {
+                    Participants = list;
+                }
+            });
+
+            MessagingCenter.Subscribe<ServiceFailedMessage>(this, "Error", message =>
+            {
+                Utils.DisplayAlert("Error", message.Message);
             });
         }
 
@@ -72,6 +88,7 @@ namespace VoiceCraft_Android.ViewModels
         {
             MessagingCenter.Unsubscribe<StopServiceMessage>(this, "ServiceStopped");
             MessagingCenter.Unsubscribe<UpdateUIMessage>(this, "Update");
+            MessagingCenter.Unsubscribe<ServiceFailedMessage>(this, "Error");
         }
 
         private void StopService()

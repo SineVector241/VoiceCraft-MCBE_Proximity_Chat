@@ -16,16 +16,19 @@ namespace VoiceCraft_Android.Services
 {
     public class VoipService
     {
-        private const int SampleRate = 64000;
+        private const int SampleRate = 16000;
         private const int Channels = 1;
         private bool Stopping = false;
+        private bool IsMuted = false;
+        private bool IsDeafened = false;
         private string Username = "";
-        private string StatusMessage = "";
+        private string StatusMessage = "Connecting...";
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
+        private G722ChatCodec AudioCodec;
 
         private SignallingClient SignalClient;
         private VoiceClient VCClient;
@@ -58,6 +61,7 @@ namespace VoiceCraft_Android.Services
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
                 AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Mixer);
+                AudioCodec = new G722ChatCodec();
 
 
                 SignalClient.OnConnect += SC_OnConnect;
@@ -73,15 +77,11 @@ namespace VoiceCraft_Android.Services
                 AudioRecorder.DataAvailable += AudioDataAvailable;
 
                 MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message => {
-                    var p = new ParticipantModel()
-                    {
-                        LoginKey = "AAAAA",
-                        Name = "Dummy",
-                        WaveProvider = new BufferedWaveProvider(GetRecordFormat)
-                    };
+                    IsDeafened = !IsDeafened;
+                });
 
-                    Mixer.AddMixerInput(p.WaveProvider);
-                    Participants.Add(p);
+                MessagingCenter.Subscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen", message => {
+                    IsMuted = !IsMuted;
                 });
 
                 //Connection/Verification starts right at this point.
@@ -98,7 +98,9 @@ namespace VoiceCraft_Android.Services
                             var message = new UpdateUIMessage()
                             {
                                 Participants = Participants,
-                                StatusMessage = StatusMessage
+                                StatusMessage = StatusMessage,
+                                IsDeafened = IsDeafened,
+                                IsMuted = IsMuted
                             };
                             Device.BeginInvokeOnMainThread(() =>
                             {
@@ -120,12 +122,28 @@ namespace VoiceCraft_Android.Services
                 { }
                 finally
                 {
+                    //Not sure if I explicitly need to do this but just to be safe I am doing it
+                    SignalClient.OnConnect -= SC_OnConnect;
+                    SignalClient.OnDisconnect -= SC_OnDisconnect;
+                    SignalClient.OnBinded -= SC_OnBinded;
+                    SignalClient.OnParticipantLogin -= SC_OnParticipantLogin;
+                    SignalClient.OnParticipantLogout -= SC_OnParticipantLogout;
+
+                    VCClient.OnConnect -= VC_OnConnect;
+                    VCClient.OnDisconnect -= VC_OnDisconnect;
+                    VCClient.OnAudioReceived -= VC_OnAudioReceived;
+
+                    AudioRecorder.DataAvailable -= AudioDataAvailable;
+
+
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
+                    AudioCodec.Dispose();
                     Mixer.RemoveAllMixerInputs();
                     Mixer = null;
                     AudioRecorder = null;
                     AudioPlayer = null;
+                    AudioCodec = null;
                     Participants.Clear();
                     Participants = null;
                     try
@@ -143,6 +161,10 @@ namespace VoiceCraft_Android.Services
                     }
                     catch
                     { }
+
+                    MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
+
+                    MessagingCenter.Unsubscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen");
                 }
             });
         }
@@ -201,11 +223,11 @@ namespace VoiceCraft_Android.Services
 
         private Task SC_OnDisconnect(string reason)
         {
+            Stopping = true;
+
             //We don't want to fire a failed message if there was no reason.
             if (reason == null)
                 return Task.CompletedTask;
-
-            Stopping = true;
 
             //Fire event message here
             Device.BeginInvokeOnMainThread(() =>
@@ -236,21 +258,22 @@ namespace VoiceCraft_Android.Services
 
         private Task VC_OnAudioReceived(byte[] Audio, string Key)
         {
+            var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
+
             var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
             if (participant != null)
-                participant.WaveProvider.AddSamples(Audio, 0, Audio.Length);
+                participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
 
             return Task.CompletedTask;
         }
 
         private Task VC_OnDisconnect(string reason)
         {
+            Stopping = true;
+
             //We don't want to fire a failed message if there was no reason.
             if (reason == null)
                 return Task.CompletedTask;
-
-
-            Stopping = true;
 
             //Fire event message here
             Device.BeginInvokeOnMainThread(() =>
@@ -264,9 +287,14 @@ namespace VoiceCraft_Android.Services
 
         private void AudioDataAvailable(object sender, WaveInEventArgs e)
         {
+            if(IsDeafened || IsMuted)
+                return;
+
+            var encoded = AudioCodec.Encode(e.Buffer, 0, e.BytesRecorded);
+
             var voicePacket = new VoicePacket()
             {
-                PacketAudio = e.Buffer,
+                PacketAudio = encoded,
                 PacketDataIdentifier = PacketIdentifier.Audio,
                 PacketVersion = Network.Network.Version
             };

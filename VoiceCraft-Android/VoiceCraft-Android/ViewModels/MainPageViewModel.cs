@@ -18,6 +18,12 @@ namespace VoiceCraft_Android.ViewModels
         ObservableCollection<ServerModel> servers = new ObservableCollection<ServerModel>();
 
         [RelayCommand]
+        public async Task GoToCreditsPage()
+        {
+            await App.Current.MainPage.Navigation.PushAsync(new CreditsAndInfoPage());
+        }
+
+        [RelayCommand]
         public async Task GoToAddServer()
         {
             await App.Current.MainPage.Navigation.PushAsync(new AddServerPage());

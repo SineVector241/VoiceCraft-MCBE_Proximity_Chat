@@ -16,10 +16,15 @@ namespace VoiceCraft_Android.Services
     {
         public List<ParticipantModel> Participants { get; set; } = new List<ParticipantModel>();
         public string StatusMessage { get; set; } = "";
+        public bool IsMuted { get; set; }
+        public bool IsDeafened { get; set; }
     }
 
     public class MuteUnmuteMessage
-    { }
+    {}
+
+    public class DeafenUndeafenMessage
+    {}
 
     public class ServiceErrorMessage
     {

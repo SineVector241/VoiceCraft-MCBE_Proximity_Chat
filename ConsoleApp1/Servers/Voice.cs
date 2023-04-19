@@ -45,7 +45,7 @@ namespace VoiceCraft_Server.Servers
             {
                 try
                 {
-                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[6024]);
+                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[65024]);
                     SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
                     var packet = new VoicePacket(buffer.Array);
                     HandlePacket(packet, result.RemoteEndPoint);
