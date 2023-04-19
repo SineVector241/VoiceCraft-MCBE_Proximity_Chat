@@ -10,8 +10,8 @@
     </ContentPage.BindingContext>
 
     <ContentPage.Content>
-        <StackLayout>
-            <Grid>
+        <Grid RowDefinitions="Auto">
+            <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -37,7 +37,8 @@
                         Command="{Binding GoToCreditsPageCommand}"/>
             </Grid>
 
-            <CollectionView ItemsSource="{Binding Servers}"
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Servers}"
                             SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -91,6 +92,6 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-        </StackLayout>
+        </Grid>
     </ContentPage.Content>
 </ContentPage>

@@ -52,7 +52,11 @@ namespace VoiceCraft_Android.Services
                     return;
                 }
 
-                Participants = new List<ParticipantModel>();
+                Participants = new List<ParticipantModel>() { new ParticipantModel() {
+                    LoginKey = "AAAAA",
+                    Name = "Dummy1",
+                    WaveProvider = new BufferedWaveProvider(GetRecordFormat)
+                } };
 
                 SignalClient = new SignallingClient();
                 VCClient = new VoiceClient();

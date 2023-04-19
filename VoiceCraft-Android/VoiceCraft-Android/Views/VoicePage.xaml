@@ -9,8 +9,9 @@
     </ContentPage.BindingContext>
 
     <ContentPage.Content>
-        <StackLayout>
-            <Label BackgroundColor="#4000" 
+        <Grid RowDefinitions="Auto">
+            <Label Grid.Row="0"
+                   BackgroundColor="#4000" 
                    Text="{Binding StatusText}"
                    HorizontalTextAlignment="Center"
                    VerticalTextAlignment="Center"
@@ -22,25 +23,40 @@
                    TextColor="White"/>
 
             <CollectionView ItemsSource="{Binding Participants}"
-                            SelectionMode="None">
+                            SelectionMode="None"
+                            Grid.Row="1">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <ContentView>
-                            
+                            <Frame Margin="10,0,10,30"
+                                   Padding="15"
+                                   CornerRadius="10"
+                                   Background="#8123"
+                                   BorderColor="#331b70d7">
+
+                                <Label Text="{Binding}"
+                                       TextColor="White"
+                                       FontSize="20"
+                                       FontAttributes="Bold" />
+                            </Frame>
                         </ContentView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Grid Padding="10">
+            <Grid Padding="10"
+                  Grid.Row="2"
+                  VerticalOptions="End">
                 <Button Text="Disconnect"
                         CornerRadius="5"
                         BackgroundColor="#CF00"
+                        FontAttributes="Bold"
                         Grid.Column="0"
                         Command="{Binding DisconnectCommand}" />
 
                 <Button Grid.Column="1"
                         CornerRadius="5"
+                        FontAttributes="Bold"
                         Command="{Binding MuteUnmuteCommand}">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -60,6 +76,7 @@
 
                 <Button Grid.Column="2"
                         CornerRadius="5"
+                        FontAttributes="Bold"
                         Command="{Binding DeafenUndeafenCommand}">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -77,6 +94,6 @@
                     </Button.Style>
                 </Button>
             </Grid>
-        </StackLayout>
+        </Grid>
     </ContentPage.Content>
 </ContentPage>
