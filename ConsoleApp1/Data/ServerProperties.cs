@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using VoiceCraft_Server.Data;
 
 namespace VoiceCraft_Server
 {
@@ -8,7 +9,7 @@ namespace VoiceCraft_Server
     {
         const string _propertiesFile = "serverProperties.json";
         public static Properties _serverProperties;
-        static ServerProperties()
+        public ServerProperties()
         {
             try
             {
@@ -28,8 +29,17 @@ namespace VoiceCraft_Server
             }
             catch (Exception ex)
             {
-                Logger.LogToConsole(LogType.Error, ex.Message, nameof(ServerProperties));
+                ServerEvents.InvokeFailed(nameof(ServerProperties), ex.Message);
+                return;
             }
+
+            if(_serverProperties.SignallingPort_UDP == _serverProperties.VoicePort_UDP)
+            {
+                ServerEvents.InvokeFailed(nameof(ServerProperties), "SignallingPort and VoicePort cannot be the same!");
+                return;
+            }
+
+            ServerEvents.InvokeStarted(nameof(ServerProperties));
         }
     }
 
@@ -41,5 +51,8 @@ namespace VoiceCraft_Server
         
         //TCP Ports
         public int MCCommPort_TCP { get; set; } = 9050;
+
+        //Other Settings
+        public int ProximityDistance { get; set; } = 30;
     }
 }

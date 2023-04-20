@@ -21,7 +21,7 @@ namespace VCSignalling_Packet
         private PacketIdentifier packetIdentifier; //PacketIdentifier - Data containing data to identify what packet is received/sent
         private int VoicePort; //VoicePort - Data containing the port of the Voice server;
         private string Version; //Version - Data containing the version of voicecraft being used.
-        private string LoginId; //LoginId - Data containing the login key to bind the player and the incoming login.
+        private string LoginKey; //LoginKey - Data containing the login key to bind the player and the incoming login.
         private string Name; //Name - Data containing the players Ingame Name.
 
         public PacketIdentifier PacketDataIdentifier
@@ -42,10 +42,10 @@ namespace VCSignalling_Packet
             set { Version = value; }
         }
 
-        public string PacketLoginId
+        public string PacketLoginKey
         {
-            get { return LoginId; }
-            set { LoginId = value; }
+            get { return LoginKey; }
+            set { LoginKey = value; }
         }
 
         public string PacketName
@@ -59,7 +59,7 @@ namespace VCSignalling_Packet
             PacketDataIdentifier = PacketIdentifier.Null;
             PacketVoicePort = 0;
             PacketVersion = "";
-            PacketLoginId = "";
+            PacketLoginKey = "";
             PacketName = "";
         }
 
@@ -80,9 +80,9 @@ namespace VCSignalling_Packet
                 Version = null;
 
             if (loginIdLength > 0)
-                LoginId = Encoding.UTF8.GetString(dataStream, 20 + versionLength, loginIdLength);
+                LoginKey = Encoding.UTF8.GetString(dataStream, 20 + versionLength, loginIdLength);
             else
-                LoginId = null;
+                LoginKey = null;
 
             if (usernameLength > 0)
                 Name = Encoding.UTF8.GetString(dataStream, 20 + loginIdLength + versionLength, usernameLength);
@@ -106,8 +106,8 @@ namespace VCSignalling_Packet
             else
                 DataStream.AddRange(BitConverter.GetBytes(0));
 
-            if (LoginId != null)
-                DataStream.AddRange(BitConverter.GetBytes(LoginId.Length));
+            if (LoginKey != null)
+                DataStream.AddRange(BitConverter.GetBytes(LoginKey.Length));
             else
                 DataStream.AddRange(BitConverter.GetBytes(0));
 
@@ -120,8 +120,8 @@ namespace VCSignalling_Packet
             if (Version != null)
                 DataStream.AddRange(Encoding.UTF8.GetBytes(Version));
 
-            if (LoginId != null)
-                DataStream.AddRange(Encoding.UTF8.GetBytes(LoginId));
+            if (LoginKey != null)
+                DataStream.AddRange(Encoding.UTF8.GetBytes(LoginKey));
 
             if (Name != null)
                 DataStream.AddRange(Encoding.UTF8.GetBytes(Name));

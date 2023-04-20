@@ -55,7 +55,7 @@ namespace VoiceCraft_Android.Network
                 lastPing = DateTime.UtcNow;
                 stopTimer = false;
 
-                var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+                var packet = new SignallingPacket() { PacketDataIdentifier = VCSignalling_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginKey = Key }.GetPacketDataStream();
                 Client.Send(packet, packet.Length);
 
                 Device.StartTimer(TimeSpan.FromSeconds(2), SendHeartbeatAsync);
@@ -105,7 +105,7 @@ namespace VoiceCraft_Android.Network
                     switch (packet.PacketDataIdentifier)
                     {
                         case VCSignalling_Packet.PacketIdentifier.Accept:
-                            Key = packet.PacketLoginId;
+                            Key = packet.PacketLoginKey;
                             VoicePort = packet.PacketVoicePort;
                             isConnected = true;
                             isConnecting = false;
@@ -127,14 +127,14 @@ namespace VoiceCraft_Android.Network
                         case VCSignalling_Packet.PacketIdentifier.Login:
                             OnParticipantLogin?.Invoke(new ParticipantModel
                             {
-                                LoginKey = packet.PacketLoginId,
+                                LoginKey = packet.PacketLoginKey,
                                 Name = packet.PacketName,
                                 WaveProvider = new NAudio.Wave.BufferedWaveProvider(VoipService.GetRecordFormat)
                             });
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Logout:
-                            OnParticipantLogout?.Invoke(packet.PacketLoginId);
+                            OnParticipantLogout?.Invoke(packet.PacketLoginKey);
                             break;
                     }
                 }
@@ -199,7 +199,7 @@ namespace VoiceCraft_Android.Network
                 Client.Connect(IP, PORT);
                 StartListeningAsync();
 
-                var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginId = Key }.GetPacketDataStream();
+                var packet = new VoicePacket() { PacketDataIdentifier = VCVoice_Packet.PacketIdentifier.Login, PacketVersion = Network.Version, PacketLoginKey = Key }.GetPacketDataStream();
                 Client.Send(packet, packet.Length);
 
                 Device.StartTimer(TimeSpan.FromSeconds(1), WaitForConnection);
@@ -249,7 +249,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginId);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey);
                             break;
                     }
                 }

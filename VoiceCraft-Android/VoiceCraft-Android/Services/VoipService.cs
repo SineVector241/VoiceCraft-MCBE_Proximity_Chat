@@ -52,11 +52,7 @@ namespace VoiceCraft_Android.Services
                     return;
                 }
 
-                Participants = new List<ParticipantModel>() { new ParticipantModel() {
-                    LoginKey = "AAAAA",
-                    Name = "Dummy1",
-                    WaveProvider = new BufferedWaveProvider(GetRecordFormat)
-                } };
+                Participants = new List<ParticipantModel>();
 
                 SignalClient = new SignallingClient();
                 VCClient = new VoiceClient();
@@ -198,6 +194,10 @@ namespace VoiceCraft_Android.Services
             Username = name;
             StatusMessage = $"Connected - Key: {SignalClient.Key}\n{Username}";
 
+            //Last step of verification. We start sending data and playing any received data.
+            AudioRecorder.StartRecording();
+            AudioPlayer.Play();
+
             //Fire event message here.
             Device.BeginInvokeOnMainThread(() =>
             {
@@ -247,8 +247,6 @@ namespace VoiceCraft_Android.Services
         #region Voice Client Events
         private Task VC_OnConnect()
         {
-            AudioRecorder.StartRecording();
-            AudioPlayer.Play();
             StatusMessage = $"Connected - Key: {SignalClient.Key}\nWaiting For Binding...";
 
             //Fire event message here.

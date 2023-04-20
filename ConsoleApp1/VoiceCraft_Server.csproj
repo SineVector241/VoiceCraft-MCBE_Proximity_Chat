@@ -135,15 +135,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\ServerData.cs" />
+    <Compile Include="Data\ServerEvents.cs" />
     <Compile Include="Packets\VoicePacket.cs" />
-    <Compile Include="Servers\ServerMetadata.cs" />
-    <Compile Include="Miscellaneous\Events.cs" />
-    <Compile Include="Miscellaneous\Logger.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="MainEntry.cs" />
     <Compile Include="Packets\SignallingPacket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Miscellaneous\ServerProperties.cs" />
+    <Compile Include="Data\ServerProperties.cs" />
     <Compile Include="Servers\MCComm.cs" />
     <Compile Include="Servers\Signalling.cs" />
     <Compile Include="Servers\Voice.cs" />

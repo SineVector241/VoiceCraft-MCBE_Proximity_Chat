@@ -6,23 +6,20 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Text;
+using VoiceCraft_Server.Data;
 
 namespace VoiceCraft_Server.Servers
 {
     public class MCComm
     {
         private HttpListener listener;
+        private ServerData serverData;
         private string sessionKey;
-
-        //Events Here
-        public delegate void Fail(string reason);
-        public delegate void Bind(Participant participant);
-
-        public event Fail OnFail;
-        public static event Bind OnBind;
         
-        public MCComm()
+        public MCComm(ServerData serverDataObject)
         {
+            serverData = serverDataObject;
+
             sessionKey = Guid.NewGuid().ToString();
             listener = new HttpListener();
             listener.Prefixes.Add($"http://*:{ServerProperties._serverProperties.MCCommPort_TCP}/");
@@ -30,9 +27,10 @@ namespace VoiceCraft_Server.Servers
             {
                 Logger.LogToConsole(LogType.Info, "Starting Server", nameof(MCComm));
                 listener.Start();
-                Logger.LogToConsole(LogType.Success, $"Server Started: Login Key - {sessionKey}", nameof(MCComm));
-
                 listener.BeginGetContext(new AsyncCallback(listen), null);
+
+                Logger.LogToConsole(LogType.Info, $"Server Key: {sessionKey}", nameof(MCComm));
+                ServerEvents.InvokeStarted(nameof(MCComm));
             }
             catch (HttpListenerException ex)
             {
@@ -51,7 +49,7 @@ namespace VoiceCraft_Server.Servers
                     Console.ResetColor();
                 }
 
-                OnFail?.Invoke(ex.Message);
+                ServerEvents.InvokeFailed(nameof(MCComm), ex.Message);
             }
         }
 
@@ -81,17 +79,15 @@ namespace VoiceCraft_Server.Servers
                     switch(json.Type)
                     {
                         case PacketType.Bind:
-                            var participant = ServerMetadata.voiceParticipants.FirstOrDefault(x => x.LoginId == json.PlayerKey);
+                            var participant = serverData.GetParticipantByKey(json.PlayerKey);
                             if(participant != null)
                             {
                                 participant.Binded = true;
-                                participant.Name = json.Username;
+                                participant.MinecraftData.Gamertag = json.Gamertag;
+                                participant.MinecraftData.PlayerId = json.PlayerId;
                                 SendResponse(ctx, HttpStatusCode.Accepted, "Successfully Binded");
-                                var element = ServerMetadata.voiceParticipants.FindIndex(x => x.LoginId == json.PlayerKey);
-                                ServerMetadata.voiceParticipants[element] = participant;
-
-                                Logger.LogToConsole(LogType.Success, $"Successfully binded user: Username: {participant.Name}, Key: {participant.LoginId}", nameof(MCComm));
-                                OnBind?.Invoke(participant);
+                                serverData.EditParticipant(participant);
+                                ServerEvents.InvokeParticipantBinded(participant);
                             }
                             else
                             {
@@ -103,13 +99,12 @@ namespace VoiceCraft_Server.Servers
                             for (int i = 0; i < json.Players.Count; i++)
                             {
                                 var player = json.Players[i];
-                                var vcParticipant = ServerMetadata.voiceParticipants.FirstOrDefault(x => x.LoginId == player.PlayerKey);
+                                var vcParticipant = serverData.GetParticipants().FirstOrDefault(x => x.MinecraftData.PlayerId == player.PlayerId);
                                 if(vcParticipant != null)
                                 {
-                                    vcParticipant.Position = player.Location;
-                                    vcParticipant.EnvId = player.EnviromentId;
-                                    var element = ServerMetadata.voiceParticipants.FindIndex(x => x.LoginId == player.PlayerKey);
-                                    ServerMetadata.voiceParticipants[element] = vcParticipant;
+                                    vcParticipant.MinecraftData.Position = player.Location;
+                                    vcParticipant.MinecraftData.DimensionId = player.DimensionId;
+                                    serverData.EditParticipant(vcParticipant);
                                 }
                             }
 
@@ -142,15 +137,17 @@ namespace VoiceCraft_Server.Servers
     {
         public PacketType Type { get; set; }
         public string LoginKey { get; set; } = "";
+        public string PlayerId { get; set; } = "";
         public string PlayerKey { get; set; } = "";
-        public string Username { get; set; } = "";
+        public string Gamertag { get; set; } = "";
+
         public List<Player> Players { get; set; } = new List<Player>();
     }
 
     public class Player
     {
-        public string PlayerKey { get; set; } = "";
-        public string EnviromentId { get; set; } = "";
+        public string PlayerId { get; set; } = "";
+        public string DimensionId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
     }
 

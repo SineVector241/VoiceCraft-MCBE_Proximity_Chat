@@ -1,100 +1,111 @@
-﻿using System;
-using System.Linq;
+﻿using System.Net.Sockets;
 using System.Net;
-using System.Net.Sockets;
-using System.Numerics;
+using VoiceCraft_Server.Data;
+using System;
 using System.Threading.Tasks;
 using VCVoice_Packet;
+using System.Linq;
+using System.Numerics;
 
 namespace VoiceCraft_Server.Servers
 {
     public class Voice
     {
-        private Socket serverSocket;
+        private ServerData serverData;
+        private Socket socket;
         private EndPoint endPoint;
 
-        //Events Here TODO
-        public delegate void Fail(string reason);
-
-        public event Fail OnFail;
-
-        public Voice()
+        public Voice(ServerData serverDataObject)
         {
             try
             {
-                Logger.LogToConsole(LogType.Info, $"Starting Voice Server on port {ServerProperties._serverProperties.VoicePort_UDP}", nameof(Voice));
-
+                serverData = serverDataObject;
                 endPoint = new IPEndPoint(IPAddress.Any, 0);
 
-                //Bind Server to Address and Port
-                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                IPEndPoint serverEp = new IPEndPoint(IPAddress.Any, ServerProperties._serverProperties.VoicePort_UDP);
-                serverSocket.Bind(serverEp);
+                //Start binding port and udp server
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                OnFail?.Invoke(ex.Message);
+                ServerEvents.InvokeFailed(nameof(Voice), ex.Message);
             }
-
         }
 
-        public async Task StartServer()
+        public async Task Start()
         {
-            Logger.LogToConsole(LogType.Success, "Voice server successfully initialised.", nameof(Voice));
-            while (true)
+            try
             {
-                try
+                Logger.LogToConsole(LogType.Info, "Starting Server", nameof(Voice));
+
+                IPEndPoint serverEp = new IPEndPoint(IPAddress.Any, ServerProperties._serverProperties.VoicePort_UDP);
+                socket.Bind(serverEp);
+
+                ServerEvents.InvokeStarted(nameof(Voice));
+
+                while (true)
                 {
-                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[65024]);
-                    SocketReceiveFromResult result = await serverSocket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
-                    var packet = new VoicePacket(buffer.Array);
-                    HandlePacket(packet, result.RemoteEndPoint);
+                    try
+                    {
+                        ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[16024]);
+                        SocketReceiveFromResult result = await socket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
+                        var packet = new VoicePacket(buffer.Array);
+                        HandlePacket(packet, result.RemoteEndPoint);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogToConsole(LogType.Error, ex.Message, nameof(Voice));
+                    }
                 }
-                catch(Exception ex)
-                {
-                    Logger.LogToConsole(LogType.Error, ex.Message, nameof(Voice));
-                }
+            }
+            catch(Exception ex)
+            {
+                ServerEvents.InvokeFailed(nameof(Voice), ex.Message);
             }
         }
 
-        private async void HandlePacket(VoicePacket _packet, EndPoint _endPoint)
+        private async Task HandlePacket(VoicePacket _packet, EndPoint _endPoint)
         {
             switch (_packet.PacketDataIdentifier)
             {
                 case PacketIdentifier.Login:
-                    Logger.LogToConsole(LogType.Info, $"New Login: Key: {_packet.PacketLoginId}, Version: {_packet.PacketVersion}", nameof(Voice));
-                    var VoiceParticipant = ServerMetadata.voiceParticipants.FirstOrDefault(x => x.LoginId == _packet.PacketLoginId);
+                    Logger.LogToConsole(LogType.Info, $"New Login: Key: {_packet.PacketLoginKey}, Version: {_packet.PacketVersion}", nameof(Voice));
+                    var VoiceParticipant = serverData.GetParticipantByKey(_packet.PacketLoginKey);
                     if (_packet.PacketVersion != MainEntry.Version)
-                        await serverSocket.SendToAsync(new ArraySegment<byte>(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }.GetPacketDataStream()), SocketFlags.None, _endPoint);
+                        await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }, _endPoint);
                     else
                     {
-                        if (string.IsNullOrWhiteSpace(_packet.PacketLoginId))
-                            await serverSocket.SendToAsync(new ArraySegment<byte>(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }.GetPacketDataStream()), SocketFlags.None, _endPoint);
+                        if (string.IsNullOrWhiteSpace(_packet.PacketLoginKey))
+                            await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }, _endPoint);
                         else if (VoiceParticipant != null)
                         {
-                            VoiceParticipant.LastPing = DateTime.UtcNow;
-                            VoiceParticipant.VoiceAddress = _endPoint;
-                            await serverSocket.SendToAsync(new ArraySegment<byte>(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Accept }.GetPacketDataStream()), SocketFlags.None, _endPoint);
-                            Logger.LogToConsole(LogType.Success, $"Accepted Login: Key: {_packet.PacketLoginId}, Version: {_packet.PacketVersion}", nameof(Voice));
+                            VoiceParticipant.SocketData.LastPing = DateTime.UtcNow;
+                            VoiceParticipant.SocketData.VoiceAddress = _endPoint;
+                            await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Accept }, _endPoint);
+                            Logger.LogToConsole(LogType.Success, $"Accepted Login: Key: {_packet.PacketLoginKey}, Version: {_packet.PacketVersion}", nameof(Voice));
                         }
                         else
-                            await serverSocket.SendToAsync(new ArraySegment<byte>(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }.GetPacketDataStream()), SocketFlags.None, _endPoint);
+                            await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Deny }, _endPoint);
                     }
                     break;
 
                 case PacketIdentifier.Audio:
-                    var Participant = ServerMetadata.voiceParticipants.FirstOrDefault(x => x.VoiceAddress.ToString() == _endPoint.ToString() && x.Binded == true);
-                    if (Participant != null)
+                    var Participant = serverData.GetParticipantByVoiceAddress(_endPoint);
+                    if(Participant != null && Participant.Binded)
                     {
-                        var list = ServerMetadata.voiceParticipants.Where(x => x.Binded == true && x.LoginId != Participant.LoginId && Vector3.Distance(x.Position, Participant.Position) <= 30).ToList();
-                        for (int i = 0; i < list.Count; i++)
+                        var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey && Vector3.Distance(x.MinecraftData.Position, Participant.MinecraftData.Position) <= ServerProperties._serverProperties.ProximityDistance);
+                        for (int i = 0; i < list.Count(); i++)
                         {
-                            var volume = Vector3.Distance(list[i].Position, Participant.Position) / 30;
-                            await serverSocket.SendToAsync(new ArraySegment<byte>(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginId = _packet.PacketLoginId, PacketAudio = _packet.PacketAudio, PacketVolume = volume }.GetPacketDataStream()), SocketFlags.None, _endPoint);
+                            var volume = Vector3.Distance(list.ElementAt(i).MinecraftData.Position, Participant.MinecraftData.Position) / ServerProperties._serverProperties.ProximityDistance;
+                            await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = _packet.PacketLoginKey, PacketAudio = _packet.PacketAudio, PacketVolume = volume }, list.ElementAt(i).SocketData.VoiceAddress);
                         }
                     }
                     break;
             }
+        }
+
+        private async Task SendPacket(VoicePacket _packet, EndPoint _endPoint)
+        {
+            await socket.SendToAsync(new ArraySegment<byte>(_packet.GetPacketDataStream()), SocketFlags.None, _endPoint);
         }
     }
 }

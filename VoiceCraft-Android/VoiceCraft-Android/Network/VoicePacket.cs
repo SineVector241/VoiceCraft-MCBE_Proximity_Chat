@@ -28,7 +28,7 @@ namespace VCVoice_Packet
         private PacketIdentifier PacketIdentifier; //PacketIdentifier - Data containing data to identify what packet is received/sent
         private StateIdentifier StateIdentifier; //StateIdentifier - Data containing data to identify the state.
         private float Volume; //Volume - Data containing volume data to set for proximity.
-        private string LoginId; //LoginId - Data containing the login Id. Used only for binding to a client connected to signalling server.
+        private string LoginKey; //LoginKey - Data containing the login Id. Used only for binding to a client connected to signalling server.
         private string Version; //Version - Data containing the packet Version/VoiceCraft Version. Needed 
         private byte[] Audio; //Audio - Data containing audio data.
 
@@ -50,10 +50,10 @@ namespace VCVoice_Packet
             set { Volume = value; }
         }
 
-        public string PacketLoginId
+        public string PacketLoginKey
         {
-            get { return LoginId; }
-            set { LoginId = value; }
+            get { return LoginKey; }
+            set { LoginKey = value; }
         }
 
         public string PacketVersion
@@ -72,7 +72,7 @@ namespace VCVoice_Packet
         {
             PacketIdentifier = PacketIdentifier.Null;
             StateIdentifier = StateIdentifier.Unknown;
-            LoginId = "";
+            LoginKey = "";
             Volume = 0.0f;
             Audio = null;
         }
@@ -88,9 +88,9 @@ namespace VCVoice_Packet
             Audio = new byte[audioLength];
 
             if (loginIdLength > 0)
-                LoginId = Encoding.UTF8.GetString(dataStream, 24, loginIdLength);
+                LoginKey = Encoding.UTF8.GetString(dataStream, 24, loginIdLength);
             else
-                LoginId = null;
+                LoginKey = null;
 
             if (versionLength > 0)
                 Version = Encoding.UTF8.GetString(dataStream, 24 + loginIdLength, versionLength);
@@ -110,8 +110,8 @@ namespace VCVoice_Packet
             DataStream.AddRange(BitConverter.GetBytes((int)PacketStateIdentifier));
             DataStream.AddRange(BitConverter.GetBytes(PacketVolume));
 
-            if (PacketLoginId != null)
-                DataStream.AddRange(BitConverter.GetBytes(PacketLoginId.Length));
+            if (PacketLoginKey != null)
+                DataStream.AddRange(BitConverter.GetBytes(PacketLoginKey.Length));
             else
                 DataStream.AddRange(BitConverter.GetBytes(0));
 
@@ -126,8 +126,8 @@ namespace VCVoice_Packet
                 DataStream.AddRange(BitConverter.GetBytes(0));
 
 
-            if (PacketLoginId != null)
-                DataStream.AddRange(Encoding.UTF8.GetBytes(PacketLoginId));
+            if (PacketLoginKey != null)
+                DataStream.AddRange(Encoding.UTF8.GetBytes(PacketLoginKey));
 
             if (PacketVersion != null)
                 DataStream.AddRange(Encoding.UTF8.GetBytes(PacketVersion));
