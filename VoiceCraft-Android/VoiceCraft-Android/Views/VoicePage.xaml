@@ -48,6 +48,7 @@
                   Grid.Row="2"
                   VerticalOptions="End">
                 <Button Text="Disconnect"
+                        TextColor="White"
                         CornerRadius="5"
                         BackgroundColor="#CF00"
                         FontAttributes="Bold"
@@ -55,6 +56,7 @@
                         Command="{Binding DisconnectCommand}" />
 
                 <Button Grid.Column="1"
+                        TextColor="White"
                         CornerRadius="5"
                         FontAttributes="Bold"
                         Command="{Binding MuteUnmuteCommand}">
@@ -75,6 +77,7 @@
                 </Button>
 
                 <Button Grid.Column="2"
+                        TextColor="White"
                         CornerRadius="5"
                         FontAttributes="Bold"
                         Command="{Binding DeafenUndeafenCommand}">

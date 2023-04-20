@@ -16,6 +16,7 @@
                        FontSize="15" 
                        FontAttributes="Bold" />
                 <Entry Placeholder="Name"
+                       PlaceholderColor="LightGray"
                        TextColor="White"
                        Keyboard="Plain"
                        MaxLength="30"
@@ -27,6 +28,7 @@
                        FontSize="15"
                        FontAttributes="Bold"/>
                 <Entry Placeholder="IP"
+                       PlaceholderColor="LightGray"
                        TextColor="White"
                        Keyboard="Plain"
                        MaxLength="30"
@@ -38,6 +40,7 @@
                        FontSize="15"
                        FontAttributes="Bold"/>
                 <Entry Placeholder="9050"
+                       PlaceholderColor="LightGray"
                        TextColor="White"
                        Keyboard="Numeric"
                        MaxLength="30"
