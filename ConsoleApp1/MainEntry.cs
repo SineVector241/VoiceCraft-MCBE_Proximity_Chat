@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using VoiceCraft_Server.Data;
 using VoiceCraft_Server.Servers;
@@ -34,13 +35,6 @@ namespace VoiceCraft_Server
             while (true)
             {
                 var cmd = Console.ReadLine();
-                if(cmd.ToLower() == "test")
-                {
-                    for (int i = 0; i < serverData.GetParticipants().Count; i++)
-                    {
-                        //await signalling.serverSocket.SendToAsync(new ArraySegment<byte>(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Login, PacketLoginId = "aaaaa", PacketName = "test" }.GetPacketDataStream()), SocketFlags.None, ServerMetadata.voiceParticipants[i].SignallingAddress);
-                    }
-                }
                 if (cmd.ToLower() == "exit")
                 {
                     break;

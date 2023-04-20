@@ -210,7 +210,7 @@ namespace VoiceCraft_Android.Services
         private Task SC_OnParticipantLogin(ParticipantModel participant)
         {
             Participants.Add(participant);
-            Mixer.AddMixerInput(participant.WaveProvider);
+            Mixer.AddMixerInput(participant.VolumeProvider);
             return Task.CompletedTask;
         }
 
@@ -258,13 +258,16 @@ namespace VoiceCraft_Android.Services
             return Task.CompletedTask;
         }
 
-        private Task VC_OnAudioReceived(byte[] Audio, string Key)
+        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume)
         {
             var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
 
             var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
             if (participant != null)
+            {
+                participant.VolumeProvider.Volume = Volume;
                 participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
+            }
 
             return Task.CompletedTask;
         }

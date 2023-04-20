@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using VCSignalling_Packet;
@@ -117,7 +118,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Deny:
-                            Disconnect("Server Denied Login Request. Possible LoginId Conflict");
+                            Disconnect("Server Denied Login Request. Possible LoginKey Conflict");
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Binded:
@@ -125,12 +126,15 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Login:
-                            OnParticipantLogin?.Invoke(new ParticipantModel
+                            var participant = new ParticipantModel()
                             {
                                 LoginKey = packet.PacketLoginKey,
                                 Name = packet.PacketName,
-                                WaveProvider = new NAudio.Wave.BufferedWaveProvider(VoipService.GetRecordFormat)
-                            });
+                                WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true }
+                            };
+                            participant.VolumeProvider = new NAudio.Wave.SampleProviders.VolumeSampleProvider(participant.WaveProvider.ToSampleProvider());
+
+                            OnParticipantLogin?.Invoke(participant);
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Logout:
@@ -183,7 +187,7 @@ namespace VoiceCraft_Android.Network
         //Events
         public delegate Task Connected();
         public delegate Task Disconnected(string reason);
-        public delegate Task AudioReceived(byte[] Audio, string Key);
+        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
@@ -249,7 +253,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume);
                             break;
                     }
                 }

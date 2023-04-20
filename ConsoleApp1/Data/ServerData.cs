@@ -14,15 +14,7 @@ namespace VoiceCraft_Server.Data
 
         public ServerData() 
         {
-            var participant = new Participant();
-            participant.SocketData.LastPing = DateTime.UtcNow.AddSeconds(30);
-            participant.Binded = true;
-            participant.LoginKey = "AAAAA";
-            participant.MinecraftData.Gamertag = "Rick Astley";
-            Participants = new List<Participant>
-            {
-                participant
-            };
+            Participants = new List<Participant>();
         }
 
         public void Start()
