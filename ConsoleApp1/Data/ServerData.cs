@@ -29,6 +29,12 @@ namespace VoiceCraft_Server.Data
             return Participants;
         }
 
+        public Participant GetParticipantByMinecraftId(string id)
+        {
+            var participant = Participants.FirstOrDefault(x => x.MinecraftData.PlayerId == id);
+            return participant;
+        }
+
         public Participant GetParticipantByKey(string loginKey)
         {
             var participant = Participants.FirstOrDefault(x => x.LoginKey == loginKey);
@@ -65,9 +71,10 @@ namespace VoiceCraft_Server.Data
             ServerEvents.InvokeParticipantLogin(participant);
         }
 
-        public void RemoveParticipant(Participant participant)
+        public void RemoveParticipant(Participant participant, bool sendToClient)
         {
             Participants.RemoveAll(x => x.LoginKey == participant.LoginKey);
+            ServerEvents.InvokeParticipantLogout(participant, sendToClient? "Server Request" : null);
         }
 
         //Check Participants
@@ -98,7 +105,7 @@ namespace VoiceCraft_Server.Data
         public string Gamertag { get; set; }
         public string PlayerId { get; set; }
         public Vector3 Position { get; set; }
-        public string DimensionId { get; set; }
+        public string DimensionId { get; set; } = "void";
     }
 
     public class SocketData

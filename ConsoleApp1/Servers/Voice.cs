@@ -92,11 +92,14 @@ namespace VoiceCraft_Server.Servers
                     var Participant = serverData.GetParticipantByVoiceAddress(_endPoint);
                     if(Participant != null && Participant.Binded)
                     {
-                        var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey && Vector3.Distance(x.MinecraftData.Position, Participant.MinecraftData.Position) <= ServerProperties._serverProperties.ProximityDistance);
+                        var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey && x.MinecraftData.DimensionId == Participant.MinecraftData.DimensionId && Vector3.Distance(x.MinecraftData.Position, Participant.MinecraftData.Position) <= ServerProperties._serverProperties.ProximityDistance);
                         for (int i = 0; i < list.Count(); i++)
                         {
-                            var volume = 1 - (Vector3.Distance(list.ElementAt(i).MinecraftData.Position, Participant.MinecraftData.Position) / ServerProperties._serverProperties.ProximityDistance);
-                            await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketVolume = volume }, list.ElementAt(i).SocketData.VoiceAddress);
+                            if (list.ElementAt(i).SocketData.VoiceAddress != null)
+                            {
+                                var volume = 1 - (Vector3.Distance(list.ElementAt(i).MinecraftData.Position, Participant.MinecraftData.Position) / ServerProperties._serverProperties.ProximityDistance);
+                                await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketVolume = volume }, list.ElementAt(i).SocketData.VoiceAddress);
+                            }
                         }
                     }
                     break;

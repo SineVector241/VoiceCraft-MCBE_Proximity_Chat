@@ -216,11 +216,25 @@ namespace VoiceCraft_Android.Services
 
         private Task SC_OnParticipantLogout(string key)
         {
-            var participant = Participants.FirstOrDefault(x => x.LoginKey == key);
-            if (participant != null)
+            //Detect if its a participant logging out or the server requesting a disconnect
+            if (!string.IsNullOrEmpty(key))
             {
-                Mixer.RemoveMixerInput(participant.WaveProvider.ToSampleProvider());
-                Participants.Remove(participant);
+                var participant = Participants.FirstOrDefault(x => x.LoginKey == key);
+                if (participant != null)
+                {
+                    Mixer.RemoveMixerInput(participant.WaveProvider.ToSampleProvider());
+                    Participants.Remove(participant);
+                }
+            }
+            else
+            {
+                Stopping = true;
+                //Fire event message here. Not necessarily an error. Its just to display that the server requested a disconnect.
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    var message = new ServiceFailedMessage() { Message = "Server Requested Disconnect" };
+                    MessagingCenter.Send(message, "Error");
+                });
             }
             return Task.CompletedTask;
         }

@@ -78,6 +78,10 @@ namespace VoiceCraft_Server.Servers
 
                     switch(json.Type)
                     {
+                        case PacketType.Login:
+                            SendResponse(ctx, HttpStatusCode.OK, "Key Accepted");
+                            break;
+
                         case PacketType.Bind:
                             var participant = serverData.GetParticipantByKey(json.PlayerKey);
                             if(participant != null)
@@ -104,15 +108,26 @@ namespace VoiceCraft_Server.Servers
                                 {
                                     vcParticipant.MinecraftData.Position = player.Location;
                                     vcParticipant.MinecraftData.DimensionId = player.DimensionId;
-                                    serverData.EditParticipant(vcParticipant);
                                 }
                             }
 
                             SendResponse(ctx, HttpStatusCode.OK, "Updated");
                             break;
 
-                        case PacketType.Login:
-                            SendResponse(ctx, HttpStatusCode.Accepted, "Accepted Login");
+                        case PacketType.RemoveParticipant:
+                            var mcParticipant = serverData.GetParticipantByMinecraftId(json.PlayerId);
+                            if(mcParticipant != null)
+                            {
+                                serverData.RemoveParticipant(mcParticipant, true);
+                                SendResponse(ctx, HttpStatusCode.OK, "Removed");
+                            }
+                            else
+                            {
+                                SendResponse(ctx, HttpStatusCode.NotFound, "Could Not Find Participant");
+                            }
+                            break;
+
+                        default:
                             break;
                     }
 
@@ -153,8 +168,9 @@ namespace VoiceCraft_Server.Servers
 
     public enum PacketType
     {
+        Login,
         Bind,
         Update,
-        Login
+        RemoveParticipant
     }
 }
