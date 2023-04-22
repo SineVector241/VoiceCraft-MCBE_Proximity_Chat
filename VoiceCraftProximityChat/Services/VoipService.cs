@@ -2,17 +2,17 @@
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using VoiceCraft_Android.Interfaces;
-using VoiceCraft_Android.Models;
-using VoiceCraft_Android.Storage;
-using VoiceCraft_Android.Network;
-using Xamarin.Forms;
 using VCVoice_Packet;
+using VoiceCraftProximityChat.Audio;
+using VoiceCraftProximityChat.Models;
+using VoiceCraftProximityChat.Network;
+using VoiceCraftProximityChat.Storage;
 
-namespace VoiceCraft_Android.Services
+namespace VoiceCraftProximityChat.Services
 {
     public class VoipService
     {
@@ -33,6 +33,13 @@ namespace VoiceCraft_Android.Services
         private SignallingClient SignalClient;
         private VoiceClient VCClient;
 
+        //Event Stuff
+        public delegate Task Update(UpdateUIMessage message);
+        public delegate Task Failed(ServiceFailedMessage message);
+
+        public event Update OnUpdate;
+        public event Failed OnFailed;
+
         public static WaveFormat GetRecordFormat { get => new WaveFormat(SampleRate, Channels); }
         public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels); }
 
@@ -45,10 +52,7 @@ namespace VoiceCraft_Android.Services
                 if (server == null)
                 {
                     var message = new ServiceFailedMessage() { Message = "Cannot find server information!" };
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        MessagingCenter.Send(message, "Error");
-                    });
+                    OnFailed?.Invoke(message);
                     return;
                 }
 
@@ -57,12 +61,11 @@ namespace VoiceCraft_Android.Services
                 SignalClient = new SignallingClient();
                 VCClient = new VoiceClient();
 
-                IAudioManager audioManager = DependencyService.Get<IAudioManager>();
+                var audioManager = new AudioManager();
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
                 AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Mixer);
                 AudioCodec = new G722ChatCodec();
-
 
                 SignalClient.OnConnect += SC_OnConnect;
                 SignalClient.OnDisconnect += SC_OnDisconnect;
@@ -75,14 +78,6 @@ namespace VoiceCraft_Android.Services
                 VCClient.OnAudioReceived += VC_OnAudioReceived;
 
                 AudioRecorder.DataAvailable += AudioDataAvailable;
-
-                MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message => {
-                    IsMuted = !IsMuted;
-                });
-
-                MessagingCenter.Subscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen", message => {
-                    IsDeafened = !IsDeafened;
-                });
 
                 //Connection/Verification starts right at this point.
                 SignalClient.Connect(server.IP, server.Port, server.LoginKey, serverName);
@@ -102,19 +97,11 @@ namespace VoiceCraft_Android.Services
                                 IsDeafened = IsDeafened,
                                 IsMuted = IsMuted
                             };
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                MessagingCenter.Send(message, "Update");
-                            });
+                            OnUpdate?.Invoke(message);
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex);
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                var message = new ServiceErrorMessage() { Exception = ex };
-                                MessagingCenter.Send(message, "Error");
-                            });
+                            Debug.WriteLine(ex);
                         }
                     }
                 }
@@ -161,10 +148,6 @@ namespace VoiceCraft_Android.Services
                     }
                     catch
                     { }
-
-                    MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
-
-                    MessagingCenter.Unsubscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen");
                 }
             });
         }
@@ -181,11 +164,8 @@ namespace VoiceCraft_Android.Services
             Database.EditServer(server);
 
             //Fire message event here
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                MessagingCenter.Send(message, "Update");
-            });
+            var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+            OnUpdate?.Invoke(message);
             return Task.CompletedTask;
         }
 
@@ -199,11 +179,8 @@ namespace VoiceCraft_Android.Services
             AudioPlayer.Play();
 
             //Fire event message here.
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                MessagingCenter.Send(message, "Update");
-            });
+            var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+            OnUpdate?.Invoke(message);
             return Task.CompletedTask;
         }
 
@@ -230,11 +207,8 @@ namespace VoiceCraft_Android.Services
             {
                 Stopping = true;
                 //Fire event message here. Not necessarily an error. Its just to display that the server requested a disconnect.
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    var message = new ServiceFailedMessage() { Message = "Server Requested Disconnect" };
-                    MessagingCenter.Send(message, "Error");
-                });
+                var message = new ServiceFailedMessage() { Message = "Server Requested Disconnect" };
+                OnFailed?.Invoke(message);
             }
             return Task.CompletedTask;
         }
@@ -248,11 +222,8 @@ namespace VoiceCraft_Android.Services
                 return Task.CompletedTask;
 
             //Fire event message here
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new ServiceFailedMessage() { Message = reason };
-                MessagingCenter.Send(message, "Error");
-            });
+            var message = new ServiceFailedMessage() { Message = reason };
+            OnFailed?.Invoke(message);
             return Task.CompletedTask;
         }
         #endregion
@@ -264,11 +235,8 @@ namespace VoiceCraft_Android.Services
             StatusMessage = $"Connected - Key: {SignalClient.Key}\nWaiting For Binding...";
 
             //Fire event message here.
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                MessagingCenter.Send(message, "Update");
-            });
+            var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+            OnUpdate?.Invoke(message);
             return Task.CompletedTask;
         }
 
@@ -295,11 +263,8 @@ namespace VoiceCraft_Android.Services
                 return Task.CompletedTask;
 
             //Fire event message here
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new ServiceFailedMessage() { Message = reason };
-                MessagingCenter.Send(message, "Error");
-            });
+            var message = new ServiceFailedMessage() { Message = reason };
+            OnFailed?.Invoke(message);
             return Task.CompletedTask;
         }
         #endregion
@@ -318,6 +283,11 @@ namespace VoiceCraft_Android.Services
                 PacketVersion = Network.Network.Version
             };
             VCClient.Send(voicePacket);
+        }
+
+        public void MuteUnmute(bool value)
+        {
+            IsMuted = value;
         }
     }
 }

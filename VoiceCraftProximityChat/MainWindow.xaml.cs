@@ -1,18 +1,19 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using System.Windows.Input;
+using VoiceCraftProximityChat.Views;
 
-namespace VoiceCraftProximityChat.Views
+namespace VoiceCraftProximityChat
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for Window.xaml
     /// </summary>
-    public partial class Connect : Window
+    public partial class MainWindow : Window
     {
-        public Connect()
+        public MainWindow()
         {
             InitializeComponent();
+
+            Navigator.Navigate(new ServersPage());
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -29,17 +30,6 @@ namespace VoiceCraftProximityChat.Views
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
-        }
-
-        private void NumbersOnlyTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = !IsValid(((TextBox)sender).Text + e.Text);
-        }
-
-        public static bool IsValid(string str)
-        {
-            int i;
-            return int.TryParse(str, out i) && i >= 1 && i <= 65535;
         }
     }
 }

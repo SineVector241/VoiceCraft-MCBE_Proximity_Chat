@@ -3,7 +3,7 @@ using NAudio.Wave;
 using NAudio.Codecs;
 using System.Diagnostics;
 
-namespace VoiceCraftProximityChat.Utils
+namespace VoiceCraftProximityChat.Services
 {
     class G722ChatCodec
     {
@@ -61,9 +61,5 @@ namespace VoiceCraftProximityChat.Utils
         }
 
         public bool IsAvailable => true;
-
-        public static readonly G722ChatCodec CodecInstance = new G722ChatCodec();
     }
 }
-
-//Credit to: https://github.com/naudio/NAudio/blob/master/NAudioDemo/NetworkChatDemo/G722ChatCodec.cs
