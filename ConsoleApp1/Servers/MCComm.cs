@@ -84,7 +84,7 @@ namespace VoiceCraft_Server.Servers
 
                         case PacketType.Bind:
                             var participant = serverData.GetParticipantByKey(json.PlayerKey);
-                            if(participant != null)
+                            if(participant != null && !participant.Binded && !serverData.GetParticipants().Exists(x => x.MinecraftData.PlayerId == json.PlayerId))
                             {
                                 participant.Binded = true;
                                 participant.MinecraftData.Gamertag = json.Gamertag;
@@ -95,7 +95,7 @@ namespace VoiceCraft_Server.Servers
                             }
                             else
                             {
-                                SendResponse(ctx, HttpStatusCode.NotFound, "Could not find key. Binding Unsuccessfull");
+                                SendResponse(ctx, HttpStatusCode.NotFound, "Could not find key or participant is already binded!");
                             }
                             break;
 

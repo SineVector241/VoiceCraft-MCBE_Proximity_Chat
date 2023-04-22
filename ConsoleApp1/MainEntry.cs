@@ -35,6 +35,14 @@ namespace VoiceCraft_Server
             while (true)
             {
                 var cmd = Console.ReadLine();
+                if(cmd.ToLower() == "test")
+                {
+                    var p = serverData.GetParticipants().FirstOrDefault();
+                    if(p != null)
+                    {
+                        Console.WriteLine(p.MinecraftData.Position);
+                    }
+                }
                 if (cmd.ToLower() == "exit")
                 {
                     break;
