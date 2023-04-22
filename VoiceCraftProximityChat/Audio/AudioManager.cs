@@ -9,6 +9,7 @@ namespace VoiceCraftProximityChat.Audio
         {
             var Player = new WaveOutEvent();
             Player.Init(waveFormat);
+            Player.DesiredLatency = 400;
             return Player;
         }
 

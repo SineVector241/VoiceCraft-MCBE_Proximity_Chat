@@ -11,6 +11,8 @@ namespace VoiceCraft_Android.Droid.Audio
         {
             var Player = new AudioTrackOut();
             Player.Init(waveProvider);
+            Player.NumberOfBuffers = 1;
+            Player.DesiredLatency = 400;
             return Player;
         }
 
