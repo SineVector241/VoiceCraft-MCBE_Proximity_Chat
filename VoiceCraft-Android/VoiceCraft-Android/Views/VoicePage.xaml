@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:VoiceCraft_Android.ViewModels"
+             x:Class="VoiceCraft_Android.Views.VoicePage"
+             NavigationPage.HasNavigationBar="False">
+    <ContentPage.BindingContext>
+        <local:VoicePageViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Content>
+        <Grid RowDefinitions="Auto">
+            <Label Grid.Row="0"
+                   BackgroundColor="#4000" 
+                   Text="{Binding StatusText}"
+                   HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="Center"
+                   Padding="10"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="StartAndExpand"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="White"/>
+
+            <CollectionView ItemsSource="{Binding Participants}"
+                            SelectionMode="None"
+                            Grid.Row="1">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <ContentView>
+                            <Frame Margin="10,0,10,30"
+                                   Padding="15"
+                                   CornerRadius="10"
+                                   Background="#8123"
+                                   BorderColor="#331b70d7">
+
+                                <Label Text="{Binding}"
+                                       TextColor="White"
+                                       FontSize="20"
+                                       FontAttributes="Bold" />
+                            </Frame>
+                        </ContentView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Grid Padding="10"
+                  Grid.Row="2"
+                  VerticalOptions="End">
+                <Button Text="Disconnect"
+                        TextColor="White"
+                        CornerRadius="5"
+                        BackgroundColor="#CF00"
+                        FontAttributes="Bold"
+                        Grid.Column="0"
+                        Command="{Binding DisconnectCommand}" />
+
+                <Button Grid.Column="1"
+                        TextColor="White"
+                        CornerRadius="5"
+                        FontAttributes="Bold"
+                        Command="{Binding MuteUnmuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#A555"/>
+                                    <Setter Property="Text" Value="Unmute"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#A111"/>
+                                    <Setter Property="Text" Value="Mute"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Grid.Column="2"
+                        TextColor="White"
+                        CornerRadius="5"
+                        FontAttributes="Bold"
+                        Command="{Binding DeafenUndeafenCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#A555"/>
+                                    <Setter Property="Text" Value="Undeafen"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#A111"/>
+                                    <Setter Property="Text" Value="Deafen"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Grid>
+    </ContentPage.Content>
+</ContentPage>

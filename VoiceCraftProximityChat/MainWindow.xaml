@@ -1,0 +1,108 @@
+﻿<Window x:Class="VoiceCraftProximityChat.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Window" Height="450" Width="800"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        MouseDown="Window_MouseDown"
+        Background="Transparent"
+        AllowsTransparency="True">
+    <Border CornerRadius="10"
+            BorderThickness="5"
+            BorderBrush="{StaticResource BackgroundGradientReversed}"
+            Background="{StaticResource BackgroundGradient}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="5"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="VoiceCraft"
+                           Foreground="White"
+                           FontSize="20"
+                           Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0">
+                </TextBlock>
+
+                <Button x:Name="btnMinimize"
+                        BorderThickness="1"
+                        Grid.Column="1"
+                        Content="-"
+                        Foreground="White"
+                        FontSize="16"
+                        Click="btnMinimize_Click">
+
+                    <Button.Style >
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="{StaticResource BtnPrimary}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource BtnPrimaryHover}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Width="18" 
+                                    Height="18"
+                                    CornerRadius="19"
+                                    Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center"
+                                              HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button x:Name="btnClose"
+                        BorderThickness="1"
+                        Grid.Column="2"
+                        Content="X"
+                        Foreground="White"
+                        FontSize="12"
+                        Click="btnClose_Click">
+
+                    <Button.Style >
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="{StaticResource BtnPrimary}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource BtnPrimaryHover}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Width="18" 
+                                    Height="18"
+                                    CornerRadius="19"
+                                    Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center"
+                                                  HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+            <Frame x:Name="Navigator" 
+                   NavigationUIVisibility="Hidden"
+                   Grid.Row="1"/>
+        </Grid>
+    </Border>
+</Window>

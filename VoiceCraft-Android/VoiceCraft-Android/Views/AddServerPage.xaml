@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:VoiceCraft_Android.ViewModels"
+             x:Class="VoiceCraft_Android.Views.AddServerPage">
+    <ContentPage.BindingContext>
+        <local:AddServerPageViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <ScrollView VerticalOptions="CenterAndExpand"
+                    Padding="20">
+            <StackLayout>
+                
+                <Label Text="Name"
+                       TextColor="White"
+                       FontSize="15" 
+                       FontAttributes="Bold" />
+                <Entry Placeholder="Name"
+                       PlaceholderColor="LightGray"
+                       TextColor="White"
+                       Keyboard="Plain"
+                       MaxLength="30"
+                       Text="{Binding Name}"
+                       Margin="0,0,0,20"/>
+
+                <Label Text="IP"
+                       TextColor="White"
+                       FontSize="15"
+                       FontAttributes="Bold"/>
+                <Entry Placeholder="IP"
+                       PlaceholderColor="LightGray"
+                       TextColor="White"
+                       Keyboard="Plain"
+                       MaxLength="30"
+                       Text="{Binding Ip}"
+                       Margin="0,0,0,20"/>
+
+                <Label Text="Port"
+                       TextColor="White"
+                       FontSize="15"
+                       FontAttributes="Bold"/>
+                <Entry Placeholder="9050"
+                       PlaceholderColor="LightGray"
+                       TextColor="White"
+                       Keyboard="Numeric"
+                       MaxLength="30"
+                       Text="{Binding Port}"
+                       Margin="0,0,0,20"/>
+
+                <Button BackgroundColor="{StaticResource BtnPrimary}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Text="Add Server"
+                        CornerRadius="5"
+                        WidthRequest="300"
+                        BorderWidth="1"
+                        Command="{Binding SaveCommand}" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>
