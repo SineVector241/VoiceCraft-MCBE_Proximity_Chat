@@ -27,6 +27,7 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 1. Add a server by clicking...
 - **Add Server(PC)**
 - **+(Android)** 
+
 and filling in the required parameters for the VoiceCraft server you want to connect to provided by the server hoster.
 2. Connect to the server by...
 - **Selecting a Server then clicking Connect(PC)**
