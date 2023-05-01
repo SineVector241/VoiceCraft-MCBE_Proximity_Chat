@@ -23,6 +23,7 @@ namespace VoiceCraftProximityChat.Services
         private bool IsDeafened = false;
         private string Username = "";
         private string StatusMessage = "Connecting...";
+        private DateTime RecordDetection = DateTime.UtcNow;
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
@@ -63,6 +64,7 @@ namespace VoiceCraftProximityChat.Services
 
                 var audioManager = new AudioManager();
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
+
                 AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Mixer);
                 AudioCodec = new G722ChatCodec();
@@ -242,14 +244,17 @@ namespace VoiceCraftProximityChat.Services
 
         private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume)
         {
-            var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
-
-            var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
-            if (participant != null)
+            _ = Task.Factory.StartNew(() =>
             {
-                participant.VolumeProvider.Volume = Volume;
-                participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
-            }
+                var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
+
+                var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
+                if (participant != null)
+                {
+                    participant.VolumeProvider.Volume = Volume;
+                    participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
+                }
+            });
 
             return Task.CompletedTask;
         }
@@ -271,18 +276,48 @@ namespace VoiceCraftProximityChat.Services
 
         private void AudioDataAvailable(object sender, WaveInEventArgs e)
         {
-            if(IsDeafened || IsMuted)
+            if (IsDeafened || IsMuted)
                 return;
 
-            var encoded = AudioCodec.Encode(e.Buffer, 0, e.BytesRecorded);
+            var buffer = new byte[e.Buffer.Length];
+            var raw = new RawSourceWaveStream(e.Buffer, 0, e.BytesRecorded, GetRecordFormat);
+            var limiter = new SoftLimiter(raw.ToSampleProvider());
+            limiter.Boost.CurrentValue = 0.8f;
 
-            var voicePacket = new VoicePacket()
+            var wave16 = limiter.ToWaveProvider16();
+            var read = wave16.Read(buffer, 0, e.BytesRecorded);
+
+            float max = 0;
+            // interpret as 16 bit audio
+            for (int index = 0; index < read; index += 2)
             {
-                PacketAudio = encoded,
-                PacketDataIdentifier = PacketIdentifier.Audio,
-                PacketVersion = Network.Network.Version
-            };
-            VCClient.Send(voicePacket);
+                short sample = (short)((buffer[index + 1] << 8) |
+                                        buffer[index + 0]);
+                // to floating point
+                var sample32 = sample / 32768f;
+                // absolute value 
+                if (sample32 < 0) sample32 = -sample32;
+                // is this the max value?
+                if (sample32 > max) max = sample32;
+            }
+
+            if (max > 0.1)
+            {
+                RecordDetection = DateTime.UtcNow;
+            }
+
+            if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
+            {
+                var encoded = AudioCodec.Encode(buffer, 0, read);
+
+                var voicePacket = new VoicePacket()
+                {
+                    PacketAudio = encoded,
+                    PacketDataIdentifier = PacketIdentifier.Audio,
+                    PacketVersion = Network.Network.Version
+                };
+                VCClient.Send(voicePacket);
+            }
         }
 
         public void MuteUnmute(bool value)

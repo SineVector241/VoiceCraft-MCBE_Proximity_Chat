@@ -26,9 +26,8 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 ### Using the app.
 1. Add a server by clicking...
 - **Add Server(PC)**
-- **+(Android)** 
+- **+(Android)** <br><br> and filling in the required parameters for the VoiceCraft server you want to connect to provided by the server hoster.
 
-and filling in the required parameters for the VoiceCraft server you want to connect to provided by the server hoster.
 2. Connect to the server by...
 - **Selecting a Server then clicking Connect(PC)**
 - **Clicking connect(Android)**
@@ -38,9 +37,11 @@ and filling in the required parameters for the VoiceCraft server you want to con
 6. If binding is successfull you should now be able to chat with other people.
 
 ## TODO LIST
-- [x] Server to Server Commmunication
-- [x] Client to Client VOIP
-- [x] Server to Client verification
-- [x] Server to Server Linking/Verification
-- [x] Addon -- https://github.com/SineVector241/VoiceCraft-MCBE_ProximityChat_Addon
-- [x] Rewrite/Improve Client side software
+- [x] Add AGC (Automatic Gain Control) for PC.
+- [ ] Implement auto binding.
+- [ ] Implement auto connecting/server linking.
+- [ ] Implement experimental accurate player position depending on velocity and latency to client.
+- [ ] Implement experimental directional hearing.
+- [ ] Implement second experimental algorithm using Minecraft Websocket Client to Client Communication. (Allows voice proximity chat on any server but limits device support)
+- [ ] Design a logo.
+- [ ] Improve UI style/design.
