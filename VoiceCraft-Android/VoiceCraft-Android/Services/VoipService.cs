@@ -23,6 +23,7 @@ namespace VoiceCraft_Android.Services
         private bool IsDeafened = false;
         private string Username = "";
         private string StatusMessage = "Connecting...";
+        private DateTime RecordDetection = DateTime.UtcNow;
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
@@ -274,14 +275,17 @@ namespace VoiceCraft_Android.Services
 
         private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume)
         {
-            var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
-
-            var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
-            if (participant != null)
+            _ = Task.Factory.StartNew(() =>
             {
-                participant.VolumeProvider.Volume = Volume;
-                participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
-            }
+                var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
+
+                var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
+                if (participant != null)
+                {
+                    participant.VolumeProvider.Volume = Volume;
+                    participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
+                }
+            });
 
             return Task.CompletedTask;
         }
@@ -309,15 +313,38 @@ namespace VoiceCraft_Android.Services
             if(IsDeafened || IsMuted)
                 return;
 
-            var encoded = AudioCodec.Encode(e.Buffer, 0, e.BytesRecorded);
-
-            var voicePacket = new VoicePacket()
+            float max = 0;
+            // interpret as 16 bit audio
+            for (int index = 0; index < e.BytesRecorded; index += 2)
             {
-                PacketAudio = encoded,
-                PacketDataIdentifier = PacketIdentifier.Audio,
-                PacketVersion = Network.Network.Version
-            };
-            VCClient.Send(voicePacket);
+                short sample = (short)((e.Buffer[index + 1] << 8) |
+                                        e.Buffer[index + 0]);
+                // to floating point
+                var sample32 = sample / 32768f;
+                // absolute value 
+                if (sample32 < 0) sample32 = -sample32;
+                // is this the max value?
+                if (sample32 > max) max = sample32;
+            }
+
+            if (max > 0.1)
+            {
+                RecordDetection = DateTime.UtcNow;
+            }
+
+            if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
+            {
+
+                var encoded = AudioCodec.Encode(e.Buffer, 0, e.BytesRecorded);
+
+                var voicePacket = new VoicePacket()
+                {
+                    PacketAudio = encoded,
+                    PacketDataIdentifier = PacketIdentifier.Audio,
+                    PacketVersion = Network.Network.Version
+                };
+                VCClient.Send(voicePacket);
+            }
         }
     }
 }

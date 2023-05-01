@@ -1,6 +1,5 @@
 ﻿using NAudio.Wave;
 using System;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,7 @@ namespace VoiceCraftProximityChat.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.0-alpha";
+        public const string Version = "v1.3.1-alpha";
     }
 
     public class SignallingClient

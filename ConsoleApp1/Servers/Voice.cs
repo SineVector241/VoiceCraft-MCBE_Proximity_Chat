@@ -49,7 +49,12 @@ namespace VoiceCraft_Server.Servers
                         ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[16024]);
                         SocketReceiveFromResult result = await socket.ReceiveFromAsync(buffer, SocketFlags.None, endPoint);
                         var packet = new VoicePacket(buffer.Array);
-                        HandlePacket(packet, result.RemoteEndPoint);
+
+                        //Voice stuff works a lot more so this is probably better to handle with.
+                        _ = Task.Factory.StartNew(async () =>
+                        {
+                            await HandlePacket(packet, result.RemoteEndPoint);
+                        });
                     }
                     catch (Exception ex)
                     {
