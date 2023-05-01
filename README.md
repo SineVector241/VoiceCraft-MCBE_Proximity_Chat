@@ -37,7 +37,7 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 6. If binding is successfull you should now be able to chat with other people.
 
 ## TODO LIST
-- [ ] Add AGC (Automatic Gain Control) for PC.
+- [x] Add AGC (Automatic Gain Control) for PC.
 - [ ] Implement auto binding.
 - [ ] Implement auto connecting/server linking.
 - [ ] Implement experimental accurate player position depending on velocity and latency to client.
