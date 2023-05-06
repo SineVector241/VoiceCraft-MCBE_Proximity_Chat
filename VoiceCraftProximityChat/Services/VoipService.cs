@@ -307,30 +307,6 @@ namespace VoiceCraftProximityChat.Services
             }
         }
 
-        private static short[] BytesToShorts(byte[] input, int offset, int length)
-        {
-            short[] processedValues = new short[length / 2];
-            for (int c = 0; c < processedValues.Length; c++)
-            {
-                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
-                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
-            }
-
-            return processedValues;
-        }
-
-        private static byte[] ShortsToBytes(short[] input, int offset, int length)
-        {
-            byte[] processedValues = new byte[length * 2];
-            for (int c = 0; c < length; c++)
-            {
-                processedValues[c * 2] = (byte)(input[c + offset] & 0xFF);
-                processedValues[c * 2 + 1] = (byte)((input[c + offset] >> 8) & 0xFF);
-            }
-
-            return processedValues;
-        }
-
         public void MuteUnmute(bool value)
         {
             IsMuted = value;
