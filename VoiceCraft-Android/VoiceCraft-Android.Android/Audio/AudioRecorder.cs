@@ -144,21 +144,14 @@ namespace NAudio.Wave
                         DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bytesRead));
                     }
                 }
-                else if(WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                else if (WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
                 {
                     float[] floatBuffer = new float[bufferSize];
-                    try
+                    var bytesRead = audioRecord.Read(floatBuffer, 0, bufferSize, 1);
+                    if (bytesRead > 0)
                     {
-                        var bytesRead = audioRecord.Read(floatBuffer, 0, bufferSize, 1);
-                        if (bytesRead > 0)
-                        {
-                            Buffer.BlockCopy(floatBuffer, 0, waveBuffer.FloatBuffer, 0, bufferSize);
-                            DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bufferSize));
-                        }
-                    }
-                    catch(Exception ex)
-                    {
-                        Console.WriteLine(ex);
+                        Buffer.BlockCopy(floatBuffer, 0, waveBuffer.FloatBuffer, 0, bufferSize);
+                        DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bufferSize));
                     }
                 }
             }
