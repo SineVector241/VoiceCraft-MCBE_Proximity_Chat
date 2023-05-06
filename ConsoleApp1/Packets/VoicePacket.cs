@@ -28,6 +28,7 @@ namespace VCVoice_Packet
         private PacketIdentifier PacketIdentifier; //PacketIdentifier - Data containing data to identify what packet is received/sent
         private StateIdentifier StateIdentifier; //StateIdentifier - Data containing data to identify the state.
         private float Volume; //Volume - Data containing volume data to set for proximity.
+        private int BytesRecorded; //Bytes Recorded - Data containing how many bytes were recorded in the packet.
         private string LoginKey; //LoginKey - Data containing the login Id. Used only for binding to a client connected to signalling server.
         private string Version; //Version - Data containing the packet Version/VoiceCraft Version. Needed 
         private byte[] Audio; //Audio - Data containing audio data.
@@ -48,6 +49,12 @@ namespace VCVoice_Packet
         {
             get { return Volume; }
             set { Volume = value; }
+        }
+
+        public int PacketBytesRecorded
+        {
+            get { return BytesRecorded; }
+            set { BytesRecorded = value; }
         }
 
         public string PacketLoginKey
@@ -75,6 +82,7 @@ namespace VCVoice_Packet
             LoginKey = "";
             Volume = 0.0f;
             Audio = null;
+            BytesRecorded = 0;
         }
 
         public VoicePacket(byte[] dataStream)
@@ -82,23 +90,24 @@ namespace VCVoice_Packet
             PacketDataIdentifier = (PacketIdentifier)BitConverter.ToInt32(dataStream, 0); //Read packet identifier - 4 bytes.
             PacketStateIdentifier = (StateIdentifier)BitConverter.ToInt32(dataStream, 4); //Read packet state - 4 bytes.
             Volume = BitConverter.ToSingle(dataStream, 8); //Read volume value - 4 bytes.
-            int loginIdLength = BitConverter.ToInt32(dataStream, 12); // Read login Id Length - 4 bytes.
-            int versionLength = BitConverter.ToInt32(dataStream, 16); //Read Version Length - 4 bytes.
-            int audioLength = BitConverter.ToInt32(dataStream, 20); //Read audio data length - 4 bytes.
+            BytesRecorded = BitConverter.ToInt32(dataStream, 12); //Read Bytes Recorded value - 4 bytes.
+            int loginIdLength = BitConverter.ToInt32(dataStream, 16); // Read login Id Length - 4 bytes.
+            int versionLength = BitConverter.ToInt32(dataStream, 20); //Read Version Length - 4 bytes.
+            int audioLength = BitConverter.ToInt32(dataStream, 24); //Read audio data length - 4 bytes.
             Audio = new byte[audioLength];
 
             if (loginIdLength > 0)
-                LoginKey = Encoding.UTF8.GetString(dataStream, 24, loginIdLength);
+                LoginKey = Encoding.UTF8.GetString(dataStream, 28, loginIdLength);
             else
                 LoginKey = null;
 
             if (versionLength > 0)
-                Version = Encoding.UTF8.GetString(dataStream, 24 + loginIdLength, versionLength);
+                Version = Encoding.UTF8.GetString(dataStream, 28 + loginIdLength, versionLength);
             else
                 Version = null;
 
             if (audioLength > 0)
-                Buffer.BlockCopy(dataStream, 24 + versionLength + loginIdLength, Audio, 0, audioLength);
+                Buffer.BlockCopy(dataStream, 28 + versionLength + loginIdLength, Audio, 0, audioLength);
             else
                 Audio = null;
         }
@@ -109,6 +118,7 @@ namespace VCVoice_Packet
             DataStream.AddRange(BitConverter.GetBytes((int)PacketDataIdentifier));
             DataStream.AddRange(BitConverter.GetBytes((int)PacketStateIdentifier));
             DataStream.AddRange(BitConverter.GetBytes(PacketVolume));
+            DataStream.AddRange(BitConverter.GetBytes(PacketBytesRecorded));
 
             if (PacketLoginKey != null)
                 DataStream.AddRange(BitConverter.GetBytes(PacketLoginKey.Length));

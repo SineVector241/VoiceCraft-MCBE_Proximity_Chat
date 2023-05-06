@@ -20,7 +20,7 @@ namespace VoiceCraft_Android.Droid.Audio
         {
             var Recorder = new AudioRecorder();
             Recorder.WaveFormat = waveFormat;
-            Recorder.BufferMilliseconds = 50;
+            Recorder.BufferMilliseconds = 20;
             Recorder.audioSource = Android.Media.AudioSource.VoiceCommunication;
             return Recorder;
         }
