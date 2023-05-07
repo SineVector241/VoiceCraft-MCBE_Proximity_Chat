@@ -11,6 +11,7 @@ using VoiceCraft_Android.Storage;
 using VoiceCraft_Android.Network;
 using Xamarin.Forms;
 using VCVoice_Packet;
+using VoiceCraft_Android.Audio;
 
 namespace VoiceCraft_Android.Services
 {
@@ -27,6 +28,7 @@ namespace VoiceCraft_Android.Services
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
+        private SoftLimiter Normalizer;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
 
@@ -57,9 +59,11 @@ namespace VoiceCraft_Android.Services
 
                 IAudioManager audioManager = DependencyService.Get<IAudioManager>();
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
-                AudioRecorder = audioManager.CreateRecorder(GetAudioFormat);
-                AudioPlayer = audioManager.CreatePlayer(Mixer);
+                Normalizer = new SoftLimiter(Mixer);
+                Normalizer.Boost.CurrentValue = 5;
 
+                AudioRecorder = audioManager.CreateRecorder(GetAudioFormat);
+                AudioPlayer = audioManager.CreatePlayer(Normalizer);
 
                 SignalClient.OnConnect += SC_OnConnect;
                 SignalClient.OnDisconnect += SC_OnDisconnect;
@@ -137,6 +141,7 @@ namespace VoiceCraft_Android.Services
                     AudioRecorder.Dispose();
                     Mixer.RemoveAllMixerInputs();
                     Mixer = null;
+                    Normalizer = null;
                     AudioRecorder = null;
                     AudioPlayer = null;
                     Participants.Clear();
@@ -319,7 +324,7 @@ namespace VoiceCraft_Android.Services
                 if (sample > max) max = sample;
             }
 
-            if (max > 0.05)
+            if (max > 0.08)
             {
                 RecordDetection = DateTime.UtcNow;
             }

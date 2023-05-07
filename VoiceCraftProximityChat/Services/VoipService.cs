@@ -27,6 +27,7 @@ namespace VoiceCraftProximityChat.Services
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
+        private SoftLimiter Normalizer;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
 
@@ -62,9 +63,11 @@ namespace VoiceCraftProximityChat.Services
 
                 var audioManager = new AudioManager();
                 Mixer = new MixingSampleProvider(GetAudioFormat);
+                Normalizer = new SoftLimiter(Mixer);
+                Normalizer.Boost.CurrentValue = 5;
 
                 AudioRecorder = audioManager.CreateRecorder(GetAudioFormat);
-                AudioPlayer = audioManager.CreatePlayer(Mixer);
+                AudioPlayer = audioManager.CreatePlayer(Normalizer);
 
                 SignalClient.OnConnect += SC_OnConnect;
                 SignalClient.OnDisconnect += SC_OnDisconnect;
@@ -125,6 +128,7 @@ namespace VoiceCraftProximityChat.Services
                     AudioRecorder.Dispose();
                     Mixer.RemoveAllMixerInputs();
                     Mixer = null;
+                    Normalizer = null;
                     AudioRecorder = null;
                     AudioPlayer = null;
                     Participants.Clear();
@@ -288,14 +292,13 @@ namespace VoiceCraftProximityChat.Services
                 if (sample > max) max = sample;
             }
 
-            if (max > 0.05)
+            if (max > 0.08)
             {
                 RecordDetection = DateTime.UtcNow;
             }
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
-                Debug.WriteLine(e.Buffer.Length);
                 var voicePacket = new VoicePacket()
                 {
                     PacketAudio = e.Buffer,

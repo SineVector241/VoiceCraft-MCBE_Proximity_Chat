@@ -17,7 +17,7 @@ namespace VoiceCraftProximityChat.Audio
         {
             var Recorder = new WaveInEvent();
             Recorder.WaveFormat = waveFormat;
-            Recorder.BufferMilliseconds = 20;
+            Recorder.BufferMilliseconds = 40;
             return Recorder;
         }
     }

@@ -12,7 +12,7 @@ namespace VoiceCraft_Android.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.1-alpha";
+        public const string Version = "v1.3.2-alpha";
     }
 
     public class SignallingClient
@@ -118,7 +118,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Deny:
-                            Disconnect("Server Denied Login Request. Possible LoginKey Conflict");
+                            Disconnect("Server Denied Login Request. Possible version mismatch.");
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Binded:

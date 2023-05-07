@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="VoiceCraft_Android.Views.CreditsAndInfoPage"
+             xmlns:network="clr-namespace:VoiceCraft_Android.Network"
              Title="Credits And Info">
     <ContentPage.Content>
         <StackLayout Padding="20">
@@ -16,7 +17,7 @@
                        TextColor="White"
                        FontSize="20"/>
             </StackLayout>
-            <Label Text="Version: V1.3.1-Alpha"
+            <Label Text="{x:Binding Source={x:Static network:Network.Version}, StringFormat='Version: {0:F0}'}"
                    TextColor="{StaticResource Gray200}"
                    FontSize="16"/>
         </StackLayout>
