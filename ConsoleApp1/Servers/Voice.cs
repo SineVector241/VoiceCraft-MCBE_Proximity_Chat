@@ -103,7 +103,7 @@ namespace VoiceCraft_Server.Servers
                             if (list.ElementAt(i).SocketData.VoiceAddress != null)
                             {
                                 var volume = 1 - (Vector3.Distance(list.ElementAt(i).MinecraftData.Position, Participant.MinecraftData.Position) / ServerProperties._serverProperties.ProximityDistance);
-                                await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketVolume = volume }, list.ElementAt(i).SocketData.VoiceAddress);
+                                await SendPacket(new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketBytesRecorded = _packet.PacketBytesRecorded, PacketVolume = volume }, list.ElementAt(i).SocketData.VoiceAddress);
                             }
                         }
                     }

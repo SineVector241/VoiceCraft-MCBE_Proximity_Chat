@@ -11,6 +11,7 @@ using VoiceCraft_Android.Storage;
 using VoiceCraft_Android.Network;
 using Xamarin.Forms;
 using VCVoice_Packet;
+using VoiceCraft_Android.Audio;
 
 namespace VoiceCraft_Android.Services
 {
@@ -27,14 +28,12 @@ namespace VoiceCraft_Android.Services
 
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
+        private SoftLimiter Normalizer;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
-        private G722ChatCodec AudioCodec;
 
         private SignallingClient SignalClient;
         private VoiceClient VCClient;
-
-        public static WaveFormat GetRecordFormat { get => new WaveFormat(SampleRate, Channels); }
         public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels); }
 
         public async Task Run(CancellationToken ct, string serverName)
@@ -60,10 +59,11 @@ namespace VoiceCraft_Android.Services
 
                 IAudioManager audioManager = DependencyService.Get<IAudioManager>();
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
-                AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
-                AudioPlayer = audioManager.CreatePlayer(Mixer);
-                AudioCodec = new G722ChatCodec();
+                Normalizer = new SoftLimiter(Mixer);
+                Normalizer.Boost.CurrentValue = 5;
 
+                AudioRecorder = audioManager.CreateRecorder(GetAudioFormat);
+                AudioPlayer = audioManager.CreatePlayer(Normalizer);
 
                 SignalClient.OnConnect += SC_OnConnect;
                 SignalClient.OnDisconnect += SC_OnDisconnect;
@@ -139,12 +139,11 @@ namespace VoiceCraft_Android.Services
 
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
-                    AudioCodec.Dispose();
                     Mixer.RemoveAllMixerInputs();
                     Mixer = null;
+                    Normalizer = null;
                     AudioRecorder = null;
                     AudioPlayer = null;
-                    AudioCodec = null;
                     Participants.Clear();
                     Participants = null;
                     try
@@ -273,17 +272,15 @@ namespace VoiceCraft_Android.Services
             return Task.CompletedTask;
         }
 
-        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume)
+        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded)
         {
             _ = Task.Factory.StartNew(() =>
             {
-                var decoded = AudioCodec.Decode(Audio, 0, Audio.Length);
-
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
                 if (participant != null)
                 {
                     participant.VolumeProvider.Volume = Volume;
-                    participant.WaveProvider.AddSamples(decoded, 0, decoded.Length);
+                    participant.WaveProvider.AddSamples(Audio, 0, BytesRecorded);
                 }
             });
 
@@ -313,35 +310,33 @@ namespace VoiceCraft_Android.Services
             if(IsDeafened || IsMuted)
                 return;
 
+            var buffer = new WaveBuffer(e.Buffer);
+
             float max = 0;
-            // interpret as 16 bit audio
-            for (int index = 0; index < e.BytesRecorded; index += 2)
+            // interpret as 32 bit audio
+            for (int index = 0; index < e.BytesRecorded / 4; index++)
             {
-                short sample = (short)((e.Buffer[index + 1] << 8) |
-                                        e.Buffer[index + 0]);
-                // to floating point
-                var sample32 = sample / 32768f;
+                var sample = buffer.FloatBuffer[index];
+
                 // absolute value 
-                if (sample32 < 0) sample32 = -sample32;
+                if (sample < 0) sample = -sample;
                 // is this the max value?
-                if (sample32 > max) max = sample32;
+                if (sample > max) max = sample;
             }
 
-            if (max > 0.1)
+            if (max > 0.08)
             {
                 RecordDetection = DateTime.UtcNow;
             }
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
-
-                var encoded = AudioCodec.Encode(e.Buffer, 0, e.BytesRecorded);
-
                 var voicePacket = new VoicePacket()
                 {
-                    PacketAudio = encoded,
+                    PacketAudio = e.Buffer,
                     PacketDataIdentifier = PacketIdentifier.Audio,
-                    PacketVersion = Network.Network.Version
+                    PacketVersion = Network.Network.Version,
+                    PacketBytesRecorded = e.BytesRecorded
                 };
                 VCClient.Send(voicePacket);
             }

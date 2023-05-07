@@ -12,7 +12,7 @@ namespace VoiceCraftProximityChat.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.1-alpha";
+        public const string Version = "v1.3.2-alpha";
     }
 
     public class SignallingClient
@@ -119,7 +119,7 @@ namespace VoiceCraftProximityChat.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Deny:
-                            Disconnect("Server Denied Login Request. Possible LoginKey Conflict");
+                            Disconnect("Server Denied Login Request. Possible version mismatch.");
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Binded:
@@ -131,7 +131,7 @@ namespace VoiceCraftProximityChat.Network
                             {
                                 LoginKey = packet.PacketLoginKey,
                                 Name = packet.PacketName,
-                                WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true }
+                                WaveProvider = new BufferedWaveProvider(VoipService.GetAudioFormat) { DiscardOnBufferOverflow = true }
                             };
                             participant.VolumeProvider = new NAudio.Wave.SampleProviders.VolumeSampleProvider(participant.WaveProvider.ToSampleProvider());
 
@@ -193,7 +193,7 @@ namespace VoiceCraftProximityChat.Network
         //Events
         public delegate Task Connected();
         public delegate Task Disconnected(string reason);
-        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume);
+        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
@@ -261,7 +261,7 @@ namespace VoiceCraftProximityChat.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded);
                             break;
                     }
                 }

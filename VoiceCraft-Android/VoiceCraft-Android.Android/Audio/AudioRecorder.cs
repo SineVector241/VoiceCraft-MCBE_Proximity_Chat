@@ -45,19 +45,20 @@ namespace NAudio.Wave
             Encoding encoding;
             ChannelIn channelMask;
 
-            //Set the encoding. Cannot use IEEFloat otherwise I would have to downgrade float[] to byte[] and I can't be bothered
-            if (WaveFormat.Encoding == WaveFormatEncoding.Pcm)
+            //Set the encoding
+            if (WaveFormat.Encoding == WaveFormatEncoding.Pcm || WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
             {
                 encoding = WaveFormat.BitsPerSample switch
                 {
                     8 => Encoding.Pcm8bit,
                     16 => Encoding.Pcm16bit,
-                    _ => throw new ArgumentException("Input wave provider must be 8-bit or 16-bit", nameof(WaveFormat))
+                    32 => Encoding.PcmFloat,
+                    _ => throw new ArgumentException("Input wave provider must be 8-bit, 16-bit or 32bit", nameof(WaveFormat))
                 };
             }
             else
             {
-                throw new ArgumentException("Input wave provider must be PCM", nameof(WaveFormat));
+                throw new ArgumentException("Input wave provider must be PCM or IEEE Float", nameof(WaveFormat));
             }
 
             //Set the channel type. Only accepts Mono or Stereo
@@ -135,10 +136,24 @@ namespace NAudio.Wave
                     continue;
                 }
 
-                var bytesRead = audioRecord.Read(waveBuffer.ByteBuffer, 0, bufferSize);
-                if(bytesRead > 0)
+                if (WaveFormat.Encoding == WaveFormatEncoding.Pcm)
                 {
-                    DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bytesRead));
+                    var bytesRead = audioRecord.Read(waveBuffer.ByteBuffer, 0, bufferSize);
+                    if (bytesRead > 0)
+                    {
+                        DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bytesRead));
+                    }
+                }
+                else if (WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                {
+                    float[] floatBuffer = new float[bufferSize / 4];
+                    byte[] byteBuffer = new byte[bufferSize];
+                    var floatsRead = audioRecord.Read(floatBuffer, 0, floatBuffer.Length, 0);
+                    Buffer.BlockCopy(floatBuffer, 0, byteBuffer, 0, byteBuffer.Length);
+                    if (floatsRead > 0)
+                    {
+                        DataAvailable?.Invoke(this, new WaveInEventArgs(byteBuffer, floatsRead * 4));
+                    }
                 }
             }
         }

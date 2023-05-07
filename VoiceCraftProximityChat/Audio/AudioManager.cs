@@ -9,7 +9,7 @@ namespace VoiceCraftProximityChat.Audio
         {
             var Player = new WaveOutEvent();
             Player.Init(waveFormat);
-            Player.DesiredLatency = 400;
+            Player.DesiredLatency = 100;
             return Player;
         }
 
@@ -17,7 +17,7 @@ namespace VoiceCraftProximityChat.Audio
         {
             var Recorder = new WaveInEvent();
             Recorder.WaveFormat = waveFormat;
-            Recorder.BufferMilliseconds = 50;
+            Recorder.BufferMilliseconds = 40;
             return Recorder;
         }
     }
