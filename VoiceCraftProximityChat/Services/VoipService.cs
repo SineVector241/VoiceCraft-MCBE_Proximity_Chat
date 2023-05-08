@@ -273,7 +273,7 @@ namespace VoiceCraftProximityChat.Services
         }
         #endregion
 
-        private void AudioDataAvailable(object sender, WaveInEventArgs e)
+        private void AudioDataAvailable(object? sender, WaveInEventArgs e)
         {
             if (IsDeafened || IsMuted)
                 return;
