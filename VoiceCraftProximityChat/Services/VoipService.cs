@@ -41,6 +41,7 @@ namespace VoiceCraftProximityChat.Services
         public event Update OnUpdate;
         public event Failed OnFailed;
 
+        public static WaveFormat GetRecordFormat { get => new WaveFormat(SampleRate, 16, Channels); }
         public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels); }
 
         public async Task Run(CancellationToken ct, string serverName)
@@ -66,7 +67,7 @@ namespace VoiceCraftProximityChat.Services
                 Normalizer = new SoftLimiter(Mixer);
                 Normalizer.Boost.CurrentValue = 5;
 
-                AudioRecorder = audioManager.CreateRecorder(GetAudioFormat);
+                AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Normalizer);
 
                 SignalClient.OnConnect += SC_OnConnect;
@@ -187,7 +188,7 @@ namespace VoiceCraftProximityChat.Services
         private Task SC_OnParticipantLogin(ParticipantModel participant)
         {
             Participants.Add(participant);
-            Mixer.AddMixerInput(participant.VolumeProvider);
+            Mixer.AddMixerInput(participant.FloatProvider);
             return Task.CompletedTask;
         }
 
@@ -199,7 +200,7 @@ namespace VoiceCraftProximityChat.Services
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == key);
                 if (participant != null)
                 {
-                    Mixer.RemoveMixerInput(participant.WaveProvider.ToSampleProvider());
+                    Mixer.RemoveMixerInput(participant.FloatProvider.ToSampleProvider());
                     Participants.Remove(participant);
                 }
             }
@@ -247,7 +248,7 @@ namespace VoiceCraftProximityChat.Services
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
                 if (participant != null)
                 {
-                    participant.VolumeProvider.Volume = Volume;
+                    participant.FloatProvider.Volume = Volume;
                     participant.WaveProvider.AddSamples(Audio, 0, BytesRecorded);
                 }
             });
@@ -278,18 +279,17 @@ namespace VoiceCraftProximityChat.Services
             if (IsDeafened || IsMuted)
                 return;
 
-            var buffer = new WaveBuffer(e.Buffer);
-
             float max = 0;
-            // interpret as 32 bit audio
-            for (int index = 0; index < e.BytesRecorded / 4; index++)
+            // interpret as 16 bit audio
+            for (int index = 0; index < e.BytesRecorded; index += 2)
             {
-                var sample = buffer.FloatBuffer[index];
-
+                short sample = (short)((e.Buffer[index + 1] << 8) |
+                                        e.Buffer[index + 0]);
+                // to floating point
+                var sample32 = sample / 32768f;
                 // absolute value 
-                if (sample < 0) sample = -sample;
-                // is this the max value?
-                if (sample > max) max = sample;
+                if (sample32 < 0) sample32 = -sample32;
+                if (sample32 > max) max = sample32;
             }
 
             if (max > 0.08)
