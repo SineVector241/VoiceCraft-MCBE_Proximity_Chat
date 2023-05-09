@@ -95,7 +95,7 @@ namespace VoiceCraft_Server.Servers
 
                 case PacketIdentifier.Audio:
                     var Participant = serverData.GetParticipantByVoiceAddress(_endPoint);
-                    if(Participant != null && Participant.Binded)
+                    if(Participant != null && Participant.Binded && !Participant.Muted)
                     {
                         var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey && x.MinecraftData.DimensionId == Participant.MinecraftData.DimensionId && Vector3.Distance(x.MinecraftData.Position, Participant.MinecraftData.Position) <= ServerProperties._serverProperties.ProximityDistance);
                         for (int i = 0; i < list.Count(); i++)

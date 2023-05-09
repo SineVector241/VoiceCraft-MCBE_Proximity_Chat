@@ -8,7 +8,7 @@ namespace VoiceCraft_Server
 {
     public class MainEntry
     {
-        public const string Version = "v1.3.2-alpha";
+        public const string Version = "v1.3.3-alpha";
         public readonly ServerData serverData;
 
         private Signalling signalServer;
@@ -34,18 +34,119 @@ namespace VoiceCraft_Server
 
             while (true)
             {
-                var cmd = Console.ReadLine();
-                if(cmd.ToLower() == "test")
-                {
-                    var p = serverData.GetParticipants().FirstOrDefault();
-                    if(p != null)
-                    {
-                        Console.WriteLine(p.MinecraftData.Position);
-                    }
-                }
-                if (cmd.ToLower() == "exit")
+                var input = Console.ReadLine();
+                if (input.ToLower() == "exit")
                 {
                     break;
+                }
+
+                var splitCmd = input.Split(' ');
+                var cmd = splitCmd[0].ToLower();
+
+                try
+                {
+                    switch (cmd)
+                    {
+                        case "list":
+                            var p1 = serverData.GetParticipants();
+                            Logger.LogToConsole(LogType.Info, $"Connected Participants {p1.Count}", nameof(MainEntry));
+                            //Thread safety
+                            Parallel.ForEach(p1, participant => {
+                                Logger.LogToConsole(LogType.Info, $"Key: {participant.LoginKey}, Binded: {participant.Binded}, IsMuted: {participant.Muted}, Name: {participant.MinecraftData.Gamertag}, Dimension: {participant.MinecraftData.DimensionId}, Position: {participant.MinecraftData.Position}", nameof(MainEntry));
+                            });
+                            break;
+                        case "mute":
+                            var muteKeyArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(muteKeyArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Key argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var p2 = serverData.GetParticipants();
+                            var part1 = p2.AsParallel().FirstOrDefault(x => x.LoginKey == muteKeyArg);
+                            if(part1 == null)
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Participant could not be found!", nameof(MainEntry));
+                                break;
+                            }
+
+                            part1.Muted = true;
+                            Logger.LogToConsole(LogType.Success, "Successfully muted participant.", nameof(MainEntry));
+                            break;
+                        case "unmute":
+                            var unmuteKeyArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(unmuteKeyArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Key argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var p3 = serverData.GetParticipants();
+                            var part2 = p3.AsParallel().FirstOrDefault(x => x.LoginKey == unmuteKeyArg);
+                            if (part2 == null)
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Participant could not be found!", nameof(MainEntry));
+                                break;
+                            }
+
+                            part2.Muted = false;
+                            Logger.LogToConsole(LogType.Success, "Successfully unmuted participant.", nameof(MainEntry));
+                            break;
+                        case "kick":
+                            var kickKeyArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(kickKeyArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Key argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var p4 = serverData.GetParticipants();
+                            var part3 = p4.AsParallel().FirstOrDefault(x => x.LoginKey == kickKeyArg);
+                            if (part3 == null)
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Participant could not be found!", nameof(MainEntry));
+                                break;
+                            }
+
+                            serverData.RemoveParticipant(part3, true);
+                            Logger.LogToConsole(LogType.Success, "Successfully kicked participant.", nameof(MainEntry));
+                            break;
+                        case "setproximity":
+                            var proxArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(proxArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Distance argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var proxArgInt = 0;
+                            int.TryParse(proxArg, out proxArgInt);
+
+                            if (proxArgInt <= 0)
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Distance argument must be higher than 0!", nameof(MainEntry));
+                                break;
+                            }
+
+                            ServerProperties._serverProperties.ProximityDistance = proxArgInt;
+                            Logger.LogToConsole(LogType.Success, $"Successfully set proximity distance to {proxArgInt}", nameof(MainEntry));
+                            break;
+                        case "help":
+                            Logger.LogToConsole(LogType.Info, "exit: Shuts down the server.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "mute [key: string]: Mutes a participant.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "unmute [key: string]: Unmutes a participant.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "kick [key: string]: Kicks a participant.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "setproximity [distance: int]: Sets the proximity distance (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
+                            break;
+                        default:
+                            Logger.LogToConsole(LogType.Error, $"Could not find command that matches {cmd.ToLower()}", nameof(MainEntry));
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogToConsole(LogType.Error, ex.Message, nameof(MainEntry));
                 }
             }
         }
@@ -60,7 +161,7 @@ namespace VoiceCraft_Server
 
         private Task OnStartedService(string service)
         {
-            switch(service)
+            switch (service)
             {
                 case nameof(ServerProperties):
                     new MCComm(serverData);
@@ -75,7 +176,7 @@ namespace VoiceCraft_Server
                     break;
                 case nameof(Voice):
                     Console.Title = $"VoiceCraft - {Version}: Running";
-                    Logger.LogToConsole(LogType.Success, "Server Started: Type EXIT to shutdown the server...", nameof(MainEntry));
+                    Logger.LogToConsole(LogType.Success, "Server Started: Type HELP to view available commands...", nameof(MainEntry));
                     break;
             }
             return Task.CompletedTask;

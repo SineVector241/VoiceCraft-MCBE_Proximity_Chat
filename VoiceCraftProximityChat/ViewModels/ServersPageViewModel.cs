@@ -24,6 +24,13 @@ namespace VoiceCraftProximityChat.ViewModels
         }
 
         [RelayCommand]
+        public void GoToCreditsPage()
+        {
+            var navigator = (Frame)App.Current.MainWindow.FindName("Navigator");
+            navigator.Navigate(new CreditsPage());
+        }
+
+        [RelayCommand]
         public void GoToAddServerPage()
         {
             var navigator = (Frame)App.Current.MainWindow.FindName("Navigator");

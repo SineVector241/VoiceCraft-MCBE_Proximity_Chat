@@ -95,6 +95,7 @@ namespace VoiceCraft_Server.Data
     {
         public string LoginKey { get; set; }
         public bool Binded { get; set; }
+        public bool Muted { get; set; }
 
         public MinecraftData MinecraftData { get; set; } = new MinecraftData();
         public SocketData SocketData { get; set; } = new SocketData();
