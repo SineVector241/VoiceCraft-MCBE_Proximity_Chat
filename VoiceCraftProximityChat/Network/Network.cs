@@ -12,7 +12,7 @@ namespace VoiceCraftProximityChat.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.2-alpha";
+        public const string Version = "v1.3.3-alpha";
     }
 
     public class SignallingClient
@@ -131,9 +131,9 @@ namespace VoiceCraftProximityChat.Network
                             {
                                 LoginKey = packet.PacketLoginKey,
                                 Name = packet.PacketName,
-                                WaveProvider = new BufferedWaveProvider(VoipService.GetAudioFormat) { DiscardOnBufferOverflow = true }
+                                WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true }
                             };
-                            participant.VolumeProvider = new NAudio.Wave.SampleProviders.VolumeSampleProvider(participant.WaveProvider.ToSampleProvider());
+                            participant.FloatProvider = new Wave16ToFloatProvider(participant.WaveProvider);
 
                             OnParticipantLogin?.Invoke(participant);
                             break;

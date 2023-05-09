@@ -1,5 +1,4 @@
 ﻿using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 
 namespace VoiceCraftProximityChat.Models
 {
@@ -8,6 +7,6 @@ namespace VoiceCraftProximityChat.Models
         public string Name { get; set; } = "";
         public string LoginKey { get; set; } = "";
         public BufferedWaveProvider WaveProvider { get; set; }
-        public VolumeSampleProvider VolumeProvider { get; set; }
+        public Wave16ToFloatProvider FloatProvider { get; set; }
     }
 }

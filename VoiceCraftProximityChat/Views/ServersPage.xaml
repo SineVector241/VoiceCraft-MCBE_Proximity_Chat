@@ -79,6 +79,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0"
                         Command="{Binding ConnectCommand}"
@@ -92,6 +93,17 @@
                 </Button>
 
                 <Button Grid.Column="1"
+                        Command="{Binding GoToCreditsPageCommand}"
+                        Content="Credits"
+                        Grid.Row="1"
+                        Foreground="White"
+                        FontSize="15"
+                        FontWeight="Bold"
+                        Height="40"
+                        Style="{StaticResource GlobalButtonStyle}">
+                </Button>
+
+                <Button Grid.Column="2"
                         Command="{Binding DeleteServerCommand}"
                         Content="Delete Server"
                         Grid.Row="1"

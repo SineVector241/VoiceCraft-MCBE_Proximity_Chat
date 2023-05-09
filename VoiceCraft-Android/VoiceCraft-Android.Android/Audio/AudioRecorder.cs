@@ -33,7 +33,6 @@ namespace NAudio.Wave
             captureState = CaptureState.Stopped;
             disposed = false;
             audioSource = AudioSource.Mic;
-
         }
         #endregion
 
@@ -72,6 +71,8 @@ namespace NAudio.Wave
             //Determine the buffer size
             int minBufferSize = AudioRecord.GetMinBufferSize(WaveFormat.SampleRate, channelMask, encoding);
             int bufferSize = WaveFormat.ConvertLatencyToByteSize(BufferMilliseconds);
+
+            if (WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat) bufferSize = bufferSize / 4;
             if (bufferSize < minBufferSize)
             {
                 bufferSize = minBufferSize;
@@ -124,7 +125,6 @@ namespace NAudio.Wave
                 bufferSize -= bufferSize % WaveFormat.BlockAlign;
             }
 
-            WaveBuffer waveBuffer = new WaveBuffer(bufferSize);
             captureState = CaptureState.Capturing;
 
             //Run the record loop
@@ -138,10 +138,11 @@ namespace NAudio.Wave
 
                 if (WaveFormat.Encoding == WaveFormatEncoding.Pcm)
                 {
-                    var bytesRead = audioRecord.Read(waveBuffer.ByteBuffer, 0, bufferSize);
+                    byte[] byteBuffer = new byte[bufferSize];
+                    var bytesRead = audioRecord.Read(byteBuffer, 0, bufferSize);
                     if (bytesRead > 0)
                     {
-                        DataAvailable?.Invoke(this, new WaveInEventArgs(waveBuffer.ByteBuffer, bytesRead));
+                        DataAvailable?.Invoke(this, new WaveInEventArgs(byteBuffer, bytesRead));
                     }
                 }
                 else if (WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)

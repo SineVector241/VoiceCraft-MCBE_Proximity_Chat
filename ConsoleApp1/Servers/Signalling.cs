@@ -163,16 +163,16 @@ namespace VoiceCraft_Server.Servers
 
         private async Task OnParticipantLogout(Participant participant, string reason = null)
         {
+            if (reason == "Server Request")
+            {
+                await SendPacket(new SignallingPacket()
+                {
+                    PacketDataIdentifier = PacketIdentifier.Logout,
+                }, participant.SocketData.SignallingAddress);
+            }
+
             if (participant.Binded)
             {
-                if (reason == "Server Request")
-                {
-                    await SendPacket(new SignallingPacket()
-                    {
-                        PacketDataIdentifier = PacketIdentifier.Logout,
-                    }, participant.SocketData.SignallingAddress);
-                }
-
                 var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != participant.LoginKey);
                 for (int i = 0; i < list.Count(); i++)
                 {
