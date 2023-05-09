@@ -2,6 +2,8 @@
 
 Proximity Voice chat for Minecraft Bedrock Edition.
 
+![VoiceCraft](./VoiceCraft-Android/VoiceCraft-Android.Android/Resources/drawable/vc.png)
+
 ## Project Description
 VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework developed in C# started by SineVector241 that enables Voice Proximity chat for the game Minecraft on the bedrock platform which gives a more immersive, communicative experience. This project will also expand into supporting more platforms such as IOS and Android devices using Xamarin. The project only allows for a self-hosted framework giving the owners more control on how they want it to be setup however the project may also expand into allowing multiple server instances on a single server that does not require a self-hosted framework and allows other users to host for other Minecraft server owners.
 
@@ -43,5 +45,5 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 - [ ] Implement experimental accurate player position depending on velocity and latency to client.
 - [ ] Implement experimental directional hearing.
 - [ ] Implement second experimental algorithm using Minecraft Websocket Client to Client Communication. (Allows voice proximity chat on any server but limits device support)
-- [ ] Design a logo.
+- [x] Design a logo.
 - [ ] Improve UI style/design.
