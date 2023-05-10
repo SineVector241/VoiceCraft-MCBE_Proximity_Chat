@@ -108,6 +108,7 @@ namespace VoiceCraft_Server.Servers
                                 {
                                     vcParticipant.MinecraftData.Position = player.Location;
                                     vcParticipant.MinecraftData.DimensionId = player.DimensionId;
+                                    vcParticipant.MinecraftData.Rotation = player.Rotation;
                                 }
                             }
 
@@ -164,6 +165,7 @@ namespace VoiceCraft_Server.Servers
         public string PlayerId { get; set; } = "";
         public string DimensionId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
+        public float Rotation { get; set; }
     }
 
     public enum PacketType

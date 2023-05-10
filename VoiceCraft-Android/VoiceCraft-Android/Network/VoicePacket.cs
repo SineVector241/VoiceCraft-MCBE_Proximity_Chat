@@ -15,18 +15,10 @@ namespace VCVoice_Packet
         Null
     }
 
-    public enum StateIdentifier
-    {
-        Unknown,
-        Mute,
-        Unmute,
-        Deafen,
-        Undeafen
-    }
     public class VoicePacket
     {
         private PacketIdentifier PacketIdentifier; //PacketIdentifier - Data containing data to identify what packet is received/sent
-        private StateIdentifier StateIdentifier; //StateIdentifier - Data containing data to identify the state.
+        private float RotationSource; //RotationSource - Data containing rotation to source.
         private float Volume; //Volume - Data containing volume data to set for proximity.
         private int BytesRecorded; //Bytes Recorded - Data containing how many bytes were recorded in the packet.
         private string LoginKey; //LoginKey - Data containing the login Id. Used only for binding to a client connected to signalling server.
@@ -39,10 +31,10 @@ namespace VCVoice_Packet
             set { PacketIdentifier = value; }
         }
 
-        public StateIdentifier PacketStateIdentifier
+        public float PacketRotationSource
         {
-            get { return StateIdentifier; }
-            set { StateIdentifier = value; }
+            get { return RotationSource; }
+            set { RotationSource = value; }
         }
 
         public float PacketVolume
@@ -78,7 +70,6 @@ namespace VCVoice_Packet
         public VoicePacket()
         {
             PacketIdentifier = PacketIdentifier.Null;
-            StateIdentifier = StateIdentifier.Unknown;
             LoginKey = "";
             Volume = 0.0f;
             Audio = null;
@@ -88,7 +79,7 @@ namespace VCVoice_Packet
         public VoicePacket(byte[] dataStream)
         {
             PacketDataIdentifier = (PacketIdentifier)BitConverter.ToInt32(dataStream, 0); //Read packet identifier - 4 bytes.
-            PacketStateIdentifier = (StateIdentifier)BitConverter.ToInt32(dataStream, 4); //Read packet state - 4 bytes.
+            PacketRotationSource = BitConverter.ToSingle(dataStream, 4); //Read packet state - 4 bytes.
             Volume = BitConverter.ToSingle(dataStream, 8); //Read volume value - 4 bytes.
             BytesRecorded = BitConverter.ToInt32(dataStream, 12); //Read Bytes Recorded value - 4 bytes.
             int loginIdLength = BitConverter.ToInt32(dataStream, 16); // Read login Id Length - 4 bytes.
@@ -116,7 +107,7 @@ namespace VCVoice_Packet
         {
             var DataStream = new List<byte>();
             DataStream.AddRange(BitConverter.GetBytes((int)PacketDataIdentifier));
-            DataStream.AddRange(BitConverter.GetBytes((int)PacketStateIdentifier));
+            DataStream.AddRange(BitConverter.GetBytes(PacketRotationSource));
             DataStream.AddRange(BitConverter.GetBytes(PacketVolume));
             DataStream.AddRange(BitConverter.GetBytes(PacketBytesRecorded));
 

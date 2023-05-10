@@ -42,7 +42,7 @@ namespace VoiceCraftProximityChat.Services
         public event Failed OnFailed;
 
         public static WaveFormat GetRecordFormat { get => new WaveFormat(SampleRate, 16, Channels); }
-        public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels); }
+        public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels * 2); }
 
         public async Task Run(CancellationToken ct, string serverName)
         {
@@ -188,7 +188,7 @@ namespace VoiceCraftProximityChat.Services
         private Task SC_OnParticipantLogin(ParticipantModel participant)
         {
             Participants.Add(participant);
-            Mixer.AddMixerInput(participant.FloatProvider);
+            Mixer.AddMixerInput(participant.MonoToStereo);
             return Task.CompletedTask;
         }
 
@@ -200,7 +200,7 @@ namespace VoiceCraftProximityChat.Services
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == key);
                 if (participant != null)
                 {
-                    Mixer.RemoveMixerInput(participant.FloatProvider.ToSampleProvider());
+                    Mixer.RemoveMixerInput(participant.MonoToStereo);
                     Participants.Remove(participant);
                 }
             }
@@ -241,7 +241,7 @@ namespace VoiceCraftProximityChat.Services
             return Task.CompletedTask;
         }
 
-        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded)
+        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource)
         {
             _ = Task.Factory.StartNew(() =>
             {
@@ -249,6 +249,8 @@ namespace VoiceCraftProximityChat.Services
                 if (participant != null)
                 {
                     participant.FloatProvider.Volume = Volume;
+                    participant.MonoToStereo.LeftVolume = (float)(0.5 + Math.Sin(RotationSource) * 0.5);
+                    participant.MonoToStereo.RightVolume = (float)(0.5 - Math.Sin(RotationSource) * 0.5);
                     participant.WaveProvider.AddSamples(Audio, 0, BytesRecorded);
                 }
             });

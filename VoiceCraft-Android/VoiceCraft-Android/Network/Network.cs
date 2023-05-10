@@ -133,6 +133,7 @@ namespace VoiceCraft_Android.Network
                                 WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true }
                             };
                             participant.FloatProvider = new Wave16ToFloatProvider(participant.WaveProvider);
+                            participant.MonoToStereo = new NAudio.Wave.SampleProviders.MonoToStereoSampleProvider(participant.FloatProvider.ToSampleProvider());
 
                             OnParticipantLogin?.Invoke(participant);
                             break;
@@ -187,7 +188,7 @@ namespace VoiceCraft_Android.Network
         //Events
         public delegate Task Connected();
         public delegate Task Disconnected(string reason);
-        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded);
+        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
@@ -253,7 +254,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded, packet.PacketRotationSource);
                             break;
                     }
                 }

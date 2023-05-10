@@ -3,7 +3,6 @@ using System.IO;
 using VoiceCraftProximityChat.Models;
 using System;
 using System.Linq;
-using System.Diagnostics;
 
 namespace VoiceCraftProximityChat.Storage
 {
