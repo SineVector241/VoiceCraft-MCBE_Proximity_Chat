@@ -12,7 +12,7 @@ namespace VoiceCraft_Android.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.3-alpha";
+        public const string Version = "v1.3.4-alpha";
     }
 
     public class SignallingClient

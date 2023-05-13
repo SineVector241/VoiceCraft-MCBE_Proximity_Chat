@@ -8,7 +8,7 @@ namespace VoiceCraft_Server
 {
     public class MainEntry
     {
-        public const string Version = "v1.3.3-alpha";
+        public const string Version = "v1.3.4-alpha";
         public readonly ServerData serverData;
 
         private Signalling signalServer;
