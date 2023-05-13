@@ -11,14 +11,17 @@ namespace VoiceCraft_Android.Storage
     {
         private const string DbFolder = "Databases";
         private const string ServersDb = "Servers.json";
+        private const string SettingsDb = "Settings.json";
 
         private static string LocalPath;
         private static string ServersDbPath;
+        private static string SettingsDbPath;
 
         static Database()
         {
             LocalPath = GetLocalFileDirectory();
             ServersDbPath = Path.Combine(LocalPath, ServersDb);
+            SettingsDbPath = Path.Combine(LocalPath, SettingsDb);
         }
 
         public static ServerListModel GetServers()
@@ -77,6 +80,23 @@ namespace VoiceCraft_Android.Storage
             var servers = GetServers();
 
             return servers.Servers.FirstOrDefault(x => x.Name == name);
+        }
+
+        public static SettingsModel GetSettings()
+        {
+            var settings = new SettingsModel();
+            if (File.Exists(SettingsDbPath))
+            {
+                var json = File.ReadAllText(SettingsDbPath);
+                settings = JsonConvert.DeserializeObject<SettingsModel>(json);
+            }
+            return settings;
+        }
+
+        public static void SaveSettings(SettingsModel settings)
+        {
+            var serialized = JsonConvert.SerializeObject(settings);
+            File.WriteAllText(SettingsDbPath, serialized);
         }
 
 

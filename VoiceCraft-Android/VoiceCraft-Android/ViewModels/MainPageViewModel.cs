@@ -73,7 +73,7 @@ namespace VoiceCraft_Android.ViewModels
 
         private void StartService(string serverName)
         {
-            var message = new StartServiceMessage() { ServerName = serverName };
+            var message = new StartServiceMessage() { ServerName = serverName, Settings = Database.GetSettings() };
             MessagingCenter.Send(message, "ServiceStarted");
             Preferences.Set("VoipServiceRunning", true);
         }

@@ -8,7 +8,7 @@ namespace VoiceCraft_Server
 {
     public class MainEntry
     {
-        public const string Version = "v1.3.3-alpha";
+        public const string Version = "v1.3.4-alpha";
         public readonly ServerData serverData;
 
         private Signalling signalServer;
@@ -52,7 +52,7 @@ namespace VoiceCraft_Server
                             Logger.LogToConsole(LogType.Info, $"Connected Participants {p1.Count}", nameof(MainEntry));
                             //Thread safety
                             Parallel.ForEach(p1, participant => {
-                                Logger.LogToConsole(LogType.Info, $"Key: {participant.LoginKey}, Binded: {participant.Binded}, IsMuted: {participant.Muted}, Name: {participant.MinecraftData.Gamertag}, Dimension: {participant.MinecraftData.DimensionId}, Position: {participant.MinecraftData.Position}", nameof(MainEntry));
+                                Logger.LogToConsole(LogType.Info, $"Key: {participant.LoginKey}, Binded: {participant.Binded}, IsMuted: {participant.Muted}, Name: {participant.MinecraftData.Gamertag}, Dimension: {participant.MinecraftData.DimensionId}, Position: {participant.MinecraftData.Position}, Rotation: {participant.MinecraftData.Rotation}", nameof(MainEntry));
                             });
                             break;
                         case "mute":

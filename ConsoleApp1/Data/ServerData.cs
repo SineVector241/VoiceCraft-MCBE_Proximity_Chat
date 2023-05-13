@@ -106,6 +106,7 @@ namespace VoiceCraft_Server.Data
         public string Gamertag { get; set; }
         public string PlayerId { get; set; }
         public Vector3 Position { get; set; }
+        public float Rotation { get; set; }
         public string DimensionId { get; set; } = "void";
     }
 

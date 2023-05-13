@@ -32,7 +32,7 @@ namespace VoiceCraft_Android.Droid.Services
                 try
                 {
                     var voipShared = new VoipService();
-                    voipShared.Run(cts.Token, intent.GetStringExtra("ServerName")).Wait();
+                    voipShared.Run(cts.Token, intent.GetStringExtra("ServerName"), intent.GetBooleanExtra("DirectionalAudioEnabled", false)).Wait();
                 }
                 catch (OperationCanceledException)
                 {

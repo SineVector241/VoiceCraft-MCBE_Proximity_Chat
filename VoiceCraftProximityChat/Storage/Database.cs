@@ -3,7 +3,6 @@ using System.IO;
 using VoiceCraftProximityChat.Models;
 using System;
 using System.Linq;
-using System.Diagnostics;
 
 namespace VoiceCraftProximityChat.Storage
 {
@@ -11,18 +10,23 @@ namespace VoiceCraftProximityChat.Storage
     {
         private const string DbFolder = "./Databases";
         private const string ServersDb = "Servers.json";
+        private const string SettingsDb = "Settings.json";
 
         private static string ServersDbPath;
+        private static string SettingsDbPath;
 
         static Database()
         {
             ServersDbPath = Path.Combine(DbFolder, ServersDb);
+            SettingsDbPath = Path.Combine(DbFolder, SettingsDb);
             if (!Directory.Exists(DbFolder))
             {
                 Directory.CreateDirectory(DbFolder);
             }
         }
 
+
+        #region Servers DB Methods
         public static ServerListModel GetServers()
         {
             ServerListModel servers = new ServerListModel();
@@ -80,5 +84,25 @@ namespace VoiceCraftProximityChat.Storage
 
             return servers.Servers.FirstOrDefault(x => x.Name == name);
         }
+        #endregion
+
+        #region Settings DB Methods
+        public static SettingsModel GetSettings()
+        {
+            var settings = new SettingsModel();
+            if (File.Exists(SettingsDbPath))
+            {
+                var json = File.ReadAllText(SettingsDbPath);
+                settings = JsonConvert.DeserializeObject<SettingsModel>(json);
+            }
+            return settings;
+        }
+
+        public static void SaveSettings(SettingsModel settings)
+        {
+            var serialized = JsonConvert.SerializeObject(settings);
+            File.WriteAllText(SettingsDbPath, serialized);
+        }
+        #endregion
     }
 }

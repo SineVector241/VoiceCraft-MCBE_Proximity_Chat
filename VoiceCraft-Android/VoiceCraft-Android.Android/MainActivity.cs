@@ -55,6 +55,7 @@ namespace VoiceCraft_Android.Droid
                 if (!IsServiceRunning(typeof(VoipForegroundService)))
                 {
                     serviceIntent.PutExtra("ServerName", message.ServerName);
+                    serviceIntent.PutExtra("DirectionalAudioEnabled", message.Settings.DirectionalAudioEnabled);
                     StartForegroundService(serviceIntent);
                     Preferences.Set("VoipServiceRunning", true);
                 }
