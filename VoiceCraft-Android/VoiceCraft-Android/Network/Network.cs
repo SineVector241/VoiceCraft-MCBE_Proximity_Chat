@@ -130,7 +130,8 @@ namespace VoiceCraft_Android.Network
                             {
                                 LoginKey = packet.PacketLoginKey,
                                 Name = packet.PacketName,
-                                WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true }
+                                WaveProvider = new BufferedWaveProvider(VoipService.GetRecordFormat) { DiscardOnBufferOverflow = true },
+                                Decoder = new Concentus.Structs.OpusDecoder(VoipService.GetRecordFormat.SampleRate, 1)
                             };
                             participant.FloatProvider = new Wave16ToFloatProvider(participant.WaveProvider);
                             participant.MonoToStereo = new NAudio.Wave.SampleProviders.MonoToStereoSampleProvider(participant.FloatProvider.ToSampleProvider());

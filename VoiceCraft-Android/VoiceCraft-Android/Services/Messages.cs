@@ -7,6 +7,7 @@ namespace VoiceCraft_Android.Services
     public class StartServiceMessage
     {
         public string ServerName { get; set; }
+        public SettingsModel Settings { get; set; }
     }
 
     public class StopServiceMessage

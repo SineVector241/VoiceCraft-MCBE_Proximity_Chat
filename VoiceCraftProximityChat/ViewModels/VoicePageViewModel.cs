@@ -1,11 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NAudio.Wave;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using VoiceCraftProximityChat.Services;
+using VoiceCraftProximityChat.Storage;
 using VoiceCraftProximityChat.Views;
 
 namespace VoiceCraftProximityChat.ViewModels
@@ -66,7 +69,20 @@ namespace VoiceCraftProximityChat.ViewModels
             {
                 try
                 {
-                    voipService.Run(cts.Token, serverName).Wait();
+                    var settings = Database.GetSettings();
+                    if (WaveIn.DeviceCount <= settings.InputDevice)
+                    {
+                        settings.InputDevice = -1;
+                        Database.SaveSettings(settings);
+                    }
+
+                    if (WaveOut.DeviceCount <= settings.OutputDevice)
+                    {
+                        settings.OutputDevice = -1;
+                        Database.SaveSettings(settings);
+                    }
+
+                    voipService.Run(cts.Token, serverName, settings.DirectionalAudioEnabled, settings.InputDevice, settings.OutputDevice).Wait();
                 }
                 catch
                 {

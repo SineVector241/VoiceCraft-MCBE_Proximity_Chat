@@ -1,4 +1,5 @@
-﻿using NAudio.Wave;
+﻿using Concentus.Structs;
+using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
 namespace VoiceCraftProximityChat.Models
@@ -10,5 +11,6 @@ namespace VoiceCraftProximityChat.Models
         public BufferedWaveProvider WaveProvider { get; set; }
         public Wave16ToFloatProvider FloatProvider { get; set; }
         public MonoToStereoSampleProvider MonoToStereo { get; set; }
+        public OpusDecoder Decoder { get; set; }
     }
 }

@@ -11,17 +11,19 @@ using VoiceCraft_Android.Storage;
 using VoiceCraft_Android.Network;
 using Xamarin.Forms;
 using VCVoice_Packet;
+using Concentus.Structs;
 using VoiceCraft_Android.Audio;
 
 namespace VoiceCraft_Android.Services
 {
     public class VoipService
     {
-        private const int SampleRate = 16000;
+        private const int SampleRate = 48000;
         private const int Channels = 1;
         private bool Stopping = false;
         private bool IsMuted = false;
         private bool IsDeafened = false;
+        private bool DirectionalAudio = false;
         private string Username = "";
         private string StatusMessage = "Connecting...";
         private DateTime RecordDetection = DateTime.UtcNow;
@@ -29,6 +31,7 @@ namespace VoiceCraft_Android.Services
         private List<ParticipantModel> Participants;
         private MixingSampleProvider Mixer;
         private SoftLimiter Normalizer;
+        private OpusEncoder Encoder;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
 
@@ -38,7 +41,7 @@ namespace VoiceCraft_Android.Services
         public static WaveFormat GetRecordFormat { get => new WaveFormat(SampleRate, 16, Channels); }
         public static WaveFormat GetAudioFormat { get => WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, Channels * 2); }
 
-        public async Task Run(CancellationToken ct, string serverName)
+        public async Task Run(CancellationToken ct, string serverName, bool directionalAudioEnabled)
         {
             await Task.Run(async () =>
             {
@@ -54,6 +57,8 @@ namespace VoiceCraft_Android.Services
                     return;
                 }
 
+                DirectionalAudio = directionalAudioEnabled;
+
                 Participants = new List<ParticipantModel>();
 
                 SignalClient = new SignallingClient();
@@ -62,7 +67,11 @@ namespace VoiceCraft_Android.Services
                 IAudioManager audioManager = DependencyService.Get<IAudioManager>();
                 Mixer = new MixingSampleProvider(GetAudioFormat) { ReadFully = true };
                 Normalizer = new SoftLimiter(Mixer);
-                Normalizer.Boost.CurrentValue = 5;
+                Normalizer.Boost.CurrentValue = 10;
+
+                Encoder = new OpusEncoder(SampleRate, Channels, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP);
+                Encoder.Complexity = 10;
+                Encoder.Bitrate = 64000;
 
                 AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Normalizer);
@@ -79,11 +88,13 @@ namespace VoiceCraft_Android.Services
 
                 AudioRecorder.DataAvailable += AudioDataAvailable;
 
-                MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message => {
+                MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message =>
+                {
                     IsMuted = !IsMuted;
                 });
 
-                MessagingCenter.Subscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen", message => {
+                MessagingCenter.Subscribe<DeafenUndeafenMessage>(this, "DeafenUndeafen", message =>
+                {
                     IsDeafened = !IsDeafened;
                 });
 
@@ -142,6 +153,7 @@ namespace VoiceCraft_Android.Services
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
                     Mixer.RemoveAllMixerInputs();
+                    Encoder = null;
                     Mixer = null;
                     Normalizer = null;
                     AudioRecorder = null;
@@ -281,10 +293,20 @@ namespace VoiceCraft_Android.Services
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
                 if (participant != null)
                 {
-                    participant.FloatProvider.Volume = Volume;
-                    participant.MonoToStereo.LeftVolume = (float)(0.5 + Math.Sin(RotationSource) * 0.5);
-                    participant.MonoToStereo.RightVolume = (float)(0.5 - Math.Sin(RotationSource) * 0.5);
-                    participant.WaveProvider.AddSamples(Audio, 0, BytesRecorded);
+                    try
+                    {
+                        short[] decoded = new short[1920];
+                        participant.Decoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
+                        byte[] decodedBytes = ShortsToBytes(decoded, 0, decoded.Length);
+                        participant.FloatProvider.Volume = Volume;
+                        if (DirectionalAudio)
+                        {
+                            participant.MonoToStereo.LeftVolume = (float)(0.5 + Math.Sin(RotationSource) * 0.5);
+                            participant.MonoToStereo.RightVolume = (float)(0.5 - Math.Sin(RotationSource) * 0.5);
+                        }
+                        participant.WaveProvider.AddSamples(decodedBytes, 0, BytesRecorded);
+                    }
+                    catch { }
                 }
             });
 
@@ -311,7 +333,7 @@ namespace VoiceCraft_Android.Services
 
         private void AudioDataAvailable(object sender, WaveInEventArgs e)
         {
-            if(IsDeafened || IsMuted)
+            if (IsDeafened || IsMuted)
                 return;
 
             float max = 0;
@@ -334,15 +356,46 @@ namespace VoiceCraft_Android.Services
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
-                var voicePacket = new VoicePacket()
+                short[] pcm = BytesToShorts(e.Buffer, 0, e.BytesRecorded);
+                byte[] encoded = new byte[1000];
+                var encodedBytes = Encoder.Encode(pcm, 0, 1920, encoded, 0, encoded.Length);
+                byte[] trimmedBytes = encoded.SkipLast(1000 - encodedBytes).ToArray();
+                if (encodedBytes > 0)
                 {
-                    PacketAudio = e.Buffer,
-                    PacketDataIdentifier = PacketIdentifier.Audio,
-                    PacketVersion = Network.Network.Version,
-                    PacketBytesRecorded = e.BytesRecorded
-                };
-                VCClient.Send(voicePacket);
+                    var voicePacket = new VoicePacket()
+                    {
+                        PacketAudio = trimmedBytes,
+                        PacketDataIdentifier = PacketIdentifier.Audio,
+                        PacketVersion = Network.Network.Version,
+                        PacketBytesRecorded = e.BytesRecorded
+                    };
+                    VCClient.Send(voicePacket);
+                }
             }
+        }
+
+        private static short[] BytesToShorts(byte[] input, int offset, int length)
+        {
+            short[] processedValues = new short[length / 2];
+            for (int c = 0; c < processedValues.Length; c++)
+            {
+                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
+                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
+            }
+
+            return processedValues;
+        }
+
+        private static byte[] ShortsToBytes(short[] input, int offset, int length)
+        {
+            byte[] processedValues = new byte[length * 2];
+            for (int c = 0; c < length; c++)
+            {
+                processedValues[c * 2] = (byte)(input[c + offset] & 0xFF);
+                processedValues[c * 2 + 1] = (byte)((input[c + offset] >> 8) & 0xFF);
+            }
+
+            return processedValues;
         }
     }
 }

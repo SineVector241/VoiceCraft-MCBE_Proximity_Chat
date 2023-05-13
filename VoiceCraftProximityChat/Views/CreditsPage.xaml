@@ -31,6 +31,17 @@
                 Width="70"
                 Style="{StaticResource GlobalButtonStyle}"/>
 
+        <Button Grid.Row="0"
+                HorizontalAlignment="Right"
+                Command="{Binding SaveSettingsCommand}"
+                Content="Save Settings"
+                Foreground="White"
+                FontSize="15"
+                FontWeight="Bold"
+                Height="45"
+                Width="120"
+                Style="{StaticResource GlobalButtonStyle}"/>
+
         <StackPanel Grid.Row="1">
             <TextBlock Text="Author: SineVector241"
                        Foreground="White"
@@ -47,7 +58,7 @@
                        FontWeight="Bold"
                        Margin="0,0,0,10"/>
 
-            <TextBlock Text="Experimental Stuff (Does nothing atm)"
+            <TextBlock Text="Experimental Features and Settings"
                        Foreground="White"
                        FontSize="20"
                        FontWeight="Bold"
@@ -65,12 +76,16 @@
 
                 <ComboBox Grid.Column="1"
                           HorizontalAlignment="Stretch"
-                          SelectedIndex="0"
                           FontSize="15"
-                          FontWeight="Bold">
-                    <ComboBoxItem Content="Default"
-                                  FontSize="15"
-                                  FontWeight="Bold"/>
+                          FontWeight="Bold"
+                          ItemsSource="{Binding InputDevices}"
+                          SelectedIndex="{Binding InputDeviceIndex}">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DeviceName}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
 
@@ -87,12 +102,15 @@
 
                 <ComboBox Grid.Column="1"
                           HorizontalAlignment="Stretch"
-                          SelectedIndex="0"
                           FontSize="15"
-                          FontWeight="Bold">
-                    <ComboBoxItem Content="Default"
-                                  FontSize="15"
-                                  FontWeight="Bold"/>
+                          FontWeight="Bold"
+                          ItemsSource="{Binding OutputDevices}"
+                          SelectedIndex="{Binding OutputDeviceIndex}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DeviceName}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
 
@@ -100,7 +118,15 @@
                       FontSize="13"
                       FontWeight="Bold"
                       Foreground="White"
-                      Margin="0,5" />
+                      Margin="0,5"
+                      IsChecked="{Binding Settings.DirectionalAudioEnabled}"/>
+
+            <CheckBox Content="Pinpoint Player Accuracy (Experimental)"
+                      FontSize="13"
+                      FontWeight="Bold"
+                      Foreground="White"
+                      Margin="0,5"
+                      IsChecked="{Binding Settings.PinpointPlayerAccuracyEnabled}"/>
         </StackPanel>
     </Grid>
 </Page>
