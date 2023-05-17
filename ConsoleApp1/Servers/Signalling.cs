@@ -71,9 +71,10 @@ namespace VoiceCraft_Server.Servers
                 case PacketIdentifier.Login:
                     var KeyResult = _packet.PacketLoginKey != null ? _packet.PacketLoginKey : "No Key";
                     Logger.LogToConsole(LogType.Info, $"Received Incoming Login: {KeyResult}", nameof(Signalling));
-                    if (_packet.PacketVersion != MainEntry.Version)
+                    if (_packet.PacketVersion != MainEntry.Version || ServerProperties._banlist.BannedIPs.Exists(x => x == _endPoint.ToString().Split(':').FirstOrDefault()))
                     {
                         await SendPacket(new SignallingPacket() { PacketDataIdentifier = PacketIdentifier.Deny }, _endPoint);
+                        Logger.LogToConsole(LogType.Warn, "Denied login. Participant has possible version mismatch or is banned.", nameof(Signalling));
                         return;
                     }
 
