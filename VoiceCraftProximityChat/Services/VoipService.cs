@@ -265,9 +265,8 @@ namespace VoiceCraftProximityChat.Services
                     var packetsLost = PacketCount - participant.PacketCount != 1;
                     try
                     {
-                        Debug.WriteLine(PacketCount);
                         short[] decoded = new short[1920];
-                        participant.Decoder.Decode(packetsLost? null : Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
+                        participant.Decoder.Decode(packetsLost? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length, false);
                         byte[] decodedBytes = ShortsToBytes(decoded, 0, decoded.Length);
                         participant.FloatProvider.Volume = Volume;
                         if (DirectionalAudio)

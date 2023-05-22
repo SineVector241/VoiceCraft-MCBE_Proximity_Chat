@@ -287,25 +287,29 @@ namespace VoiceCraft_Android.Services
             return Task.CompletedTask;
         }
 
-        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource)
+        private Task VC_OnAudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource, int PacketCount)
         {
             _ = Task.Factory.StartNew(() =>
             {
                 var participant = Participants.FirstOrDefault(x => x.LoginKey == Key);
                 if (participant != null)
                 {
+                    //Detect for any lost packets or if the stream has a different packet count.
+                    var packetsLost = PacketCount - participant.PacketCount != 1;
                     try
                     {
                         short[] decoded = new short[1920];
-                        participant.Decoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
+                        participant.Decoder.Decode(packetsLost ? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length, false);
                         byte[] decodedBytes = ShortsToBytes(decoded, 0, decoded.Length);
                         participant.FloatProvider.Volume = Volume;
                         if (DirectionalAudio)
                         {
-                            participant.MonoToStereo.LeftVolume = (float)(0.5 + Math.Sin(RotationSource) * 0.5);
-                            participant.MonoToStereo.RightVolume = (float)(0.5 - Math.Sin(RotationSource) * 0.5);
+                            participant.MonoToStereo.LeftVolume = Math.Clamp((float)(0.5 + Math.Sin(RotationSource) * 0.5), 0.3f, 1.0f);
+                            participant.MonoToStereo.RightVolume = Math.Clamp((float)(0.5 - Math.Sin(RotationSource) * 0.5), 0.3f, 1.0f);
                         }
                         participant.WaveProvider.AddSamples(decodedBytes, 0, BytesRecorded);
+
+                        participant.PacketCount = PacketCount;
                     }
                     catch { }
                 }
@@ -357,6 +361,9 @@ namespace VoiceCraft_Android.Services
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
+                //Start counting up the packets sent. This is so packet loss can be detected
+                PacketCounter++;
+
                 short[] pcm = BytesToShorts(e.Buffer, 0, e.BytesRecorded);
                 byte[] encoded = new byte[1000];
                 var encodedBytes = Encoder.Encode(pcm, 0, 1920, encoded, 0, encoded.Length);
@@ -368,9 +375,15 @@ namespace VoiceCraft_Android.Services
                         PacketAudio = trimmedBytes,
                         PacketDataIdentifier = PacketIdentifier.Audio,
                         PacketVersion = Network.Network.Version,
-                        PacketBytesRecorded = e.BytesRecorded
+                        PacketBytesRecorded = e.BytesRecorded,
+                        PacketPacketCount = PacketCounter
                     };
                     VCClient.Send(voicePacket);
+                }
+                else
+                {
+                    //Reset packet counter as soon as we stop sending audio.
+                    PacketCounter = 0;
                 }
             }
         }
