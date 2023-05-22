@@ -102,6 +102,8 @@ namespace VoiceCraft_Server
 
         //Other Settings
         public int ProximityDistance { get; set; } = 30;
+        public string PermanentServerKey { get; set; } = "";
+        public bool ProximityToggle { get; set; } = true;
     }
 
     public class BanList

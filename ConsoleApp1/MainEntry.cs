@@ -169,6 +169,20 @@ namespace VoiceCraft_Server
                             ServerProperties._serverProperties.ProximityDistance = proxArgInt;
                             Logger.LogToConsole(LogType.Success, $"Successfully set proximity distance to {proxArgInt}", nameof(MainEntry));
                             break;
+                        case "toggleproximity":
+                            var toggleArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(toggleArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Toggle argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var toggleArgBool = false;
+                            bool.TryParse(toggleArg, out toggleArgBool);
+
+                            ServerProperties._serverProperties.ProximityToggle = toggleArgBool;
+                            Logger.LogToConsole(LogType.Success, $"Successfully set proximity toggle to {toggleArgBool}", nameof(MainEntry));
+                            break;
                         case "help":
                             Logger.LogToConsole(LogType.Info, "exit: Shuts down the server.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "mute [key: string]: Mutes a participant.", nameof(MainEntry));
@@ -178,6 +192,7 @@ namespace VoiceCraft_Server
                             Logger.LogToConsole(LogType.Info, "unban [ipAddress: string]: Unbans an IPAddress", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "banlist: Shows the ip addresses that are banned.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "setproximity [distance: int]: Sets the proximity distance (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "toggleproximity [toggle: boolean]: Switches proximity chat on or off. If off, then it becomes a regular voice chat. (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
                             break;
                         default:
                             Logger.LogToConsole(LogType.Error, $"Could not find command that matches {cmd.ToLower()}", nameof(MainEntry));

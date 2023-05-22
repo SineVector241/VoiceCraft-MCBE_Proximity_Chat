@@ -95,7 +95,7 @@ namespace VoiceCraft_Server.Servers
 
                 case PacketIdentifier.Audio:
                     var Participant = serverData.GetParticipantByVoiceAddress(_endPoint);
-                    if(Participant != null && Participant.Binded && !Participant.Muted)
+                    if (Participant != null && Participant.Binded && !Participant.Muted && ServerProperties._serverProperties.ProximityToggle)
                     {
                         var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey && x.MinecraftData.DimensionId == Participant.MinecraftData.DimensionId && Vector3.Distance(x.MinecraftData.Position, Participant.MinecraftData.Position) <= ServerProperties._serverProperties.ProximityDistance);
                         for (int i = 0; i < list.Count(); i++)
@@ -105,6 +105,18 @@ namespace VoiceCraft_Server.Servers
                                 var volume = 1 - (Vector3.Distance(list.ElementAt(i).MinecraftData.Position, Participant.MinecraftData.Position) / ServerProperties._serverProperties.ProximityDistance);
                                 var rotationSource = Math.Atan2(list.ElementAt(i).MinecraftData.Position.X - Participant.MinecraftData.Position.X, list.ElementAt(i).MinecraftData.Position.Z - Participant.MinecraftData.Position.Z) - (Participant.MinecraftData.Rotation * -1 * (Math.PI / 180));
                                 var packet = new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketBytesRecorded = _packet.PacketBytesRecorded, PacketVolume = volume, PacketRotationSource = (float)rotationSource, PacketPacketCount = _packet.PacketPacketCount };
+                                await SendPacket(packet, list.ElementAt(i).SocketData.VoiceAddress);
+                            }
+                        }
+                    }
+                    else if (!ServerProperties._serverProperties.ProximityToggle)
+                    {
+                        var list = serverData.GetParticipants().Where(x => x.Binded && x.LoginKey != Participant.LoginKey);
+                        for (int i = 0; i < list.Count(); i++)
+                        {
+                            if (list.ElementAt(i).SocketData.VoiceAddress != null)
+                            {
+                                var packet = new VoicePacket() { PacketDataIdentifier = PacketIdentifier.Audio, PacketLoginKey = Participant.LoginKey, PacketAudio = _packet.PacketAudio, PacketBytesRecorded = _packet.PacketBytesRecorded, PacketVolume = 1.0f, PacketRotationSource = 0.0f, PacketPacketCount = _packet.PacketPacketCount };
                                 await SendPacket(packet, list.ElementAt(i).SocketData.VoiceAddress);
                             }
                         }

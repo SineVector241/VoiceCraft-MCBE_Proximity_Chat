@@ -20,7 +20,17 @@ namespace VoiceCraft_Server.Servers
         {
             serverData = serverDataObject;
 
-            sessionKey = Guid.NewGuid().ToString();
+            if (string.IsNullOrWhiteSpace(ServerProperties._serverProperties.PermanentServerKey))
+            {
+                Logger.LogToConsole(LogType.Warn, "Permanent server key is empty. Generating Temporary key!", nameof(MCComm));
+                sessionKey = Guid.NewGuid().ToString();
+            }
+            else
+            {
+                Logger.LogToConsole(LogType.Warn, $"Permanent server key found. Using permanent server key!", nameof(MCComm));
+                sessionKey = ServerProperties._serverProperties.PermanentServerKey;
+            }
+
             listener = new HttpListener();
             listener.Prefixes.Add($"http://*:{ServerProperties._serverProperties.MCCommPort_TCP}/");
             try
