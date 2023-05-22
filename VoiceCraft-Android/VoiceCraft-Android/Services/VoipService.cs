@@ -71,8 +71,10 @@ namespace VoiceCraft_Android.Services
                 Normalizer.Boost.CurrentValue = 10;
 
                 Encoder = new OpusEncoder(SampleRate, Channels, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP);
-                Encoder.Complexity = 10;
-                Encoder.Bitrate = 64000;
+                Encoder.Bitrate = 32000;
+                Encoder.Complexity = 5;
+                Encoder.UseVBR = true;
+                Encoder.PacketLossPercent = 40;
 
                 AudioRecorder = audioManager.CreateRecorder(GetRecordFormat);
                 AudioPlayer = audioManager.CreatePlayer(Normalizer);
