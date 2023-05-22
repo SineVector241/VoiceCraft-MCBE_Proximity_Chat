@@ -60,7 +60,7 @@ while(True and success):
             packet['PlayerId'] = plrId
             packet['Gamertag'] = plrGamertag
 
-        if(action == 2):
+        elif(action == 2):
             packet['Type'] = 1
             plrKey = str(input("Player Key: "))
 
