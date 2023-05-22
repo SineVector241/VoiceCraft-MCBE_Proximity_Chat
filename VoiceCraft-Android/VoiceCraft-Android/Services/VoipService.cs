@@ -20,6 +20,7 @@ namespace VoiceCraft_Android.Services
     {
         private const int SampleRate = 48000;
         private const int Channels = 1;
+        private int PacketCounter = 0;
         private bool Stopping = false;
         private bool IsMuted = false;
         private bool IsDeafened = false;

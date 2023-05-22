@@ -195,7 +195,7 @@ namespace VoiceCraftProximityChat.Network
         //Events
         public delegate Task Connected();
         public delegate Task Disconnected(string reason);
-        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource);
+        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource, int PacketCount);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
@@ -263,7 +263,7 @@ namespace VoiceCraftProximityChat.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded, packet.PacketRotationSource);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded, packet.PacketRotationSource, packet.PacketPacketCount);
                             break;
                     }
                 }
