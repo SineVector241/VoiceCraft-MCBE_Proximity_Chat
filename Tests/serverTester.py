@@ -17,7 +17,11 @@ while(True):
                 "DimensionId": "",
                 "Location": {"x": 0, "y": 0, "z": 0},
                 "Rotation": 0
-            }]
+            }],
+            'Settings': {
+                "ProximityDistance": 30,
+                "ProximityToggle": True
+            }
         }
 
         print("\nSending Request...")
@@ -44,10 +48,14 @@ while(True and success):
                 "DimensionId": "",
                 "Location": {"x": 0, "y": 0, "z": 0},
                 "Rotation": 0
-            }]
+            }],
+            'Settings': {
+                "ProximityDistance": 30,
+                "ProximityToggle": True
+            }
         }
 
-        print("1: Bind Participant\n2: Bind Participant(Quick)\n3: Update Participant\n4: Remove Participant\n5: Exit Program")
+        print("1: Bind Participant\n2: Bind Participant(Quick)\n3: Update Participant\n4: Update Settings\n5: Get Settings\n6: Remove Participant\n7: Exit Program")
         action = int(input("Action to take (integer): "))
 
         if(action == 1):
@@ -78,11 +86,38 @@ while(True and success):
             plrLocZ = int(input("Player Location - Z: "))
             plrRot = int(input("Player Rotation: "))
 
+            packet['Players']['PlayerId'] = plrId
+            packet['Players']['DimensionId'] = plrDim
+            packet['Players']['Location']['x'] = plrLocX
+            packet['Players']['Location']['y'] = plrLocY
+            packet['Players']['Location']['z'] = plrLocZ
+            packet['Players']['Rotation'] = plrRot
+
         elif(action == 4):
             packet['Type'] = 3
-            plrId = str(input("Player Id: "))
+            proxDist = int(input("Proximity Distance: "))
+            proxToggleInput = str(input("Proximity Toggle: "))
+            proxToggle = False
+
+            if(proxToggleInput.lower() == "true"):
+                proxToggle = True
+            elif(proxToggleInput.lower() == "false"):
+                proxToggle = False
+            else:
+                raise ValueError('Error. Expected boolean value!.')
+
+            print(proxToggle)
+            packet['Settings']['ProximityDistance'] = proxDist
+            packet['Settings']['ProximityToggle'] = proxToggle
 
         elif(action == 5):
+            packet['Type'] = 4
+
+        elif(action == 6):
+            packet['Type'] = 5
+            plrId = str(input("Player Id: "))
+
+        elif(action == 7):
             print("\nProgram Terminated.")
             break
 
@@ -100,4 +135,6 @@ while(True and success):
 #Login = 0
 #Bind = 1
 #Update = 2
-#RemoveParticipant = 3
+#UpdateSettings = 3
+#GetSettings = 4
+#RemoveParticipant = 5
