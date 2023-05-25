@@ -363,6 +363,10 @@ namespace VoiceCraft_Android.Services
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
+                //Prevent overload error.
+                if (PacketCounter >= int.MaxValue)
+                    PacketCounter = 0;
+
                 //Start counting up the packets sent. This is so packet loss can be detected
                 PacketCounter++;
 

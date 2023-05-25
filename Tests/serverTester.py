@@ -86,12 +86,12 @@ while(True and success):
             plrLocZ = int(input("Player Location - Z: "))
             plrRot = int(input("Player Rotation: "))
 
-            packet['Players']['PlayerId'] = plrId
-            packet['Players']['DimensionId'] = plrDim
-            packet['Players']['Location']['x'] = plrLocX
-            packet['Players']['Location']['y'] = plrLocY
-            packet['Players']['Location']['z'] = plrLocZ
-            packet['Players']['Rotation'] = plrRot
+            packet['Players'][0]['PlayerId'] = plrId
+            packet['Players'][0]['DimensionId'] = plrDim
+            packet['Players'][0]['Location']['x'] = plrLocX
+            packet['Players'][0]['Location']['y'] = plrLocY
+            packet['Players'][0]['Location']['z'] = plrLocZ
+            packet['Players'][0]['Rotation'] = plrRot
 
         elif(action == 4):
             packet['Type'] = 3

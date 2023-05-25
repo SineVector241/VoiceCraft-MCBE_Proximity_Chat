@@ -30,7 +30,7 @@ namespace VoiceCraft_Android.ViewModels
                 Utils.DisplayAlert("Error", "IP cannot be empty!");
                 return;
             }
-            if(Port <= 1025 || Port >= 65535)
+            if(Port < 1025 || Port > 65535)
             {
                 Utils.DisplayAlert("Error", "Port cannot be lower than 1025 or higher than 65535");
                 return;

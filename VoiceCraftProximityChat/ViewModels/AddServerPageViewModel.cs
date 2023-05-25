@@ -34,7 +34,7 @@ namespace VoiceCraftProximityChat.ViewModels
                 return;
             }
 
-            if (Port <= 1025 || Port >= 65535)
+            if (Port < 1025 || Port > 65535)
             {
                 MessageBox.Show("Port cannot be lower than 1025 or higher than 65535", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
