@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using VoiceCraft_Server.Data;
 using VoiceCraft_Server.Servers;
@@ -8,7 +9,7 @@ namespace VoiceCraft_Server
 {
     public class MainEntry
     {
-        public const string Version = "v1.3.4-alpha";
+        public const string Version = "v1.3.5-alpha";
         public readonly ServerData serverData;
 
         private Signalling signalServer;
@@ -112,6 +113,42 @@ namespace VoiceCraft_Server
                             serverData.RemoveParticipant(part3, true);
                             Logger.LogToConsole(LogType.Success, "Successfully kicked participant.", nameof(MainEntry));
                             break;
+                        case "ban":
+                            var banKeyArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(banKeyArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Key argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var p5 = serverData.GetParticipants();
+                            var part4 = p5.AsParallel().FirstOrDefault(x => x.LoginKey == banKeyArg);
+                            if (part4 == null)
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Participant could not be found!", nameof(MainEntry));
+                                break;
+                            }
+                            ServerProperties.BanIp(part4.SocketData.SignallingAddress.ToString().Split(':').FirstOrDefault());
+                            serverData.RemoveParticipant(part4, true);
+                            Logger.LogToConsole(LogType.Success, "Successfully banned participant.", nameof(MainEntry));
+                            break;
+                        case "unban":
+                            var unbanIpArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(unbanIpArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. ipAddress argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            ServerProperties.UnbanIp(unbanIpArg);
+                            break;
+                        case "banlist":
+                            Logger.LogToConsole(LogType.Info, $"Banned IP's: {ServerProperties._banlist.BannedIPs.Count}", nameof(MainEntry));
+                            foreach(var ip in ServerProperties._banlist.BannedIPs)
+                            {
+                                Logger.LogToConsole(LogType.Info, ip, nameof(MainEntry));
+                            }
+                            break;
                         case "setproximity":
                             var proxArg = splitCmd.ElementAt(1);
                             if (string.IsNullOrEmpty(proxArg))
@@ -132,12 +169,30 @@ namespace VoiceCraft_Server
                             ServerProperties._serverProperties.ProximityDistance = proxArgInt;
                             Logger.LogToConsole(LogType.Success, $"Successfully set proximity distance to {proxArgInt}", nameof(MainEntry));
                             break;
+                        case "toggleproximity":
+                            var toggleArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrEmpty(toggleArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Toggle argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            var toggleArgBool = false;
+                            bool.TryParse(toggleArg, out toggleArgBool);
+
+                            ServerProperties._serverProperties.ProximityToggle = toggleArgBool;
+                            Logger.LogToConsole(LogType.Success, $"Successfully set proximity toggle to {toggleArgBool}", nameof(MainEntry));
+                            break;
                         case "help":
                             Logger.LogToConsole(LogType.Info, "exit: Shuts down the server.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "mute [key: string]: Mutes a participant.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "unmute [key: string]: Unmutes a participant.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "kick [key: string]: Kicks a participant.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "ban [key: string]: Bans a participant. Doesn't blacklist the key but blacklists the participant's IP address", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "unban [ipAddress: string]: Unbans an IPAddress", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "banlist: Shows the ip addresses that are banned.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "setproximity [distance: int]: Sets the proximity distance (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "toggleproximity [toggle: boolean]: Switches proximity chat on or off. If off, then it becomes a regular voice chat. (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
                             break;
                         default:
                             Logger.LogToConsole(LogType.Error, $"Could not find command that matches {cmd.ToLower()}", nameof(MainEntry));

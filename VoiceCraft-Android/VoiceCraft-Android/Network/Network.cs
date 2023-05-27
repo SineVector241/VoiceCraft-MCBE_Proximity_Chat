@@ -12,7 +12,7 @@ namespace VoiceCraft_Android.Network
 {
     public class Network
     {
-        public const string Version = "v1.3.4-alpha";
+        public const string Version = "v1.3.5-alpha";
     }
 
     public class SignallingClient
@@ -118,7 +118,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Deny:
-                            Disconnect("Server Denied Login Request. Possible version mismatch.");
+                            Disconnect("Server Denied Login Request. Possible version mismatch or you have been banned from the server.");
                             break;
 
                         case VCSignalling_Packet.PacketIdentifier.Binded:
@@ -189,7 +189,7 @@ namespace VoiceCraft_Android.Network
         //Events
         public delegate Task Connected();
         public delegate Task Disconnected(string reason);
-        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource);
+        public delegate Task AudioReceived(byte[] Audio, string Key, float Volume, int BytesRecorded, float RotationSource, int PacketCount);
 
         public event Connected OnConnect;
         public event Disconnected OnDisconnect;
@@ -255,7 +255,7 @@ namespace VoiceCraft_Android.Network
                             break;
 
                         case VCVoice_Packet.PacketIdentifier.Audio:
-                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded, packet.PacketRotationSource);
+                            OnAudioReceived?.Invoke(packet.PacketAudio, packet.PacketLoginKey, packet.PacketVolume, packet.PacketBytesRecorded, packet.PacketRotationSource, packet.PacketPacketCount);
                             break;
                     }
                 }

@@ -20,7 +20,17 @@ namespace VoiceCraft_Server.Servers
         {
             serverData = serverDataObject;
 
-            sessionKey = Guid.NewGuid().ToString();
+            if (string.IsNullOrWhiteSpace(ServerProperties._serverProperties.PermanentServerKey))
+            {
+                Logger.LogToConsole(LogType.Warn, "Permanent server key is empty. Generating Temporary key!", nameof(MCComm));
+                sessionKey = Guid.NewGuid().ToString();
+            }
+            else
+            {
+                Logger.LogToConsole(LogType.Warn, $"Permanent server key found. Using permanent server key!", nameof(MCComm));
+                sessionKey = ServerProperties._serverProperties.PermanentServerKey;
+            }
+
             listener = new HttpListener();
             listener.Prefixes.Add($"http://*:{ServerProperties._serverProperties.MCCommPort_TCP}/");
             try
@@ -115,6 +125,22 @@ namespace VoiceCraft_Server.Servers
                             SendResponse(ctx, HttpStatusCode.OK, "Updated");
                             break;
 
+                        case PacketType.UpdateSettings:
+                            ServerProperties._serverProperties.ProximityDistance = json.Settings.ProximityDistance;
+                            ServerProperties._serverProperties.ProximityToggle = json.Settings.ProximityToggle;
+                            SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
+                            break;
+
+                        case PacketType.GetSettings:
+                            var settingsPacket = new WebserverPacket() { Settings = new ServerSettings() 
+                            { 
+                                ProximityDistance = ServerProperties._serverProperties.ProximityDistance, 
+                                ProximityToggle = ServerProperties._serverProperties.ProximityToggle 
+                            } };
+
+                            SendResponse(ctx, HttpStatusCode.OK, JsonConvert.SerializeObject(settingsPacket));
+                            break;
+
                         case PacketType.RemoveParticipant:
                             var mcParticipant = serverData.GetParticipantByMinecraftId(json.PlayerId);
                             if(mcParticipant != null)
@@ -158,6 +184,7 @@ namespace VoiceCraft_Server.Servers
         public string Gamertag { get; set; } = "";
 
         public List<Player> Players { get; set; } = new List<Player>();
+        public ServerSettings Settings { get; set; } = new ServerSettings();
     }
 
     public class Player
@@ -168,11 +195,23 @@ namespace VoiceCraft_Server.Servers
         public float Rotation { get; set; }
     }
 
+    public class ServerSettings
+    {
+        public int ProximityDistance { get; set; } = 30;
+        public bool ProximityToggle { get; set; } = false;
+        /*
+         * Coming Soon!
+        public bool SoundEffects { get; set; } = false;
+        */
+    }
+
     public enum PacketType
     {
         Login,
         Bind,
         Update,
+        UpdateSettings,
+        GetSettings,
         RemoveParticipant
     }
 }
