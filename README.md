@@ -41,9 +41,9 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 6.0 WPF framework 
 ## TODO LIST
 - [x] Add AGC (Automatic Gain Control) for PC.
 - [ ] Implement auto binding.
-- [ ] Implement auto connecting/server linking.
+- [x] Implement auto connecting/server linking.
 - [ ] Implement experimental accurate player position depending on velocity and latency to client.
-- [ ] Implement experimental directional hearing.
+- [x] Implement experimental directional hearing.
 - [ ] Implement second experimental algorithm using Minecraft Websocket Client to Client Communication. (Allows voice proximity chat on any server but limits device support)
 - [x] Design a logo.
 - [ ] Improve UI style/design.
