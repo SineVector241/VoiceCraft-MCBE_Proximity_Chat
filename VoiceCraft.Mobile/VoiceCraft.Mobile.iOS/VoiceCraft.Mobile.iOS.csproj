@@ -70,28 +70,28 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ImageAsset Include="Assets.xcassets\CogIcon.imageset\cog.png">
+    <ImageAsset Include="Assets.xcassets\Help_box.imageset\Contents.json">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\HelpIcon.imageset\Contents.json">
+    <ImageAsset Include="Assets.xcassets\Help_box.imageset\help_box.png">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\HelpIcon.imageset\help-box.png">
+    <ImageAsset Include="Assets.xcassets\Settings.imageset\cog.png">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\CogIcon.imageset\Contents.json">
+    <ImageAsset Include="Assets.xcassets\Settings.imageset\Contents.json">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\InformationIcon.imageset\Contents.json">
+    <ImageAsset Include="Assets.xcassets\Information.imageset\Contents.json">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\ServersIcon.imageset\Contents.json">
+    <ImageAsset Include="Assets.xcassets\Server.imageset\Contents.json">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\InformationIcon.imageset\information.png">
+    <ImageAsset Include="Assets.xcassets\Information.imageset\information.png">
       <Visible>false</Visible>
     </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\ServersIcon.imageset\server.png">
+    <ImageAsset Include="Assets.xcassets\Server.imageset\server.png">
       <Visible>false</Visible>
     </ImageAsset>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
