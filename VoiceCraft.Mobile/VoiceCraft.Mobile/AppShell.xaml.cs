@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms;
+﻿using VoiceCraft.Mobile.Views;
+using Xamarin.Forms;
 
 namespace VoiceCraft.Mobile
 {
@@ -7,6 +8,7 @@ namespace VoiceCraft.Mobile
         public AppShell()
         {
             InitializeComponent();
+            Routing.RegisterRoute(nameof(ServerPage), typeof(ServerPage));
         }
     }
 }

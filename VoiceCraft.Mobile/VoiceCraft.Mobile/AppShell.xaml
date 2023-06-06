@@ -3,7 +3,8 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:VoiceCraft.Mobile.Views"
        x:Class="VoiceCraft.Mobile.AppShell"
-       Shell.NavBarIsVisible="False">
+       Shell.NavBarIsVisible="False"
+       Shell.BackgroundColor="Transparent">
 
     <TabBar>
         <ShellContent Title="Servers"
@@ -17,14 +18,14 @@
         <ShellContent Title="Help"
                       Icon="help_box"
                       Content="{views:HelpPage}"/>
-        
+
         <ShellContent Title="Credits"
                       Icon="information"
-                      Content="{views:HelpPage}"/>
+                      Content="{views:CreditsPage}"/>
 
         <TabBar.Style>
             <Style TargetType="TabBar">
-                <Setter Property="Shell.TabBarBackgroundColor" Value="#AFFF" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Dark=#225, Light=#752}" />
                 <Setter Property="Shell.TabBarTitleColor" Value="#FFFF"/>
                 <Setter Property="Shell.TabBarUnselectedColor" Value="#8FFF"/>
             </Style>

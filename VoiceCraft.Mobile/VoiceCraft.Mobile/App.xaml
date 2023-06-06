@@ -3,6 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="VoiceCraft.Mobile.App">
     <Application.Resources>
+        <Style TargetType="Label">
+            <Setter Property="TextColor" Value="{AppThemeBinding Dark=White, Light=Black}" />
+        </Style>
 
+        <Style TargetType="Frame">
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+            <Setter Property="VerticalOptions" Value="StartAndExpand" />
+        </Style>
     </Application.Resources>
 </Application>
