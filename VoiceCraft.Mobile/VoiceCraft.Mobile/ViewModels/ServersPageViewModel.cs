@@ -16,7 +16,7 @@ namespace VoiceCraft.Mobile.ViewModels
         [RelayCommand]
         public async void GoToServer(ServerModel server)
         {
-            Console.WriteLine("Test");
+            Console.WriteLine(server.IP);
             await Shell.Current.GoToAsync(nameof(ServerPage));
         }
     }
