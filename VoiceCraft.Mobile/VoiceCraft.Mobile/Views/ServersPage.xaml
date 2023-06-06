@@ -7,7 +7,7 @@
     <ContentPage.BindingContext>
         <vm:ServersPageViewModel />
     </ContentPage.BindingContext>
-    
+
     <Grid>
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                Aspect="AspectFill"/>
@@ -20,53 +20,62 @@
                            FontAttributes="Bold"/>
                 </Frame>
                 <Button Grid.Column="1"
-                        CornerRadius="5"
                         HorizontalOptions="CenterAndExpand"
                         Margin="0,10,10,10"
                         Text="+"
                         FontSize="30"
-                        FontAttributes="Bold"
-                        BackgroundColor="#9227"/>
+                        BackgroundColor="#9227"
+                        Command="{Binding GoToAddServerCommand}"/>
             </Grid>
             <CollectionView Grid.Row="1"
                             ItemsSource="{Binding Servers}"
                             Margin="10,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="10">
-                            <Grid RowSpacing="0"
-                                  VerticalOptions="CenterAndExpand">
-                                <Label Text="{Binding Name, StringFormat='Name: {0}'}"
-                                       FontAttributes="Bold"
-                                       FontSize="22">
-                                </Label>
+                        <Grid>
+                            <Frame Margin="0,10"
+                                   Padding="10"
+                                   VerticalOptions="StartAndExpand"
+                                   BorderColor="Transparent">
+                                <Grid RowDefinitions="auto,auto,auto,auto">
+                                    <StackLayout Orientation="Horizontal">
+                                        <Label Text="{Binding Name, StringFormat='Name: {0}'}"
+                                               FontAttributes="Bold"
+                                               FontSize="22">
+                                        </Label>
 
-                                <Label Grid.Row="1"
-                                       FontAttributes="Bold"
-                                       FontSize="18">
-                                    <Label.Text>
-                                        <MultiBinding StringFormat="Address: {0}:{1}">
-                                            <Binding Path="IP"/>
-                                            <Binding Path="Port"/>
-                                        </MultiBinding>
-                                    </Label.Text>
-                                </Label>
+                                        <ImageButton Source="delete"
+                                                     BackgroundColor="{AppThemeBinding Dark=#8666, Light=#8FFF}"
+                                                     Scale="1.3"
+                                                     TranslationY="5"
+                                                     HorizontalOptions="EndAndExpand"
+                                                     Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
+                                                     CommandParameter="{Binding}"/>
+                                    </StackLayout>
 
-                                <Label Grid.Row="2"
-                                       Text="{Binding Key, StringFormat='Key: {0}'}"
-                                       FontAttributes="Bold"
-                                       FontSize="18"/>
+                                    <Label Grid.Row="1"
+                                           FontAttributes="Bold"
+                                           FontSize="18">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="Address: {0}:{1}">
+                                                <Binding Path="IP"/>
+                                                <Binding Path="Port"/>
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
 
-                                <Button Grid.Row="3"
-                                        BackgroundColor="{AppThemeBinding Dark=#8666, Light=#8FFF}"
-                                        CornerRadius="5"
-                                        Text="View"
-                                        TextColor="{AppThemeBinding Dark=White, Light=Black}"
-                                        FontAttributes="Bold"
-                                        Command="{Binding Source={x:Reference Servers}, Path=BindingContext.GoToServerCommand}"
-                                        CommandParameter="{Binding}"/>
-                            </Grid>
-                        </Frame>
+                                    <Label Grid.Row="2"
+                                           Text="{Binding Key, StringFormat='Key: {0}'}"
+                                           FontAttributes="Bold"
+                                           FontSize="18"/>
+
+                                    <Button Grid.Row="3"
+                                            Text="View"
+                                            Command="{Binding Source={x:Reference Servers}, Path=BindingContext.GoToServerCommand}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </Frame>
+                        </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

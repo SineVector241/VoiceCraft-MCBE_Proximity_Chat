@@ -1,21 +1,77 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
              x:Class="VoiceCraft.Mobile.Views.ServerPage"
              Shell.TabBarIsVisible="False">
+    <ContentPage.BindingContext>
+        <vm:ServerPageViewModel />
+    </ContentPage.BindingContext>
+
     <Grid>
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                Aspect="AspectFill"/>
 
-        <Grid Grid.RowDefinitions="auto">
+        <Grid Grid.RowDefinitions="auto, auto, auto">
             <Frame>
-                <Label Text="Server" 
+                <Label Text="{Binding Server.Name}" 
                        FontSize="25"
                        FontAttributes="Bold"/>
             </Frame>
 
             <Frame Grid.Row="1">
-                <Label Text="Server Information Here..." />
+                <Grid RowDefinitions="auto, auto, auto, auto">
+                    <Label FontAttributes="Bold"
+                           FontSize="18">
+                        <Label.Text>
+                            <MultiBinding StringFormat="Address: {0}:{1}">
+                                <Binding Path="Server.IP"/>
+                                <Binding Path="Server.Port"/>
+                            </MultiBinding>
+                        </Label.Text>
+                    </Label>
+
+                    <Label FontAttributes="Bold"
+                           FontSize="18"
+                           Grid.Row="1"
+                           Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
+
+                    <Label FontAttributes="Bold"
+                           FontSize="18"
+                           Grid.Row="2">
+
+                        <Label.Style>
+                            <Style TargetType="Label">
+                                <Style.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="0">
+                                        <Setter Property="Text" Value="Codec: Opus (48khz)" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="1">
+                                        <Setter Property="Text" Value="Codec: G722 (16khz)" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>
+
+                    <Label FontAttributes="Bold"
+                           FontSize="18"
+                           Grid.Row="3" 
+                           Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
+                </Grid>
+            </Frame>
+
+            <Frame Grid.Row="2">
+                <Grid RowDefinitions="auto, auto">
+                    <Label FontAttributes="Bold"
+                           FontSize="18"
+                           Text="External Server Information"/>
+
+                    <Label Grid.Row="1"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           Text="{Binding ExternalServerInformation}"/>
+                </Grid>
             </Frame>
         </Grid>
     </Grid>

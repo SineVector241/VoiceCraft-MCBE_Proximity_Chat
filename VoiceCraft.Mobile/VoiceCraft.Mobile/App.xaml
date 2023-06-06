@@ -13,5 +13,18 @@
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
             <Setter Property="VerticalOptions" Value="StartAndExpand" />
         </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Dark=White, Light=Black}" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+
+        <Style TargetType="Entry">
+            <Setter Property="PlaceholderColor" Value="{AppThemeBinding Dark=#AAA, Light=#333}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Dark=White, Light=Black}" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
     </Application.Resources>
 </Application>
