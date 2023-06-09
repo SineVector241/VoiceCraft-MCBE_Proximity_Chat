@@ -62,7 +62,7 @@
             </Frame>
 
             <Frame Grid.Row="2">
-                <Grid RowDefinitions="auto, auto">
+                <Grid RowDefinitions="auto, auto, auto">
                     <Label FontAttributes="Bold"
                            FontSize="18"
                            Text="External Server Information"/>
@@ -71,6 +71,11 @@
                            FontAttributes="Bold"
                            FontSize="18"
                            Text="{Binding ExternalServerInformation}"/>
+
+                    <Button Grid.Row="2"
+                            FontSize="18"
+                            Text="Test"
+                            Command="{Binding TestCommand}"></Button>
                 </Grid>
             </Frame>
         </Grid>

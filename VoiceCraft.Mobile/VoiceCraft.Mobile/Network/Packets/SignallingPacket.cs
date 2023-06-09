@@ -75,22 +75,22 @@ namespace VoiceCraft.Mobile.Network.Packets
 
         public SignallingPacket(byte[] DataStream)
         {
-            PacketIdentifier = (SignallingPacketIdentifiers)DataStream[0]; //Read packet identifier - 1 byte.
-            PacketCodec = (AudioCodecs)DataStream[1]; //Read packet codec - 1 byte.
-            PacketKey = BitConverter.ToUInt16(DataStream, 2); //Read packet key - 2 bytes.
-            PacketVoicePort = BitConverter.ToUInt16(DataStream, 2); //Read packet voice port - 2 bytes.
+            PacketIdentifier = (SignallingPacketIdentifiers)BitConverter.ToUInt16(DataStream, 0); //Read packet identifier - 2 bytes.
+            PacketCodec = (AudioCodecs)BitConverter.ToUInt16(DataStream, 2); //Read packet codec - 2 bytes.
+            PacketKey = BitConverter.ToUInt16(DataStream, 4); //Read packet key - 2 bytes.
+            PacketVoicePort = BitConverter.ToUInt16(DataStream, 6); //Read packet voice port - 2 bytes.
 
             //String lengths
-            int versionLength = BitConverter.ToInt32(DataStream, 6); //Read version length - 4 bytes.
-            int metadataLength = DataStream.Length - (10 + versionLength);
+            int versionLength = BitConverter.ToInt32(DataStream, 8); //Read version length - 4 bytes.
+            int metadataLength = DataStream.Length - (12 + versionLength);
 
             if (versionLength > 0)
-                PacketVersion = Encoding.UTF8.GetString(DataStream, 10, versionLength);
+                PacketVersion = Encoding.UTF8.GetString(DataStream, 12, versionLength);
             else
                 PacketVersion = string.Empty;
 
             if (metadataLength > 0)
-                PacketMetadata = Encoding.UTF8.GetString(DataStream, 10 + versionLength, metadataLength);
+                PacketMetadata = Encoding.UTF8.GetString(DataStream, 12 + versionLength, metadataLength);
             else
                 PacketMetadata = string.Empty;
         }
@@ -99,8 +99,8 @@ namespace VoiceCraft.Mobile.Network.Packets
         {
             var DataStream = new List<byte>();
 
-            DataStream.AddRange(BitConverter.GetBytes((byte)Identifier)); //Packet Identifier
-            DataStream.AddRange(BitConverter.GetBytes((byte)Codec)); //Packet Codec
+            DataStream.AddRange(BitConverter.GetBytes((ushort)Identifier)); //Packet Identifier
+            DataStream.AddRange(BitConverter.GetBytes((ushort)Codec)); //Packet Codec
             DataStream.AddRange(BitConverter.GetBytes(Key)); //Packet Key
             DataStream.AddRange(BitConverter.GetBytes(VoicePort)); //Packet Voice Port
 
