@@ -1,22 +1,24 @@
-﻿using VoiceCraft.Mobile.Interfaces;
+﻿using VoiceCraft.Mobile.Network.Interfaces;
 
 namespace VoiceCraft.Mobile.Network.Sockets
 {
     public class VoiceSocket : INetwork
     {
-        public bool IsClientSided { get; }
+        public INetworkManager Manager { get; }
 
-        public void Connect(INetworkManager networkManager)
+        public VoiceSocket(INetworkManager Manager) => this.Manager = Manager;
+
+        public void Connect()
         {
             throw new System.NotImplementedException();
         }
 
-        public void Disconnect()
+        public void Disconnect(string Reason = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public void Disconnect(string reason)
+        public void SendPacket(object Packet)
         {
             throw new System.NotImplementedException();
         }

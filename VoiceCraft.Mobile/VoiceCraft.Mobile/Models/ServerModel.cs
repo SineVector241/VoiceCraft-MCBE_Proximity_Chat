@@ -9,10 +9,4 @@
         public int Codec { get; set; } = -1;
         public bool ClientSided { get; set; }
     }
-
-    public enum Codecs
-    {
-        Opus,
-        G722
-    }
 }

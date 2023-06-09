@@ -4,7 +4,18 @@ namespace VoiceCraft_Android.Interfaces
 {
     public interface IAudioManager
     {
-        IWaveIn CreateRecorder(WaveFormat waveFormat);
-        IWavePlayer CreatePlayer(ISampleProvider waveFormat);
+        /// <summary>
+        /// Creates a recorder on the native device.
+        /// </summary>
+        /// <param name="AudioFormat"></param>
+        /// <returns></returns>
+        IWaveIn CreateRecorder(WaveFormat AudioFormat);
+
+        /// <summary>
+        /// Creates a player on the native device.
+        /// </summary>
+        /// <param name="AudioFormat"></param>
+        /// <returns></returns>
+        IWavePlayer CreatePlayer(ISampleProvider AudioFormat);
     }
 }
