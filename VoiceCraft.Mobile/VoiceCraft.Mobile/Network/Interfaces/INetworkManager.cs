@@ -24,8 +24,8 @@ namespace VoiceCraft.Mobile.Network.Interfaces
         public delegate void SocketConnect(SocketTypes SocketType, int SampleRate);
         public delegate void SocketConnectError(SocketTypes SocketType, string reason);
         public delegate void SocketDisconnect(SocketTypes SocketType, string reason = null);
-        public delegate void VoiceCraftParticipantJoined(VoiceCraftParticipant Participant);
-        public delegate void VoiceCraftParticipantLeft(VoiceCraftParticipant Participant);
+        public delegate void VoiceCraftParticipantJoined(uint Key, VoiceCraftParticipant Participant);
+        public delegate void VoiceCraftParticipantLeft(uint Key, VoiceCraftParticipant Participant);
 
         public event SocketConnect OnConnect;
         public event SocketConnectError OnConnectError;

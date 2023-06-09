@@ -11,7 +11,6 @@ namespace VoiceCraft.Mobile.Network
         private int BufferSize;
 
         public string Name { get; }
-        public uint Key { get; }
         public uint PacketCount { get; private set; }
         public AudioCodecs Codec { get; }
         public BufferedWaveProvider AudioBuffer;

@@ -52,6 +52,8 @@ namespace VoiceCraft.Mobile.Network
 
             OnConnect += NM_OnConnect;
             OnConnectError += NM_OnConnectError;
+            OnParticipantJoined += NM_OnParticipantJoined;
+            OnParticipantLeft += NM_OnParticipantLeft;
         }
 
         //Public Methods
@@ -121,6 +123,16 @@ namespace VoiceCraft.Mobile.Network
         private void NM_OnConnectError(SocketTypes SocketType, string reason)
         {
             Disconnect();
+        }
+
+        private void NM_OnParticipantJoined(uint Key, VoiceCraftParticipant Participant)
+        {
+            Participants.TryAdd(Key, Participant);
+        }
+
+        private void NM_OnParticipantLeft(uint Key, VoiceCraftParticipant Participant)
+        {
+            Participants.TryRemove(Key, out _);
         }
     }
 }
