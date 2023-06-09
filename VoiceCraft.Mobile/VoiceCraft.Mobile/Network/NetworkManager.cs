@@ -12,11 +12,12 @@ namespace VoiceCraft.Mobile.Network
 {
     public class NetworkManager : INetworkManager
     {
-        public ConcurrentDictionary<uint, VoiceCraftParticipant> Participants { get; }
+        public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; }
 
         public string IP { get; private set; }
-        public int Port { get; private set; }
-        public uint Key { get; private set; }
+        public ushort Port { get; private set; }
+        public ushort VoicePort { get; private set; }
+        public ushort Key { get; private set; }
         public bool DirectionalHearing { get; }
         public bool ClientSidedPositioning { get; }
         public AudioCodecs Codec { get; }
@@ -45,7 +46,7 @@ namespace VoiceCraft.Mobile.Network
             this.ClientSidedPositioning = ClientSidedPositioning;
             this.Codec = Codec;
 
-            Participants = new ConcurrentDictionary<uint, VoiceCraftParticipant>();
+            Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
 
             Signalling = new SignallingSocket(this);
             Voice = new VoiceSocket(this);
@@ -57,7 +58,7 @@ namespace VoiceCraft.Mobile.Network
         }
 
         //Public Methods
-        public void Connect(string IP, int Port)
+        public void Connect(string IP, ushort Port)
         {
             this.IP = IP;
             this.Port = Port;
@@ -120,19 +121,8 @@ namespace VoiceCraft.Mobile.Network
             }
         }
 
-        private void NM_OnConnectError(SocketTypes SocketType, string reason)
-        {
-            Disconnect();
-        }
-
-        private void NM_OnParticipantJoined(uint Key, VoiceCraftParticipant Participant)
-        {
-            Participants.TryAdd(Key, Participant);
-        }
-
-        private void NM_OnParticipantLeft(uint Key, VoiceCraftParticipant Participant)
-        {
-            Participants.TryRemove(Key, out _);
-        }
+        private void NM_OnConnectError(SocketTypes SocketType, string reason) => Disconnect();
+        private void NM_OnParticipantJoined(ushort Key, VoiceCraftParticipant Participant) => Participants.TryAdd(Key, Participant);
+        private void NM_OnParticipantLeft(ushort Key, VoiceCraftParticipant Participant) => Participants.TryRemove(Key, out _);
     }
 }

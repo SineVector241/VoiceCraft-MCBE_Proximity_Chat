@@ -9,11 +9,12 @@ namespace VoiceCraft.Mobile.Network.Interfaces
     public interface INetworkManager
     {
         //Variables
-        public ConcurrentDictionary<uint, VoiceCraftParticipant> Participants { get; }
+        public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; }
 
         public string IP { get; }
-        public int Port { get; }
-        public uint Key { get; }
+        public ushort Port { get; }
+        public ushort VoicePort { get; }
+        public ushort Key { get; }
         public bool DirectionalHearing { get; }
         public bool ClientSidedPositioning { get; }
         public AudioCodecs Codec { get; }
@@ -24,8 +25,8 @@ namespace VoiceCraft.Mobile.Network.Interfaces
         public delegate void SocketConnect(SocketTypes SocketType, int SampleRate);
         public delegate void SocketConnectError(SocketTypes SocketType, string reason);
         public delegate void SocketDisconnect(SocketTypes SocketType, string reason = null);
-        public delegate void VoiceCraftParticipantJoined(uint Key, VoiceCraftParticipant Participant);
-        public delegate void VoiceCraftParticipantLeft(uint Key, VoiceCraftParticipant Participant);
+        public delegate void VoiceCraftParticipantJoined(ushort Key, VoiceCraftParticipant Participant);
+        public delegate void VoiceCraftParticipantLeft(ushort Key, VoiceCraftParticipant Participant);
 
         public event SocketConnect OnConnect;
         public event SocketConnectError OnConnectError;
@@ -38,7 +39,7 @@ namespace VoiceCraft.Mobile.Network.Interfaces
         /// </summary>
         /// <param name="IP">Address</param>
         /// <param name="Port">Port</param>
-        public void Connect(string IP, int Port);
+        public void Connect(string IP, ushort Port);
 
         /// <summary>
         /// Disconnects all connected sockets.

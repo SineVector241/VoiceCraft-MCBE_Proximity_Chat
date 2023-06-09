@@ -21,10 +21,9 @@ namespace VoiceCraft.Mobile.Network
         public OpusDecoder? OpusDecoder { get; }
         public G722ChatCodec? G722Decoder { get; }
 
-        public VoiceCraftParticipant(string Name, uint Key, WaveFormat WaveFormat, int RecordLengthMS, AudioCodecs Codec)
+        public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS, AudioCodecs Codec)
         {
             this.Name = Name;
-            this.Key = Key;
             this.Codec = Codec;
 
             BufferSize = RecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
@@ -95,18 +94,6 @@ namespace VoiceCraft.Mobile.Network
         }
 
         //Private Methods
-        private static short[] BytesToShorts(byte[] input, int offset, int length)
-        {
-            short[] processedValues = new short[length / 2];
-            for (int c = 0; c < processedValues.Length; c++)
-            {
-                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
-                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
-            }
-
-            return processedValues;
-        }
-
         private static byte[] ShortsToBytes(short[] input, int offset, int length)
         {
             byte[] processedValues = new byte[length * 2];
