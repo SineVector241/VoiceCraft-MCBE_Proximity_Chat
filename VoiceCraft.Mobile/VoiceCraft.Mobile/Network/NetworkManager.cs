@@ -143,7 +143,7 @@ namespace VoiceCraft.Mobile.Network
             }
             catch (Exception ex)
             {
-                OnConnectError?.Invoke(SocketTypes.NetworkManager, ex.Message);
+                PerformConnectError(SocketTypes.NetworkManager, ex.Message);
             }
         }
 
