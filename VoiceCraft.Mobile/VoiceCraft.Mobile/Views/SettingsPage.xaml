@@ -1,20 +1,57 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
              x:Class="VoiceCraft.Mobile.Views.SettingsPage">
-    <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+    <ContentPage.BindingContext>
+        <vm:SettingsPageViewModel />
+    </ContentPage.BindingContext>
 
-        <Grid Grid.RowDefinitions="auto">
-            <Frame>
-                <Label Text="Settings" 
-                       FontSize="25"
-                       FontAttributes="Bold"/>
-            </Frame>
+    <ScrollView>
+        <Grid>
+            <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+                   Aspect="AspectFill"/>
 
-            <Frame Grid.Row="1">
-            </Frame>
+            <Grid Grid.RowDefinitions="auto">
+                <Frame>
+                    <Label Text="Settings" 
+                           FontSize="25"
+                           FontAttributes="Bold"/>
+                </Frame>
+
+                <Frame Grid.Row="1">
+                    <Grid RowDefinitions="auto, auto, auto"
+                          RowSpacing="0">
+                        <StackLayout Orientation="Horizontal"
+                                     Margin="0,10"
+                                     Grid.Row="1">
+                            <CheckBox IsChecked="{Binding Settings.DirectionalAudioEnabled}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Directional Audio"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Horizontal"
+                                     Margin="0,10"
+                                     Grid.Row="2">
+                            <CheckBox IsChecked="{Binding Settings.PinpointPlayerAccuracyEnabled}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Pinpoint Player Accuracy"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <Button Text="Save"
+                                Grid.Row="3"
+                                Command="{Binding SaveSettingsCommand}"/>
+                    </Grid>
+                </Frame>
+            </Grid>
         </Grid>
-    </Grid>
+    </ScrollView>
 </ContentPage>

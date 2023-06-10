@@ -3,6 +3,8 @@ using NAudio.Wave;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 using VoiceCraft.Mobile.Network.Codecs;
 using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
@@ -123,11 +125,13 @@ namespace VoiceCraft.Mobile.Network
                         switch (Codec)
                         {
                             case AudioCodecs.Opus:
-                                OpusEncoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP);
-                                OpusEncoder.Bitrate = 32000;
-                                OpusEncoder.Complexity = 5;
-                                OpusEncoder.UseVBR = true;
-                                OpusEncoder.PacketLossPercent = 40;
+                                OpusEncoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
+                                {
+                                    Bitrate = 32000,
+                                    Complexity = 5,
+                                    UseVBR = true,
+                                    PacketLossPercent = 40
+                                };
                                 break;
                             case AudioCodecs.G722:
                                 G722Codec = new G722ChatCodec();
@@ -162,14 +166,59 @@ namespace VoiceCraft.Mobile.Network
 
         public void PerformParticipantLeft(ushort Key)
         {
-            VoiceCraftParticipant participant;
-            Participants.TryRemove(Key, out participant);
+            Participants.TryRemove(Key, out VoiceCraftParticipant participant);
             OnParticipantLeft?.Invoke(Key, participant);
         }
 
         public void PerformBinded(string Username)
         {
             OnBinded?.Invoke(Username);
+        }
+
+        public static async Task<string> InfoPingAsync(string IP, ushort Port)
+        {
+            var UDPSocket = new UdpClient();
+            try
+            {
+                //Connect and send.
+                UDPSocket.Connect(IP, Port);
+                var pingPacket = new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.InfoPing, PacketVersion = App.Version }.GetPacketDataStream();
+                await UDPSocket.SendAsync(pingPacket, pingPacket.Length);
+                var pingTime = DateTime.UtcNow;
+
+                //Receive and parse...
+                var response = UDPSocket.ReceiveAsync();
+                var timeout = Task.Delay(5000);
+                var tasks = await Task.WhenAny(response, timeout);
+
+                var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+
+                if (tasks == response)
+                {
+                    var packet = new SignallingPacket(response.Result.Buffer);
+                    UDPSocket.Close();
+                    UDPSocket.Dispose();
+                    UDPSocket = null;
+                    return $"{packet.PacketMetadata}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+                else
+                {
+                    UDPSocket.Close();
+                    UDPSocket.Dispose();
+                    UDPSocket = null;
+                    return $"Error. Timed Out...\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //If errored. Disconnect and dispose.
+                if (UDPSocket.Client.Connected)
+                    UDPSocket.Close();
+                UDPSocket.Dispose();
+                UDPSocket = null;
+                return ex.Message;
+            }
         }
 
         //Private Methods

@@ -17,6 +17,7 @@ namespace VoiceCraft.Mobile.Network.Packets
         Binded,
         Error,
         Ping,
+        InfoPing,
         Null
     }
 

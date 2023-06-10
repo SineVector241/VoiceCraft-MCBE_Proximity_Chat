@@ -13,7 +13,6 @@ namespace VoiceCraft.Mobile.Network.Sockets
         public UdpClient? UDPSocket { get; set; }
 #nullable disable
         public SignallingSocket(INetworkManager Manager) => this.Manager = Manager;
-        private Task HeartBeater;
         private bool StartDisconnect = false;
         private DateTime LastPing = DateTime.UtcNow;
 
@@ -34,7 +33,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
                 SendPacket(packet.GetPacketDataStream());
 
                 LastPing = DateTime.UtcNow;
-                HeartBeater = StartHeartbeatAsync();
+                StartHeartbeatAsync();
             }
             catch(Exception ex)
             {
@@ -116,7 +115,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
             }
         }
 
-        private async Task StartHeartbeatAsync()
+        private async void StartHeartbeatAsync()
         {
             while (!StartDisconnect)
             {

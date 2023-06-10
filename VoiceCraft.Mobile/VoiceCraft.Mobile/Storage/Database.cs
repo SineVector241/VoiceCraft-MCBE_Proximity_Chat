@@ -56,6 +56,18 @@ namespace VoiceCraft.Mobile.Storage
             SaveDatabase();
         }
 
+        public static SettingsModel GetSettings()
+        {
+            LoadDatabase();
+            return DBData.Settings;
+        }
+
+        public static void SetSettings(SettingsModel settings)
+        {
+            DBData.Settings = settings;
+            SaveDatabase();
+        }
+
         public static void SetPassableObject(object obj)
         {
             objClass = obj;

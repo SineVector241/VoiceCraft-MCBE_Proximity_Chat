@@ -29,7 +29,8 @@
                         <Entry Grid.Row="1"
                                Keyboard="Text"
                                Text="{Binding Server.Name}"
-                               Placeholder="Name" />
+                               Placeholder="Name"
+                               MaxLength="20"/>
 
                         <Label Margin="0,20,0,0"
                                Grid.Row="2"
@@ -40,7 +41,8 @@
                         <Entry Grid.Row="3"
                                Keyboard="Text"
                                Text="{Binding Server.IP}"
-                               Placeholder="127.0.0.1" />
+                               Placeholder="127.0.0.1"
+                               MaxLength="20"/>
 
                         <Label Margin="0,20,0,0"
                                Grid.Row="4"

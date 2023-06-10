@@ -1,8 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
 using VoiceCraft.Mobile.Models;
-using VoiceCraft.Mobile.Network.Packets;
+using VoiceCraft.Mobile.Network;
 using VoiceCraft.Mobile.Storage;
 using Xamarin.Forms;
 
@@ -19,19 +18,27 @@ namespace VoiceCraft.Mobile.ViewModels
         public ServerPageViewModel()
         {
             Server = Database.GetPassableObject<ServerModel>();
+            NetworkManager.InfoPingAsync(server.IP, server.Port).ContinueWith(res => {
+                ExternalServerInformation = res.Result;
+            });
         }
 
         [RelayCommand]
-        public void Test()
+        public void Connect()
         {
-            var packet = new SignallingPacket() { PacketCodec = Network.Codecs.AudioCodecs.G722, PacketIdentifier = SignallingPacketIdentifiers.Accept16, PacketKey = 56, PacketVoicePort = 9051, PacketMetadata = "Test", PacketVersion = "testaaa" }.GetPacketDataStream();
-            var decoded = new SignallingPacket(packet);
-            Console.WriteLine(decoded.PacketIdentifier);
-            Console.WriteLine(decoded.PacketCodec);
-            Console.WriteLine(decoded.PacketKey);
-            Console.WriteLine(decoded.PacketVoicePort);
-            Console.WriteLine(decoded.PacketVersion);
-            Console.WriteLine(decoded.PacketMetadata);
+            Shell.Current.DisplayAlert("Connected!" ,"Woo. Connected!", "OK");
+        }
+
+        [RelayCommand]
+        public void Edit()
+        {
+            Shell.Current.DisplayAlert("RickRoll", "Never gonna give you up. Never gonna let you down.", "Damnit");
+        }
+
+        [RelayCommand]
+        public void Back()
+        {
+            Shell.Current.Navigation.PopAsync();
         }
     }
 }

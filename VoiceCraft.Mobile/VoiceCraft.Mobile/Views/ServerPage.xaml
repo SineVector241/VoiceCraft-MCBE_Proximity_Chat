@@ -8,76 +8,86 @@
         <vm:ServerPageViewModel />
     </ContentPage.BindingContext>
 
-    <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+    <ScrollView>
+        <Grid>
+            <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                Aspect="AspectFill"/>
 
-        <Grid Grid.RowDefinitions="auto, auto, auto">
-            <Frame>
-                <Label Text="{Binding Server.Name}" 
-                       FontSize="25"
-                       FontAttributes="Bold"/>
-            </Frame>
+            <Grid Grid.RowDefinitions="auto, auto, auto">
+                <Frame>
+                    <Label Text="{Binding Server.Name}" 
+                           FontSize="25"
+                           FontAttributes="Bold"/>
+                </Frame>
 
-            <Frame Grid.Row="1">
-                <Grid RowDefinitions="auto, auto, auto, auto">
-                    <Label FontAttributes="Bold"
-                           FontSize="18">
-                        <Label.Text>
-                            <MultiBinding StringFormat="Address: {0}:{1}">
-                                <Binding Path="Server.IP"/>
-                                <Binding Path="Server.Port"/>
-                            </MultiBinding>
-                        </Label.Text>
-                    </Label>
+                <Frame Grid.Row="1">
+                    <Grid RowDefinitions="auto, auto, auto, auto">
+                        <Label FontAttributes="Bold"
+                               FontSize="18">
+                            <Label.Text>
+                                <MultiBinding StringFormat="Address: {0}:{1}">
+                                    <Binding Path="Server.IP"/>
+                                    <Binding Path="Server.Port"/>
+                                </MultiBinding>
+                            </Label.Text>
+                        </Label>
 
-                    <Label FontAttributes="Bold"
-                           FontSize="18"
-                           Grid.Row="1"
-                           Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
+                        <Label FontAttributes="Bold"
+                               FontSize="18"
+                               Grid.Row="1"
+                               Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
 
-                    <Label FontAttributes="Bold"
-                           FontSize="18"
-                           Grid.Row="2">
+                        <Label FontAttributes="Bold"
+                               FontSize="18"
+                               Grid.Row="2">
 
-                        <Label.Style>
-                            <Style TargetType="Label">
-                                <Style.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="0">
-                                        <Setter Property="Text" Value="Codec: Opus (48khz)" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="1">
-                                        <Setter Property="Text" Value="Codec: G722 (16khz)" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Label.Style>
-                    </Label>
+                            <Label.Style>
+                                <Style TargetType="Label">
+                                    <Style.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="0">
+                                            <Setter Property="Text" Value="Codec: Opus (48khz)" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="1">
+                                            <Setter Property="Text" Value="Codec: G722 (16khz)" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Label.Style>
+                        </Label>
 
-                    <Label FontAttributes="Bold"
-                           FontSize="18"
-                           Grid.Row="3" 
-                           Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
-                </Grid>
-            </Frame>
+                        <Label FontAttributes="Bold"
+                               FontSize="18"
+                               Grid.Row="3" 
+                               Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
+                    </Grid>
+                </Frame>
 
-            <Frame Grid.Row="2">
-                <Grid RowDefinitions="auto, auto, auto">
-                    <Label FontAttributes="Bold"
-                           FontSize="18"
-                           Text="External Server Information"/>
+                <Frame Grid.Row="2">
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto">
+                        <Label FontAttributes="Bold"
+                               FontSize="18"
+                               Text="External Server Information"/>
 
-                    <Label Grid.Row="1"
-                           FontAttributes="Bold"
-                           FontSize="18"
-                           Text="{Binding ExternalServerInformation}"/>
+                        <Label Grid.Row="1"
+                               FontAttributes="Bold"
+                               FontSize="18"
+                               Text="{Binding ExternalServerInformation}"/>
 
-                    <Button Grid.Row="2"
-                            FontSize="18"
-                            Text="Test"
-                            Command="{Binding TestCommand}"></Button>
-                </Grid>
-            </Frame>
+                        <Button Margin="0,20,0,0"
+                                Grid.Row="2"
+                                Text="Connect"
+                                Command="{Binding ConnectCommand}" />
+
+                        <Button Grid.Row="3"
+                                Text="Edit"
+                                Command="{Binding EditCommand}" />
+
+                        <Button Grid.Row="4"
+                                Text="Back"
+                                Command="{Binding BackCommand}" />
+                    </Grid>
+                </Frame>
+            </Grid>
         </Grid>
-    </Grid>
+    </ScrollView>
 </ContentPage>
