@@ -67,14 +67,15 @@ namespace VoiceCraft.Mobile.Network
             Signalling.Connect();
         }
 
-        public void Disconnect(string reason = null)
+        public void Disconnect(string Reason = null, bool FireEvent = true)
         {
             //Disconnect all sockets.
             Signalling.Disconnect();
             Voice.Disconnect();
             if(ClientSidedPositioning || Websocket != null) Websocket?.Disconnect(); //If client sided positioning then disconnect websocket.
 
-            OnDisconnect?.Invoke(reason);
+            if(FireEvent)
+                OnDisconnect?.Invoke(Reason);
         }
 
         public void SendAudio(byte[] Data, int BytesRecorded, uint AudioPacketCount)
@@ -147,10 +148,10 @@ namespace VoiceCraft.Mobile.Network
             }
         }
 
-        public void PerformConnectError(SocketTypes SocketType, string reason)
+        public void PerformConnectError(SocketTypes SocketType, string Reason)
         {
-            Disconnect();
-            OnConnectError?.Invoke(SocketType, reason);
+            Disconnect(FireEvent: false);
+            OnConnectError?.Invoke(SocketType, Reason);
         }
 
         public void PerformParticipantJoined(ushort Key, VoiceCraftParticipant Participant)
