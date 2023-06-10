@@ -44,13 +44,16 @@ namespace VoiceCraft.Mobile.Network
         //Constructor
         public NetworkManager(bool DirectionalHearing, bool ClientSidedPositioning, AudioCodecs Codec, int AudioFrameSizeMS)
         {
+            //Setup the readonly variables.
             this.DirectionalHearing = DirectionalHearing;
             this.ClientSidedPositioning = ClientSidedPositioning;
             this.Codec = Codec;
             this.AudioFrameSizeMS = AudioFrameSizeMS;
 
+            //Setup participants list.
             Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
 
+            //Setup the sockets
             Signalling = new SignallingSocket(this);
             Voice = new VoiceSocket(this);
         }
@@ -58,6 +61,7 @@ namespace VoiceCraft.Mobile.Network
         //Public Methods
         public void Connect(string IP, ushort Port)
         {
+            //Setup IP and Port variables and start connection protocol.
             this.IP = IP;
             this.Port = Port;
             Signalling.Connect();
@@ -65,9 +69,10 @@ namespace VoiceCraft.Mobile.Network
 
         public void Disconnect(string reason = null)
         {
+            //Disconnect all sockets.
             Signalling.Disconnect();
             Voice.Disconnect();
-            if(ClientSidedPositioning || Websocket != null) Websocket?.Disconnect();
+            if(ClientSidedPositioning || Websocket != null) Websocket?.Disconnect(); //If client sided positioning then disconnect websocket.
 
             OnDisconnect?.Invoke(reason);
         }
@@ -78,6 +83,7 @@ namespace VoiceCraft.Mobile.Network
             byte[] audioTrimmed = new byte[0];
             switch(Codec)
             {
+                //If opus. Encode on opus level.
                 case AudioCodecs.Opus:
                     if (OpusEncoder == null)
                         return;
@@ -86,6 +92,7 @@ namespace VoiceCraft.Mobile.Network
                     var encodedBytes = OpusEncoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
                     audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
                     break;
+                //If G722. Encode on G722 level.
                 case AudioCodecs.G722:
                     if (G722Codec == null)
                         return;
@@ -93,9 +100,10 @@ namespace VoiceCraft.Mobile.Network
                     audioTrimmed = G722Codec.Encode(Data, 0, BytesRecorded);
                     break;
             }
+            //Packet creation.
             VoicePacket packet = new VoicePacket() {
                 PacketIdentifier = VoicePacketIdentifier.Audio,
-                PacketAudio = audioTrimmed,
+                PacketAudio = audioTrimmed, //Sends trimmed bytes to save packet size.
                 PacketCount = AudioPacketCount
             }; //Audio packet stuff here.
             Voice.SendPacket(packet.GetPacketDataStream());
