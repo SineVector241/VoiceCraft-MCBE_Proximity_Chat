@@ -110,7 +110,7 @@ namespace VoiceCraft.Mobile.Network
             Voice.SendPacket(packet.GetPacketDataStream());
         }
 
-        public void PerformConnect(SocketTypes SocketType, int SampleRate, ushort Key)
+        public void PerformConnect(SocketTypes SocketType, int SampleRate = 0, ushort Key = 0)
         {
             try
             {

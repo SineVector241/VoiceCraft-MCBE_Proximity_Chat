@@ -60,7 +60,7 @@ namespace VoiceCraft.Mobile.Network.Interfaces
         /// Fires the OnConnect event.
         /// </summary>
          
-        public void PerformConnect(SocketTypes SocketType, int SampleRate, ushort Key);
+        public void PerformConnect(SocketTypes SocketType, int SampleRate = 0, ushort Key = 0);
 
         /// <summary>
         /// Fires the OnConnectError event.
