@@ -1,4 +1,7 @@
-﻿namespace VoiceCraft.Mobile.Network.Interfaces
+﻿using VoiceCraft.Mobile.Network.Sockets;
+using static VoiceCraft.Mobile.Network.Interfaces.INetworkManager;
+
+namespace VoiceCraft.Mobile.Network.Interfaces
 {
     public interface INetwork
     {
@@ -12,12 +15,12 @@
         /// <summary>
         /// Disconnects from the socket and disposes with optional reason.
         /// </summary>
-        public void Disconnect(string Reason = null);
+        public void Disconnect();
 
         /// <summary>
         /// Sends a packet on the socket.
         /// </summary>
-        /// <param name="Packet"></param>
-        public void SendPacket(object Packet);
+        /// <param name="PacketStream"></param>
+        public void SendPacket(byte[] PacketStream);
     }
 }

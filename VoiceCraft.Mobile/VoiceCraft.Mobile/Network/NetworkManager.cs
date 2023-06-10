@@ -2,7 +2,7 @@
 using NAudio.Wave;
 using System;
 using System.Collections.Concurrent;
-using System.Numerics;
+using System.Linq;
 using VoiceCraft.Mobile.Network.Codecs;
 using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
@@ -16,10 +16,11 @@ namespace VoiceCraft.Mobile.Network
 
         public string IP { get; private set; }
         public ushort Port { get; private set; }
-        public ushort VoicePort { get; private set; }
         public ushort Key { get; private set; }
+        public ushort VoicePort { get; set; }
         public bool DirectionalHearing { get; }
         public bool ClientSidedPositioning { get; }
+        public int AudioFrameSizeMS { get; }
         public AudioCodecs Codec { get; }
 #nullable enable
         public WaveFormat? RecordFormat { get; private set; }
@@ -36,25 +37,22 @@ namespace VoiceCraft.Mobile.Network
         public event INetworkManager.SocketConnect OnConnect;
         public event INetworkManager.SocketConnectError OnConnectError;
         public event INetworkManager.SocketDisconnect OnDisconnect;
+        public event INetworkManager.Binded OnBinded;
         public event INetworkManager.VoiceCraftParticipantJoined OnParticipantJoined;
         public event INetworkManager.VoiceCraftParticipantLeft OnParticipantLeft;
 
         //Constructor
-        public NetworkManager(bool DirectionalHearing, bool ClientSidedPositioning, AudioCodecs Codec)
+        public NetworkManager(bool DirectionalHearing, bool ClientSidedPositioning, AudioCodecs Codec, int AudioFrameSizeMS)
         {
             this.DirectionalHearing = DirectionalHearing;
             this.ClientSidedPositioning = ClientSidedPositioning;
             this.Codec = Codec;
+            this.AudioFrameSizeMS = AudioFrameSizeMS;
 
             Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
 
             Signalling = new SignallingSocket(this);
             Voice = new VoiceSocket(this);
-
-            OnConnect += NM_OnConnect;
-            OnConnectError += NM_OnConnectError;
-            OnParticipantJoined += NM_OnParticipantJoined;
-            OnParticipantLeft += NM_OnParticipantLeft;
         }
 
         //Public Methods
@@ -70,22 +68,40 @@ namespace VoiceCraft.Mobile.Network
             Signalling.Disconnect();
             Voice.Disconnect();
             if(ClientSidedPositioning || Websocket != null) Websocket?.Disconnect();
+
+            OnDisconnect?.Invoke(reason);
         }
 
-        public void SendAudio(byte[] Data)
+        public void SendAudio(byte[] Data, int BytesRecorded, uint AudioPacketCount)
         {
-            VoicePacket packet = new VoicePacket(); //Audio packet stuff here.
-            Voice.SendPacket(packet);
+            byte[] audioEncodeBuffer = new byte[1000];
+            byte[] audioTrimmed = new byte[0];
+            switch(Codec)
+            {
+                case AudioCodecs.Opus:
+                    if (OpusEncoder == null)
+                        return;
+
+                    short[] pcm = BytesToShorts(Data, 0, BytesRecorded);
+                    var encodedBytes = OpusEncoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
+                    audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
+                    break;
+                case AudioCodecs.G722:
+                    if (G722Codec == null)
+                        return;
+
+                    audioTrimmed = G722Codec.Encode(Data, 0, BytesRecorded);
+                    break;
+            }
+            VoicePacket packet = new VoicePacket() {
+                PacketIdentifier = VoicePacketIdentifier.Audio,
+                PacketAudio = audioTrimmed,
+                PacketCount = AudioPacketCount
+            }; //Audio packet stuff here.
+            Voice.SendPacket(packet.GetPacketDataStream());
         }
 
-        public void SendAudio(byte[] Data, Vector3 Position)
-        {
-            VoicePacket packet = new VoicePacket() { }; //Audio packet stuff here.
-            Voice.SendPacket(packet);
-        }
-
-        //Private Methods
-        private void NM_OnConnect(SocketTypes SocketType, int SampleRate)
+        public void PerformConnect(SocketTypes SocketType, int SampleRate, ushort Key)
         {
             try
             {
@@ -114,15 +130,50 @@ namespace VoiceCraft.Mobile.Network
                         if (ClientSidedPositioning) Websocket.Connect();
                         break;
                 }
+
+                OnConnect?.Invoke(SocketType, SampleRate, Key);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 OnConnectError?.Invoke(SocketTypes.NetworkManager, ex.Message);
             }
         }
 
-        private void NM_OnConnectError(SocketTypes SocketType, string reason) => Disconnect();
-        private void NM_OnParticipantJoined(ushort Key, VoiceCraftParticipant Participant) => Participants.TryAdd(Key, Participant);
-        private void NM_OnParticipantLeft(ushort Key, VoiceCraftParticipant Participant) => Participants.TryRemove(Key, out _);
+        public void PerformConnectError(SocketTypes SocketType, string reason)
+        {
+            Disconnect();
+            OnConnectError?.Invoke(SocketType, reason);
+        }
+
+        public void PerformParticipantJoined(ushort Key, VoiceCraftParticipant Participant)
+        {
+            Participants.TryAdd(Key, Participant);
+            OnParticipantJoined?.Invoke(Key, Participant);
+        }
+
+        public void PerformParticipantLeft(ushort Key)
+        {
+            VoiceCraftParticipant participant;
+            Participants.TryRemove(Key, out participant);
+            OnParticipantLeft?.Invoke(Key, participant);
+        }
+
+        public void PerformBinded(string Username)
+        {
+            OnBinded?.Invoke(Username);
+        }
+
+        //Private Methods
+        private static short[] BytesToShorts(byte[] input, int offset, int length)
+        {
+            short[] processedValues = new short[length / 2];
+            for (int c = 0; c < processedValues.Length; c++)
+            {
+                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
+                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
+            }
+
+            return processedValues;
+        }
     }
 }

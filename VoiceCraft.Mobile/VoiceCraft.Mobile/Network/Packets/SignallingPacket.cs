@@ -9,12 +9,14 @@ namespace VoiceCraft.Mobile.Network.Packets
     {
         LoginServerSided,
         LoginClientSided,
+        Login,
         Logout,
         Accept16,
         Accept48,
         Deny,
         Binded,
         Error,
+        Ping,
         Null
     }
 
@@ -105,15 +107,15 @@ namespace VoiceCraft.Mobile.Network.Packets
             DataStream.AddRange(BitConverter.GetBytes(VoicePort)); //Packet Voice Port
 
             //String Values
-            if (!string.IsNullOrEmpty(Version))
+            if (!string.IsNullOrWhiteSpace(Version))
                 DataStream.AddRange(BitConverter.GetBytes(Version.Length));
             else
                 DataStream.AddRange(BitConverter.GetBytes(0));
 
-            if(!string.IsNullOrEmpty(Version))
+            if(!string.IsNullOrWhiteSpace(Version))
                 DataStream.AddRange(Encoding.UTF8.GetBytes(Version));
 
-            if (!string.IsNullOrEmpty(Metadata))
+            if (!string.IsNullOrWhiteSpace(Metadata))
                 DataStream.AddRange(Encoding.UTF8.GetBytes(Metadata));
 
             return DataStream.ToArray();

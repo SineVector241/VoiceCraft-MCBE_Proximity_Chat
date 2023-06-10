@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:app="clr-namespace:VoiceCraft.Mobile"
              x:Class="VoiceCraft.Mobile.Views.CreditsPage">
     <Grid>
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
@@ -25,7 +26,7 @@
                            FontAttributes="Bold" />
 
                     <Label Grid.Row="2"
-                           Text="Version: 1.4.0-alpha"
+                           Text="{Binding Source={Static app:App.Version}, StringFormat='Version: {0}' }"
                            FontSize="20"
                            FontAttributes="Bold" />
                 </Grid>

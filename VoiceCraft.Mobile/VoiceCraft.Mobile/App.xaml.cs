@@ -4,6 +4,8 @@ namespace VoiceCraft.Mobile
 {
     public partial class App : Application
     {
+        public const string Version = "v1.4.0-alpha";
+
         public App()
         {
             InitializeComponent();

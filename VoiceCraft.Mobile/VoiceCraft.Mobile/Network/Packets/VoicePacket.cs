@@ -1,4 +1,7 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Text;
 
 namespace VoiceCraft.Mobile.Network.Packets
 {
@@ -20,7 +23,102 @@ namespace VoiceCraft.Mobile.Network.Packets
         private uint Count; //Data containing packet count to detect packet loss.
         private ushort Key; //Data containing the key of a participant.
         private Vector3 Position; //Data containing audio source assuming client audio handling is at 0,0,0 rotation 0.
+        private string EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
         private byte[] Audio; //Data containing encoded audio data.
-        private string Version; //Data containing packet version.
+
+        public VoicePacketIdentifier PacketIdentifier
+        {
+            get { return Identifier; }
+            set { Identifier = value; }
+        }
+
+        public uint PacketCount
+        {
+            get { return Count; }
+            set { Count = value; }
+        }
+
+        public ushort PacketKey
+        {
+            get { return Key; }
+            set { Key = value; }
+        }
+
+        public Vector3 PacketPosition
+        {
+            get { return Position; }
+            set { Position = value; }
+        }
+
+        public string PacketEnviromentId
+        {
+            get { return EnviromentId; }
+            set { EnviromentId = value; }
+        }
+
+        public byte[] PacketAudio
+        {
+            get { return Audio; }
+            set { Audio = value; }
+        }
+
+        public VoicePacket()
+        {
+            Identifier = VoicePacketIdentifier.Null;
+            Count = 0;
+            Key = 0;
+            Position = new Vector3();
+            PacketEnviromentId = string.Empty;
+            Audio = new byte[0];
+        }
+
+        public VoicePacket(byte[] DataStream)
+        {
+            PacketIdentifier = (VoicePacketIdentifier)BitConverter.ToUInt16(DataStream, 0); //Read packet identifier - 2 bytes.
+            PacketCount = BitConverter.ToUInt32(DataStream, 2); //Read packet count - 4 bytes.
+            PacketKey = BitConverter.ToUInt16(DataStream, 6); //Read packet key - 2 bytes.
+            PacketPosition = new Vector3(BitConverter.ToSingle(DataStream, 8), BitConverter.ToSingle(DataStream, 12), BitConverter.ToSingle(DataStream, 16)); //Read packet position 12 bytes.
+            
+            //String lengths.
+            int enviromentIdLength = BitConverter.ToInt32(DataStream, 20); //Read enviroment id length - 4 bytes.
+            int audioLength = DataStream.Length - (24 + enviromentIdLength); //Read audio length.
+            PacketAudio = new byte[audioLength];
+
+            if (enviromentIdLength > 0)
+                PacketEnviromentId = Encoding.UTF8.GetString(DataStream, 24, enviromentIdLength);
+            else
+                PacketEnviromentId = string.Empty;
+
+            if (audioLength > 0)
+                Buffer.BlockCopy(DataStream, 24 + enviromentIdLength, PacketAudio, 0, audioLength);
+            else
+                Audio = new byte[0];
+        }
+
+        public byte[] GetPacketDataStream()
+        {
+            var DataStream = new List<byte>();
+
+            DataStream.AddRange(BitConverter.GetBytes((ushort)Identifier)); //Packet Identifier
+            DataStream.AddRange(BitConverter.GetBytes(Count)); //Packet Count
+            DataStream.AddRange(BitConverter.GetBytes(Key)); //Packet Key
+            DataStream.AddRange(BitConverter.GetBytes(Position.X)); //Packet Position X
+            DataStream.AddRange(BitConverter.GetBytes(Position.Y)); //Packet Position Y
+            DataStream.AddRange(BitConverter.GetBytes(Position.Z)); //Packet Position Z
+
+            //String Values
+            if (!string.IsNullOrWhiteSpace(EnviromentId))
+                DataStream.AddRange(BitConverter.GetBytes(EnviromentId.Length));
+            else
+                DataStream.AddRange(BitConverter.GetBytes(0));
+
+            if (!string.IsNullOrWhiteSpace(EnviromentId))
+                DataStream.AddRange(Encoding.UTF8.GetBytes(EnviromentId));
+
+            if (Audio != null && Audio.Length > 0)
+                DataStream.AddRange(Audio);
+
+            return DataStream.ToArray();
+        }
     }
 }
