@@ -51,7 +51,7 @@ namespace VoiceCraft.Mobile.Storage
 
         public static void DeleteServer(ServerModel server)
         {
-            DBData.Servers.Remove(server);
+            DBData.Servers.RemoveAll(x => x.Name.Equals(server.Name));
             OnServerRemove?.Invoke(server);
             SaveDatabase();
         }

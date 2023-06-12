@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading.Tasks;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Network;
 using VoiceCraft.Mobile.Storage;
@@ -18,8 +19,9 @@ namespace VoiceCraft.Mobile.ViewModels
         public ServerPageViewModel()
         {
             Server = Database.GetPassableObject<ServerModel>();
-            NetworkManager.InfoPingAsync(server.IP, server.Port).ContinueWith(res => {
-                ExternalServerInformation = res.Result;
+            _ = Task.Run(async () => {
+                var res = await NetworkManager.InfoPingAsync(server.IP, server.Port);
+                ExternalServerInformation = res;
             });
         }
 

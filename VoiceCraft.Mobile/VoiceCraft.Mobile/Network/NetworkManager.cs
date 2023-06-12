@@ -199,7 +199,10 @@ namespace VoiceCraft.Mobile.Network
                     UDPSocket.Close();
                     UDPSocket.Dispose();
                     UDPSocket = null;
-                    return $"{packet.PacketMetadata}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                    if(packet.PacketIdentifier != SignallingPacketIdentifiers.Deny)
+                        return $"{packet.PacketMetadata}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+
+                    return $"Banned from server...\nPing Time: {Math.Floor(pingTimeMS)}ms";
                 }
                 else
                 {

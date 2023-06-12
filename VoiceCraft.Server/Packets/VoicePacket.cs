@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
 
-namespace VoiceCraft.Mobile.Network.Packets
+namespace VoiceCraft.Server.Network.Packets
 {
     public enum VoicePacketIdentifier
     {
@@ -23,8 +21,8 @@ namespace VoiceCraft.Mobile.Network.Packets
         private uint Count; //Data containing packet count to detect packet loss.
         private ushort Key; //Data containing the key of a participant.
         private Vector3 Position; //Data containing audio source assuming client audio handling is at 0,0,0 rotation 0.
-        private string EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
-        private byte[] Audio; //Data containing encoded audio data.
+        private string? EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
+        private byte[]? Audio; //Data containing encoded audio data.
 
         public VoicePacketIdentifier PacketIdentifier
         {
@@ -50,13 +48,13 @@ namespace VoiceCraft.Mobile.Network.Packets
             set { Position = value; }
         }
 
-        public string PacketEnviromentId
+        public string? PacketEnviromentId
         {
             get { return EnviromentId; }
             set { EnviromentId = value; }
         }
 
-        public byte[] PacketAudio
+        public byte[]? PacketAudio
         {
             get { return Audio; }
             set { Audio = value; }
