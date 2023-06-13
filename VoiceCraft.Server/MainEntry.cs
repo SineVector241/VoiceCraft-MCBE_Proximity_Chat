@@ -11,6 +11,15 @@ namespace VoiceCraft.Server
         public MainEntry()
         {
             ServerEvents.OnStarted += ServiceStarted;
+            ServerEvents.OnFailed += ServiceFailed;
+        }
+
+        private async Task ServiceFailed(string service, string reason)
+        {
+            Logger.LogToConsole(LogType.Error, "Failed to start server. Closing window in 10 seconds.", nameof(MainEntry));
+            ServerEvents.InvokeStopping();
+            await Task.Delay(10000);
+            Environment.Exit(0);
         }
 
         private Task ServiceStarted(string service)
@@ -21,6 +30,14 @@ namespace VoiceCraft.Server
                     _ = Task.Run(async () => {
                         await new Signalling().Start();
                     });
+                    break;
+                case nameof(Signalling):
+                    _ = Task.Run(async () => {
+                        await new Voice().Start();
+                    });
+                    break;
+                case nameof(Voice):
+                    Logger.LogToConsole(LogType.Success, "Server successfully started!", nameof(MainEntry));
                     break;
             }
 
@@ -82,7 +99,7 @@ namespace VoiceCraft.Server
                             //Thread safety
                             Parallel.ForEach(p1, participant =>
                             {
-                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value.Binded}, IsMuted: {participant.Value.Muted}, Name: {participant.Value.MinecraftData.Gamertag}, Dimension: {participant.Value.MinecraftData.DimensionId}, Position: {participant.Value.MinecraftData.Position}, Rotation: {participant.Value.MinecraftData.Rotation}", nameof(MainEntry));
+                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value?.Binded}, IsMuted: {participant.Value?.Muted}, Name: {participant.Value?.MinecraftData.Gamertag}, Dimension: {participant.Value?.MinecraftData.DimensionId}, Position: {participant.Value?.MinecraftData.Position}, Rotation: {participant.Value?.MinecraftData.Rotation}", nameof(MainEntry));
                             });
                             break;
                         case "mute":
@@ -253,7 +270,7 @@ namespace VoiceCraft.Server
                             Logger.LogToConsole(LogType.Info, "banlist: Shows the ip addresses that are banned.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "setproximity [distance: int]: Sets the proximity distance (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "toggleproximity [toggle: boolean]: Switches proximity chat on or off. If off, then it becomes a regular voice chat. (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
-                            Logger.LogToConsole(LogType.Info, "setmotd [MOTD: string]: Sets the servers MOTD message.", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "setmotd [MOTD: string]: Sets the servers MOTD message. (Defaults to serverProperties.json setting on server restart)", nameof(MainEntry));
                             break;
                         default:
                             Logger.LogToConsole(LogType.Error, $"Could not find command that matches {cmd.ToLower()}", nameof(MainEntry));

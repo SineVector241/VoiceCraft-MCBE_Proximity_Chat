@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Threading.Tasks;
 using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
@@ -100,6 +101,8 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
                         if (participant != null)
                         {
+                            var volume = Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
+                            participant.SetVolume(volume);
                             var rotationSource = Math.Atan2(Packet.PacketPosition.X, Packet.PacketPosition.Z);
                             if (!Manager.ClientSidedPositioning && Manager.DirectionalHearing)
                             {

@@ -5,15 +5,13 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraftProximityChat", "VoiceCraftProximityChat\VoiceCraftProximityChat.csproj", "{EA5AAB26-E7F4-4552-8EED-A3727DDB909C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft_Server", "ConsoleApp1\VoiceCraft_Server.csproj", "{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft.Mobile.Android", "VoiceCraft.Mobile\VoiceCraft.Mobile.Android\VoiceCraft.Mobile.Android.csproj", "{EE53769B-73ED-42C0-AC15-2AD5C7BAC40D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft.Mobile.iOS", "VoiceCraft.Mobile\VoiceCraft.Mobile.iOS\VoiceCraft.Mobile.iOS.csproj", "{13CF703B-874B-447A-BABB-872A9EE36FB5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraft.Mobile", "VoiceCraft.Mobile\VoiceCraft.Mobile\VoiceCraft.Mobile.csproj", "{22DDBDA1-6109-463F-8277-E4A745D4FEDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft.Server", "VoiceCraft.Server\VoiceCraft.Server.csproj", "{48124B02-6AC7-4C96-8BAE-F3FF52F7689E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraft.Server", "VoiceCraft.Server\VoiceCraft.Server.csproj", "{48124B02-6AC7-4C96-8BAE-F3FF52F7689E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,34 +59,6 @@ Global
 		{EA5AAB26-E7F4-4552-8EED-A3727DDB909C}.Release|x64.Build.0 = Release|Any CPU
 		{EA5AAB26-E7F4-4552-8EED-A3727DDB909C}.Release|x86.ActiveCfg = Release|Any CPU
 		{EA5AAB26-E7F4-4552-8EED-A3727DDB909C}.Release|x86.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|ARM.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|iPhone.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|iPhone.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|x64.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Debug|x86.Build.0 = Debug|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|ARM.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|ARM.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|ARM64.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|iPhone.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|iPhone.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|x64.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|x64.Build.0 = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|x86.ActiveCfg = Release|Any CPU
-		{3A5B322E-D55D-4CEB-B0D4-2DE6D581B3E4}.Release|x86.Build.0 = Release|Any CPU
 		{EE53769B-73ED-42C0-AC15-2AD5C7BAC40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE53769B-73ED-42C0-AC15-2AD5C7BAC40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE53769B-73ED-42C0-AC15-2AD5C7BAC40D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU

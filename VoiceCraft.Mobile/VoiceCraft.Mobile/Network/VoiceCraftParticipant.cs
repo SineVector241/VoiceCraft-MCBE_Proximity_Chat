@@ -88,7 +88,7 @@ namespace VoiceCraft.Mobile.Network
             this.PacketCount = PacketCount;
         }
 
-        public void SetVolume(int Volume)
+        public void SetVolume(float Volume)
         {
             FloatProvider.Volume = Volume;
         }

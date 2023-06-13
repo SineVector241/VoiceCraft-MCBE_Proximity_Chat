@@ -72,7 +72,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
                     var data = await UDPSocket.ReceiveAsync();
                     var packet = new SignallingPacket(data.Buffer);
                     LastPing = DateTime.UtcNow;
-                    HandlePacketAsync(packet);
+                    HandlePacket(packet);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -86,7 +86,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
             }
         }
 
-        private void HandlePacketAsync(SignallingPacket Packet)
+        private void HandlePacket(SignallingPacket Packet)
         {
             switch(Packet.PacketIdentifier)
             {
@@ -112,6 +112,9 @@ namespace VoiceCraft.Mobile.Network.Sockets
                 case SignallingPacketIdentifiers.Error:
                     Manager.Disconnect(Packet.PacketMetadata);
                     break;
+                case SignallingPacketIdentifiers.Ping:
+                    LastPing = DateTime.UtcNow;
+                    break;
             }
         }
 
@@ -123,7 +126,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
                 {
                     await Task.Delay(2000);
 
-                    var packet = new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping }.GetPacketDataStream();
+                    var packet = new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping, PacketVersion = App.Version }.GetPacketDataStream();
                     UDPSocket.Send(packet, packet.Length);
 
                     if (DateTime.UtcNow.Subtract(LastPing).Seconds > 10)

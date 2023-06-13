@@ -62,7 +62,7 @@ namespace VoiceCraft.Server.Sockets
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Server ||
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
-                Logger.LogToConsole(LogType.Info, $"Received Incoming Login: {Packet.PacketKey}", nameof(Signalling));
+                Logger.LogToConsole(LogType.Info, $"Received Server Sided Login: {Packet.PacketKey}", nameof(Signalling));
                 var key = Packet.PacketKey;
                 var participant = new Participant();
                 participant.SocketData.SignallingAddress = EP;
@@ -95,6 +95,8 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts client sided logins!"
                 }, EP);
+
+                Logger.LogToConsole(LogType.Warn, $"Login Denied: Key: {Packet.PacketKey} Reason: Server only accepts client sided logins.", nameof(Signalling));
             }
         }
 
@@ -120,7 +122,7 @@ namespace VoiceCraft.Server.Sockets
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Client ||
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
-                Logger.LogToConsole(LogType.Info, $"Received Incoming Login: {Packet.PacketKey}", nameof(Signalling));
+                Logger.LogToConsole(LogType.Info, $"Received Client Sided Login: {Packet.PacketKey}", nameof(Signalling));
                 var key = Packet.PacketKey;
                 var participant = new Participant();
                 participant.SocketData.SignallingAddress = EP;
@@ -154,18 +156,17 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts server sided logins!"
                 }, EP);
+
+                Logger.LogToConsole(LogType.Warn, $"Login Denied: Key: {Packet.PacketKey} Reason: Server only accepts server sided logins.", nameof(Signalling));
             }
         }
 
         private void HandleLogout(EndPoint EP)
         {
-            foreach (var obj in ServerData.Participants)
+            var participant = ServerData.GetParticipantBySignalling(EP);
+            if(participant.Value != null)
             {
-                if (obj.Value.SocketData.SignallingAddress?.ToString() == EP.ToString())
-                {
-                    ServerData.RemoveParticipant(obj.Key, "logout");
-                    break;
-                }
+                ServerData.RemoveParticipant(participant.Key, "logout");
             }
         }
 
@@ -175,7 +176,7 @@ namespace VoiceCraft.Server.Sockets
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
                 var participant = ServerData.GetParticipantByKey(Packet.PacketKey);
-                if(participant != null && Packet.PacketMetadata != null)
+                if(participant != null && Packet.PacketMetadata != null && participant.ClientSided)
                 {
                     participant.Binded = true;
                     participant.MinecraftData.Gamertag = Packet.PacketMetadata; //Requires a name
@@ -185,6 +186,16 @@ namespace VoiceCraft.Server.Sockets
             }
 
             //Else do nothing.
+        }
+
+        private void HandlePing(EndPoint EP)
+        {
+            var participant = ServerData.GetParticipantBySignalling(EP);
+            if(participant.Value != null)
+            {
+                participant.Value.SocketData.LastPing = DateTime.UtcNow;
+                SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping }, EP);
+            }
         }
     }
 }

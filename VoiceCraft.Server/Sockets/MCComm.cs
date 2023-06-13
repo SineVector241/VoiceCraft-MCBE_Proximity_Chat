@@ -19,7 +19,13 @@ namespace VoiceCraft.Server.Sockets
 
         private Task OnStopping()
         {
-            Listener.Stop();
+            try
+            {
+                Listener?.Stop();
+            }
+            catch(ObjectDisposedException) { 
+                //DO NOTHING
+            }
             return Task.CompletedTask;
         }
 
@@ -98,7 +104,7 @@ namespace VoiceCraft.Server.Sockets
                                     SendResponse(ctx, HttpStatusCode.Conflict, "Error. Key has already been binded to a participant.");
                                     break;
                                 }
-                                if (ServerData.GetParticipantByMinecraftId(json.PlayerId) != null)
+                                if (ServerData.GetParticipantByMinecraftId(json.PlayerId).Value != null)
                                 {
                                     SendResponse(ctx, HttpStatusCode.Conflict, "Error. PlayerId is already binded to a participant!");
                                     break;
@@ -115,7 +121,7 @@ namespace VoiceCraft.Server.Sockets
                                 for (int i = 0; i < json.Players.Count; i++)
                                 {
                                     var player = json.Players[i];
-                                    var vcParticipant = ServerData.GetParticipantByMinecraftId(player.PlayerId);
+                                    var vcParticipant = ServerData.GetParticipantByMinecraftId(player.PlayerId).Value;
                                     if (vcParticipant != null)
                                     {
                                         vcParticipant.MinecraftData.Position = player.Location;
@@ -152,14 +158,12 @@ namespace VoiceCraft.Server.Sockets
                                 break;
 
                             case PacketType.RemoveParticipant:
-                                foreach (var obj in ServerData.Participants)
+                                var rPart = ServerData.GetParticipantByMinecraftId(json.PlayerId);
+                                if (rPart.Value?.MinecraftData.PlayerId == json.PlayerId)
                                 {
-                                    if (obj.Value.MinecraftData.PlayerId == json.PlayerId)
-                                    {
-                                        ServerData.RemoveParticipant(obj.Key, "kicked");
-                                        SendResponse(ctx, HttpStatusCode.OK, "Removed");
-                                        break;
-                                    }
+                                    ServerData.RemoveParticipant(rPart.Key, "kicked");
+                                    SendResponse(ctx, HttpStatusCode.OK, "Removed");
+                                    break;
                                 }
 
                                 SendResponse(ctx, HttpStatusCode.NotFound, "Could Not Find Participant");

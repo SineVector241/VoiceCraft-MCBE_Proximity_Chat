@@ -6,7 +6,7 @@ namespace VoiceCraft.Server.Helpers
 {
     public static class ServerData
     {
-        public static ConcurrentDictionary<ushort, Participant> Participants { get; } = new ConcurrentDictionary<ushort, Participant>();
+        public static ConcurrentDictionary<ushort, Participant?> Participants { get; } = new ConcurrentDictionary<ushort, Participant?>();
         private static PeriodicTimer? Timer = null;
 
         public static async void StartTimer(CancellationToken CT)
@@ -61,34 +61,19 @@ namespace VoiceCraft.Server.Helpers
             return participant;
         }
 
-        public static Participant? GetParticipantByMinecraftId(string Id)
+        public static KeyValuePair<ushort, Participant?> GetParticipantByMinecraftId(string Id)
         {
-            foreach (var value in Participants.Values)
-            {
-                if (value != null && value.MinecraftData.PlayerId == Id)
-                    return value;
-            }
-            return null;
+            return Participants.FirstOrDefault(x => x.Value?.MinecraftData.PlayerId == Id);
         }
 
-        public static Participant? GetParticipantBySignalling(EndPoint EndPoint)
+        public static KeyValuePair<ushort, Participant?> GetParticipantBySignalling(EndPoint EndPoint)
         {
-            foreach(var value in Participants.Values)
-            {
-                if (value != null && value.SocketData.SignallingAddress?.ToString() == EndPoint.ToString())
-                    return value;
-            }
-            return null;
+            return Participants.FirstOrDefault(x => x.Value?.SocketData.SignallingAddress?.ToString() == EndPoint.ToString());
         }
 
-        public static Participant? GetParticipantByVoice(EndPoint EndPoint)
+        public static KeyValuePair<ushort, Participant?> GetParticipantByVoice(EndPoint EndPoint)
         {
-            foreach (var value in Participants.Values)
-            {
-                if (value != null && value.SocketData.VoiceAddress?.ToString() == EndPoint.ToString())
-                    return value;
-            }
-            return null;
+            return Participants.FirstOrDefault(x => x.Value?.SocketData.VoiceAddress?.ToString() == EndPoint.ToString());
         }
     }
 

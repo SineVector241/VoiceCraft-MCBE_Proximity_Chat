@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using VoiceCraft.Server.Helpers;
 using VoiceCraft.Server.Network.Packets;
@@ -51,7 +50,7 @@ namespace VoiceCraft.Server.Sockets
                             HandlePacket(packet, result.RemoteEndPoint);
                         }
                     }
-                    catch(SocketException)
+                    catch(SocketException ex) when(ex.Message == "The I/O operation has been aborted because of either a thread exit or an application request.")
                     {
                         break; //Break out on disconnect/close
                     }
@@ -86,6 +85,9 @@ namespace VoiceCraft.Server.Sockets
                 case SignallingPacketIdentifiers.InfoPing:
                     HandleInfoPing(EP);
                     break;
+                case SignallingPacketIdentifiers.Ping:
+                    HandlePing(EP);
+                    break;
                 case SignallingPacketIdentifiers.LoginServerSided:
                     HandleServerSidedLogin(Packet, EP);
                     break;
@@ -111,19 +113,21 @@ namespace VoiceCraft.Server.Sockets
             if(Participant.SocketData.SignallingAddress != null)
                 SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Binded, PacketMetadata = Participant.MinecraftData.Gamertag }, Participant.SocketData.SignallingAddress);
 
-            var list = ServerData.Participants.Where(x => x.Value.Binded && x.Key != Key);
+            var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && x.Key != Key);
 
             for (int i = 0; i < list.Count(); i++)
             {
-                var externalParticipant = list.ElementAt(i).Value.SocketData.SignallingAddress;
-                if (Participant.SocketData.SignallingAddress != null && externalParticipant != null)
+                var externalParticipant = list.ElementAt(i);
+                if (Participant.SocketData.SignallingAddress != null && 
+                    externalParticipant.Value != null && 
+                    externalParticipant.Value.SocketData.SignallingAddress != null)
                 {
                     SendPacket(new SignallingPacket()
                     {
                         PacketIdentifier = SignallingPacketIdentifiers.Login,
-                        PacketKey = list.ElementAt(i).Key,
-                        PacketMetadata = list.ElementAt(i).Value.MinecraftData.Gamertag,
-                        PacketCodec = list.ElementAt(i).Value.Codec
+                        PacketKey = externalParticipant.Key,
+                        PacketMetadata = externalParticipant.Value.MinecraftData.Gamertag,
+                        PacketCodec = externalParticipant.Value.Codec
                     }, Participant.SocketData.SignallingAddress);
 
                     SendPacket(new SignallingPacket()
@@ -132,7 +136,7 @@ namespace VoiceCraft.Server.Sockets
                         PacketKey = Key,
                         PacketMetadata = Participant.MinecraftData.Gamertag,
                         PacketCodec = Participant.Codec
-                    }, externalParticipant);
+                    }, externalParticipant.Value.SocketData.SignallingAddress);
                 }
             }
 
@@ -143,9 +147,12 @@ namespace VoiceCraft.Server.Sockets
         {
             foreach(var participant in ServerData.Participants.Values)
             {
-                var socketData = participant.SocketData.SignallingAddress;
-                if (participant.Binded && socketData != null)
-                    SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key }, socketData);
+                if (participant != null)
+                {
+                    var socketData = participant.SocketData.SignallingAddress;
+                    if (participant.Binded && socketData != null)
+                        SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key }, socketData);
+                }
             }
             return Task.CompletedTask;
         }
