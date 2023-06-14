@@ -49,6 +49,7 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts Opus audio codec!"
                 }, EP);
+                return;
             }
             else if (Packet.PacketCodec == AudioCodecs.Opus && ServerProperties.Properties.Codec == AudioCodecs.G722)
             {
@@ -57,6 +58,7 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts G722 audio codec!"
                 }, EP);
+                return;
             }
 
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Server ||
@@ -109,6 +111,7 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts Opus audio codec!"
                 }, EP);
+                return;
             }
             else if (Packet.PacketCodec == AudioCodecs.Opus && ServerProperties.Properties.Codec == AudioCodecs.G722)
             {
@@ -117,6 +120,7 @@ namespace VoiceCraft.Server.Sockets
                     PacketIdentifier = SignallingPacketIdentifiers.Deny,
                     PacketMetadata = "Server only accepts G722 audio codec!"
                 }, EP);
+                return;
             }
 
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Client ||

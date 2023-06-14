@@ -152,10 +152,18 @@ namespace VoiceCraft.Mobile.Services
                 AudioRecorder = audioManager.CreateRecorder(VoipNetwork.RecordFormat);
 
                 AudioRecorder.DataAvailable += AudioDataAvailable;
+
+                StatusMessage = $"Connected - Key:{VoipNetwork.Key}\nWaiting for binding...";
+                //Fire event message here.
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                    MessagingCenter.Send(message, "Update");
+                });
             }
             else if (SocketType == Network.Sockets.SocketTypes.Signalling)
             {
-                StatusMessage = $"Connected - Key: {VoipNetwork.Key}\nWaiting For Binding...";
+                StatusMessage = $"Connecting Voice...\nPort: {VoipNetwork.VoicePort}";
 
                 //Fire event message here.
                 Device.BeginInvokeOnMainThread(() =>

@@ -91,9 +91,11 @@ namespace VoiceCraft.Mobile.Network.Sockets
             switch(Packet.PacketIdentifier)
             {
                 case SignallingPacketIdentifiers.Accept16:
+                    Manager.VoicePort = Packet.PacketVoicePort;
                     Manager.PerformConnect(SocketTypes.Signalling, 16000, Packet.PacketKey);
                     break;
                 case SignallingPacketIdentifiers.Accept48:
+                    Manager.VoicePort = Packet.PacketVoicePort;
                     Manager.PerformConnect(SocketTypes.Signalling, 48000, Packet.PacketKey);
                     break;
                 case SignallingPacketIdentifiers.Deny:
@@ -114,6 +116,9 @@ namespace VoiceCraft.Mobile.Network.Sockets
                     break;
                 case SignallingPacketIdentifiers.Ping:
                     LastPing = DateTime.UtcNow;
+                    break;
+                case SignallingPacketIdentifiers.Binded:
+                    Manager.PerformBinded(Packet.PacketMetadata);
                     break;
             }
         }

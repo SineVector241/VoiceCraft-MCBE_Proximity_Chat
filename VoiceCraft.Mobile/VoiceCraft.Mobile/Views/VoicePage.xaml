@@ -8,4 +8,22 @@
     <ContentPage.BindingContext>
         <vm:VoicePageViewModel />
     </ContentPage.BindingContext>
+
+    <Grid>
+        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+               Aspect="AspectFill"/>
+
+        <Grid Grid.RowDefinitions="auto">
+            <Frame>
+                <Label Text="{Binding StatusText}" 
+                       FontSize="25"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"/>
+            </Frame>
+
+            <Frame Grid.Row="1">
+            </Frame>
+        </Grid>
+    </Grid>
 </ContentPage>
