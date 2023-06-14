@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VoiceCraft_Android.Audio
+namespace VoiceCraft.Mobile.Audio
 {
     class EffectParameter
     {

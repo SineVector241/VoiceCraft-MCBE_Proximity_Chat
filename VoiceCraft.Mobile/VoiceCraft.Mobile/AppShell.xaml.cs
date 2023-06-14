@@ -10,6 +10,7 @@ namespace VoiceCraft.Mobile
             InitializeComponent();
             Routing.RegisterRoute(nameof(ServerPage), typeof(ServerPage));
             Routing.RegisterRoute(nameof(AddServerPage), typeof(AddServerPage));
+            Routing.RegisterRoute(nameof(VoicePage), typeof(VoicePage));
         }
     }
 }

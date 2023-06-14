@@ -1,4 +1,6 @@
-﻿using Xamarin.Forms;
+﻿using VoiceCraft.Mobile.Services;
+using Xamarin.Essentials;
+using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace VoiceCraft.Mobile.Views
@@ -9,6 +11,15 @@ namespace VoiceCraft.Mobile.Views
         public ServersPage()
         {
             InitializeComponent();
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            if(Preferences.Get("VoipServiceRunning", false))
+            {
+                Device.BeginInvokeOnMainThread(() => { Shell.Current.GoToAsync(nameof(VoicePage)); });
+            }
         }
     }
 }

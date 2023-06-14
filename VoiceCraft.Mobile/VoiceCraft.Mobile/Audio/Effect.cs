@@ -1,7 +1,7 @@
 ﻿using NAudio.Wave;
 using System;
 
-namespace VoiceCraft_Android.Audio
+namespace VoiceCraft.Mobile.Audio
 {
     abstract class Effect : ISampleProvider
     {

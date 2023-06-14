@@ -1,6 +1,6 @@
 ﻿using NAudio.Wave;
 
-namespace VoiceCraft_Android.Audio
+namespace VoiceCraft.Mobile.Audio
 {
     class SoftLimiter : Effect
     {

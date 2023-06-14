@@ -1,6 +1,6 @@
 ﻿using NAudio.Wave;
 
-namespace VoiceCraft_Android.Interfaces
+namespace VoiceCraft.Mobile.Interfaces
 {
     public interface IAudioManager
     {

@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using System.Threading.Tasks;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Network;
+using VoiceCraft.Mobile.Services;
 using VoiceCraft.Mobile.Storage;
+using VoiceCraft.Mobile.Views;
 using Xamarin.Forms;
 
 namespace VoiceCraft.Mobile.ViewModels
@@ -26,9 +28,14 @@ namespace VoiceCraft.Mobile.ViewModels
         }
 
         [RelayCommand]
-        public void Connect()
+        public async void Connect()
         {
-            Shell.Current.DisplayAlert("Connected!" ,"Woo. Connected!", "OK");
+            var granted = await Utils.CheckAndRequestPermissions();
+            if(granted)
+            {
+                MessagingCenter.Send(new StartServiceMessage(), "ServiceStarted");
+                await Shell.Current.GoToAsync(nameof(VoicePage));
+            }
         }
 
         [RelayCommand]
