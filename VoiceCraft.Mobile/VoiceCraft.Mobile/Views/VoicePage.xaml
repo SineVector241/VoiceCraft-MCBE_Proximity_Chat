@@ -13,7 +13,7 @@
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                Aspect="AspectFill"/>
 
-        <Grid Grid.RowDefinitions="auto">
+        <Grid Grid.RowDefinitions="auto, *, auto">
             <Frame>
                 <Label Text="{Binding StatusText}" 
                        FontSize="25"
@@ -22,7 +22,53 @@
                        VerticalTextAlignment="Center"/>
             </Frame>
 
-            <Frame Grid.Row="1">
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Participants}"
+                            Margin="10,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Frame Margin="0,10"
+                                   Padding="20"
+                                   VerticalOptions="StartAndExpand"
+                                   BorderColor="Transparent">
+                                <Label Text="{Binding}"
+                                       FontAttributes="Bold"
+                                       FontSize="22"
+                                       VerticalTextAlignment="Center">
+                                </Label>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Frame Grid.Row="2"
+                   VerticalOptions="EndAndExpand">
+                <Grid ColumnDefinitions="*, *">
+                    <Button Grid.Column="0"
+                            Text="Disconnect"
+                            BackgroundColor="{AppThemeBinding Dark=#8A22, Light=#8F44}"
+                            Command="{Binding DisconnectCommand}"/>
+
+                    <Button Grid.Column="1"
+                            Command="{Binding MuteUnmuteCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="True">
+                                        <Setter Property="Text" Value="Unmute" />
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
+                                        <Setter Property="Text" Value="Mute" />
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
             </Frame>
         </Grid>
     </Grid>

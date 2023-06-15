@@ -22,6 +22,9 @@ namespace VoiceCraft.Mobile.Services
     public class StartServiceMessage
     { }
 
+    public class DisconnectMessage
+    { }
+
     public class UpdateUIMessage
     {
         public List<string> Participants { get; set; } = new List<string>();

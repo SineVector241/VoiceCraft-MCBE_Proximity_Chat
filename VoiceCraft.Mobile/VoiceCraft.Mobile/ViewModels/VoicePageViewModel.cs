@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Collections.ObjectModel;
 using VoiceCraft.Mobile.Services;
 using Xamarin.Essentials;
 using Xamarin.Forms;
@@ -16,6 +14,23 @@ namespace VoiceCraft.Mobile.ViewModels
 
         [ObservableProperty]
         string statusText = "Connecting...";
+
+        [ObservableProperty]
+        ObservableCollection<string> participants = new ObservableCollection<string>();
+
+        [RelayCommand]
+        public void MuteUnmute()
+        {
+            var message = new MuteUnmuteMessage();
+            MessagingCenter.Send(message, "MuteUnmute");
+            IsMuted = !IsMuted;
+        }
+
+        [RelayCommand]
+        public void Disconnect()
+        {
+            MessagingCenter.Send(new DisconnectMessage(), "Disconnect");
+        }
 
         //Page codebehind to viewmodel.
         [RelayCommand]

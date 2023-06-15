@@ -69,8 +69,11 @@ namespace VoiceCraft.Mobile.Network
             Signalling.Connect();
         }
 
-        public void Disconnect(string Reason = null, bool FireEvent = true)
+        public void Disconnect(string Reason = null, bool FireEvent = true, bool SendDCPacket = false)
         {
+            if(SendDCPacket)
+                Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketVersion = App.Version }.GetPacketDataStream());
+
             //Disconnect all sockets.
             Signalling.Disconnect();
             Voice.Disconnect();

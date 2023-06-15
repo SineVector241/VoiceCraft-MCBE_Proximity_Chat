@@ -10,6 +10,7 @@ using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Network;
 using VoiceCraft.Mobile.Network.Codecs;
 using VoiceCraft.Mobile.Storage;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace VoiceCraft.Mobile.Services
@@ -73,6 +74,13 @@ namespace VoiceCraft.Mobile.Services
                     IsMuted = !IsMuted;
                 });
 
+                MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message => {
+                    VoipNetwork.Disconnect(SendDCPacket: true);
+                    var msg = new StopServiceMessage();
+                    MessagingCenter.Send(msg, "ServiceStopped");
+                    Preferences.Set("VoipServiceRunning", false);
+                });
+
                 RecordDetection = DateTime.UtcNow;
 
                 try
@@ -132,6 +140,8 @@ namespace VoiceCraft.Mobile.Services
                     VoipNetwork.Disconnect(FireEvent: false);
 
                     MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
+
+                    MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnect");
                 }
             });
         }

@@ -47,7 +47,7 @@ namespace VoiceCraft.Mobile.Network.Interfaces
         /// Disconnects all connected sockets.
         /// </summary>
         /// <param name="reason">Reason for disconnection to be passed into OnDisconnect event.</param>
-        public void Disconnect(string Reason = null, bool FireEvent = true);
+        public void Disconnect(string Reason = null, bool FireEvent = true, bool SendDCPacket = false);
 
         /// <summary>
         /// Sends audio.
