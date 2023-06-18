@@ -3,14 +3,9 @@ using System.Collections.Generic;
 
 namespace VoiceCraft.Mobile.Services
 {
-    public class ServiceFailedMessage
-    {
-        public string Message { get; set; }
-    }
-
     public class ServiceErrorMessage
     {
-        public Exception Exception { get; set; }
+        public Exception? Exception { get; set; }
     }
 
     public class MuteUnmuteMessage
@@ -23,7 +18,9 @@ namespace VoiceCraft.Mobile.Services
     { }
 
     public class DisconnectMessage
-    { }
+    {
+        public string? Reason { get; set; } = string.Empty;
+    }
 
     public class UpdateUIMessage
     {

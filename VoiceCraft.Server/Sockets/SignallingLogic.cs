@@ -8,17 +8,7 @@ namespace VoiceCraft.Server.Sockets
     {
         private void HandleInfoPing(EndPoint EP)
         {
-            var codec = "Hybrid";
             var connType = "Hybrid";
-            switch(ServerProperties.Properties.Codec)
-            {
-                case AudioCodecs.Opus:
-                    codec = "Opus";
-                    break;
-                case AudioCodecs.G722:
-                    codec = "G722";
-                    break;
-            }
 
             switch (ServerProperties.Properties.ConnectionType)
             {
@@ -35,32 +25,12 @@ namespace VoiceCraft.Server.Sockets
                 PacketIdentifier = SignallingPacketIdentifiers.InfoPing,
                 PacketMetadata = $"MOTD: {ServerProperties.Properties.ServerMOTD}" +
                 $"\nConnection Type: {connType}" +
-                $"\nConnected Participants: {ServerData.Participants.Count}" +
-                $"\nCodec: {codec}"
+                $"\nConnected Participants: {ServerData.Participants.Count}"
             }, EP);
         }
 
        private void HandleServerSidedLogin(SignallingPacket Packet, EndPoint EP)
         {
-            if (Packet.PacketCodec == AudioCodecs.G722 && ServerProperties.Properties.Codec == AudioCodecs.Opus)
-            {
-                SendPacket(new SignallingPacket() 
-                { 
-                    PacketIdentifier = SignallingPacketIdentifiers.Deny,
-                    PacketMetadata = "Server only accepts Opus audio codec!"
-                }, EP);
-                return;
-            }
-            else if (Packet.PacketCodec == AudioCodecs.Opus && ServerProperties.Properties.Codec == AudioCodecs.G722)
-            {
-                SendPacket(new SignallingPacket() 
-                {
-                    PacketIdentifier = SignallingPacketIdentifiers.Deny,
-                    PacketMetadata = "Server only accepts G722 audio codec!"
-                }, EP);
-                return;
-            }
-
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Server ||
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
@@ -68,7 +38,6 @@ namespace VoiceCraft.Server.Sockets
                 var key = Packet.PacketKey;
                 var participant = new Participant();
                 participant.SocketData.SignallingAddress = EP;
-                participant.Codec = Packet.PacketCodec;
 
                 if(ServerData.Participants.ContainsKey(Packet.PacketKey))
                 {
@@ -85,7 +54,7 @@ namespace VoiceCraft.Server.Sockets
                 ServerData.AddParticipant(key, participant);
                 SendPacket(new SignallingPacket()
                 {
-                    PacketIdentifier = ServerProperties.Properties.Codec == AudioCodecs.Opus ? SignallingPacketIdentifiers.Accept48 : SignallingPacketIdentifiers.Accept16,
+                    PacketIdentifier = SignallingPacketIdentifiers.Accept,
                     PacketKey = key,
                     PacketVoicePort = ServerProperties.Properties.VoicePortUDP
                 }, EP);
@@ -104,25 +73,6 @@ namespace VoiceCraft.Server.Sockets
 
         private void HandleClientSidedLogin(SignallingPacket Packet, EndPoint EP)
         {
-            if (Packet.PacketCodec == AudioCodecs.G722 && ServerProperties.Properties.Codec == AudioCodecs.Opus)
-            {
-                SendPacket(new SignallingPacket()
-                {
-                    PacketIdentifier = SignallingPacketIdentifiers.Deny,
-                    PacketMetadata = "Server only accepts Opus audio codec!"
-                }, EP);
-                return;
-            }
-            else if (Packet.PacketCodec == AudioCodecs.Opus && ServerProperties.Properties.Codec == AudioCodecs.G722)
-            {
-                SendPacket(new SignallingPacket()
-                {
-                    PacketIdentifier = SignallingPacketIdentifiers.Deny,
-                    PacketMetadata = "Server only accepts G722 audio codec!"
-                }, EP);
-                return;
-            }
-
             if (ServerProperties.Properties.ConnectionType == ConnectionTypes.Client ||
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
@@ -131,7 +81,6 @@ namespace VoiceCraft.Server.Sockets
                 var participant = new Participant();
                 participant.SocketData.SignallingAddress = EP;
                 participant.ClientSided = true;
-                participant.Codec = Packet.PacketCodec;
 
                 if (ServerData.Participants.ContainsKey(Packet.PacketKey))
                 {
@@ -148,7 +97,7 @@ namespace VoiceCraft.Server.Sockets
                 ServerData.AddParticipant(key, participant);
                 SendPacket(new SignallingPacket()
                 {
-                    PacketIdentifier = ServerProperties.Properties.Codec == AudioCodecs.Opus ? SignallingPacketIdentifiers.Accept48 : SignallingPacketIdentifiers.Accept16,
+                    PacketIdentifier = SignallingPacketIdentifiers.Accept,
                     PacketKey = key,
                     PacketVoicePort = ServerProperties.Properties.VoicePortUDP
                 }, EP);

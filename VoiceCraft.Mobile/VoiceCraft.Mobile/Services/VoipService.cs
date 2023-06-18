@@ -1,5 +1,4 @@
 ﻿using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 using System;
 using System.Linq;
 using System.Threading;
@@ -8,9 +7,7 @@ using VoiceCraft.Mobile.Audio;
 using VoiceCraft.Mobile.Interfaces;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Network;
-using VoiceCraft.Mobile.Network.Codecs;
 using VoiceCraft.Mobile.Storage;
-using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace VoiceCraft.Mobile.Services
@@ -18,74 +15,58 @@ namespace VoiceCraft.Mobile.Services
     public class VoipService
     {
         //State Variables
-        private uint PacketCounter = 0;
         private bool Stopping = false;
         private bool IsMuted = false;
-        private const int AudioFrameSizeMS = 40;
 
         private string StatusMessage = "Connecting...";
         private string Username = "";
 
         //VOIP and Audio handler variables
-        private readonly NetworkManager VoipNetwork;
+        private NetworkManager Network;
         private DateTime RecordDetection;
-#nullable enable
-        private readonly ServerModel? ServerInformation;
-        private IWaveIn? AudioRecorder;
-        private IWavePlayer? AudioPlayer;
-        private MixingSampleProvider? Mixer;
-        private SoftLimiter? Normalizer;
-#nullable disable
+        private IWaveIn AudioRecorder;
+        private IWavePlayer AudioPlayer;
+        private SoftLimiter Normalizer;
+
+        //Events
+        public delegate void Update(UpdateUIMessage Data);
+        public delegate void Disconnect(string? Reason);
+
+        public event Update? OnUpdate;
+        public event Disconnect? OnServiceDisconnect;
 
         public VoipService()
         {
-            ServerInformation = Database.GetPassableObject<ServerModel>();
-            VoipNetwork = new NetworkManager(Database.GetSettings().DirectionalAudioEnabled, 
-                ServerInformation.ClientSided, 
-                (AudioCodecs)ServerInformation.Codec, 
-                AudioFrameSizeMS);
+            var settings = Database.GetSettings();
+            var server = Database.GetPassableObject<ServerModel>();
+            var audioManager = DependencyService.Get<IAudioManager>();
+
+            Network = new NetworkManager(server.IP, server.Port, server.Key, server.ClientSided, settings.DirectionalAudioEnabled);
+            RecordDetection = DateTime.UtcNow;
+            AudioRecorder = audioManager.CreateRecorder(Network.RecordFormat);
+            AudioPlayer = audioManager.CreatePlayer(Network.Mixer);
+            Normalizer = new SoftLimiter(Network.Mixer);
         }
 
         public async Task Start(CancellationToken CT)
         {
-            if (ServerInformation == null)
-            {
-                var message = new ServiceFailedMessage() { Message = "Cannot find server information!" };
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    MessagingCenter.Send(message, "Error");
-                });
-                return;
-            }
-
             await Task.Run(async () =>
             {
                 //Event Initializations
-                VoipNetwork.OnConnect += OnConnect;
-                VoipNetwork.OnConnectError += OnConnectError;
-                VoipNetwork.OnBinded += OnBinded;
-                VoipNetwork.OnDisconnect += OnDisconnect;
-                VoipNetwork.OnParticipantJoined += OnParticipantJoined;
-                VoipNetwork.OnParticipantLeft += OnParticipantLeft;
+                Network.OnSignallingConnect += SC_OnConnect;
+                Network.OnVoiceConnect += VC_OnConnect;
+                Network.OnWebsocketConnect += WS_OnConnect;
+                Network.OnWebsocketDisconnect += WS_OnDisconnect;
+                Network.OnBind += OnBind;
+                Network.OnDisconnect += OnDisconnect;
 
-                //Listen for UI Messages
-                MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message =>
-                {
-                    IsMuted = !IsMuted;
-                });
-
-                MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message => {
-                    VoipNetwork.Disconnect(SendDCPacket: true);
-                    var msg = new StopServiceMessage();
-                    MessagingCenter.Send(msg, "ServiceStopped");
-                    Preferences.Set("VoipServiceRunning", false);
-                });
+                AudioRecorder.DataAvailable += DataAvailable;
 
                 RecordDetection = DateTime.UtcNow;
 
                 try
                 {
-                    VoipNetwork.Connect(ServerInformation.IP, ServerInformation.Port);
+                    Network.StartConnect();
                     while (!Stopping)
                     {
                         CT.ThrowIfCancellationRequested();
@@ -95,13 +76,13 @@ namespace VoiceCraft.Mobile.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = VoipNetwork.Participants.Select(x => x.Value.Name).ToList(),
+                                Participants = Network.Participants.Select(x => x.Value.Name).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted
                             };
                             Device.BeginInvokeOnMainThread(() =>
                             {
-                                MessagingCenter.Send(message, "Update");
+                                OnUpdate?.Invoke(message);
                             });
                         }
                         catch (Exception ex)
@@ -110,7 +91,7 @@ namespace VoiceCraft.Mobile.Services
                             Device.BeginInvokeOnMainThread(() =>
                             {
                                 var message = new ServiceErrorMessage() { Exception = ex };
-                                MessagingCenter.Send(message, "Error");
+                                OnServiceDisconnect?.Invoke(ex.Message);
                             });
                         }
                     }
@@ -119,130 +100,30 @@ namespace VoiceCraft.Mobile.Services
                 { }
                 finally
                 {
-                    VoipNetwork.OnConnect -= OnConnect;
-                    VoipNetwork.OnConnectError -= OnConnectError;
-                    VoipNetwork.OnBinded -= OnBinded;
-                    VoipNetwork.OnDisconnect -= OnDisconnect;
-                    VoipNetwork.OnParticipantJoined -= OnParticipantJoined;
-                    VoipNetwork.OnParticipantLeft -= OnParticipantLeft;
+                    Network.OnSignallingConnect -= SC_OnConnect;
+                    Network.OnVoiceConnect -= VC_OnConnect;
+                    Network.OnWebsocketConnect -= WS_OnConnect;
+                    Network.OnWebsocketDisconnect -= WS_OnDisconnect;
+                    Network.OnBind -= OnBind;
+                    Network.OnDisconnect -= OnDisconnect;
 
-                    if(AudioRecorder != null)
-                        AudioRecorder.DataAvailable -= AudioDataAvailable;
+                    AudioRecorder.DataAvailable -= DataAvailable;
 
-                    AudioPlayer?.Dispose();
-                    AudioRecorder?.Dispose();
-                    Mixer?.RemoveAllMixerInputs();
-                    Mixer = null;
-                    Normalizer = null;
-                    AudioRecorder = null;
-                    AudioPlayer = null;
+                    AudioPlayer.Dispose();
+                    AudioRecorder.Dispose();
 
-                    VoipNetwork.Disconnect(FireEvent: false);
-
-                    MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
-
-                    MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnect");
+                    Network.StartDisconnect();
                 }
             });
         }
 
-        //Networking protocol executes in this order (most of the time).
-        private void OnConnect(Network.Sockets.SocketTypes SocketType, int SampleRate, ushort Key)
+        public void MuteUnmute()
         {
-            //Register play and record formats after voice has connected...
-            if(SocketType == Network.Sockets.SocketTypes.Voice && VoipNetwork.PlayFormat != null && VoipNetwork.RecordFormat != null)
-            {
-                IAudioManager audioManager = DependencyService.Get<IAudioManager>();
-
-                Mixer = new MixingSampleProvider(VoipNetwork.PlayFormat) { ReadFully = true };
-                Normalizer = new SoftLimiter(Mixer);
-                Normalizer.Boost.CurrentValue = 10;
-
-                AudioPlayer = audioManager.CreatePlayer(Normalizer);
-                AudioRecorder = audioManager.CreateRecorder(VoipNetwork.RecordFormat);
-
-                AudioRecorder.DataAvailable += AudioDataAvailable;
-
-                StatusMessage = $"Connected - Key:{VoipNetwork.Key}\nWaiting for binding...";
-                //Fire event message here.
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                    MessagingCenter.Send(message, "Update");
-                });
-            }
-            else if (SocketType == Network.Sockets.SocketTypes.Signalling)
-            {
-                StatusMessage = $"Connecting Voice...\nPort: {VoipNetwork.VoicePort}";
-
-                //Fire event message here.
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                    MessagingCenter.Send(message, "Update");
-                });
-            }
-        }
-
-        private void OnConnectError(Network.Sockets.SocketTypes SocketType, string reason)
-        {
-            Stopping = true;
-
-            //Fire event message here
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new ServiceFailedMessage() { Message = reason };
-                MessagingCenter.Send(message, "Error");
-            });
-        }
-
-        private void OnBinded(string Username)
-        {
-            this.Username = Username;
-            StatusMessage = $"Connected - Key: {VoipNetwork.Key}\n{Username}";
-
-            //Last step of verification. We start sending data and playing any received data.
-            AudioRecorder?.StartRecording();
-            AudioPlayer?.Play();
-
-            //Fire event message here.
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                MessagingCenter.Send(message, "Update");
-            });
-        }
-
-        //Participant joining and leaving...
-        private void OnParticipantJoined(ushort Key, VoiceCraftParticipant Participant)
-        {
-            Mixer?.AddMixerInput(Participant.AudioProvider);
-        }
-
-        private void OnParticipantLeft(ushort Key, VoiceCraftParticipant Participant)
-        {
-            Mixer?.RemoveMixerInput(Participant.AudioProvider);
-        }
-
-        //Event for on disconnections. If no reason DO NOT FIRE MESSAGE EVENT
-        private void OnDisconnect(string reason = null)
-        {
-            Stopping = true;
-
-            //We don't want to fire a failed message if there was no reason.
-            if (reason == null)
-                return;
-
-            //Fire event message here
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                var message = new ServiceFailedMessage() { Message = reason };
-                MessagingCenter.Send(message, "Error");
-            });
+            IsMuted = !IsMuted;
         }
 
         //Audio Events
-        private void AudioDataAvailable(object sender, WaveInEventArgs e)
+        private void DataAvailable(object? sender, WaveInEventArgs e)
         {
             if (IsMuted)
                 return;
@@ -267,20 +148,82 @@ namespace VoiceCraft.Mobile.Services
 
             if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
             {
-                //Prevent overload error.
-                if (PacketCounter >= uint.MaxValue)
-                    PacketCounter = 0;
-
-                //Start counting up the packets sent. This is so packet loss can be detected
-                PacketCounter++;
-
-                VoipNetwork.SendAudio(e.Buffer, e.BytesRecorded, PacketCounter);
+                Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
             else
             {
                 //Reset packet counter as soon as we stop sending audio.
-                PacketCounter = 0;
+                Network.ResetPacketCounter();
             }
+        }
+
+        //Goes in this protocol order.
+        private void SC_OnConnect(ushort Key, int VoicePort)
+        {
+            StatusMessage = $"Connecting Voice...\nPort: {Network.VoicePort}";
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void VC_OnConnect()
+        {
+            StatusMessage = Network.ClientSided ? "Voice Connected\nWaiting for MCWSS Connection..." : $"Connected - Key:{Network.Key}\nWaiting for binding...";
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void WS_OnConnect()
+        {
+            StatusMessage = "Connected\n<Username>";
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void WS_OnDisconnect()
+        {
+            StatusMessage = "MCWSS Disconnected!\nWaiting for reconnection...";
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void OnBind(string Name)
+        {
+            Username = Name;
+            StatusMessage = $"Connected - Key: {Network.Key}\n{Username}";
+
+            //Last step of verification. We start sending data and playing any received data.
+            AudioRecorder.StartRecording();
+            AudioPlayer.Play();
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void OnDisconnect(string? Reason = null)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnServiceDisconnect?.Invoke(Reason);
+            });
         }
     }
 }

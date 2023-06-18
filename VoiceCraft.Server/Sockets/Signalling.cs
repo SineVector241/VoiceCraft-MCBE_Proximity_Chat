@@ -126,16 +126,14 @@ namespace VoiceCraft.Server.Sockets
                     {
                         PacketIdentifier = SignallingPacketIdentifiers.Login,
                         PacketKey = externalParticipant.Key,
-                        PacketMetadata = externalParticipant.Value.MinecraftData.Gamertag,
-                        PacketCodec = externalParticipant.Value.Codec
+                        PacketMetadata = externalParticipant.Value.MinecraftData.Gamertag
                     }, Participant.SocketData.SignallingAddress);
 
                     SendPacket(new SignallingPacket()
                     {
                         PacketIdentifier = SignallingPacketIdentifiers.Login,
                         PacketKey = Key,
-                        PacketMetadata = Participant.MinecraftData.Gamertag,
-                        PacketCodec = Participant.Codec
+                        PacketMetadata = Participant.MinecraftData.Gamertag
                     }, externalParticipant.Value.SocketData.SignallingAddress);
                 }
             }
@@ -145,12 +143,12 @@ namespace VoiceCraft.Server.Sockets
 
         private Task OnParticipantLogout(Participant Participant, ushort Key, string? reason)
         {
-            foreach(var participant in ServerData.Participants.Values)
+            foreach(var participant in ServerData.Participants)
             {
-                if (participant != null)
+                if (participant.Value != null && participant.Key != Key)
                 {
-                    var socketData = participant.SocketData.SignallingAddress;
-                    if (participant.Binded && socketData != null)
+                    var socketData = participant.Value.SocketData.SignallingAddress;
+                    if (participant.Value.Binded && socketData != null)
                         SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key }, socketData);
                 }
             }

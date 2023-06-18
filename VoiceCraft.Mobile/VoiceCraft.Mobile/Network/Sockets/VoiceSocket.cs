@@ -1,73 +1,67 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Numerics;
+﻿using System.Net.Sockets;
+using System;
 using System.Threading.Tasks;
-using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
+using System.Numerics;
 
 namespace VoiceCraft.Mobile.Network.Sockets
 {
-    public class VoiceSocket : INetwork
+    public class VoiceSocket
     {
-        public INetworkManager Manager { get; }
-        public UdpClient UDPSocket { get; set; }
-        public VoiceSocket(INetworkManager Manager) => this.Manager = Manager;
-        private bool StartDisconnect = false;
-        private bool IsConnected = false;
+        //Variables
+        private readonly NetworkManager NM;
+        private readonly UdpClient Socket;
+        private bool IsConnected;
 
-        public void Connect()
+        //Events
+        public delegate void Connect();
+
+        public event Connect? OnConnect;
+
+        public VoiceSocket(NetworkManager NM)
         {
-            try
-            {
-                UDPSocket = new UdpClient();
-                UDPSocket.Connect(Manager.IP, Manager.VoicePort);
-                StartListeningAsync();
-                var packet = new VoicePacket()
-                {
-                    PacketIdentifier = VoicePacketIdentifier.Login,
-                    PacketKey = Manager.Key
-                };
-                SendPacket(packet.GetPacketDataStream());
-
-                _ = Task.Run(async () => {
-                    await WaitForConnectionAsync();
-                });
-            }
-            catch (Exception ex)
-            {
-                Manager.PerformConnectError(SocketTypes.Signalling, ex.Message);
-            }
+            this.NM = NM;
+            Socket = new UdpClient();
         }
 
-        public void Disconnect()
+        public void StartConnect()
         {
-            if (UDPSocket != null)
+            Socket.Connect(NM.IP, NM.VoicePort);
+            StartListeningAsync();
+            var packet = new VoicePacket()
             {
-                StartDisconnect = true;
-                if (UDPSocket.Client.Connected)
-                    UDPSocket.Close();
+                PacketIdentifier = VoicePacketIdentifier.Login,
+                PacketKey = NM.Key
+            };
+            SendPacket(packet.GetPacketDataStream());
 
-                UDPSocket.Dispose();
-                UDPSocket = null;
-            }
+            WaitForConnectionAsync();
+        }
+
+        public void StartDisconnect()
+        {
+            if (Socket.Client.Connected)
+                Socket.Close();
+
+            Socket.Dispose();
         }
 
         public void SendPacket(byte[] PacketStream)
         {
-            if (UDPSocket != null && UDPSocket.Client.Connected)
+            if (Socket.Client.Connected)
             {
-                UDPSocket.Send(PacketStream, PacketStream.Length);
+                Socket.Send(PacketStream, PacketStream.Length);
             }
         }
 
         //Private Methods
         private async void StartListeningAsync()
         {
-            while (!StartDisconnect)
+            while (!NM.Disconnecting)
             {
                 try
                 {
-                    var data = await UDPSocket.ReceiveAsync();
+                    var data = await Socket.ReceiveAsync();
                     var packet = new VoicePacket(data.Buffer);
                     HandlePacket(packet);
                 }
@@ -78,7 +72,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
                 catch
                 {
                     //Ignore every other exception except when the client is disconnected then break out of the loop.
-                    if (StartDisconnect)
+                    if (NM.Disconnecting)
                         break;
                 }
             }
@@ -90,37 +84,36 @@ namespace VoiceCraft.Mobile.Network.Sockets
             {
                 case VoicePacketIdentifier.Accept:
                     IsConnected = true;
-                    Manager.PerformConnect(SocketTypes.Voice);
+                    OnConnect?.Invoke();
                     break;
                 case VoicePacketIdentifier.Deny:
-                    Manager.PerformConnectError(SocketTypes.Voice, "Server denied voice connection.");
+                    NM.StartDisconnect("Server denied voice connection.");
                     break;
                 case VoicePacketIdentifier.Audio:
                     _ = Task.Run(() => {
-                        Manager.Participants.TryGetValue(Packet.PacketKey, out VoiceCraftParticipant participant);
+                        NM.Participants.TryGetValue(Packet.PacketKey, out VoiceCraftParticipant? participant);
 
-                        if (participant != null)
+                        if (participant != null && Packet.PacketAudio != null)
                         {
-                            var volume = Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
+                            var volume = 1 - Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
                             participant.SetVolume(volume);
                             var rotationSource = Math.Atan2(Packet.PacketPosition.X, Packet.PacketPosition.Z);
-                            if (!Manager.ClientSidedPositioning && Manager.DirectionalHearing)
+                            if (!NM.ClientSided && NM.DirectionalHearing)
                             {
                                 participant.AudioProvider.RightVolume = (float)(0.5 + Math.Sin(rotationSource) * 0.5);
                                 participant.AudioProvider.LeftVolume = (float)(0.5 - Math.Sin(rotationSource) * 0.5);
                             }
-
                             participant.AddAudioSamples(Packet.PacketAudio, Packet.PacketCount);
                         }
                     });
                     break;
                 case VoicePacketIdentifier.Error:
-                    Manager.Disconnect("A server error occured with voice...");
+                    NM.StartDisconnect("A server error occured with voice...");
                     break;
             }
         }
 
-        private async Task WaitForConnectionAsync()
+        private async void WaitForConnectionAsync()
         {
             var startedConnection = DateTime.UtcNow;
             while (true)
@@ -131,7 +124,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
                 if (DateTime.UtcNow.Subtract(startedConnection).Seconds > 5)
                 {
-                    Manager.PerformConnectError(SocketTypes.Voice, "Voice connection timed out.");
+                    NM.StartDisconnect("Voice connection timed out.");
                     break;
                 }
             }

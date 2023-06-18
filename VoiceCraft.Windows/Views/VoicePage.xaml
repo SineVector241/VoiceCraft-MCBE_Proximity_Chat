@@ -1,0 +1,109 @@
+﻿<Page x:Class="VoiceCraft.Windows.Views.VoicePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
+      mc:Ignorable="d" 
+      Title="VoicePage">
+    <Page.DataContext>
+        <vm:VoicePageViewModel />
+    </Page.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60px" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Background="#5111"
+                  Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="VoiceCraft Windows"
+                       FontSize="20"
+                       VerticalAlignment="Center"
+                       Margin="10,0"/>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Style="{StaticResource DefaultBorder}"
+                Margin="5"
+                Padding="10">
+            <TextBlock FontWeight="Bold"
+                       FontSize="18"
+                       Text="{Binding StatusText}"
+                       HorizontalAlignment="Center">
+            </TextBlock>
+        </Border>
+
+        <ListView Grid.Row="2"
+                  ItemsSource="{Binding Participants}"
+                  Margin="10,0"
+                  Background="Transparent"
+                  BorderBrush="Transparent">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Border Style="{StaticResource DefaultBorder}"
+                                Margin="5"
+                                Padding="10">
+                            <TextBlock Text="{Binding}"
+                                       FontWeight="Bold"
+                                       FontSize="22"
+                                       VerticalAlignment="Center">
+                            </TextBlock>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <Border Grid.Row="3"
+                Style="{StaticResource DefaultBorder}"
+                Margin="10"
+                Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                
+                <Button Content="Disconnect"
+                        FontSize="15"
+                        Command="{Binding DisconnectCommand}"
+                        Style="{StaticResource ButtonStyle}"
+                        Height="40"
+                        Margin="5,0"
+                        Grid.Column="0"/>
+
+                <Button Grid.Column="1"
+                        FontSize="15"
+                        Height="40"
+                        Margin="5,0"
+                        Command="{Binding MuteUnmuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                    <Setter Property="Content" Value="Unmute" />
+                                    <Setter Property="Background" Value="#8AAA" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsMuted}" Value="False">
+                                    <Setter Property="Content" Value="Mute" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

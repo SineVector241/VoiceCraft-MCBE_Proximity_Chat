@@ -20,7 +20,7 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto"
                           RowSpacing="0">
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
@@ -46,8 +46,22 @@
                                    VerticalOptions="CenterAndExpand"/>
                         </StackLayout>
 
+                        <StackLayout Orientation="Vertical"
+                                     Margin="0,10"
+                                     Grid.Row="3">
+
+                            <Label Text="Websocket Port"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                            
+                            <Entry Keyboard="Numeric"
+                                   Text="{Binding Settings.WebsocketPort}"
+                                   Placeholder="8080" />
+                        </StackLayout>
+
                         <Button Text="Save"
-                                Grid.Row="3"
+                                Grid.Row="4"
                                 Command="{Binding SaveSettingsCommand}"/>
                     </Grid>
                 </Frame>

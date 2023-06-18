@@ -1,6 +1,7 @@
 ﻿using NAudio.Wave;
 using VoiceCraft.Mobile.Droid.Audio;
 using VoiceCraft.Mobile.Interfaces;
+using VoiceCraft.Mobile.Storage;
 
 [assembly: Xamarin.Forms.Dependency(typeof(AudioManager))]
 namespace VoiceCraft.Mobile.Droid.Audio
@@ -9,6 +10,13 @@ namespace VoiceCraft.Mobile.Droid.Audio
     {
         public IWavePlayer CreatePlayer(ISampleProvider waveProvider)
         {
+            var settings = Database.GetSettings();
+            if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
+            {
+                settings.WebsocketPort = 8080;
+                Database.SetSettings(settings);
+            }
+
             var Player = new AudioTrackOut();
             Player.Init(waveProvider);
             Player.DesiredLatency = 400;
@@ -18,6 +26,13 @@ namespace VoiceCraft.Mobile.Droid.Audio
 
         public IWaveIn CreateRecorder(WaveFormat waveFormat)
         {
+            var settings = Database.GetSettings();
+            if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
+            {
+                settings.WebsocketPort = 8080;
+                Database.SetSettings(settings);
+            }
+
             var Recorder = new AudioRecorder();
             Recorder.WaveFormat = waveFormat;
             Recorder.BufferMilliseconds = 40;

@@ -1,0 +1,208 @@
+﻿<Page x:Class="VoiceCraft.Windows.Views.ServerPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
+      mc:Ignorable="d" 
+      Title="ServerPage">
+    <Page.DataContext>
+        <vm:ServerPageViewModel />
+    </Page.DataContext>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Auto">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="60px" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Background="#5111"
+                  Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="VoiceCraft Windows"
+                           FontSize="20"
+                           VerticalAlignment="Center"
+                           Margin="10,0"/>
+
+                <TextBlock Text="{Binding Server.Name}"
+                           Grid.Column="1"
+                           VerticalAlignment="Center"
+                           FontSize="20"
+                           HorizontalAlignment="Center"/>
+            </Grid>
+            <Border Grid.Row="1"
+                    Style="{StaticResource DefaultBorder}"
+                    Margin="5"
+                    Padding="10">
+
+                <Border.RenderTransform>
+                    <TranslateTransform Y="20">
+                    </TranslateTransform>
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Address: {0}:{1}">
+                                <Binding Path="Server.IP"/>
+                                <Binding Path="Server.Port"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Grid.Row="1"
+                               Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Grid.Row="2" 
+                               Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
+                </Grid>
+
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Border.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.0" Value="0" />
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+            </Border>
+            
+            <Border Style="{StaticResource DefaultBorder}"
+                    Grid.Row="2"
+                    Margin="5"
+                    Padding="10"
+                    Opacity="0">
+
+                <Border.RenderTransform>
+                    <TranslateTransform Y="20">
+                    </TranslateTransform>
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Text="External Server Information"/>
+
+                    <TextBlock Grid.Row="1"
+                               FontWeight="Bold"
+                               FontSize="18"
+                               Text="{Binding ExternalServerInformation}"/>
+
+                    <Button Margin="0,20,0,0"
+                            Grid.Row="2"
+                            Command="{Binding ConnectCommand}">
+                        <Grid Margin="15,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Connect" 
+                                       VerticalAlignment="Center"
+                                       FontSize="15"
+                                       Grid.Column="0"/>
+                            <Image Source="{StaticResource connection}"
+                                   Margin="5"
+                                   Grid.Column="1"/>
+                        </Grid>
+                        
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                <Setter Property="Background" Value="#86C6"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Margin="0,10,0,0"
+                            Style="{StaticResource ButtonStyle}"
+                            Grid.Row="3"
+                            Command="{Binding EditCommand}">
+                        <Grid Margin="15,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Edit" 
+                                       VerticalAlignment="Center"
+                                       FontSize="15"
+                                       Grid.Column="0"/>
+                            <Image Source="{StaticResource pencil}"
+                                   Margin="5"
+                                   Grid.Column="1"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Margin="0,10,0,0"
+                            Style="{StaticResource ButtonStyle}"
+                            Grid.Row="4"
+                            Command="{Binding BackCommand}">
+                        <Grid Margin="15,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Back" 
+                                       VerticalAlignment="Center"
+                                       FontSize="15"
+                                       Grid.Column="0"/>
+                            <Image Source="{StaticResource arrow_left_thick}"
+                                   Margin="5"
+                                   Grid.Column="1"/>
+                        </Grid>
+                    </Button>
+                </Grid>
+
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Border.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.1" Value="0" />
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="1"/>
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.1" Value="20" />
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</Page>

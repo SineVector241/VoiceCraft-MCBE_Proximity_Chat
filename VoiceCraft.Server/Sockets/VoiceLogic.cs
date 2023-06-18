@@ -11,7 +11,7 @@ namespace VoiceCraft.Server.Sockets
         {
             Logger.LogToConsole(LogType.Info, $"New Login: Key: {Packet.PacketKey}", nameof(Voice));
             var participant = ServerData.GetParticipantByKey(Packet.PacketKey);
-            if (participant != null)
+            if (participant != null && participant.SocketData.VoiceAddress == null)
             {
                 participant.SocketData.VoiceAddress = EP;
                 participant.SocketData.LastPing = DateTime.UtcNow;
@@ -29,7 +29,7 @@ namespace VoiceCraft.Server.Sockets
             var audioparticipant = ServerData.GetParticipantByVoice(EP);
             if (audioparticipant.Value != null && audioparticipant.Value.Binded && !audioparticipant.Value.Muted && ServerProperties.Properties.ProximityToggle)
             {
-                var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && x.Value.MinecraftData.PlayerId != audioparticipant.Value.MinecraftData.PlayerId && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance);
+                var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && x.Key != audioparticipant.Key && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance);
                 for (int i = 0; i < list.Count(); i++)
                 {
                     var participant = list.ElementAt(i);
@@ -45,7 +45,8 @@ namespace VoiceCraft.Server.Sockets
                         var vec = new Vector3((float)(cosTheta * distance.X - sinTheta * distance.Z), 0, (float)(sinTheta * distance.X - cosTheta * distance.Z));
 
                         Packet.PacketPosition = vec;
-                        Packet.PacketKey = participant.Key;
+                        Packet.PacketKey = audioparticipant.Key;
+                        Packet.PacketDistance = (ushort)ServerProperties.Properties.ProximityDistance;
                         SendPacket(Packet, participant.Value.SocketData.VoiceAddress);
                     }
                 }
@@ -55,7 +56,7 @@ namespace VoiceCraft.Server.Sockets
         private void HandleUpdate(VoicePacket Packet, EndPoint EP)
         {
             var participant = ServerData.GetParticipantByVoice(EP);
-            if(participant.Value != null && Packet.PacketEnviromentId != null)
+            if(participant.Value != null && Packet.PacketEnviromentId != null && participant.Value.ClientSided)
             {
                 participant.Value.MinecraftData.Position = Packet.PacketPosition;
                 participant.Value.MinecraftData.DimensionId = Packet.PacketEnviromentId;

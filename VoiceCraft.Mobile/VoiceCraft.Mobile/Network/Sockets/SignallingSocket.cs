@@ -1,75 +1,76 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
 
 namespace VoiceCraft.Mobile.Network.Sockets
 {
-    public class SignallingSocket : INetwork
+    public class SignallingSocket
     {
-        public INetworkManager Manager { get; }
-#nullable enable
-        public UdpClient? UDPSocket { get; set; }
-#nullable disable
-        public SignallingSocket(INetworkManager Manager) => this.Manager = Manager;
-        private bool StartDisconnect = false;
-        private DateTime LastPing = DateTime.UtcNow;
+        //Variables
+        private readonly NetworkManager NM;
+        private readonly UdpClient Socket;
+        private DateTime LastPing;
 
-        //Public Methods
-        public void Connect()
+        //Events
+        public delegate void Connect(ushort Key, int VoicePort);
+        public delegate void ParticipantJoined(ushort Key, VoiceCraftParticipant Participant);
+        public delegate void ParticipantLeft(ushort Key);
+        public delegate void Bind(string Name);
+
+        public event Connect? OnConnect;
+        public event ParticipantJoined? OnParticipantJoined;
+        public event ParticipantLeft? OnParticipantLeft;
+        public event Bind? OnBind;
+
+        public SignallingSocket(NetworkManager NM)
         {
-            try
-            {
-                UDPSocket = new UdpClient();
-                UDPSocket.Connect(Manager.IP, Manager.Port);
-                StartListeningAsync();
-                var packet = new SignallingPacket() { 
-                    PacketIdentifier = Manager.ClientSidedPositioning? SignallingPacketIdentifiers.LoginClientSided : SignallingPacketIdentifiers.LoginServerSided,
-                    PacketKey = Manager.Key,
-                    PacketVersion = App.Version,
-                    PacketCodec = Manager.Codec
-                };
-                SendPacket(packet.GetPacketDataStream());
-
-                LastPing = DateTime.UtcNow;
-                StartHeartbeatAsync();
-            }
-            catch(Exception ex)
-            {
-                Manager.PerformConnectError(SocketTypes.Signalling, ex.Message);
-            }
+            this.NM = NM;
+            Socket = new UdpClient();
+            LastPing = DateTime.UtcNow;
         }
 
-        public void Disconnect()
+        //Public Events
+        public void StartConnect()
         {
-            if (UDPSocket != null)
+            Socket.Connect(NM.IP, NM.Port);
+            StartListeningAsync();
+            var packet = new SignallingPacket()
             {
-                StartDisconnect = true;
-                if (UDPSocket.Client.Connected)
-                    UDPSocket.Close();
+                PacketIdentifier = NM.ClientSided ? SignallingPacketIdentifiers.LoginClientSided : SignallingPacketIdentifiers.LoginServerSided,
+                PacketKey = NM.Key,
+                PacketVersion = App.Version,
+            };
+            SendPacket(packet.GetPacketDataStream());
 
-                UDPSocket.Dispose();
-                UDPSocket = null;
-            }
+            LastPing = DateTime.UtcNow;
+            StartHeartbeatAsync();
+        }
+
+        public void StartDisconnect()
+        {
+            if (Socket.Client.Connected)
+                Socket.Close();
+
+            Socket.Dispose();
         }
 
         public void SendPacket(byte[] PacketStream)
         {
-            if(UDPSocket != null && UDPSocket.Client.Connected)
+            if (Socket.Client.Connected)
             {
-                UDPSocket.Send(PacketStream, PacketStream.Length);
+                Socket.Send(PacketStream, PacketStream.Length);
             }
         }
 
         //Private Methods
         private async void StartListeningAsync()
         {
-            while (!StartDisconnect)
+            while (!NM.Disconnecting)
             {
                 try
                 {
-                    var data = await UDPSocket.ReceiveAsync();
+                    var data = await Socket.ReceiveAsync();
                     var packet = new SignallingPacket(data.Buffer);
                     LastPing = DateTime.UtcNow;
                     HandlePacket(packet);
@@ -78,9 +79,10 @@ namespace VoiceCraft.Mobile.Network.Sockets
                 {
                     break; //Break out if UDPSocket is disconnected and disposed.
                 }
-                catch {
+                catch
+                {
                     //Ignore every other exception except when the client is disconnected then break out of the loop.
-                    if (StartDisconnect)
+                    if (NM.Disconnecting)
                         break;
                 }
             }
@@ -88,54 +90,49 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
         private void HandlePacket(SignallingPacket Packet)
         {
-            switch(Packet.PacketIdentifier)
+            switch (Packet.PacketIdentifier)
             {
-                case SignallingPacketIdentifiers.Accept16:
-                    Manager.VoicePort = Packet.PacketVoicePort;
-                    Manager.PerformConnect(SocketTypes.Signalling, 16000, Packet.PacketKey);
-                    break;
-                case SignallingPacketIdentifiers.Accept48:
-                    Manager.VoicePort = Packet.PacketVoicePort;
-                    Manager.PerformConnect(SocketTypes.Signalling, 48000, Packet.PacketKey);
+                case SignallingPacketIdentifiers.Accept:
+                    OnConnect?.Invoke(Packet.PacketKey, Packet.PacketVoicePort);
                     break;
                 case SignallingPacketIdentifiers.Deny:
-                    Manager.PerformConnectError(SocketTypes.Signalling, Packet.PacketMetadata);
+                    NM.StartDisconnect(Packet.PacketMetadata ?? "");
                     break;
                 case SignallingPacketIdentifiers.Login:
-                    var Participant = new VoiceCraftParticipant(Packet.PacketMetadata, Manager.RecordFormat, Manager.AudioFrameSizeMS, Packet.PacketCodec);
-                    Manager.PerformParticipantJoined(Packet.PacketKey, Participant);
+                    var Participant = new VoiceCraftParticipant(Packet.PacketMetadata ?? "Unknown", NM.RecordFormat, NM.RecordLengthMS);
+                    OnParticipantJoined?.Invoke(Packet.PacketKey, Participant);
                     break;
                 case SignallingPacketIdentifiers.Logout:
-                    if (Packet.PacketKey == Manager.Key)
-                        Manager.Disconnect(Packet.PacketMetadata);
+                    if (Packet.PacketKey == NM.Key)
+                        NM.StartDisconnect(Packet.PacketMetadata ?? "Server Requested Disconnect");
                     else
-                        Manager.PerformParticipantLeft(Packet.PacketKey);
+                        OnParticipantLeft?.Invoke(Packet.PacketKey);
                     break;
                 case SignallingPacketIdentifiers.Error:
-                    Manager.Disconnect(Packet.PacketMetadata);
+                    NM.StartDisconnect(Packet.PacketMetadata ?? "A server error occurred...");
                     break;
                 case SignallingPacketIdentifiers.Ping:
                     LastPing = DateTime.UtcNow;
                     break;
                 case SignallingPacketIdentifiers.Binded:
-                    Manager.PerformBinded(Packet.PacketMetadata);
+                    OnBind?.Invoke(Packet.PacketMetadata ?? "Unknown");
                     break;
             }
         }
 
         private async void StartHeartbeatAsync()
         {
-            while (!StartDisconnect)
+            while (!NM.Disconnecting)
             {
                 try
                 {
                     await Task.Delay(2000);
 
                     var packet = new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping, PacketVersion = App.Version }.GetPacketDataStream();
-                    UDPSocket.Send(packet, packet.Length);
+                    Socket.Send(packet, packet.Length);
 
                     if (DateTime.UtcNow.Subtract(LastPing).Seconds > 10)
-                        Manager.Disconnect("Connection timed out!");
+                        NM.StartDisconnect("Connection timed out!");
                 }
                 catch
                 {

@@ -12,7 +12,7 @@ namespace VoiceCraft.Mobile.Storage
         static object objClass = new object();
 
         const string DbFile = "Database.json";
-        static string DatabasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DbFile);
+        static readonly string DatabasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DbFile);
         static DatabaseModel DBData = new DatabaseModel();
 
         //Events
@@ -32,8 +32,7 @@ namespace VoiceCraft.Mobile.Storage
         {
             var servers = GetServers();
             var server = servers.FirstOrDefault(x => x.Name == Name);
-            if (server == null) throw new Exception($"Could not find server {Name}.");
-            return server;
+            return server ?? throw new Exception($"Could not find server {Name}.");
         }
 
         public static void AddServer(ServerModel server)
@@ -42,7 +41,6 @@ namespace VoiceCraft.Mobile.Storage
             else if (string.IsNullOrEmpty(server.IP)) throw new Exception("IP cannot be empty!");
             else if (server.Port < 1025) throw new Exception("Port cannot be lower than 1025");
             else if (server.Port > 65535) throw new Exception("Port cannot be higher than 65535");
-            else if (server.Codec == -1) throw new Exception("A codec must be selected!");
             else if (GetServers().Exists(x => x.Name == server.Name)) throw new Exception("Name already exists! Name must be unique!");
             DBData.Servers.Add(server);
             OnServerAdd?.Invoke(server);
@@ -64,6 +62,8 @@ namespace VoiceCraft.Mobile.Storage
 
         public static void SetSettings(SettingsModel settings)
         {
+            if (settings.WebsocketPort < 1025) throw new Exception("Websocket Port cannot be lower than 1025");
+            else if (settings.WebsocketPort > 65535) throw new Exception("Weboscket Port cannot be higher than 65535");
             DBData.Settings = settings;
             SaveDatabase();
         }
@@ -86,9 +86,11 @@ namespace VoiceCraft.Mobile.Storage
                 File.WriteAllText(DatabasePath, JsonConvert.SerializeObject(DBData));
                 return;
             }
-            DBData = JsonConvert.DeserializeObject<DatabaseModel>(File.ReadAllText(DatabasePath));
+            var ReadDBData = JsonConvert.DeserializeObject<DatabaseModel>(File.ReadAllText(DatabasePath));
+            if (ReadDBData != null)
+                DBData = ReadDBData;
             //Make sure the application doesn't crash.
-            if(DBData.Servers == null || DBData.Settings == null) DBData = new DatabaseModel();
+            if (DBData.Servers == null || DBData.Settings == null) DBData = new DatabaseModel();
         }
 
         private static void SaveDatabase()

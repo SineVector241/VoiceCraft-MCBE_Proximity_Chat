@@ -21,7 +21,7 @@
 
                 <Frame Grid.Row="1">
                     <Grid VerticalOptions="StartAndExpand"
-                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto">
+                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto">
                         <Label Text="Server Name"
                                FontSize="15"
                                FontAttributes="Bold"/>
@@ -61,14 +61,8 @@
                                FontSize="15"
                                FontAttributes="Bold"/>
 
-                        <Picker Grid.Row="7"
-                                SelectedIndex="{Binding Server.Codec}"
-                                ItemsSource="{Binding Codecs}"
-                                TextColor="{AppThemeBinding Dark=White, Light=Black}"
-                                FontAttributes="Bold" />
-
                         <StackLayout Orientation="Horizontal"
-                                     Grid.Row="8"
+                                     Grid.Row="7"
                                      Margin="0,20">
                             <CheckBox IsChecked="{Binding Server.ClientSided}"
                                       Scale="1.3"/>
@@ -79,11 +73,11 @@
                                    VerticalOptions="CenterAndExpand"/>
                         </StackLayout>
 
-                        <Button Grid.Row="9"
+                        <Button Grid.Row="8"
                                 Text="Add"
                                 Command="{Binding AddServerCommand}"/>
 
-                        <Button Grid.Row="10"
+                        <Button Grid.Row="9"
                                 Text="Cancel"
                                 Command="{Binding CancelCommand}"/>
                     </Grid>

@@ -68,12 +68,14 @@ namespace VoiceCraft.Server.Helpers
 
         public static KeyValuePair<ushort, Participant?> GetParticipantBySignalling(EndPoint EndPoint)
         {
-            return Participants.FirstOrDefault(x => x.Value?.SocketData.SignallingAddress?.ToString() == EndPoint.ToString());
+            var part = Participants.FirstOrDefault(x => x.Value?.SocketData.SignallingAddress?.ToString() == EndPoint.ToString());
+            return part;
         }
 
         public static KeyValuePair<ushort, Participant?> GetParticipantByVoice(EndPoint EndPoint)
         {
-            return Participants.FirstOrDefault(x => x.Value?.SocketData.VoiceAddress?.ToString() == EndPoint.ToString());
+            var part = Participants.FirstOrDefault(x => x.Value?.SocketData.VoiceAddress?.ToString() == EndPoint.ToString());
+            return part;
         }
     }
 
@@ -82,7 +84,6 @@ namespace VoiceCraft.Server.Helpers
         public bool Binded { get; set; }
         public bool Muted { get; set; }
         public bool ClientSided { get; set; }
-        public AudioCodecs Codec { get; set; }
 
         public MinecraftData MinecraftData { get; set; } = new MinecraftData();
         public SocketData SocketData { get; set; } = new SocketData();
@@ -101,6 +102,6 @@ namespace VoiceCraft.Server.Helpers
     {
         public EndPoint? SignallingAddress { get; set; }
         public EndPoint? VoiceAddress { get; set; }
-        public DateTime LastPing { get; set; } = DateTime.UtcNow.AddMinutes(5);
+        public DateTime LastPing { get; set; } = DateTime.UtcNow;
     }
 }

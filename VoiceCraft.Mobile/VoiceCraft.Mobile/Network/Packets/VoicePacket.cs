@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
 using System.Numerics;
 using System.Text;
 
@@ -24,8 +24,8 @@ namespace VoiceCraft.Mobile.Network.Packets
         private ushort Key; //Data containing the key of a participant.
         private ushort Distance; //Data containing the distance to calculate the volume level.
         private Vector3 Position; //Data containing audio source assuming client audio handling is at 0,0,0 rotation 0.
-        private string EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
-        private byte[] Audio; //Data containing encoded audio data.
+        private string? EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
+        private byte[]? Audio; //Data containing encoded audio data.
 
         public VoicePacketIdentifier PacketIdentifier
         {
@@ -57,13 +57,13 @@ namespace VoiceCraft.Mobile.Network.Packets
             set { Position = value; }
         }
 
-        public string PacketEnviromentId
+        public string? PacketEnviromentId
         {
             get { return EnviromentId; }
             set { EnviromentId = value; }
         }
 
-        public byte[] PacketAudio
+        public byte[]? PacketAudio
         {
             get { return Audio; }
             set { Audio = value; }
@@ -87,19 +87,19 @@ namespace VoiceCraft.Mobile.Network.Packets
             PacketKey = BitConverter.ToUInt16(DataStream, 6); //Read packet key - 2 bytes.
             PacketDistance = BitConverter.ToUInt16(DataStream, 8); //Read packet distance - 2 bytes.
             PacketPosition = new Vector3(BitConverter.ToSingle(DataStream, 10), BitConverter.ToSingle(DataStream, 14), BitConverter.ToSingle(DataStream, 18)); //Read packet position 12 bytes.
-            
+
             //String lengths.
             int enviromentIdLength = BitConverter.ToInt32(DataStream, 22); //Read enviroment id length - 4 bytes.
-            int audioLength = DataStream.Length - (26 + enviromentIdLength); //Read audio length.
+            int audioLength = BitConverter.ToInt32(DataStream, 26); //Read audio length - 4 bytes.
             PacketAudio = new byte[audioLength];
 
             if (enviromentIdLength > 0)
-                PacketEnviromentId = Encoding.UTF8.GetString(DataStream, 26, enviromentIdLength);
+                PacketEnviromentId = Encoding.UTF8.GetString(DataStream, 30, enviromentIdLength);
             else
                 PacketEnviromentId = string.Empty;
 
             if (audioLength > 0)
-                Buffer.BlockCopy(DataStream, 26 + enviromentIdLength, PacketAudio, 0, audioLength);
+                Buffer.BlockCopy(DataStream, 30 + enviromentIdLength, PacketAudio, 0, audioLength);
             else
                 PacketAudio = Array.Empty<byte>();
         }
@@ -119,6 +119,11 @@ namespace VoiceCraft.Mobile.Network.Packets
             //String Values
             if (!string.IsNullOrWhiteSpace(EnviromentId))
                 DataStream.AddRange(BitConverter.GetBytes(EnviromentId.Length));
+            else
+                DataStream.AddRange(BitConverter.GetBytes(0));
+
+            if (Audio != null && Audio.Length > 0)
+                DataStream.AddRange(BitConverter.GetBytes(Audio.Length));
             else
                 DataStream.AddRange(BitConverter.GetBytes(0));
 

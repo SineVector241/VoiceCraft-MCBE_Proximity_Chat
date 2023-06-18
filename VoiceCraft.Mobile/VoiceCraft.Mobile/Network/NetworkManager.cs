@@ -1,181 +1,153 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using VoiceCraft.Mobile.Network.Codecs;
-using VoiceCraft.Mobile.Network.Interfaces;
 using VoiceCraft.Mobile.Network.Packets;
 using VoiceCraft.Mobile.Network.Sockets;
 
 namespace VoiceCraft.Mobile.Network
 {
-    public class NetworkManager : INetworkManager
+    public class NetworkManager
     {
-        public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; }
+        //Constants
+        public const int SampleRate = 48000;
 
-        public string IP { get; private set; }
-        public ushort Port { get; private set; }
+        //Variables
+        public readonly string IP = string.Empty;
+        public readonly int Port;
+        public readonly bool ClientSided;
+        public readonly bool DirectionalHearing;
+        public readonly ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants;
+        public bool Disconnecting { get; private set; }
         public ushort Key { get; private set; }
-        public ushort VoicePort { get; set; }
-        public bool DirectionalHearing { get; }
-        public bool ClientSidedPositioning { get; }
-        public int AudioFrameSizeMS { get; }
-        public AudioCodecs Codec { get; }
-#nullable enable
-        public WaveFormat? RecordFormat { get; private set; }
-        public WaveFormat? PlayFormat { get; private set; }
+        public int VoicePort { get; private set; }
+        public uint PacketCount { get; private set; }
 
-        public INetwork Signalling { get; }
-        public INetwork Voice { get; }
-        public INetwork? Websocket { get; }
+        //Audio Variables
+        public readonly int RecordLengthMS;
+        public readonly WaveFormat RecordFormat = new WaveFormat(SampleRate, 1);
+        public readonly WaveFormat PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2);
+        public readonly MixingSampleProvider Mixer;
 
-        public G722ChatCodec? G722Codec { get; private set; }
-        public OpusEncoder? OpusEncoder { get; private set; }
-#nullable disable
+        //Codec Encoder
+        private readonly OpusEncoder Encoder;
 
-        public event INetworkManager.SocketConnect OnConnect;
-        public event INetworkManager.SocketConnectError OnConnectError;
-        public event INetworkManager.SocketDisconnect OnDisconnect;
-        public event INetworkManager.Binded OnBinded;
-        public event INetworkManager.VoiceCraftParticipantJoined OnParticipantJoined;
-        public event INetworkManager.VoiceCraftParticipantLeft OnParticipantLeft;
+        //Sockets
+        public readonly SignallingSocket Signalling;
+        public readonly VoiceSocket Voice;
+        public readonly WebsocketSocket Websocket;
 
-        //Constructor
-        public NetworkManager(bool DirectionalHearing, bool ClientSidedPositioning, AudioCodecs Codec, int AudioFrameSizeMS)
+        //Events
+        public delegate void SignallingConnect(ushort Key, int VoicePort);
+        public delegate void VoiceConnect();
+        public delegate void WebsocketConnect();
+        public delegate void WebsocketDisconnect();
+        public delegate void Bind(string Name);
+        public delegate void ConnectError(string Reason);
+        public delegate void ParticipantJoined(ushort Key, VoiceCraftParticipant Participant);
+        public delegate void ParticipantLeft(ushort Key, VoiceCraftParticipant? Participant);
+        public delegate void Disconnect(string? Reason = null);
+
+        public event SignallingConnect? OnSignallingConnect;
+        public event VoiceConnect? OnVoiceConnect;
+        public event WebsocketConnect? OnWebsocketConnect;
+        public event WebsocketDisconnect? OnWebsocketDisconnect;
+        public event Bind? OnBind;
+        public event ParticipantJoined? OnParticipantJoined;
+        public event ParticipantLeft? OnParticipantLeft;
+        public event Disconnect? OnDisconnect;
+
+        public NetworkManager(string IP, int Port, ushort Key, bool ClientSided = false, bool DirectionalHearing = false, int RecordLengthMS = 40)
         {
-            //Setup the readonly variables.
-            this.DirectionalHearing = DirectionalHearing;
-            this.ClientSidedPositioning = ClientSidedPositioning;
-            this.Codec = Codec;
-            this.AudioFrameSizeMS = AudioFrameSizeMS;
-
-            //Setup participants list.
-            Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
-
-            //Setup the sockets
-            Signalling = new SignallingSocket(this);
-            Voice = new VoiceSocket(this);
-        }
-
-        //Public Methods
-        public void Connect(string IP, ushort Port)
-        {
-            //Setup IP and Port variables and start connection protocol.
+            //Variable Assignments
             this.IP = IP;
             this.Port = Port;
-            Signalling.Connect();
-        }
+            this.Key = Key;
+            this.ClientSided = ClientSided;
+            this.DirectionalHearing = DirectionalHearing;
+            Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
 
-        public void Disconnect(string Reason = null, bool FireEvent = true, bool SendDCPacket = false)
-        {
-            if(SendDCPacket)
-                Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketVersion = App.Version }.GetPacketDataStream());
-
-            //Disconnect all sockets.
-            Signalling.Disconnect();
-            Voice.Disconnect();
-            if(ClientSidedPositioning || Websocket != null) Websocket?.Disconnect(); //If client sided positioning then disconnect websocket.
-
-            if(FireEvent)
-                OnDisconnect?.Invoke(Reason);
-        }
-
-        public void SendAudio(byte[] Data, int BytesRecorded, uint AudioPacketCount)
-        {
-            byte[] audioEncodeBuffer = new byte[1000];
-            byte[] audioTrimmed = new byte[0];
-            switch(Codec)
+            Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
-                //If opus. Encode on opus level.
-                case AudioCodecs.Opus:
-                    if (OpusEncoder == null)
-                        return;
+                Bitrate = 32000,
+                Complexity = 5,
+                UseVBR = true,
+                PacketLossPercent = 40
+            };
 
-                    short[] pcm = BytesToShorts(Data, 0, BytesRecorded);
-                    var encodedBytes = OpusEncoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
-                    audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
-                    break;
-                //If G722. Encode on G722 level.
-                case AudioCodecs.G722:
-                    if (G722Codec == null)
-                        return;
+            //Audio Variable Assignments
+            this.RecordLengthMS = RecordLengthMS;
+            Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
 
-                    audioTrimmed = G722Codec.Encode(Data, 0, BytesRecorded);
-                    break;
+            //Socket Assignements
+            Signalling = new SignallingSocket(this);
+            Voice = new VoiceSocket(this);
+            Websocket = new WebsocketSocket(this);
+
+            //Event Listening
+            Signalling.OnConnect += SC_OnConnect;
+            Signalling.OnBind += SC_OnBind;
+            Signalling.OnParticipantJoined += SC_OnParticipantJoined;
+            Signalling.OnParticipantLeft += SC_OnParticipantLeft;
+
+            Voice.OnConnect += VC_OnConnect;
+
+            Websocket.OnConnect += WS_OnConnect;
+            Websocket.OnDisconnect += WS_OnDisconnect;
+        }
+
+        public void StartConnect()
+        {
+            Signalling.StartConnect();
+        }
+
+        public void StartDisconnect(string? Reason = null, bool SendDisconnectPacket = false)
+        {
+            if (Disconnecting) return; //We've already disconnected.
+
+            if (SendDisconnectPacket)
+            {
+                Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout }.GetPacketDataStream());
             }
+
+            Disconnecting = true;
+            Signalling.StartDisconnect();
+            Voice.StartDisconnect();
+            if (ClientSided) Websocket.StartDisconnect();
+            OnDisconnect?.Invoke(Reason);
+        }
+
+        public void SendAudio(byte[] Data, int BytesRecorded)
+        {
+            //Prevent overloading the highest max count of a uint.
+            if (PacketCount >= uint.MaxValue)
+                PacketCount = 0;
+
+            //Count packets
+            PacketCount++;
+
+            byte[] audioEncodeBuffer = new byte[1000];
+            short[] pcm = BytesToShorts(Data, 0, BytesRecorded);
+            var encodedBytes = Encoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
+            byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
+
             //Packet creation.
-            VoicePacket packet = new VoicePacket() {
+            VoicePacket packet = new VoicePacket()
+            {
                 PacketIdentifier = VoicePacketIdentifier.Audio,
                 PacketAudio = audioTrimmed, //Sends trimmed bytes to save packet size.
-                PacketCount = AudioPacketCount
+                PacketCount = PacketCount
             }; //Audio packet stuff here.
             Voice.SendPacket(packet.GetPacketDataStream());
         }
 
-        public void PerformConnect(SocketTypes SocketType, int SampleRate = 0, ushort Key = 0)
+        public void ResetPacketCounter()
         {
-            try
-            {
-                switch (SocketType)
-                {
-                    case SocketTypes.Signalling:
-                        RecordFormat = new WaveFormat(SampleRate, 1);
-                        PlayFormat = WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2);
-
-                        switch (Codec)
-                        {
-                            case AudioCodecs.Opus:
-                                OpusEncoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
-                                {
-                                    Bitrate = 32000,
-                                    Complexity = 5,
-                                    UseVBR = true,
-                                    PacketLossPercent = 40
-                                };
-                                break;
-                            case AudioCodecs.G722:
-                                G722Codec = new G722ChatCodec();
-                                break;
-                        }
-                        Voice.Connect();
-                        break;
-                    case SocketTypes.Voice:
-                        if (ClientSidedPositioning) Websocket.Connect();
-                        break;
-                }
-
-                OnConnect?.Invoke(SocketType, SampleRate, Key);
-            }
-            catch (Exception ex)
-            {
-                PerformConnectError(SocketTypes.NetworkManager, ex.Message);
-            }
-        }
-
-        public void PerformConnectError(SocketTypes SocketType, string Reason)
-        {
-            Disconnect(FireEvent: false);
-            OnConnectError?.Invoke(SocketType, Reason);
-        }
-
-        public void PerformParticipantJoined(ushort Key, VoiceCraftParticipant Participant)
-        {
-            Participants.TryAdd(Key, Participant);
-            OnParticipantJoined?.Invoke(Key, Participant);
-        }
-
-        public void PerformParticipantLeft(ushort Key)
-        {
-            Participants.TryRemove(Key, out VoiceCraftParticipant participant);
-            OnParticipantLeft?.Invoke(Key, participant);
-        }
-
-        public void PerformBinded(string Username)
-        {
-            OnBinded?.Invoke(Username);
+            PacketCount = 0;
         }
 
         public static async Task<string> InfoPingAsync(string IP, ushort Port)
@@ -202,7 +174,7 @@ namespace VoiceCraft.Mobile.Network
                     UDPSocket.Close();
                     UDPSocket.Dispose();
                     UDPSocket = null;
-                    if(packet.PacketIdentifier != SignallingPacketIdentifiers.Deny)
+                    if (packet.PacketIdentifier != SignallingPacketIdentifiers.Deny)
                         return $"{packet.PacketMetadata}\nPing Time: {Math.Floor(pingTimeMS)}ms";
 
                     return $"Banned from server...\nPing Time: {Math.Floor(pingTimeMS)}ms";
@@ -219,12 +191,66 @@ namespace VoiceCraft.Mobile.Network
             catch (Exception ex)
             {
                 //If errored. Disconnect and dispose.
-                if (UDPSocket.Client.Connected)
+                if (UDPSocket != null && UDPSocket.Client.Connected)
+                {
                     UDPSocket.Close();
-                UDPSocket.Dispose();
-                UDPSocket = null;
+                    UDPSocket.Dispose();
+                }
                 return ex.Message;
             }
+        }
+
+        //Signalling Client Events
+        private void SC_OnConnect(ushort Key, int VoicePort)
+        {
+            this.Key = Key;
+            this.VoicePort = VoicePort;
+            Voice.StartConnect();
+
+            OnSignallingConnect?.Invoke(Key, VoicePort);
+        }
+
+        private void SC_OnBind(string Name)
+        {
+            OnBind?.Invoke(Name);
+        }
+
+        private void SC_OnParticipantJoined(ushort Key, VoiceCraftParticipant Participant)
+        {
+            var result = Participants.TryAdd(Key, Participant);
+            Mixer.AddMixerInput(Participant.AudioProvider);
+            if (result)
+                OnParticipantJoined?.Invoke(Key, Participant);
+        }
+
+        private void SC_OnParticipantLeft(ushort Key)
+        {
+            var result = Participants.TryRemove(Key, out VoiceCraftParticipant? Participant);
+            Mixer.RemoveMixerInput(Participant?.AudioProvider);
+            if (result)
+                OnParticipantLeft?.Invoke(Key, Participant);
+        }
+
+        //Voice Client Events
+        private void VC_OnConnect()
+        {
+            if (ClientSided)
+            {
+                Websocket.StartConnect();
+            }
+
+            OnVoiceConnect?.Invoke();
+        }
+
+        //Websocket Client Events
+        private void WS_OnConnect(string Username)
+        {
+            OnWebsocketConnect?.Invoke();
+        }
+
+        private void WS_OnDisconnect()
+        {
+            OnWebsocketDisconnect?.Invoke();
         }
 
         //Private Methods

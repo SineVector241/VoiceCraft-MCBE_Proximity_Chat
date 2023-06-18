@@ -21,7 +21,7 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto, auto">
+                    <Grid RowDefinitions="auto, auto, auto">
                         <Label FontAttributes="Bold"
                                FontSize="18">
                             <Label.Text>
@@ -39,25 +39,7 @@
 
                         <Label FontAttributes="Bold"
                                FontSize="18"
-                               Grid.Row="2">
-
-                            <Label.Style>
-                                <Style TargetType="Label">
-                                    <Style.Triggers>
-                                        <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="0">
-                                            <Setter Property="Text" Value="Codec: Opus (48khz)" />
-                                        </DataTrigger>
-                                        <DataTrigger TargetType="Label" Binding="{Binding Server.Codec}" Value="1">
-                                            <Setter Property="Text" Value="Codec: G722 (16khz)" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Label.Style>
-                        </Label>
-
-                        <Label FontAttributes="Bold"
-                               FontSize="18"
-                               Grid.Row="3" 
+                               Grid.Row="2" 
                                Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
                     </Grid>
                 </Frame>

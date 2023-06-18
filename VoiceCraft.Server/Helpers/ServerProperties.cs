@@ -133,7 +133,6 @@ namespace VoiceCraft.Server.Helpers
 
         //Unchangeable Settings
         public string PermanentServerKey { get; set; } = "";
-        public AudioCodecs Codec { get; set; } = AudioCodecs.Opus;
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
 
         //Changeable Settings
@@ -145,13 +144,6 @@ namespace VoiceCraft.Server.Helpers
     public class BanlistData
     {
         public List<string> IPBans { get; set; } = new List<string>();
-    }
-
-    public enum AudioCodecs
-    {
-        Opus,
-        G722,
-        Hybrid
     }
 
     public enum ConnectionTypes
