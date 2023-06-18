@@ -6,7 +6,6 @@ using VoiceCraft.Windows.Services;
 using CommunityToolkit.Mvvm.Input;
 using VoiceCraft.Windows.Storage;
 using System.Windows;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
