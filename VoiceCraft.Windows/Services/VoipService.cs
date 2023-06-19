@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -164,6 +165,12 @@ namespace VoiceCraft.Windows.Services
         private void SC_OnConnect(ushort Key, int VoicePort)
         {
             StatusMessage = $"Connecting Voice...\nPort: {Network.VoicePort}";
+            var server = Database.GetPassableObject<ServerModel>();
+            if (server != null && server.Key != Key)
+            {
+                server.Key = Key;
+                Database.UpdateServer(server);
+            }
 
             App.Current.Dispatcher.Invoke(() =>
             {
@@ -174,7 +181,7 @@ namespace VoiceCraft.Windows.Services
 
         private void VC_OnConnect()
         {
-            StatusMessage = Network.ClientSided? "Voice Connected\nWaiting for MCWSS Connection..." : $"Connected - Key:{Network.Key}\nWaiting for binding...";
+            StatusMessage = Network.ClientSided ? "Voice Connected\nWaiting for MCWSS Connection..." : $"Connected - Key:{Network.Key}\nWaiting for binding...";
 
             App.Current.Dispatcher.Invoke(() =>
             {

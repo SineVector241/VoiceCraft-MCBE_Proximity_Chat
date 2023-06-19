@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Linq;
 using VoiceCraft.Windows.Models;
 using VoiceCraft.Windows.Storage;
 using VoiceCraft.Windows.Views;
@@ -15,8 +16,15 @@ namespace VoiceCraft.Windows.ViewModels
         public ServersPageViewModel()
         {
             Database.OnServerAdd += ServerAdded;
+            Database.OnServerUpdated += ServerUpdated;
             Database.OnServerRemove += ServerRemoved;
         }
+
+        private void ServerUpdated(ServerModel Server)
+        {
+            Servers = new ObservableCollection<ServerModel>(Database.GetServers());
+        }
+
         private void ServerAdded(ServerModel Server)
         {
             Servers.Add(Server);

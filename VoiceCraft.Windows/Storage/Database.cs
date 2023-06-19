@@ -18,9 +18,11 @@ namespace VoiceCraft.Windows.Storage
 
         //Events
         public delegate void ServerAdd(ServerModel Server);
+        public delegate void ServerUpdated(ServerModel Server);
         public delegate void ServerRemove(ServerModel Server);
 
         public static event ServerAdd? OnServerAdd;
+        public static event ServerUpdated? OnServerUpdated;
         public static event ServerRemove? OnServerRemove;
 
         public static List<ServerModel> GetServers()
@@ -46,6 +48,22 @@ namespace VoiceCraft.Windows.Storage
             DBData.Servers.Add(server);
             OnServerAdd?.Invoke(server);
             SaveDatabase();
+        }
+
+        public static void UpdateServer(ServerModel server)
+        {
+            var foundServer = DBData.Servers.FindIndex(x => x.Name == server.Name);
+            
+            if(foundServer != -1)
+            {
+                if (string.IsNullOrEmpty(server.IP)) throw new Exception("IP cannot be empty!");
+                else if (server.Port < 1025) throw new Exception("Port cannot be lower than 1025");
+                else if (server.Port > 65535) throw new Exception("Port cannot be higher than 65535");
+
+                DBData.Servers[foundServer] = server;
+                SaveDatabase();
+                OnServerUpdated?.Invoke(server);
+            }
         }
 
         public static void DeleteServer(ServerModel server)
