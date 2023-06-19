@@ -34,14 +34,7 @@ namespace VoiceCraft.Windows.ViewModels
             if(StatusText != Data.StatusMessage)
                 StatusText = Data.StatusMessage;
 
-            //Not efficient but idc.
-            foreach (var participant in Data.Participants)
-                if (!Participants.Contains(participant))
-                    Participants.Add(participant);
-
-            foreach (var participant in Participants)
-                if (!Data.Participants.Contains(participant))
-                    Participants.Remove(participant);
+            Participants = new ObservableCollection<string>(Data.Participants);
         }
 
         private void OnServiceDisconnect(string? Reason)
@@ -72,7 +65,9 @@ namespace VoiceCraft.Windows.ViewModels
         [RelayCommand]
         public void Disconnect()
         {
+            voipService.SendDisconnectPacket = true;
             cts.Cancel();
+            Navigator.GoToPreviousPage();
         }
 
         [RelayCommand]

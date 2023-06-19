@@ -59,17 +59,10 @@ namespace VoiceCraft.Mobile.ViewModels
                 if (IsMuted != message.IsMuted)
                     IsMuted = message.IsMuted;
 
-                //Not efficient but idc.
-                foreach (var participant in message.Participants)
-                    if (!Participants.Contains(participant))
-                        Participants.Add(participant);
-
-                foreach (var participant in Participants)
-                    if (!message.Participants.Contains(participant))
-                        Participants.Remove(participant);
+                Participants = new ObservableCollection<string>(message.Participants);
             });
 
-            MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message =>
+            MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>
             {
                 Device.BeginInvokeOnMainThread(() =>
                 {

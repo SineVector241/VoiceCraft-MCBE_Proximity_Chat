@@ -111,7 +111,7 @@ namespace VoiceCraft.Mobile.Network
 
             if (SendDisconnectPacket)
             {
-                Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout }.GetPacketDataStream());
+                Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketVersion = App.Version }.GetPacketDataStream());
             }
 
             Disconnecting = true;

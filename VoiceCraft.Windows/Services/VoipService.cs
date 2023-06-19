@@ -13,8 +13,8 @@ namespace VoiceCraft.Windows.Services
     public class VoipService
     {
         //State Variables
-        private bool Stopping = false;
         private bool IsMuted = false;
+        public bool SendDisconnectPacket = false;
 
         private string StatusMessage = "Connecting...";
         private string Username = "";
@@ -41,9 +41,10 @@ namespace VoiceCraft.Windows.Services
 
             Network = new NetworkManager(server.IP, server.Port, server.Key, server.ClientSided, settings.DirectionalAudioEnabled);
             RecordDetection = DateTime.UtcNow;
-            AudioRecorder = audioManager.CreateRecorder(Network.RecordFormat);
-            AudioPlayer = audioManager.CreatePlayer(Network.Mixer);
             Normalizer = new SoftLimiter(Network.Mixer);
+            Normalizer.Boost.CurrentValue = 5;
+            AudioRecorder = audioManager.CreateRecorder(Network.RecordFormat);
+            AudioPlayer = audioManager.CreatePlayer(Normalizer);
         }
 
         public async Task Start(CancellationToken CT)
@@ -65,7 +66,7 @@ namespace VoiceCraft.Windows.Services
                 try
                 {
                     Network.StartConnect();
-                    while (!Stopping)
+                    while (true)
                     {
                         CT.ThrowIfCancellationRequested();
                         try
@@ -95,9 +96,7 @@ namespace VoiceCraft.Windows.Services
                     }
                 }
                 catch (OperationCanceledException)
-                {
-                    Network.StartDisconnect(SendDisconnectPacket: true);
-                }
+                { }
                 finally
                 {
                     Network.OnSignallingConnect -= SC_OnConnect;
@@ -109,10 +108,13 @@ namespace VoiceCraft.Windows.Services
 
                     AudioRecorder.DataAvailable -= DataAvailable;
 
+                    if (AudioPlayer.PlaybackState == PlaybackState.Playing)
+                        AudioPlayer.Stop();
+
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
 
-                    Network.StartDisconnect();
+                    Network.StartDisconnect(SendDisconnectPacket: SendDisconnectPacket);
                 }
             });
         }

@@ -152,6 +152,20 @@ namespace VoiceCraft.Server.Sockets
                         SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key }, socketData);
                 }
             }
+
+            if (reason == "kicked")
+            {
+                var socketData = Participant.SocketData.SignallingAddress;
+                if (socketData != null)
+                    SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key, PacketMetadata = "You have been kicked from the server!" }, socketData);
+            }
+
+            if (reason == "banned")
+            {
+                var socketData = Participant.SocketData.SignallingAddress;
+                if (socketData != null)
+                    SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Logout, PacketKey = Key, PacketMetadata = "You have been banned from the server!" }, socketData);
+            }
             return Task.CompletedTask;
         }
     }

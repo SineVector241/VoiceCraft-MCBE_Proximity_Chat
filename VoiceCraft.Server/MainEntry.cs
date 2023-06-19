@@ -184,25 +184,23 @@ namespace VoiceCraft.Server
                             Logger.LogToConsole(LogType.Success, $"Successfully banned participant {keyArgUshort3}.", nameof(MainEntry));
                             break;
                         case "unban":
-                            string unbanKeyArg = splitCmd.ElementAt(1);
-                            if (string.IsNullOrWhiteSpace(unbanKeyArg))
+                            string unbanIpArg = splitCmd.ElementAt(1);
+                            if (string.IsNullOrWhiteSpace(unbanIpArg))
                             {
                                 Logger.LogToConsole(LogType.Error, "Error. Key argument cannot be empty!", nameof(MainEntry));
                                 break;
                             }
 
-                            _ = ushort.TryParse(unbanKeyArg, out ushort keyArgUshort4);
-                            var p6 = ServerData.GetParticipantByKey(keyArgUshort4);
+                            var p6 = ServerProperties.Banlist.IPBans.FirstOrDefault(x => x == unbanIpArg);
 
                             if (p6 == null)
                             {
-                                Logger.LogToConsole(LogType.Error, $"Error. Could not find participant {keyArgUshort4}.", nameof(MainEntry));
+                                Logger.LogToConsole(LogType.Error, $"Error. Could not find IP {unbanIpArg}.", nameof(MainEntry));
                                 break;
                             }
 
-                            ServerProperties.BanIp(p6.SocketData.SignallingAddress?.ToString()?.Split(':').FirstOrDefault());
-                            ServerData.RemoveParticipant(keyArgUshort4, "banned");
-                            Logger.LogToConsole(LogType.Success, $"Successfully unbanned participant {keyArgUshort4}.", nameof(MainEntry));
+                            ServerProperties.UnbanIp(p6);
+                            Logger.LogToConsole(LogType.Success, $"Successfully unbanned participant {unbanIpArg}.", nameof(MainEntry));
                             break;
                         case "banlist":
                             Logger.LogToConsole(LogType.Info, $"Banned IP's: {ServerProperties.Banlist.IPBans.Count}", nameof(MainEntry));

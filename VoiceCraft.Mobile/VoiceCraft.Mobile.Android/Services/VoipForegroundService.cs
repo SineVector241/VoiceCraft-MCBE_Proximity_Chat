@@ -38,6 +38,7 @@ namespace VoiceCraft.Mobile.Droid.Services
 
                     MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message =>
                     {
+                        voipService.SendDisconnectPacket = true;
                         cts.Cancel();
                     });
 
@@ -95,7 +96,7 @@ namespace VoiceCraft.Mobile.Droid.Services
                     Reason = Reason
                 };
 
-                MessagingCenter.Send(message, "Disconnect");
+                MessagingCenter.Send(message, "Disconnected");
 
                 cts.Cancel();
             });

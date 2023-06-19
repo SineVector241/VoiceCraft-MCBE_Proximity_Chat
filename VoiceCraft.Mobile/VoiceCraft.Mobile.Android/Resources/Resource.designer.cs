@@ -16687,6 +16687,9 @@ namespace VoiceCraft.Mobile.Droid
 			// aapt resource value: 0x7F070097
 			public const int tooltip_frame_light = 2131165335;
 			
+			// aapt resource value: 0x7F070098
+			public const int vc = 2131165336;
+			
 			static Drawable()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
