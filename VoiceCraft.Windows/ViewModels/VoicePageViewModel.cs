@@ -24,7 +24,7 @@ namespace VoiceCraft.Windows.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ObservableCollection<string> participants = new ObservableCollection<string>() { "AAA" };
+        ObservableCollection<string> participants = new ObservableCollection<string>();
 
         public VoicePageViewModel()
         {
@@ -83,6 +83,7 @@ namespace VoiceCraft.Windows.ViewModels
         public void MuteUnmute()
         {
             IsMuted = !IsMuted;
+            voipService.MuteUnmute();
         }
     }
 }
