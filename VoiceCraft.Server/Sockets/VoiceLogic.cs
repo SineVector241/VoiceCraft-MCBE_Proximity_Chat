@@ -27,9 +27,9 @@ namespace VoiceCraft.Server.Sockets
         private void HandleAudio(VoicePacket Packet, EndPoint EP)
         {
             var audioparticipant = ServerData.GetParticipantByVoice(EP);
-            if (audioparticipant.Value != null && audioparticipant.Value.Binded && !audioparticipant.Value.Muted && ServerProperties.Properties.ProximityToggle)
+            if (audioparticipant.Value != null && audioparticipant.Value.Binded && !audioparticipant.Value.Muted)
             {
-                var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && x.Value.MinecraftData.DimensionId != "void" && x.Key != audioparticipant.Key && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance);
+                var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && x.Key != audioparticipant.Key && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance);
                 for (int i = 0; i < list.Count(); i++)
                 {
                     var participant = list.ElementAt(i);

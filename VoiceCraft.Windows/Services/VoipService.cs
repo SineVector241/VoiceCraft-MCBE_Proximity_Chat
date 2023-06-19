@@ -77,7 +77,8 @@ namespace VoiceCraft.Windows.Services
                             {
                                 Participants = Network.Participants.Select(x => x.Value.Name).ToList(),
                                 StatusMessage = StatusMessage,
-                                IsMuted = IsMuted
+                                IsMuted = IsMuted,
+                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
                             };
                             App.Current.Dispatcher.Invoke(() =>
                             {

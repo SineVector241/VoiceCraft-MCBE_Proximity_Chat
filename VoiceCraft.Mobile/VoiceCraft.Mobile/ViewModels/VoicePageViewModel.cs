@@ -16,6 +16,9 @@ namespace VoiceCraft.Mobile.ViewModels
         string statusText = "Connecting...";
 
         [ObservableProperty]
+        bool isSpeaking = false;
+
+        [ObservableProperty]
         ObservableCollection<string> participants = new ObservableCollection<string>();
 
         [RelayCommand]
@@ -58,6 +61,9 @@ namespace VoiceCraft.Mobile.ViewModels
 
                 if (IsMuted != message.IsMuted)
                     IsMuted = message.IsMuted;
+
+                if (IsSpeaking != message.IsSpeaking)
+                    IsSpeaking = message.IsSpeaking;
 
                 Participants = new ObservableCollection<string>(message.Participants);
             });

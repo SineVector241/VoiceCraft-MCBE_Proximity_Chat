@@ -69,6 +69,24 @@
                         </Button.Style>
                     </Button>
                 </Grid>
+
+                <Frame.Style>
+                    <Style TargetType="Frame">
+                        <Setter Property="CornerRadius" Value="5" />
+                        <Setter Property="Margin" Value="10" />
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                        <Setter Property="VerticalOptions" Value="StartAndExpand" />
+
+                        <Style.Triggers>
+                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#46C6, Light=#66C6}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="False">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Frame.Style>
             </Frame>
         </Grid>
     </Grid>
