@@ -167,6 +167,13 @@ namespace VoiceCraft.Mobile.Services
         {
             StatusMessage = $"Connecting Voice...\nPort: {Network.VoicePort}";
 
+            var server = Database.GetPassableObject<ServerModel>();
+            if (server != null && server.Key != Key)
+            {
+                server.Key = Key;
+                Database.UpdateServer(server);
+            }
+
             Device.BeginInvokeOnMainThread(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };

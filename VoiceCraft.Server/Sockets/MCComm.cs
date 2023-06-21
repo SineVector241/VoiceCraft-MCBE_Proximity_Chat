@@ -122,11 +122,16 @@ namespace VoiceCraft.Server.Sockets
                                 {
                                     var player = json.Players[i];
                                     var vcParticipant = ServerData.GetParticipantByMinecraftId(player.PlayerId).Value;
-                                    if (vcParticipant != null)
+                                    if (vcParticipant != null && !vcParticipant.ClientSided)
                                     {
-                                        vcParticipant.MinecraftData.Position = player.Location;
-                                        vcParticipant.MinecraftData.DimensionId = player.DimensionId;
-                                        vcParticipant.MinecraftData.Rotation = player.Rotation;
+                                        if (!vcParticipant.MinecraftData.Position.Equals(player.Location))
+                                            vcParticipant.MinecraftData.Position = player.Location;
+
+                                        if(vcParticipant.MinecraftData.DimensionId != player.DimensionId)
+                                            vcParticipant.MinecraftData.DimensionId = player.DimensionId;
+
+                                        if(vcParticipant.MinecraftData.Rotation != player.Rotation)
+                                            vcParticipant.MinecraftData.Rotation = player.Rotation;
                                     }
                                 }
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated");

@@ -34,6 +34,7 @@ namespace VoiceCraft.Windows.ViewModels
         [RelayCommand]
         public void Edit()
         {
+            Navigator.NavigateTo(new EditPage());
         }
 
         [RelayCommand]

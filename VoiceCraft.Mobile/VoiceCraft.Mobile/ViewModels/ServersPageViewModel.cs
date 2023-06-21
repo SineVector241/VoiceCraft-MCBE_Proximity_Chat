@@ -16,12 +16,18 @@ namespace VoiceCraft.Mobile.ViewModels
         public ServersPageViewModel()
         {
             Database.OnServerAdd += ServerAdded;
+            Database.OnServerUpdated += ServerUpdated;
             Database.OnServerRemove += ServerRemoved;
         }
 
         private void ServerAdded(ServerModel Server)
         {
             Servers.Add(Server);
+        }
+
+        private void ServerUpdated(ServerModel Server)
+        {
+            Servers = new ObservableCollection<ServerModel>(Database.GetServers());
         }
 
         private void ServerRemoved(ServerModel Server)

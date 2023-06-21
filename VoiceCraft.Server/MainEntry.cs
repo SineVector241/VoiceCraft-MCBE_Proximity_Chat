@@ -17,6 +17,7 @@ namespace VoiceCraft.Server
         private async Task ServiceFailed(string service, string reason)
         {
             Logger.LogToConsole(LogType.Error, "Failed to start server. Closing window in 10 seconds.", nameof(MainEntry));
+            Console.Title = $"VoiceCraft - {Version}: Failed...";
             ServerEvents.InvokeStopping();
             await Task.Delay(10000);
             Environment.Exit(0);
@@ -38,6 +39,7 @@ namespace VoiceCraft.Server
                     break;
                 case nameof(Voice):
                     Logger.LogToConsole(LogType.Success, "Server successfully started!", nameof(MainEntry));
+                    Console.Title = $"VoiceCraft - {Version}: Started.";
                     break;
             }
 
@@ -81,6 +83,7 @@ namespace VoiceCraft.Server
                 {
                     CTS.Cancel();
                     Logger.LogToConsole(LogType.Warn, $"Shutting down server. Closing window in 5 seconds.", nameof(MainEntry));
+                    Console.Title = $"VoiceCraft - {Version}: Shutting Down...";
                     ServerEvents.InvokeStopping();
                     await Task.Delay(5000);
                     break;

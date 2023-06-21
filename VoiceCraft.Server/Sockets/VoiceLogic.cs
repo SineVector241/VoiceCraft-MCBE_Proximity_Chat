@@ -76,8 +76,11 @@ namespace VoiceCraft.Server.Sockets
             var participant = ServerData.GetParticipantByVoice(EP);
             if(participant.Value != null && Packet.PacketEnviromentId != null && participant.Value.ClientSided)
             {
+                //Do not need to do a check since MCWSS only sends update packets when the player moves. Packet.PacketPosition will always be different everytime a packet is received.
                 participant.Value.MinecraftData.Position = Packet.PacketPosition;
-                participant.Value.MinecraftData.DimensionId = Packet.PacketEnviromentId;
+
+                if(participant.Value.MinecraftData.DimensionId != Packet.PacketEnviromentId)
+                    participant.Value.MinecraftData.DimensionId = Packet.PacketEnviromentId;
             }
         }
     }
