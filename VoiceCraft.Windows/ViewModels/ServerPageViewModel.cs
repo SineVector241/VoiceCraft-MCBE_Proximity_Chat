@@ -23,6 +23,13 @@ namespace VoiceCraft.Windows.ViewModels
                 var res = await NetworkManager.InfoPingAsync(server.IP, server.Port);
                 ExternalServerInformation = res;
             });
+
+            Database.OnServerUpdated += ServerUpdated;
+        }
+
+        private void ServerUpdated(ServerModel Server)
+        {
+            OnPropertyChanged(nameof(Server));
         }
 
         [RelayCommand]
@@ -41,6 +48,7 @@ namespace VoiceCraft.Windows.ViewModels
         public void Back()
         {
             Navigator.GoToPreviousPage();
+            Database.OnServerUpdated -= ServerUpdated;
         }
     }
 }

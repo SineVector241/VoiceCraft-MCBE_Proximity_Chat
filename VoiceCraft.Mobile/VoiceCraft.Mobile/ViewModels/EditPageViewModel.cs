@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Windows;
-using VoiceCraft.Windows.Models;
-using VoiceCraft.Windows.Storage;
+using VoiceCraft.Mobile.Models;
+using VoiceCraft.Mobile.Storage;
+using Xamarin.Forms;
 
-namespace VoiceCraft.Windows.ViewModels
+namespace VoiceCraft.Mobile.ViewModels
 {
     public partial class EditPageViewModel : ObservableObject
     {
@@ -18,23 +18,23 @@ namespace VoiceCraft.Windows.ViewModels
         }
 
         [RelayCommand]
-        public void EditServer()
+        public async void EditServer()
         {
             try
             {
                 Database.UpdateServer(Server);
-                Navigator.GoToPreviousPage();
+                await Shell.Current.Navigation.PopAsync();
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error!", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
             }
         }
 
         [RelayCommand]
         public void Cancel()
         {
-            Navigator.GoToPreviousPage();
+            Shell.Current.Navigation.PopAsync();
         }
     }
 }

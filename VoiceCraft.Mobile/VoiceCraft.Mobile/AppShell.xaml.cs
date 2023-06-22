@@ -11,6 +11,7 @@ namespace VoiceCraft.Mobile
             Routing.RegisterRoute(nameof(ServerPage), typeof(ServerPage));
             Routing.RegisterRoute(nameof(AddServerPage), typeof(AddServerPage));
             Routing.RegisterRoute(nameof(VoicePage), typeof(VoicePage));
+            Routing.RegisterRoute(nameof(EditPage), typeof(EditPage));
         }
     }
 }

@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
+             x:Class="VoiceCraft.Mobile.Views.EditPage"
+             Shell.TabBarIsVisible="False">
+
+    <ContentPage.BindingContext>
+        <vm:EditPageViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+               Aspect="AspectFill"/>
+        <ScrollView>
+            <Grid Grid.RowDefinitions="auto">
+                <Frame>
+                    <Label Text="Add Server" 
+                           FontSize="25"
+                           FontAttributes="Bold"/>
+                </Frame>
+
+                <Frame Grid.Row="1">
+                    <Grid VerticalOptions="StartAndExpand"
+                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto">
+                        <Label Text="{Binding Server.Name}"
+                               FontSize="25"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"/>
+
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="1"
+                               Text="Server IP"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="2"
+                               Keyboard="Text"
+                               Text="{Binding Server.IP}"
+                               Placeholder="127.0.0.1"
+                               MaxLength="20"/>
+
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="3"
+                               Text="Server Port"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="4"
+                               Keyboard="Numeric"
+                               Text="{Binding Server.Port}"
+                               Placeholder="9050" />
+
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="5"
+                               Text="Audio Codec"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <StackLayout Orientation="Horizontal"
+                                     Grid.Row="6"
+                                     Margin="0,20">
+                            <CheckBox IsChecked="{Binding Server.ClientSided}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Client Sided Positioning"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <Button Grid.Row="7"
+                                Text="Save Edits"
+                                Command="{Binding EditServerCommand}"/>
+
+                        <Button Grid.Row="8"
+                                Text="Cancel"
+                                Command="{Binding CancelCommand}"/>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

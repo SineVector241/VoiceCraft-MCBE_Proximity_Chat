@@ -25,6 +25,13 @@ namespace VoiceCraft.Mobile.ViewModels
                 var res = await NetworkManager.InfoPingAsync(server.IP, server.Port);
                 ExternalServerInformation = res;
             });
+
+            Database.OnServerUpdated += ServerUpdated;
+        }
+
+        private void ServerUpdated(ServerModel Server)
+        {
+            OnPropertyChanged(nameof(Server));
         }
 
         [RelayCommand]
@@ -41,13 +48,14 @@ namespace VoiceCraft.Mobile.ViewModels
         [RelayCommand]
         public void Edit()
         {
-            Shell.Current.DisplayAlert("RickRoll", "Never gonna give you up. Never gonna let you down.", "Damnit");
+            Shell.Current.GoToAsync(nameof(EditPage));
         }
 
         [RelayCommand]
         public void Back()
         {
             Shell.Current.Navigation.PopAsync();
+            Database.OnServerUpdated -= ServerUpdated;
         }
     }
 }
