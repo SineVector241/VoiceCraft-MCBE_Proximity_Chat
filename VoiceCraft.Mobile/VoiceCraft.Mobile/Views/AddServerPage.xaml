@@ -74,7 +74,7 @@
                         </StackLayout>
 
                         <Button Grid.Row="8"
-                                Text="Add"
+                                Text="Add Server"
                                 Command="{Binding AddServerCommand}"/>
 
                         <Button Grid.Row="9"
