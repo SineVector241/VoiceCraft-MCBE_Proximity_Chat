@@ -22,7 +22,7 @@
 
                 <Frame Grid.Row="1">
                     <Grid VerticalOptions="StartAndExpand"
-                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto">
+                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto">
                         <Label Text="{Binding Server.Name}"
                                FontSize="25"
                                FontAttributes="Bold"
@@ -57,23 +57,11 @@
                                FontSize="15"
                                FontAttributes="Bold"/>
 
-                        <StackLayout Orientation="Horizontal"
-                                     Grid.Row="6"
-                                     Margin="0,20">
-                            <CheckBox IsChecked="{Binding Server.ClientSided}"
-                                      Scale="1.3"/>
-
-                            <Label Text="Client Sided Positioning"
-                                   FontSize="15"
-                                   FontAttributes="Bold"
-                                   VerticalOptions="CenterAndExpand"/>
-                        </StackLayout>
-
-                        <Button Grid.Row="7"
+                        <Button Grid.Row="6"
                                 Text="Save Edits"
                                 Command="{Binding EditServerCommand}"/>
 
-                        <Button Grid.Row="8"
+                        <Button Grid.Row="7"
                                 Text="Cancel"
                                 Command="{Binding CancelCommand}"/>
                     </Grid>

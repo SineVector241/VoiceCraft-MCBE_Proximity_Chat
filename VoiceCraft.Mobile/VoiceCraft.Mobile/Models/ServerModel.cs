@@ -6,6 +6,5 @@
         public string IP { get; set; } = string.Empty;
         public ushort Port { get; set; } = 9050;
         public ushort Key { get; set; }
-        public bool ClientSided { get; set; }
     }
 }

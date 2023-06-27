@@ -24,7 +24,7 @@ namespace VoiceCraft.Windows.Services
         private DateTime RecordDetection;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
-        private SoftLimiter Normalizer;
+        private SoftLimiter? Normalizer;
 
         //Events
         public delegate void Update(UpdateUIMessage Data);
@@ -39,12 +39,19 @@ namespace VoiceCraft.Windows.Services
             var server = Database.GetPassableObject<ServerModel>();
             var audioManager = new AudioManager();
 
-            Network = new NetworkManager(server.IP, server.Port, server.Key, server.ClientSided, settings.DirectionalAudioEnabled);
+            Network = new NetworkManager(server.IP, server.Port, server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled);
             RecordDetection = DateTime.UtcNow;
-            Normalizer = new SoftLimiter(Network.Mixer);
-            Normalizer.Boost.CurrentValue = 5;
+            if (settings.SoftLimiterEnabled)
+            {
+                Normalizer = new SoftLimiter(Network.Mixer);
+                Normalizer.Boost.CurrentValue = settings.SoftLimiterGain;
+                AudioPlayer = audioManager.CreatePlayer(Normalizer);
+            }
+            else
+            {
+                AudioPlayer = audioManager.CreatePlayer(Network.Mixer);
+            }
             AudioRecorder = audioManager.CreateRecorder(Network.RecordFormat);
-            AudioPlayer = audioManager.CreatePlayer(Normalizer);
         }
 
         public async Task Start(CancellationToken CT)

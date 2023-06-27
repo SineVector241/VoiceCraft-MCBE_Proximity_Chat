@@ -36,11 +36,6 @@
                                FontSize="18"
                                Grid.Row="1"
                                Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
-
-                        <Label FontAttributes="Bold"
-                               FontSize="18"
-                               Grid.Row="2" 
-                               Text="{Binding Server.ClientSided, StringFormat='Client Sided Positioning: {0}'}"/>
                     </Grid>
                 </Frame>
 

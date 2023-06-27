@@ -201,39 +201,6 @@
                         </TextBox.Triggers>
                     </TextBox>
 
-                    <CheckBox Content="Client Sided Positioning"
-                              FontSize="10"
-                              FontWeight="Bold"
-                              IsChecked="{Binding Server.ClientSided}"
-                              VerticalContentAlignment="Center"
-                              Margin="0,10"
-                              Opacity="0">
-                        <CheckBox.LayoutTransform>
-                            <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
-                        </CheckBox.LayoutTransform>
-                        <CheckBox.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
-                        </CheckBox.RenderTransform>
-
-                        <CheckBox.Triggers>
-                            <EventTrigger RoutedEvent="CheckBox.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
-                                            <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="0" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="1"/>
-                                        </DoubleAnimationUsingKeyFrames>
-                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
-                                            <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
-                                        </DoubleAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </CheckBox.Triggers>
-                    </CheckBox>
-
                     <Button Content="Save Edits"
                             FontSize="15"
                             Command="{Binding EditServerCommand}"

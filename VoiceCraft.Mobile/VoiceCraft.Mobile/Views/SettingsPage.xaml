@@ -20,7 +20,7 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto, auto, auto"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto"
                           RowSpacing="0">
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
@@ -46,9 +46,33 @@
                                    VerticalOptions="CenterAndExpand"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Vertical"
+                        <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
                                      Grid.Row="3">
+                            <CheckBox IsChecked="{Binding Settings.SoftLimiterEnabled}"
+                                      Scale="1.3"/>
+
+                            <Label Text="SoftLimiter Enabled"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Horizontal"
+                                     Margin="0,10"
+                                     Grid.Row="4">
+                            <CheckBox IsChecked="{Binding Settings.ClientSidedPositioning}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Client Sided Positioning"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Vertical"
+                                     Margin="0,10"
+                                     Grid.Row="5">
 
                             <Label Text="Websocket Port"
                                    FontSize="15"
@@ -60,8 +84,22 @@
                                    Placeholder="8080" />
                         </StackLayout>
 
+                        <StackLayout Orientation="Vertical"
+                                     Margin="0,10"
+                                     Grid.Row="6">
+
+                            <Label Text="SoftLimiter Gain(DB)"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+
+                            <Entry Keyboard="Numeric"
+                                   Text="{Binding Settings.SoftLimiterGain}"
+                                   Placeholder="5" />
+                        </StackLayout>
+
                         <Button Text="Save"
-                                Grid.Row="4"
+                                Grid.Row="7"
                                 Command="{Binding SaveSettingsCommand}"/>
                     </Grid>
                 </Frame>
