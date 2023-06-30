@@ -20,11 +20,11 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto"
                           RowSpacing="0">
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
-                                     Grid.Row="1">
+                                     Grid.Row="0">
                             <CheckBox IsChecked="{Binding Settings.DirectionalAudioEnabled}"
                                       Scale="1.3"/>
 
@@ -36,7 +36,7 @@
 
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
-                                     Grid.Row="2">
+                                     Grid.Row="1">
                             <CheckBox IsChecked="{Binding Settings.PinpointPlayerAccuracyEnabled}"
                                       Scale="1.3"/>
 
@@ -48,7 +48,7 @@
 
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
-                                     Grid.Row="3">
+                                     Grid.Row="2">
                             <CheckBox IsChecked="{Binding Settings.SoftLimiterEnabled}"
                                       Scale="1.3"/>
 
@@ -60,7 +60,7 @@
 
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
-                                     Grid.Row="4">
+                                     Grid.Row="3">
                             <CheckBox IsChecked="{Binding Settings.ClientSidedPositioning}"
                                       Scale="1.3"/>
 
@@ -72,13 +72,13 @@
 
                         <StackLayout Orientation="Vertical"
                                      Margin="0,10"
-                                     Grid.Row="5">
+                                     Grid.Row="4">
 
                             <Label Text="Websocket Port"
                                    FontSize="15"
                                    FontAttributes="Bold"
                                    VerticalOptions="CenterAndExpand"/>
-                            
+
                             <Entry Keyboard="Numeric"
                                    Text="{Binding Settings.WebsocketPort}"
                                    Placeholder="8080" />
@@ -86,20 +86,22 @@
 
                         <StackLayout Orientation="Vertical"
                                      Margin="0,10"
-                                     Grid.Row="6">
+                                     Grid.Row="5">
 
-                            <Label Text="SoftLimiter Gain(DB)"
+                            <Label Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}' }"
                                    FontSize="15"
                                    FontAttributes="Bold"
-                                   VerticalOptions="CenterAndExpand"/>
+                                   VerticalOptions="CenterAndExpand"
+                                   x:Name="GainLabel"/>
 
-                            <Entry Keyboard="Numeric"
-                                   Text="{Binding Settings.SoftLimiterGain}"
-                                   Placeholder="5" />
+                            <Slider Value="{Binding Settings.SoftLimiterGain}"
+                                    Maximum="20.0"
+                                    Minimum="1.0"
+                                    ValueChanged="GainValueChanged"/>
                         </StackLayout>
 
                         <Button Text="Save"
-                                Grid.Row="7"
+                                Grid.Row="6"
                                 Command="{Binding SaveSettingsCommand}"/>
                     </Grid>
                 </Frame>

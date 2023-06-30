@@ -17,6 +17,7 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             try
             {
+                Settings.SoftLimiterGain = (float)Math.Round(Settings.SoftLimiterGain, 2);
                 Database.SetSettings(Settings);
                 Shell.Current.DisplayAlert("Save", "Successfully saved settings!", "OK");
             }

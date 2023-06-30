@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -15,6 +10,11 @@ namespace VoiceCraft.Mobile.Views
         public SettingsPage()
         {
             InitializeComponent();
+        }
+
+        private void GainValueChanged(object sender, ValueChangedEventArgs e)
+        {
+            GainLabel.Text = Math.Round(e.NewValue, 2).ToString();
         }
     }
 }
