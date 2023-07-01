@@ -205,22 +205,15 @@
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="SoftLimiter Gain(DB): "
+                        <TextBlock Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}"
                                    FontSize="20"
                                    FontWeight="Bold"/>
 
-                        <TextBox FontWeight="Medium"
-                                 PreviewTextInput="NumbersOnlyTextInput"
-                                 FontSize="18"
-                                 Foreground="White"
-                                 Background="Transparent"
-                                 CaretBrush="LightGray"
-                                 BorderBrush="DarkGray"
-                                 BorderThickness="0,0,0,2"
-                                 Height="28"
-                                 Margin="0,2,0,0"
-                                 Text="{Binding Settings.SoftLimiterGain}"
-                                 Grid.Column="1"/>
+                        <Slider Grid.Column="1"
+                                Value="{Binding Settings.SoftLimiterGain}"
+                                Minimum="1.0"
+                                Maximum="20.0" 
+                                Margin="5"/>
                     </Grid>
 
                     <Button Content="Save Settings"

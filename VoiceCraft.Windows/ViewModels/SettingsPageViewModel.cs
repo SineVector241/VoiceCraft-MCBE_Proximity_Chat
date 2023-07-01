@@ -61,6 +61,7 @@ namespace VoiceCraft.Windows.ViewModels
         {
             try
             {
+                Settings.SoftLimiterGain = (float)Math.Round(Settings.SoftLimiterGain, 2);
                 Database.SetSettings(Settings);
                 MessageBox.Show("Successfully saved settings.", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
             }
