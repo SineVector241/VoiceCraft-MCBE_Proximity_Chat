@@ -51,6 +51,35 @@
                     <Image Source="{StaticResource arrow_left_thick}" />
                 </Button>
             </Grid>
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource DefaultBorder}"
+                    Margin="10"
+                    Padding="10"
+                    Opacity="0">
+                <TextBlock Text="In Progress... Please refer to the wiki instead."
+                           FontSize="20" />
+
+                <Border.RenderTransform>
+                    <TranslateTransform Y="20">
+                    </TranslateTransform>
+                </Border.RenderTransform>
+
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Border.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+            </Border>
         </Grid>
     </ScrollViewer>
 </Page>

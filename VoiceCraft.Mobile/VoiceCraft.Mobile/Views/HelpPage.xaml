@@ -14,6 +14,9 @@
             </Frame>
 
             <Frame Grid.Row="1">
+                <Label Text="In Progress... Please refer to the wiki instead."
+                       FontSize="20"
+                       FontAttributes="Bold"/>
             </Frame>
         </Grid>
     </Grid>
