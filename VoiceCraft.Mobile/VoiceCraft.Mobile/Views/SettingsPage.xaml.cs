@@ -14,7 +14,7 @@ namespace VoiceCraft.Mobile.Views
 
         private void GainValueChanged(object sender, ValueChangedEventArgs e)
         {
-            GainLabel.Text = Math.Round(e.NewValue, 2).ToString();
+            GainLabel.Text = $"SoftLimiter Gain(DB): {Math.Round(e.NewValue, 2)}";
         }
     }
 }
