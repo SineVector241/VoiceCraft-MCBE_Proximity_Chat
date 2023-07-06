@@ -150,5 +150,23 @@ namespace VoiceCraft.Server.Sockets
                 SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping }, EP);
             }
         }
+
+        private void HandleDeafen(EndPoint EP)
+        {
+            var participant = ServerData.GetParticipantBySignalling(EP);
+            if(participant.Value != null) 
+            { 
+                participant.Value.Deafened = true;
+            }
+        }
+
+        private void HandleUndeafen(EndPoint EP)
+        {
+            var participant = ServerData.GetParticipantBySignalling(EP);
+            if (participant.Value != null)
+            {
+                participant.Value.Deafened = false;
+            }
+        }
     }
 }

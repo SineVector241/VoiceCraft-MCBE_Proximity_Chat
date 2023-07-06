@@ -76,6 +76,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 
                 <Button Content="Disconnect"
@@ -100,6 +101,26 @@
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsMuted}" Value="False">
                                     <Setter Property="Content" Value="Mute" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Grid.Column="2"
+                        FontSize="15"
+                        Height="40"
+                        Margin="5,0"
+                        Command="{Binding DeafenUndeafenCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDeafened}" Value="True">
+                                    <Setter Property="Content" Value="Undeafen" />
+                                    <Setter Property="Background" Value="#8AAA" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsDeafened}" Value="False">
+                                    <Setter Property="Content" Value="Deafen" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

@@ -45,7 +45,7 @@
 
             <Frame Grid.Row="2"
                    VerticalOptions="EndAndExpand">
-                <Grid ColumnDefinitions="*, *">
+                <Grid ColumnDefinitions="*, *, *">
                     <Button Grid.Column="0"
                             Text="Disconnect"
                             BackgroundColor="{AppThemeBinding Dark=#8A22, Light=#8F44}"
@@ -62,6 +62,24 @@
                                     </DataTrigger>
                                     <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
                                         <Setter Property="Text" Value="Mute" />
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Grid.Column="2"
+                            Command="{Binding DeafenUndeafenCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
+                                        <Setter Property="Text" Value="Deafen" />
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
+                                        <Setter Property="Text" Value="Undeafen" />
                                         <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
                                     </DataTrigger>
                                 </Style.Triggers>

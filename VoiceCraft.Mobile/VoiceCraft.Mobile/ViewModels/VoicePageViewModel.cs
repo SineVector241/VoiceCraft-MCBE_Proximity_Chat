@@ -13,6 +13,9 @@ namespace VoiceCraft.Mobile.ViewModels
         bool isMuted = false;
 
         [ObservableProperty]
+        bool isDeafened = false;
+
+        [ObservableProperty]
         string statusText = "Connecting...";
 
         [ObservableProperty]
@@ -27,6 +30,14 @@ namespace VoiceCraft.Mobile.ViewModels
             var message = new MuteUnmuteMessage();
             MessagingCenter.Send(message, "MuteUnmute");
             IsMuted = !IsMuted;
+        }
+
+        [RelayCommand]
+        public void DeafenUndeafen()
+        {
+            var message = new DeafenUndeafen();
+            MessagingCenter.Send(message, "DeafenUndeafen");
+            IsDeafened = !IsDeafened;
         }
 
         [RelayCommand]
@@ -61,6 +72,9 @@ namespace VoiceCraft.Mobile.ViewModels
 
                 if (IsMuted != message.IsMuted)
                     IsMuted = message.IsMuted;
+
+                if(IsDeafened != message.IsDeafened)
+                    IsDeafened = message.IsDeafened;
 
                 if (IsSpeaking != message.IsSpeaking)
                     IsSpeaking = message.IsSpeaking;

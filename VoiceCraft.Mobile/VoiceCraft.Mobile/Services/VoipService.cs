@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using VoiceCraft.Mobile.Network.Packets;
 using VoiceCraft.Mobile.Audio;
 using VoiceCraft.Mobile.Interfaces;
 using VoiceCraft.Mobile.Models;
@@ -16,6 +17,7 @@ namespace VoiceCraft.Mobile.Services
     {
         //State Variables
         private bool IsMuted = false;
+        private bool IsDeafened = false;
         public bool SendDisconnectPacket = false;
 
         private string StatusMessage = "Connecting...";
@@ -80,13 +82,14 @@ namespace VoiceCraft.Mobile.Services
                         CT.ThrowIfCancellationRequested();
                         try
                         {
-                            await Task.Delay(1000);
+                            await Task.Delay(500);
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
                                 Participants = Network.Participants.Select(x => x.Value.Name).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
+                                IsDeafened = IsDeafened,
                                 IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
                             };
                             Device.BeginInvokeOnMainThread(() =>
@@ -134,10 +137,20 @@ namespace VoiceCraft.Mobile.Services
             IsMuted = !IsMuted;
         }
 
+        public void DeafenUndeafen()
+        {
+            IsDeafened = !IsDeafened;
+
+            if (IsDeafened)
+                Network.Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Deafen, PacketVersion = App.Version }.GetPacketDataStream());
+            else
+                Network.Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Undeafen, PacketVersion = App.Version }.GetPacketDataStream());
+        }
+
         //Audio Events
         private void DataAvailable(object? sender, WaveInEventArgs e)
         {
-            if (IsMuted)
+            if (IsMuted || IsDeafened)
                 return;
 
             float max = 0;

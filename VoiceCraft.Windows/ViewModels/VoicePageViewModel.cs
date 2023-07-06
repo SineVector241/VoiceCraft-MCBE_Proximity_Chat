@@ -21,6 +21,9 @@ namespace VoiceCraft.Windows.ViewModels
         bool isMuted = false;
 
         [ObservableProperty]
+        bool isDeafened = false;
+
+        [ObservableProperty]
         bool isSpeaking = false;
 
         [ObservableProperty]
@@ -39,6 +42,9 @@ namespace VoiceCraft.Windows.ViewModels
 
             if(IsMuted != Data.IsMuted)
                 IsMuted = Data.IsMuted;
+
+            if (IsDeafened != Data.IsDeafened)
+                IsDeafened = Data.IsDeafened;
 
             if (IsSpeaking != Data.IsSpeaking)
                 IsSpeaking = Data.IsSpeaking;
@@ -84,6 +90,13 @@ namespace VoiceCraft.Windows.ViewModels
         {
             IsMuted = !IsMuted;
             voipService.MuteUnmute();
+        }
+
+        [RelayCommand]
+        public void DeafenUndeafen()
+        {
+            IsDeafened = !IsDeafened;
+            voipService.DeafenUndeafen();
         }
     }
 }

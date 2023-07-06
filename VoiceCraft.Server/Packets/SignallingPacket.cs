@@ -14,6 +14,8 @@ namespace VoiceCraft.Server.Network.Packets
         Error,
         Ping,
         InfoPing,
+        Deafen,
+        Undeafen,
         Null
     }
 

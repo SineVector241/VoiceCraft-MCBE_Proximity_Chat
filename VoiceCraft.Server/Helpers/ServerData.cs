@@ -83,6 +83,7 @@ namespace VoiceCraft.Server.Helpers
     {
         public bool Binded { get; set; }
         public bool Muted { get; set; }
+        public bool Deafened { get; set; }
         public bool ClientSided { get; set; }
 
         public MinecraftData MinecraftData { get; set; } = new MinecraftData();

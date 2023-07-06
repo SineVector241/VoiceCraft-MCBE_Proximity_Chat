@@ -16,6 +16,9 @@ namespace VoiceCraft.Windows.Services
     public class MuteUnmuteMessage
     { }
 
+    public class DeafenUndeafen
+    { }
+
     public class StopServiceMessage
     { }
 
@@ -30,6 +33,7 @@ namespace VoiceCraft.Windows.Services
         public List<string> Participants { get; set; } = new List<string>();
         public string StatusMessage { get; set; } = "";
         public bool IsMuted { get; set; }
+        public bool IsDeafened { get; set; }
         public bool IsSpeaking { get; set; }
     }
 }

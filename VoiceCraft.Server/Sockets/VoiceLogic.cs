@@ -27,7 +27,7 @@ namespace VoiceCraft.Server.Sockets
         private void HandleAudio(VoicePacket Packet, EndPoint EP)
         {
             var audioparticipant = ServerData.GetParticipantByVoice(EP);
-            if (audioparticipant.Value != null && audioparticipant.Value.Binded && !audioparticipant.Value.Muted)
+            if (audioparticipant.Value != null && audioparticipant.Value.Binded && !audioparticipant.Value.Muted && !audioparticipant.Value.Deafened)
             {
                 if (ServerProperties.Properties.ProximityToggle)
                 {
@@ -69,6 +69,8 @@ namespace VoiceCraft.Server.Sockets
                     }
                 }
             }
+
+            //Do nothing. Do not send audio. Do not handle it at all.
         }
 
         private void HandleUpdate(VoicePacket Packet, EndPoint EP)

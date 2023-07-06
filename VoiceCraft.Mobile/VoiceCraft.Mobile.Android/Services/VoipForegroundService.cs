@@ -47,6 +47,11 @@ namespace VoiceCraft.Mobile.Droid.Services
                         voipService.MuteUnmute();
                     });
 
+                    MessagingCenter.Subscribe<DeafenUndeafen>(this, "DeafenUndeafen", message => 
+                    {
+                        voipService.DeafenUndeafen();
+                    });
+
                     voipService.Start(cts.Token).Wait();
                 }
                 catch (System.OperationCanceledException)
@@ -56,6 +61,7 @@ namespace VoiceCraft.Mobile.Droid.Services
                 {
                     MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnect");
                     MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
+                    MessagingCenter.Unsubscribe<DeafenUndeafen>(this, "DeafenUndeafen");
 
                     var message = new StopServiceMessage();
                     Device.BeginInvokeOnMainThread(() => {

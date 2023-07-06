@@ -100,6 +100,12 @@ namespace VoiceCraft.Server.Sockets
                 case SignallingPacketIdentifiers.Binded:
                     HandleBind(Packet, EP);
                     break;
+                case SignallingPacketIdentifiers.Deafen:
+                    HandleDeafen(EP);
+                    break;
+                case SignallingPacketIdentifiers.Undeafen:
+                    HandleUndeafen(EP);
+                    break;
             }
         }
 
