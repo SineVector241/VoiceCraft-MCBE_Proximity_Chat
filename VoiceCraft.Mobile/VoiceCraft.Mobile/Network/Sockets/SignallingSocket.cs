@@ -129,6 +129,9 @@ namespace VoiceCraft.Mobile.Network.Sockets
                     await Task.Delay(2000);
 
                     var packet = new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Ping, PacketVersion = App.Version }.GetPacketDataStream();
+                    if (NM.Disconnecting)
+                        return;
+
                     Socket.Send(packet, packet.Length);
 
                     if (DateTime.UtcNow.Subtract(LastPing).Seconds > 10)
