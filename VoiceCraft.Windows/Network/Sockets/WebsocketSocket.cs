@@ -12,7 +12,7 @@ namespace VoiceCraft.Windows.Network.Sockets
     {
         //Variables
         private readonly NetworkManager NM;
-        private readonly WebSocketServer Socket;
+        private WebSocketServer? Socket;
         private ushort SocketCount;
         private List<IWebSocketConnection> AllSockets = new List<IWebSocketConnection>();
         private readonly string[] Dimensions;
@@ -32,11 +32,12 @@ namespace VoiceCraft.Windows.Network.Sockets
             Socket = new WebSocketServer($"ws://0.0.0.0:{settings.WebsocketPort}");
             Dimensions = new string[] { "minecraft:overworld", "minecraft:nether", "minecraft:end" };
             Binded = false;
+            SocketCount = 0;
         }
 
         public void StartConnect()
         {
-            Socket.Start(socket =>
+            Socket?.Start(socket =>
             {
                 socket.OnOpen = () =>
                 {
@@ -103,7 +104,8 @@ namespace VoiceCraft.Windows.Network.Sockets
             }
 
             AllSockets.Clear();
-            Socket.Dispose();
+            Socket?.Dispose();
+            Socket = null;
         }
     }
 }

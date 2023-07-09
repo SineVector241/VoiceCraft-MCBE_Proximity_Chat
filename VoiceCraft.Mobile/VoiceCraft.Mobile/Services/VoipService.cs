@@ -124,6 +124,7 @@ namespace VoiceCraft.Mobile.Services
                     if (AudioPlayer.PlaybackState == PlaybackState.Playing)
                         AudioPlayer.Stop();
 
+                    AudioRecorder.StopRecording();
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
 
