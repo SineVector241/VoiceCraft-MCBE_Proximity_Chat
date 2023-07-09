@@ -19,7 +19,7 @@ namespace VoiceCraft.Server.Helpers
                     foreach (var key in Participants.Keys)
                     {
                         Participants.TryGetValue(key, out Participant? participant);
-                        if (participant != null && DateTime.UtcNow.Subtract(participant.SocketData.LastPing).TotalSeconds > 10)
+                        if (participant != null && DateTime.UtcNow.Subtract(participant.SocketData.LastPing).TotalSeconds > 6)
                         {
                             RemoveParticipant(key, "TimeOut");
                         }

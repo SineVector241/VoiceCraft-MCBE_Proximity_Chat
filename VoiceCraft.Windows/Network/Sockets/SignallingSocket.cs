@@ -135,7 +135,7 @@ namespace VoiceCraft.Windows.Network.Sockets
 
                     Socket.Send(packet, packet.Length);
 
-                    if (DateTime.UtcNow.Subtract(LastPing).Seconds > 10)
+                    if (DateTime.UtcNow.Subtract(LastPing).Seconds > 6)
                         NM.StartDisconnect("Connection timed out!");
                 }
                 catch (ObjectDisposedException)
