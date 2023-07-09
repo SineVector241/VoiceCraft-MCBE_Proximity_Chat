@@ -128,13 +128,13 @@ namespace VoiceCraft.Server.Sockets
             if(ServerProperties.Properties.ConnectionType == ConnectionTypes.Client ||
                 ServerProperties.Properties.ConnectionType == ConnectionTypes.Hybrid)
             {
-                var participant = ServerData.GetParticipantByKey(Packet.PacketKey);
-                if(participant != null && Packet.PacketMetadata != null && participant.ClientSided)
+                var participant = ServerData.GetParticipantBySignalling(EP);
+                if (participant.Value != null && Packet.PacketMetadata != null && participant.Value.ClientSided)
                 {
-                    participant.Binded = true;
-                    participant.MinecraftData.Gamertag = Packet.PacketMetadata; //Requires a name
+                    participant.Value.Binded = true;
+                    participant.Value.MinecraftData.Gamertag = Packet.PacketMetadata; //Requires a name
                     SendPacket(Packet, EP); //Send the packet back for server confirmation...
-                    ServerEvents.InvokeParticipantBinded(participant, Packet.PacketKey);
+                    ServerEvents.InvokeParticipantBinded(participant.Value, participant.Key);
                 }
             }
 
