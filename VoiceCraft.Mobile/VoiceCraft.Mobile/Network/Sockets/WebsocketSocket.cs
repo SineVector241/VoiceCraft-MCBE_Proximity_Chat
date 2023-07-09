@@ -1,5 +1,6 @@
 ﻿using Fleck;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.Diagnostics;
 using VoiceCraft.Mobile.Network.Builders;
 using VoiceCraft.Mobile.Network.Packets;
@@ -13,6 +14,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
         private readonly NetworkManager NM;
         private readonly WebSocketServer Socket;
         private ushort SocketCount;
+        private List<IWebSocketConnection> AllSockets = new List<IWebSocketConnection>();
         private readonly string[] Dimensions;
         private bool Binded;
 
@@ -38,6 +40,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
             {
                 socket.OnOpen = () =>
                 {
+                    AllSockets.Add(socket);
                     SocketCount++;
                     if (SocketCount <= 1)
                     {
@@ -50,6 +53,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
                 socket.OnClose = () =>
                 {
+                    AllSockets.Remove(socket);
                     SocketCount--;
                     if (SocketCount <= 0)
                     {
@@ -93,9 +97,12 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
         public void StartDisconnect()
         {
-            if (Socket.ListenerSocket.Connected)
-                Socket.ListenerSocket.Close();
+            foreach (var socket in AllSockets)
+            {
+                socket.Close();
+            }
 
+            AllSockets.Clear();
             Socket.Dispose();
         }
     }

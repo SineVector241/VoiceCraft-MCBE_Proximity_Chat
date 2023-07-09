@@ -117,7 +117,8 @@ namespace VoiceCraft.Windows.Network
             Disconnecting = true;
             Signalling.StartDisconnect();
             Voice.StartDisconnect();
-            if(ClientSided) Websocket.StartDisconnect();
+            if(ClientSided) 
+                Websocket.StartDisconnect();
             OnDisconnect?.Invoke(Reason);
         }
 

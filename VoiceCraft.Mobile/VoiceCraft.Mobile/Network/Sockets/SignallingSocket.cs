@@ -57,7 +57,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
 
         public void SendPacket(byte[] PacketStream)
         {
-            if (Socket.Client.Connected)
+            if (Socket != null && Socket.Client != null && Socket.Client.Connected)
             {
                 Socket.Send(PacketStream, PacketStream.Length);
             }
