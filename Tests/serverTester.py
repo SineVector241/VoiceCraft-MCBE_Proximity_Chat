@@ -9,7 +9,7 @@ while(True):
         packet = {
             'Type': 0,
             'LoginKey': loginKey,
-            'PlayerKey': '',
+            'PlayerKey': 0,
             'PlayerId': '',
             'Gamertag': '',
             'Players': [{
@@ -40,7 +40,7 @@ while(True and success):
         packet = {
             'Type': 1,
             'LoginKey': loginKey,
-            'PlayerKey': '',
+            'PlayerKey': 0,
             'PlayerId': '',
             'Gamertag': '',
             'Players': [{
@@ -60,7 +60,7 @@ while(True and success):
 
         if(action == 1):
             packet['Type'] = 1
-            plrKey = str(input("Player Key: "))
+            plrKey = int(input("Player Key: "))
             plrId = str(input("Player Id: "))
             plrGamertag = str(input("Player Gamertag: "))
 
@@ -70,7 +70,7 @@ while(True and success):
 
         elif(action == 2):
             packet['Type'] = 1
-            plrKey = str(input("Player Key: "))
+            plrKey = int(input("Player Key: "))
 
             packet['PlayerKey'] = plrKey
             packet['PlayerId'] = random.choice(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"])
@@ -116,6 +116,7 @@ while(True and success):
         elif(action == 6):
             packet['Type'] = 5
             plrId = str(input("Player Id: "))
+            packet['PlayerId'] = plrId
 
         elif(action == 7):
             print("\nProgram Terminated.")

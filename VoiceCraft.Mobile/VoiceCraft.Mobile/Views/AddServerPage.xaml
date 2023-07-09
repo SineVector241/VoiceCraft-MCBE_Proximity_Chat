@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
+             x:Class="VoiceCraft.Mobile.Views.AddServerPage"
+             Shell.TabBarIsVisible="False">
+    <ContentPage.BindingContext>
+        <vm:AddServerPageViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+               Aspect="AspectFill"/>
+        <ScrollView>
+            <Grid Grid.RowDefinitions="auto">
+                <Frame>
+                    <Label Text="Add Server" 
+                           FontSize="25"
+                           FontAttributes="Bold"/>
+                </Frame>
+
+                <Frame Grid.Row="1">
+                    <Grid VerticalOptions="StartAndExpand"
+                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto">
+                        <Label Text="Server Name"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="1"
+                               Keyboard="Text"
+                               Text="{Binding Server.Name}"
+                               Placeholder="Name"
+                               MaxLength="20"/>
+
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="2"
+                               Text="Server IP"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="3"
+                               Keyboard="Text"
+                               Text="{Binding Server.IP}"
+                               Placeholder="127.0.0.1"
+                               MaxLength="20"/>
+
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="4"
+                               Text="Server Port"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="5"
+                               Keyboard="Numeric"
+                               Text="{Binding Server.Port}"
+                               Placeholder="9050" />
+
+                        <Button Grid.Row="6"
+                                Text="Add Server"
+                                Command="{Binding AddServerCommand}"/>
+
+                        <Button Grid.Row="7"
+                                Text="Cancel"
+                                Command="{Binding CancelCommand}"/>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

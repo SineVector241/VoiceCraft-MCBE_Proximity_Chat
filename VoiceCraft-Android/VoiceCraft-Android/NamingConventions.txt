@@ -1,5 +1,0 @@
-﻿Participant Id/Login = LoginKey
-Both name of participant or server = Name
-
-Try make variables with capitals at the start for models and wherever possible.
-DO NOT USE CAPITALS AT THE START OF LOCAL VARIABLE NAMES. This includes method parameter names.

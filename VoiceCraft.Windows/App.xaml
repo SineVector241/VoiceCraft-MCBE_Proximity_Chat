@@ -1,0 +1,140 @@
+﻿<Application x:Class="VoiceCraft.Windows.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!--Templates-->
+        <Style x:Key="ButtonStyle"
+               TargetType="Button">
+            <Setter Property="Background" Value="#8666"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
+                                                To="#8CCC"
+                                                Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
+                                                To="{x:Null}"
+                                                Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#8AAA"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DefaultBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Background" Value="#5111" />
+            <Setter Property="Height" Value="auto" />
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <!--Icons-->
+        <DrawingImage x:Key="help_box">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M11,18L13,18 13,16 11,16 11,18 M12,6A4,4,0,0,0,8,10L10,10A2,2,0,0,1,12,8A2,2,0,0,1,14,10C14,12,11,11.75,11,15L13,15C13,12.75,16,12.5,16,10A4,4,0,0,0,12,6 M5,3L19,3A2,2,0,0,1,21,5L21,19A2,2,0,0,1,19,21L5,21A2,2,0,0,1,3,19L3,5A2,2,0,0,1,5,3z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+        
+        <DrawingImage x:Key="delete">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M19,4L15.5,4 14.5,3 9.5,3 8.5,4 5,4 5,6 19,6 M6,19A2,2,0,0,0,8,21L16,21A2,2,0,0,0,18,19L18,7 6,7 6,19z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="server_plus">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M4,4L20,4A1,1,0,0,1,21,5L21,9A1,1,0,0,1,20,10L4,10A1,1,0,0,1,3,9L3,5A1,1,0,0,1,4,4 M9,8L10,8 10,6 9,6 9,8 M5,6L5,8 7,8 7,6 5,6 M8,16L11,16 11,13 13,13 13,16 16,16 16,18 13,18 13,21 11,21 11,18 8,18 8,16z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="connection">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M21.4,7.5C22.2,8.3,22.2,9.6,21.4,10.3L18.6,13.1 10.8,5.3 13.6,2.5C14.4,1.7,15.7,1.7,16.4,2.5L18.2,4.3 21.2,1.3 22.6,2.7 19.6,5.7 21.4,7.5 M15.6,13.3L14.2,11.9 11.4,14.7 9.3,12.6 12.1,9.8 10.7,8.4 7.9,11.2 6.4,9.8 3.6,12.6C2.8,13.4,2.8,14.7,3.6,15.4L5.4,17.2 1.4,21.2 2.8,22.6 6.8,18.6 8.6,20.4C9.4,21.2,10.7,21.2,11.4,20.4L14.2,17.6 12.8,16.2 15.6,13.3z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="cog">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M12,15.5A3.5,3.5,0,0,1,8.5,12A3.5,3.5,0,0,1,12,8.5A3.5,3.5,0,0,1,15.5,12A3.5,3.5,0,0,1,12,15.5 M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12 19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22,21.78,8.95,21.66,8.73L19.66,5.27C19.54,5.05,19.27,4.96,19.05,5.05L16.56,6.05C16.04,5.66,15.5,5.32,14.87,5.07L14.5,2.42C14.46,2.18,14.25,2,14,2L10,2C9.75,2,9.54,2.18,9.5,2.42L9.13,5.07C8.5,5.32,7.96,5.66,7.44,6.05L4.95,5.05C4.73,4.96,4.46,5.05,4.34,5.27L2.34,8.73C2.21,8.95,2.27,9.22,2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12 4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78,2.21,15.05,2.34,15.27L4.34,18.73C4.46,18.95,4.73,19.03,4.95,18.95L7.44,17.94C7.96,18.34,8.5,18.68,9.13,18.93L9.5,21.58C9.54,21.82,9.75,22,10,22L14,22C14.25,22,14.46,21.82,14.5,21.58L14.87,18.93C15.5,18.67,16.04,18.34,16.56,17.94L19.05,18.95C19.27,19.03,19.54,18.95,19.66,18.73L21.66,15.27C21.78,15.05,21.73,14.78,21.54,14.63L19.43,12.97z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="arrow_right_thick">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M4,10L4,14 13,14 9.5,17.5 11.92,19.92 19.84,12 11.92,4.08 9.5,6.5 13,10 4,10z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="server">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M4,1L20,1A1,1,0,0,1,21,2L21,6A1,1,0,0,1,20,7L4,7A1,1,0,0,1,3,6L3,2A1,1,0,0,1,4,1 M4,9L20,9A1,1,0,0,1,21,10L21,14A1,1,0,0,1,20,15L4,15A1,1,0,0,1,3,14L3,10A1,1,0,0,1,4,9 M4,17L20,17A1,1,0,0,1,21,18L21,22A1,1,0,0,1,20,23L4,23A1,1,0,0,1,3,22L3,18A1,1,0,0,1,4,17 M9,5L10,5 10,3 9,3 9,5 M9,13L10,13 10,11 9,11 9,13 M9,21L10,21 10,19 9,19 9,21 M5,3L5,5 7,5 7,3 5,3 M5,11L5,13 7,13 7,11 5,11 M5,19L5,21 7,21 7,19 5,19z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="information">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M13,9L11,9 11,7 13,7 M13,17L11,17 11,11 13,11 M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="pencil">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M20.71,7.04C21.1,6.65,21.1,6,20.71,5.63L18.37,3.29C18,2.9,17.35,2.9,16.96,3.29L15.12,5.12 18.87,8.87 M3,17.25L3,21 6.75,21 17.81,9.93 14.06,6.18 3,17.25z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="arrow_left_thick">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M20,10L20,14 11,14 14.5,17.5 12.08,19.92 4.16,12 12.08,4.08 14.5,6.5 11,10 20,10z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+    </Application.Resources>
+</Application>
