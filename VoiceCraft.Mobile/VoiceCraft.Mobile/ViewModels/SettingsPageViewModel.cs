@@ -21,7 +21,22 @@ namespace VoiceCraft.Mobile.ViewModels
                 Database.SetSettings(Settings);
                 Shell.Current.DisplayAlert("Save", "Successfully saved settings!", "OK");
             }
-            catch(Exception ex)
+            catch (Exception ex)
+            {
+                Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
+            }
+        }
+
+        [RelayCommand]
+        public void ResetSettings()
+        {
+            try
+            {
+                Settings = new SettingsModel();
+                Database.SetSettings(Settings);
+                Shell.Current.DisplayAlert("Reset", "Successfully reset settings!", "OK");
+            }
+            catch (Exception ex)
             {
                 Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
             }

@@ -73,6 +73,9 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0"
                           Margin="0,5">
@@ -173,7 +176,19 @@
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <Grid Grid.Row="7"
+                    <CheckBox Content="Preferred Permanent Key Enabled"
+                              FontSize="13"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              Margin="0,5"
+                              IsChecked="{Binding Settings.PreferredPermanentKeyEnabled}"
+                              Grid.Row="7">
+                        <CheckBox.LayoutTransform>
+                            <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                        </CheckBox.LayoutTransform>
+                    </CheckBox>
+
+                    <Grid Grid.Row="8"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -198,7 +213,32 @@
                                  Grid.Column="1"/>
                     </Grid>
 
-                    <Grid Grid.Row="8"
+                    <Grid Grid.Row="9"
+                          Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Preferred Permanent Key: "
+                                   FontSize="20"
+                                   FontWeight="Bold"/>
+
+                        <TextBox FontWeight="Medium"
+                                 PreviewTextInput="NumbersOnlyTextInput"
+                                 FontSize="18"
+                                 Foreground="White"
+                                 Background="Transparent"
+                                 CaretBrush="LightGray"
+                                 BorderBrush="DarkGray"
+                                 BorderThickness="0,0,0,2"
+                                 Height="28"
+                                 Margin="0,2,0,0"
+                                 Text="{Binding Settings.PreferredPermanentKey}"
+                                 Grid.Column="1"/>
+                    </Grid>
+
+                    <Grid Grid.Row="10"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -222,7 +262,15 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="9"/>
+                            Grid.Row="11"/>
+
+                    <Button Content="Reset Settings"
+                            FontSize="15"
+                            Command="{Binding ResetCommand}"
+                            Style="{StaticResource ButtonStyle}"
+                            Height="40"
+                            Margin="0,5"
+                            Grid.Row="12"/>
                 </Grid>
 
                 <Border.Triggers>

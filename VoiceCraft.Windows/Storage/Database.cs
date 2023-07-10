@@ -82,7 +82,8 @@ namespace VoiceCraft.Windows.Storage
         public static void SetSettings(SettingsModel settings)
         {
             if (settings.WebsocketPort < 1025) throw new Exception("Websocket Port cannot be lower than 1025");
-            else if (settings.WebsocketPort > 65535) throw new Exception("Weboscket Port cannot be higher than 65535");
+            else if (settings.WebsocketPort > 65535) throw new Exception("Websocket Port cannot be higher than 65535");
+            else if (settings.PreferredPermanentKey > 65535) throw new Exception("Preferred Permanent Key cannot be higher than 65535");
             else if (settings.SoftLimiterGain < 1) throw new Exception("SoftLimiter Gain cannot be lower than 1");
             else if (settings.SoftLimiterGain > 20) throw new Exception("SoftLimiter Gain cannot be higher than 20");
             DBData.Settings = settings;

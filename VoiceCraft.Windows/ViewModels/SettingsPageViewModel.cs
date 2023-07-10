@@ -70,5 +70,20 @@ namespace VoiceCraft.Windows.ViewModels
                 MessageBox.Show($"An error occured!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        [RelayCommand]
+        public void Reset()
+        {
+            try
+            {
+                Settings = new SettingsModel();
+                Database.SetSettings(Settings);
+                MessageBox.Show("Successfully reset settings.", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occured!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

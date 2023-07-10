@@ -33,7 +33,7 @@ namespace VoiceCraft.Windows.Views
         public static bool IsValid(string str)
         {
             float i;
-            return float.TryParse(str, out i) && i >= 1 && i <= 20;
+            return float.TryParse(str, out i) && i >= 0 && i <= 65535;
         }
     }
 }
