@@ -42,7 +42,7 @@
                                Keyboard="Text"
                                Text="{Binding Server.IP}"
                                Placeholder="127.0.0.1"
-                               MaxLength="20"/>
+                               MaxLength="40"/>
 
                         <Label Margin="0,20,0,0"
                                Grid.Row="4"

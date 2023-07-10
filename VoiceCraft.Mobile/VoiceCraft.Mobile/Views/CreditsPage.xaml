@@ -29,6 +29,11 @@
                            Text="{Binding Source={Static app:App.Version}, StringFormat='Version: {0}' }"
                            FontSize="20"
                            FontAttributes="Bold" />
+
+                    <Label Grid.Row="3"
+                           Text="Codec: Opus - Concentus"
+                           FontSize="20"
+                           FontAttributes="Bold" />
                 </Grid>
             </Frame>
         </Grid>

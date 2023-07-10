@@ -136,7 +136,7 @@
                     </TextBlock>
 
                     <TextBox FontWeight="Medium"
-                             MaxLength="30"
+                             MaxLength="40"
                              FontSize="18"
                              Foreground="White"
                              Background="Transparent"

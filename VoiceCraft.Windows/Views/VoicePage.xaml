@@ -83,6 +83,7 @@
                         FontSize="15"
                         Command="{Binding DisconnectCommand}"
                         Style="{StaticResource ButtonStyle}"
+                        Background="#8A22"
                         Height="40"
                         Margin="5,0"
                         Grid.Column="0"/>

@@ -67,6 +67,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock FontWeight="Bold"
@@ -83,6 +84,11 @@
                                FontSize="18"
                                Grid.Row="2" 
                                Text="{Binding Source={x:Static app:App.Version}, StringFormat='Version: {0}'}"/>
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Grid.Row="3"
+                               Text="Codec: Opus - Concentus" />
                 </Grid>
 
                 <Border.Triggers>

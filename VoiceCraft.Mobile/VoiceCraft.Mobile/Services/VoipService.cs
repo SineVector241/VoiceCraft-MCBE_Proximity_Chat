@@ -18,6 +18,7 @@ namespace VoiceCraft.Mobile.Services
         //State Variables
         private bool IsMuted = false;
         private bool IsDeafened = false;
+        private bool SaveKey = false;
         public bool SendDisconnectPacket = false;
 
         private string StatusMessage = "Connecting...";
@@ -43,7 +44,9 @@ namespace VoiceCraft.Mobile.Services
             var server = Database.GetPassableObject<ServerModel>();
             var audioManager = DependencyService.Get<IAudioManager>();
 
-            Network = new NetworkManager(server.IP, server.Port, server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled);
+            SaveKey = !settings.PreferredPermanentKeyEnabled;
+
+            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled);
             RecordDetection = DateTime.UtcNow;
             if (settings.SoftLimiterEnabled)
             {
@@ -189,7 +192,7 @@ namespace VoiceCraft.Mobile.Services
             StatusMessage = $"Connecting Voice...\nPort: {Network.VoicePort}";
 
             var server = Database.GetPassableObject<ServerModel>();
-            if (server != null && server.Key != Key)
+            if (server != null && server.Key != Key && SaveKey)
             {
                 server.Key = Key;
                 Database.UpdateServer(server);
