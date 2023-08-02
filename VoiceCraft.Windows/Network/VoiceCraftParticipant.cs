@@ -41,12 +41,26 @@ namespace VoiceCraft.Windows.Network
             short[] decoded = new short[BufferSize / 2];
             try
             {
-                //Decode or Enable PLC if packets are lost.
-                OpusDecoder.Decode(packetsLost ? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length);
+                //Decode or Enable FEC if packets are lost.
+                //OpusDecoder.Decode(packetsLost ? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length);
+                if(packetsLost)
+                {
+                    //Decode packet with FEC ON
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
+                    audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
+                    AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
+
+                    //Decode packet with FEC OFF
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
+                }
+                else
+                {
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
+                }
                 audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
             }
-            //Declare as lost/corrupted frame.
-            catch{
+            //Declare as lost/corrupted frame and enable PLC.
+            catch {
                 OpusDecoder.Decode(null, 0, 0, decoded, 0, decoded.Length);
             }
 
