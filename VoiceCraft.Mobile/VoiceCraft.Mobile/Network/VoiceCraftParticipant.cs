@@ -33,12 +33,12 @@ namespace VoiceCraft.Mobile.Network
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
-            byte[] audioFrame = new byte[BufferSize];
-
             bool packetsLost = PacketCount - this.PacketCount != 1;
             short[] decoded = new short[BufferSize / 2];
             try
             {
+                byte[] audioFrame = new byte[BufferSize];
+
                 //Decode or Enable FEC if packets are lost.
                 if (packetsLost)
                 {
@@ -55,14 +55,14 @@ namespace VoiceCraft.Mobile.Network
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
                 }
                 audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
+
+                AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
+                this.PacketCount = PacketCount;
             }
             //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
             catch {
                 return;
             }
-
-            AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
-            this.PacketCount = PacketCount;
         }
 
         public void SetVolume(float Volume)
