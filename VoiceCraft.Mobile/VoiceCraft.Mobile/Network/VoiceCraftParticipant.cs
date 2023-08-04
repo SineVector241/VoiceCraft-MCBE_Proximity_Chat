@@ -40,7 +40,6 @@ namespace VoiceCraft.Mobile.Network
             try
             {
                 //Decode or Enable FEC if packets are lost.
-                //OpusDecoder.Decode(packetsLost ? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length);
                 if (packetsLost)
                 {
                     //Decode packet with FEC ON
@@ -57,10 +56,9 @@ namespace VoiceCraft.Mobile.Network
                 }
                 audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
             }
-            //Declare as lost/corrupted frame and enable PLC.
-            catch
-            {
-                OpusDecoder.Decode(null, 0, 0, decoded, 0, decoded.Length);
+            //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
+            catch {
+                return;
             }
 
             AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
