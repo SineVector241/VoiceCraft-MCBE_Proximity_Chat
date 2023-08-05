@@ -73,10 +73,11 @@ namespace VoiceCraft.Mobile.Network
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
-                Bitrate = 32000,
+                Bitrate = 64000,
                 Complexity = 5,
                 UseVBR = true,
-                PacketLossPercent = 40
+                PacketLossPercent = 50,
+                UseInbandFEC = true
             };
 
             //Audio Variable Assignments
