@@ -1,8 +1,6 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using System;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.Network
 {
