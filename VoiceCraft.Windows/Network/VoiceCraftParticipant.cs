@@ -35,14 +35,17 @@ namespace VoiceCraft.Windows.Network
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
-            bool packetsLost = PacketCount - this.PacketCount != 1;
+            uint packetsLost = PacketCount - (this.PacketCount + 1);
             short[] decoded = new short[BufferSize / 2];
             try
             {
                 byte[] audioFrame = new byte[BufferSize];
 
-                //Decode or Enable FEC if packets are lost.
-                if (packetsLost)
+                if(packetsLost == 0)
+                {
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
+                }
+                else if(packetsLost < 0) //Packet lost.
                 {
                     //Decode packet with FEC ON
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
@@ -52,12 +55,8 @@ namespace VoiceCraft.Windows.Network
                     //Decode packet with FEC OFF
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
                 }
-                else
-                {
-                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
-                }
-                audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
 
+                audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
                 AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
                 this.PacketCount = PacketCount;
             }
