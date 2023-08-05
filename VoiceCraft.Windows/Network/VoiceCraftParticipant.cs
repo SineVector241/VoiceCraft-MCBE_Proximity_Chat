@@ -1,8 +1,6 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using System;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.Network
 {
@@ -35,23 +33,36 @@ namespace VoiceCraft.Windows.Network
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
-            byte[] audioFrame = new byte[BufferSize];
-
-            bool packetsLost = PacketCount - this.PacketCount != 1;
+            uint packetsLost = PacketCount - (this.PacketCount + 1);
             short[] decoded = new short[BufferSize / 2];
             try
             {
-                //Decode or Enable PLC if packets are lost.
-                OpusDecoder.Decode(packetsLost ? null : Audio, 0, packetsLost ? 0 : Audio.Length, decoded, 0, decoded.Length);
-                audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
-            }
-            //Declare as lost/corrupted frame.
-            catch{
-                OpusDecoder.Decode(null, 0, 0, decoded, 0, decoded.Length);
-            }
+                byte[] audioFrame = new byte[BufferSize];
 
-            AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
-            this.PacketCount = PacketCount;
+                if(packetsLost == 0)
+                {
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
+                }
+                else if(packetsLost < 0) //Packet lost.
+                {
+                    //Decode packet with FEC ON
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
+                    audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
+                    AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
+
+                    //Decode packet with FEC OFF
+                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
+                }
+
+                audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
+                AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
+                this.PacketCount = PacketCount;
+            }
+            //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
+            catch
+            {
+                return;
+            }
         }
 
         public void SetVolume(float Volume)
