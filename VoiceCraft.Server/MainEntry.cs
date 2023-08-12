@@ -6,7 +6,7 @@ namespace VoiceCraft.Server
     public class MainEntry
     {
         readonly CancellationTokenSource CTS = new CancellationTokenSource();
-        public const string Version = "v1.4.0-alpha";
+        public const string Version = "v1.4.1-alpha";
 
         public MainEntry()
         {
