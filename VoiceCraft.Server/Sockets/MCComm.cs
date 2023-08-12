@@ -218,6 +218,7 @@ namespace VoiceCraft.Server.Sockets
         public string DimensionId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
         public float Rotation { get; set; }
+        public float CaveDensity { get; set; }
     }
 
     public class ServerSettings

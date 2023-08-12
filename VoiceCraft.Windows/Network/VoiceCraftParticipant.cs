@@ -1,6 +1,7 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using VoiceCraft.Windows.Audio;
 
 namespace VoiceCraft.Windows.Network
 {
@@ -12,6 +13,7 @@ namespace VoiceCraft.Windows.Network
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
+        public EffectsSampleProvider EffectsProvider;
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
@@ -27,7 +29,9 @@ namespace VoiceCraft.Windows.Network
 
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
-            AudioProvider = new MonoToStereoSampleProvider(FloatProvider.ToSampleProvider());
+            EffectsProvider = new EffectsSampleProvider(FloatProvider.ToSampleProvider());
+            EffectsProvider.Effects.Add(new EchoEffect());
+            AudioProvider = new MonoToStereoSampleProvider(EffectsProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 

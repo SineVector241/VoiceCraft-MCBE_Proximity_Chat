@@ -1,6 +1,7 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using VoiceCraft.Mobile.Audio;
 
 namespace VoiceCraft.Mobile.Network
 {
@@ -12,6 +13,7 @@ namespace VoiceCraft.Mobile.Network
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
+        public EffectsSampleProvider EffectsProvider;
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
@@ -27,7 +29,9 @@ namespace VoiceCraft.Mobile.Network
 
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
-            AudioProvider = new MonoToStereoSampleProvider(FloatProvider.ToSampleProvider());
+            EffectsProvider = new EffectsSampleProvider(FloatProvider.ToSampleProvider());
+            EffectsProvider.Effects.Add(new EchoEffect());
+            AudioProvider = new MonoToStereoSampleProvider(EffectsProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 
@@ -39,11 +43,11 @@ namespace VoiceCraft.Mobile.Network
             {
                 byte[] audioFrame = new byte[BufferSize];
 
-                if (packetsLost == 0)
+                if(packetsLost == 0)
                 {
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
                 }
-                else if (packetsLost < 0) //Packet lost.
+                else if(packetsLost < 0) //Packet lost.
                 {
                     //Decode packet with FEC ON
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
