@@ -146,6 +146,7 @@ namespace VoiceCraft.Server.Sockets
 
                                 ServerProperties.Properties.ProximityDistance = json.Settings.ProximityDistance;
                                 ServerProperties.Properties.ProximityToggle = json.Settings.ProximityToggle;
+                                ServerProperties.Properties.VoiceEffects = json.Settings.VoiceEffects;
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
                                 break;
 
@@ -155,7 +156,8 @@ namespace VoiceCraft.Server.Sockets
                                     Settings = new ServerSettings()
                                     {
                                         ProximityDistance = ServerProperties.Properties.ProximityDistance,
-                                        ProximityToggle = ServerProperties.Properties.ProximityToggle
+                                        ProximityToggle = ServerProperties.Properties.ProximityToggle,
+                                        VoiceEffects = ServerProperties.Properties.VoiceEffects
                                     }
                                 };
 
@@ -225,10 +227,7 @@ namespace VoiceCraft.Server.Sockets
     {
         public int ProximityDistance { get; set; } = 30;
         public bool ProximityToggle { get; set; } = false;
-        /*
-         * Coming Soon!
-        public bool SoundEffects { get; set; } = false;
-        */
+        public bool VoiceEffects { get; set; } = false;
     }
 
     public enum PacketType
