@@ -102,7 +102,7 @@ namespace VoiceCraft.Server
                             //Thread safety
                             Parallel.ForEach(p1, participant =>
                             {
-                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value?.Binded}, IsMuted: {participant.Value?.Muted}, Name: {participant.Value?.MinecraftData.Gamertag}, Dimension: {participant.Value?.MinecraftData.DimensionId}, Position: {participant.Value?.MinecraftData.Position}, Rotation: {participant.Value?.MinecraftData.Rotation}", nameof(MainEntry));
+                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value?.Binded}, IsMuted: {participant.Value?.Muted}, Name: {participant.Value?.MinecraftData.Gamertag}, Dimension: {participant.Value?.MinecraftData.DimensionId}, Position: {participant.Value?.MinecraftData.Position}, Rotation: {participant.Value?.MinecraftData.Rotation}, CaveDensity: {participant.Value?.MinecraftData.CaveDensity}", nameof(MainEntry));
                             });
                             break;
                         case "mute":

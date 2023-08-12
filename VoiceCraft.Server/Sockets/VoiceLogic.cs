@@ -49,6 +49,7 @@ namespace VoiceCraft.Server.Sockets
                             Packet.PacketPosition = vec;
                             Packet.PacketKey = audioparticipant.Key;
                             Packet.PacketDistance = (ushort)ServerProperties.Properties.ProximityDistance;
+                            Packet.PacketEchoFactor = audioparticipant.Value.MinecraftData.CaveDensity * (Vector3.Distance(LocalPlayerCoordinates, AudioSourceCoordinates) / ServerProperties.Properties.ProximityDistance);
                             SendPacket(Packet, participant.Value.SocketData.VoiceAddress);
                         }
                     }

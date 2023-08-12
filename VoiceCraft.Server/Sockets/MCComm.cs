@@ -132,6 +132,9 @@ namespace VoiceCraft.Server.Sockets
 
                                         if(vcParticipant.MinecraftData.Rotation != player.Rotation)
                                             vcParticipant.MinecraftData.Rotation = player.Rotation;
+
+                                        if (vcParticipant.MinecraftData.CaveDensity != player.CaveDensity)
+                                            vcParticipant.MinecraftData.CaveDensity = player.CaveDensity;
                                     }
                                 }
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated");
