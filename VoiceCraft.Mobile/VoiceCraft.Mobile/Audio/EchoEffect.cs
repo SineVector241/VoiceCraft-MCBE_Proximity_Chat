@@ -24,7 +24,10 @@ namespace VoiceCraft.Mobile.Audio
         public float ApplyEffect(float sample)
         {
             Samples.Enqueue(sample);
-            return Math.Min(1, Math.Max(-1, sample + EchoFactor * Samples.Dequeue()));
+            if (EchoFactor != 0.0f)
+                return Math.Min(1, Math.Max(-1, sample + EchoFactor * Samples.Dequeue()));
+            else
+                return sample;
         }
     }
 }
