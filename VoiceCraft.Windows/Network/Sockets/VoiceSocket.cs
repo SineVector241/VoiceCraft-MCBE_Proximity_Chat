@@ -107,8 +107,7 @@ namespace VoiceCraft.Windows.Network.Sockets
                                 var echo = echoEffect as EchoEffect;
                                 if (echo != null)
                                 {
-                                    echo.EchoFactor = 0.0f;
-                                    Debug.WriteLine(echo.EchoFactor);
+                                    echo.EchoFactor = Packet.PacketEchoFactor;
                                 }
                             }
                             if (!NM.ClientSided && NM.DirectionalHearing)
