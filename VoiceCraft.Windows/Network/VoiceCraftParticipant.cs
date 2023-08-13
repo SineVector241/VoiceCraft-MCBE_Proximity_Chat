@@ -13,7 +13,7 @@ namespace VoiceCraft.Windows.Network
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
-        public EffectsSampleProvider EffectsProvider;
+        public EchoSampleProvider EchoProvider;
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
@@ -29,9 +29,8 @@ namespace VoiceCraft.Windows.Network
 
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
-            EffectsProvider = new EffectsSampleProvider(FloatProvider.ToSampleProvider());
-            EffectsProvider.Effects.Add(new EchoEffect());
-            AudioProvider = new MonoToStereoSampleProvider(EffectsProvider);
+            EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
+            AudioProvider = new MonoToStereoSampleProvider(EchoProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 

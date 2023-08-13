@@ -101,15 +101,7 @@ namespace VoiceCraft.Windows.Network.Sockets
                             var volume = 1 - Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
                             participant.SetVolume(volume);
                             var rotationSource = Math.Atan2(Packet.PacketPosition.X, Packet.PacketPosition.Z);
-                            var echoEffect = participant.EffectsProvider.Effects.FirstOrDefault();
-                            if(echoEffect != null && echoEffect is EchoEffect)
-                            {
-                                var echo = echoEffect as EchoEffect;
-                                if (echo != null)
-                                {
-                                    echo.EchoFactor = Packet.PacketEchoFactor;
-                                }
-                            }
+                            var echoEffect = participant.EchoProvider.EchoFactor = Packet.PacketEchoFactor;
                             if (!NM.ClientSided && NM.DirectionalHearing)
                             {
                                 participant.AudioProvider.RightVolume = (float)(0.5 + Math.Sin(rotationSource) * 0.5);
