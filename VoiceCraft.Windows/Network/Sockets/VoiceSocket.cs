@@ -3,9 +3,6 @@ using System;
 using System.Threading.Tasks;
 using VoiceCraft.Windows.Network.Packets;
 using System.Numerics;
-using System.Linq;
-using VoiceCraft.Windows.Audio;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.Network.Sockets
 {
@@ -99,7 +96,7 @@ namespace VoiceCraft.Windows.Network.Sockets
                         if (participant != null && Packet.PacketAudio != null)
                         {
                             var volume = 1 - Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
-                            participant.SetVolume(volume);
+                            participant.SetVolume(NM.LinearVolume? (float)((Math.Exp(volume) - 1) / (Math.E - 1)) : volume);
                             var rotationSource = Math.Atan2(Packet.PacketPosition.X, Packet.PacketPosition.Z);
                             var echoEffect = participant.EchoProvider.EchoFactor = Packet.PacketEchoFactor;
                             if (!NM.ClientSided && NM.DirectionalHearing)

@@ -46,7 +46,7 @@ namespace VoiceCraft.Mobile.Services
 
             SaveKey = !settings.PreferredPermanentKeyEnabled;
 
-            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled);
+            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled, settings.LinearVolume);
             RecordDetection = DateTime.UtcNow;
             if (settings.SoftLimiterEnabled)
             {

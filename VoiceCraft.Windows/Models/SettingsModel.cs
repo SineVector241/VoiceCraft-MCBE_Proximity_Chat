@@ -11,6 +11,7 @@
         public bool PinpointPlayerAccuracyEnabled { get; set; }
         public bool ClientSidedPositioning { get; set; }
         public bool PreferredPermanentKeyEnabled { get; set; }
+        public bool LinearVolume { get; set; }
         public bool SoftLimiterEnabled { get; set; } = true;
     }
 }

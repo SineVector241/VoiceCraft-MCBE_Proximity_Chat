@@ -21,6 +21,7 @@ namespace VoiceCraft.Windows.Network
         public readonly int Port;
         public readonly bool ClientSided;
         public readonly bool DirectionalHearing;
+        public readonly bool LinearVolume;
         public readonly ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants;
         public bool Disconnecting { get; private set; }
         public ushort Key { get; private set; }
@@ -61,7 +62,7 @@ namespace VoiceCraft.Windows.Network
         public event ParticipantLeft? OnParticipantLeft;
         public event Disconnect? OnDisconnect;
 
-        public NetworkManager(string IP, int Port, ushort Key, bool ClientSided = false, bool DirectionalHearing = false, int RecordLengthMS = 40)
+        public NetworkManager(string IP, int Port, ushort Key, bool ClientSided = false, bool DirectionalHearing = false, bool LinearVolume = false, int RecordLengthMS = 40)
         {
             //Variable Assignments
             this.IP = IP;
@@ -69,6 +70,7 @@ namespace VoiceCraft.Windows.Network
             this.Key = Key;
             this.ClientSided = ClientSided;
             this.DirectionalHearing = DirectionalHearing;
+            this.LinearVolume = LinearVolume;
             Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
