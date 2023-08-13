@@ -29,7 +29,7 @@ namespace VoiceCraft.Mobile.Network
 
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
-            EchoProvider = new EffectsSampleProvider(FloatProvider.ToSampleProvider());
+            EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
             AudioProvider = new MonoToStereoSampleProvider(EchoProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
