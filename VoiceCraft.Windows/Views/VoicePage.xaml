@@ -76,7 +76,8 @@
                                            FontWeight="Bold"
                                            FontSize="22"
                                            VerticalAlignment="Center"
-                                           Grid.Column="0"/>
+                                           Grid.Column="0"
+                                           Margin="0,0,10,0"/>
                                 <Slider Grid.Column="1"
                                         Minimum="0.0"
                                         Maximum="2.0"
