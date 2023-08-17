@@ -1,6 +1,7 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using System;
 using VoiceCraft.Windows.Audio;
 
 namespace VoiceCraft.Windows.Network
@@ -8,8 +9,10 @@ namespace VoiceCraft.Windows.Network
     public class VoiceCraftParticipant
     {
         private readonly int BufferSize;
+        public DateTime LastSpoke { get; private set; }
 
         public string Name { get; }
+        public float Volume { get; set; }
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
@@ -60,6 +63,7 @@ namespace VoiceCraft.Windows.Network
                 audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
                 AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
                 this.PacketCount = PacketCount;
+                LastSpoke = DateTime.UtcNow;
             }
             //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
             catch

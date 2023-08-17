@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using VoiceCraft.Mobile.Models;
 
 namespace VoiceCraft.Mobile.Services
 {
@@ -27,7 +28,7 @@ namespace VoiceCraft.Mobile.Services
 
     public class UpdateUIMessage
     {
-        public List<string> Participants { get; set; } = new List<string>();
+        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
         public string StatusMessage { get; set; } = "";
         public bool IsMuted { get; set; }
         public bool IsDeafened { get; set; }

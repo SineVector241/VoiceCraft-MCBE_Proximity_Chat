@@ -6,6 +6,8 @@ using VoiceCraft.Windows.Services;
 using CommunityToolkit.Mvvm.Input;
 using VoiceCraft.Windows.Storage;
 using System.Windows;
+using VoiceCraft.Windows.Network;
+using VoiceCraft.Windows.Models;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -27,7 +29,7 @@ namespace VoiceCraft.Windows.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ObservableCollection<string> participants = new ObservableCollection<string>();
+        ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         public VoicePageViewModel()
         {
@@ -49,7 +51,7 @@ namespace VoiceCraft.Windows.ViewModels
             if (IsSpeaking != Data.IsSpeaking)
                 IsSpeaking = Data.IsSpeaking;
 
-            Participants = new ObservableCollection<string>(Data.Participants);
+            Participants = new ObservableCollection<ParticipantDisplayModel>(Data.Participants);
         }
 
         private void OnServiceDisconnect(string? Reason)

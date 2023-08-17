@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Services;
 using Xamarin.Essentials;
 using Xamarin.Forms;
@@ -22,7 +23,7 @@ namespace VoiceCraft.Mobile.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ObservableCollection<string> participants = new ObservableCollection<string>();
+        ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         [RelayCommand]
         public void MuteUnmute()
@@ -79,7 +80,7 @@ namespace VoiceCraft.Mobile.ViewModels
                 if (IsSpeaking != message.IsSpeaking)
                     IsSpeaking = message.IsSpeaking;
 
-                Participants = new ObservableCollection<string>(message.Participants);
+                Participants = new ObservableCollection<ParticipantDisplayModel>(message.Participants);
             });
 
             MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>

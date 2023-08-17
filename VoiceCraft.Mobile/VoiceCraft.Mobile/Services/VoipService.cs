@@ -89,12 +89,17 @@ namespace VoiceCraft.Mobile.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = Network.Participants.Select(x => x.Value.Name).ToList(),
+                                Participants = new System.Collections.Generic.List<ParticipantDisplayModel>(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
                                 IsDeafened = IsDeafened,
                                 IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
                             };
+
+                            foreach (var participant in Network.Participants)
+                            {
+                                message.Participants.Add(new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(participant.Value.LastSpoke).TotalMilliseconds <= 100, Name = participant.Value.Name });
+                            }
                             Device.BeginInvokeOnMainThread(() =>
                             {
                                 OnUpdate?.Invoke(message);

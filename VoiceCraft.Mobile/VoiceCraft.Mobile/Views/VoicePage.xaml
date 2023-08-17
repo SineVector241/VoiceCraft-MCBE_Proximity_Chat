@@ -30,13 +30,24 @@
                         <Grid>
                             <Frame Margin="0,10"
                                    Padding="20"
-                                   VerticalOptions="StartAndExpand"
-                                   BorderColor="Transparent">
-                                <Label Text="{Binding}"
+                                   VerticalOptions="StartAndExpand">
+                                <Label Text="{Binding Name}"
                                        FontAttributes="Bold"
                                        FontSize="22"
                                        VerticalTextAlignment="Center">
                                 </Label>
+                                <Frame.Style>
+                                    <Style TargetType="Frame">
+                                        <Style.Triggers>
+                                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="True">
+                                                <Setter Property="BorderColor" Value="#58F3" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="False">
+                                                <Setter Property="BorderColor" Value="#5111" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Frame.Style>
                             </Frame>
                         </Grid>
                     </DataTemplate>

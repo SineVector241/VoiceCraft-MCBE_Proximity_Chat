@@ -49,20 +49,53 @@
                   ItemsSource="{Binding Participants}"
                   Background="Transparent"
                   BorderBrush="Transparent"
-                  IsHitTestVisible="False"
                   HorizontalContentAlignment="Stretch">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
-                        <Border Style="{StaticResource DefaultBorder}"
-                                Padding="10"
+                        <Border Padding="10"
                                 Margin="0"
                                 HorizontalAlignment="Stretch">
-                            <TextBlock Text="{Binding}"
-                                       FontWeight="Bold"
-                                       FontSize="22"
-                                       VerticalAlignment="Center">
-                            </TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="Bold"
+                                           FontSize="22"
+                                           VerticalAlignment="Center"
+                                           Grid.Column="0"/>
+                                <Slider Grid.Column="1"
+                                        Minimum="0.0"
+                                        Maximum="2.0"
+                                        VerticalAlignment="Center"/>
+
+                            </Grid>
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
+                                    <Setter Property="BorderThickness" Value="5" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#58F3" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsSpeaking}" Value="False">
+                                            <Setter Property="BorderBrush" Value="#5111" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                         </Border>
                     </Grid>
                 </DataTemplate>
