@@ -6,8 +6,9 @@ using VoiceCraft.Windows.Services;
 using CommunityToolkit.Mvvm.Input;
 using VoiceCraft.Windows.Storage;
 using System.Windows;
-using VoiceCraft.Windows.Network;
 using VoiceCraft.Windows.Models;
+using System.Linq;
+using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -51,7 +52,26 @@ namespace VoiceCraft.Windows.ViewModels
             if (IsSpeaking != Data.IsSpeaking)
                 IsSpeaking = Data.IsSpeaking;
 
-            Participants = new ObservableCollection<ParticipantDisplayModel>(Data.Participants);
+            foreach(var participant in Data.Participants)
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
+                if (displayParticipant != null)
+                {
+                    if(displayParticipant.IsSpeaking != participant.IsSpeaking)
+                        displayParticipant.IsSpeaking = participant.IsSpeaking;
+                    if (displayParticipant.Name != participant.Name)
+                        displayParticipant.Name = participant.Name;
+                }
+                else
+                {
+                    Participants.Add(participant);
+                }
+            }
+            for(int i = 0; i < Participants.Count; i++)
+            {
+                if (!Data.Participants.Exists(x => x.Key == Participants[i].Key))
+                    Participants.RemoveAt(i);
+            }
         }
 
         private void OnServiceDisconnect(string? Reason)

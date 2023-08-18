@@ -87,13 +87,13 @@ namespace VoiceCraft.Windows.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).Milliseconds <= 100, Name = x.Value.Name }).ToList(),
+                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Name = x.Value.Name, Key = x.Key }).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
                                 IsDeafened = IsDeafened,
-                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
+                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
                             };
-                            App.Current.Dispatcher.Invoke(() =>
+                            App.Current?.Dispatcher.Invoke(() =>
                             {
                                 OnUpdate?.Invoke(message);
                             });
@@ -101,7 +101,7 @@ namespace VoiceCraft.Windows.Services
                         catch (Exception ex)
                         {
                             Console.WriteLine(ex);
-                            App.Current.Dispatcher.Invoke(() =>
+                            App.Current?.Dispatcher.Invoke(() =>
                             {
                                 var message = new ServiceErrorMessage() { Exception = ex };
                                 OnServiceDisconnect?.Invoke(ex.Message);
@@ -173,7 +173,7 @@ namespace VoiceCraft.Windows.Services
                 RecordDetection = DateTime.UtcNow;
             }
 
-            if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
+            if (DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1)
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
@@ -195,7 +195,7 @@ namespace VoiceCraft.Windows.Services
                 Database.UpdateServer(server);
             }
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
                 OnUpdate?.Invoke(message);
@@ -206,7 +206,7 @@ namespace VoiceCraft.Windows.Services
         {
             StatusMessage = Network.ClientSided ? "Voice Connected\nWaiting for MCWSS Connection..." : $"Connected - Key:{Network.Key}\nWaiting for binding...";
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
                 OnUpdate?.Invoke(message);
@@ -217,7 +217,7 @@ namespace VoiceCraft.Windows.Services
         {
             StatusMessage = "Connected\n<Username>";
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
                 OnUpdate?.Invoke(message);
@@ -228,7 +228,7 @@ namespace VoiceCraft.Windows.Services
         {
             StatusMessage = "MCWSS Disconnected!\nWaiting for reconnection...";
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
                 OnUpdate?.Invoke(message);
@@ -244,7 +244,7 @@ namespace VoiceCraft.Windows.Services
             AudioRecorder.StartRecording();
             AudioPlayer.Play();
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
                 OnUpdate?.Invoke(message);
@@ -253,7 +253,7 @@ namespace VoiceCraft.Windows.Services
 
         private void OnDisconnect(string? Reason = null)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current?.Dispatcher.Invoke(() =>
             {
                 OnServiceDisconnect?.Invoke(Reason);
             });

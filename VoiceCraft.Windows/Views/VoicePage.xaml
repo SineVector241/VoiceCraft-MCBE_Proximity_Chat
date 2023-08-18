@@ -5,7 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
       mc:Ignorable="d" 
-      Title="VoicePage">
+      Title="VoicePage"
+      x:Name="Voice">
     <Page.DataContext>
         <vm:VoicePageViewModel />
     </Page.DataContext>
@@ -78,11 +79,13 @@
                                            VerticalAlignment="Center"
                                            Grid.Column="0"
                                            Margin="0,0,10,0"/>
-                                <Slider Grid.Column="1"
-                                        Minimum="0.0"
-                                        Maximum="2.0"
-                                        VerticalAlignment="Center"/>
-
+                                <Button Style="{StaticResource ButtonStyle}"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Right">
+                                    <Image Source="{StaticResource volume_medium}"
+                                           Width="35"
+                                           Height="35"/>
+                                </Button>
                             </Grid>
                             <Border.Style>
                                 <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">

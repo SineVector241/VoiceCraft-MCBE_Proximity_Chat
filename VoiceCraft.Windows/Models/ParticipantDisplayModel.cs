@@ -1,8 +1,16 @@
-﻿namespace VoiceCraft.Windows.Models
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace VoiceCraft.Windows.Models
 {
-    public class ParticipantDisplayModel
+    public partial class ParticipantDisplayModel : ObservableObject
     {
-        public string Name { get; set; } = "";
-        public bool IsSpeaking { get; set; }
+        [ObservableProperty]
+        public string name = "";
+        [ObservableProperty]
+        public bool isSpeaking;
+        [ObservableProperty]
+        public ushort key;
+        [ObservableProperty]
+        public float volume;
     }
 }

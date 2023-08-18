@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using VoiceCraft.Windows.ViewModels;
 
 namespace VoiceCraft.Windows.Views

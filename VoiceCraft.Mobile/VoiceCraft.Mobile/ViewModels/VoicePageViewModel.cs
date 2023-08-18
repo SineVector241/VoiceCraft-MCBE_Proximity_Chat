@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Linq;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Services;
 using Xamarin.Essentials;
@@ -80,7 +81,26 @@ namespace VoiceCraft.Mobile.ViewModels
                 if (IsSpeaking != message.IsSpeaking)
                     IsSpeaking = message.IsSpeaking;
 
-                Participants = new ObservableCollection<ParticipantDisplayModel>(message.Participants);
+                foreach (var participant in message.Participants)
+                {
+                    var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
+                    if (displayParticipant != null)
+                    {
+                        if (displayParticipant.IsSpeaking != participant.IsSpeaking)
+                            displayParticipant.IsSpeaking = participant.IsSpeaking;
+                        if (displayParticipant.Name != participant.Name)
+                            displayParticipant.Name = participant.Name;
+                    }
+                    else
+                    {
+                        Participants.Add(participant);
+                    }
+                }
+                for (int i = 0; i < Participants.Count; i++)
+                {
+                    if (!message.Participants.Exists(x => x.Key == Participants[i].Key))
+                        Participants.RemoveAt(i);
+                }
             });
 
             MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>

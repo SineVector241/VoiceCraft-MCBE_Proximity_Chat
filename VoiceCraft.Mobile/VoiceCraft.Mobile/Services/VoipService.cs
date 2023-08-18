@@ -29,7 +29,7 @@ namespace VoiceCraft.Mobile.Services
         private DateTime RecordDetection;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
-        private SoftLimiter Normalizer;
+        private SoftLimiter? Normalizer;
 
         //Events
         public delegate void Update(UpdateUIMessage Data);
@@ -89,17 +89,12 @@ namespace VoiceCraft.Mobile.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = new System.Collections.Generic.List<ParticipantDisplayModel>(),
+                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Name = x.Value.Name, Key = x.Key }).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
                                 IsDeafened = IsDeafened,
-                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
+                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
                             };
-
-                            foreach (var participant in Network.Participants)
-                            {
-                                message.Participants.Add(new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(participant.Value.LastSpoke).TotalMilliseconds <= 100, Name = participant.Value.Name });
-                            }
                             Device.BeginInvokeOnMainThread(() =>
                             {
                                 OnUpdate?.Invoke(message);
@@ -180,7 +175,7 @@ namespace VoiceCraft.Mobile.Services
                 RecordDetection = DateTime.UtcNow;
             }
 
-            if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
+            if (DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1)
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
