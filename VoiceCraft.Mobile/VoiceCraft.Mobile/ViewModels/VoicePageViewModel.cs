@@ -24,6 +24,12 @@ namespace VoiceCraft.Mobile.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
+        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
+
+        [ObservableProperty]
+        bool showSlider = false;
+
+        [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         [RelayCommand]
@@ -88,8 +94,6 @@ namespace VoiceCraft.Mobile.ViewModels
                     {
                         if (displayParticipant.IsSpeaking != participant.IsSpeaking)
                             displayParticipant.IsSpeaking = participant.IsSpeaking;
-                        if (displayParticipant.Name != participant.Name)
-                            displayParticipant.Name = participant.Name;
                     }
                     else
                     {
@@ -119,6 +123,23 @@ namespace VoiceCraft.Mobile.ViewModels
             MessagingCenter.Unsubscribe<StopServiceMessage>(this, "ServiceStopped");
             MessagingCenter.Unsubscribe<UpdateUIMessage>(this, "Update");
             MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnected");
+        }
+
+        [RelayCommand]
+        public void ShowParticipantVolume(ushort key)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Key == key);
+            if (participant != null)
+            {
+                SelectedParticipant = participant;
+                ShowSlider = true;
+            }
+        }
+
+        [RelayCommand]
+        public void HideParticipantVolume()
+        {
+            ShowSlider = false;
         }
     }
 }

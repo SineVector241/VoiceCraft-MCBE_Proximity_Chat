@@ -11,9 +11,29 @@ namespace VoiceCraft.Mobile.Network
         private readonly int BufferSize;
         public DateTime LastSpoke { get; private set; }
 
-        public string Name { get; }
-        public uint PacketCount { get; private set; }
+        private float volume = 1.0f;
+        private float proximityVolume = 0.0f;
 
+        public string Name { get; }
+        public float Volume
+        {
+            get { return volume; }
+            set
+            {
+                volume = value;
+                UpdateVolume();
+            }
+        }
+        public float ProximityVolume
+        {
+            get { return proximityVolume; }
+            set
+            {
+                proximityVolume = value;
+                UpdateVolume();
+            }
+        }
+        public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
         public EchoSampleProvider EchoProvider;
@@ -45,11 +65,11 @@ namespace VoiceCraft.Mobile.Network
             {
                 byte[] audioFrame = new byte[BufferSize];
 
-                if(packetsLost == 0)
+                if (packetsLost == 0)
                 {
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
                 }
-                else if(packetsLost < 0) //Packet lost.
+                else if (packetsLost < 0) //Packet lost.
                 {
                     //Decode packet with FEC ON
                     OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
@@ -72,12 +92,12 @@ namespace VoiceCraft.Mobile.Network
             }
         }
 
-        public void SetVolume(float Volume)
+        //Private Methods
+        private void UpdateVolume()
         {
-            FloatProvider.Volume = Volume;
+            FloatProvider.Volume = proximityVolume * volume;
         }
 
-        //Private Methods
         private static byte[] ShortsToBytes(short[] input, int offset, int length)
         {
             byte[] processedValues = new byte[length * 2];

@@ -47,7 +47,6 @@ namespace VoiceCraft.Mobile.Services
             SaveKey = !settings.PreferredPermanentKeyEnabled;
 
             Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled, settings.LinearVolume);
-            RecordDetection = DateTime.UtcNow;
             if (settings.SoftLimiterEnabled)
             {
                 Normalizer = new SoftLimiter(Network.Mixer);
@@ -75,8 +74,6 @@ namespace VoiceCraft.Mobile.Services
 
                 AudioRecorder.DataAvailable += DataAvailable;
 
-                RecordDetection = DateTime.UtcNow;
-
                 try
                 {
                     Network.StartConnect();
@@ -89,7 +86,7 @@ namespace VoiceCraft.Mobile.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Name = x.Value.Name, Key = x.Key }).ToList(),
+                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Participant = x.Value }).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
                                 IsDeafened = IsDeafened,

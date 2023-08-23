@@ -8,7 +8,6 @@ using VoiceCraft.Windows.Storage;
 using System.Windows;
 using VoiceCraft.Windows.Models;
 using System.Linq;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -28,6 +27,12 @@ namespace VoiceCraft.Windows.ViewModels
 
         [ObservableProperty]
         bool isSpeaking = false;
+
+        [ObservableProperty]
+        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
+
+        [ObservableProperty]
+        bool showSlider = false;
 
         [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
@@ -59,8 +64,6 @@ namespace VoiceCraft.Windows.ViewModels
                 {
                     if(displayParticipant.IsSpeaking != participant.IsSpeaking)
                         displayParticipant.IsSpeaking = participant.IsSpeaking;
-                    if (displayParticipant.Name != participant.Name)
-                        displayParticipant.Name = participant.Name;
                 }
                 else
                 {
@@ -119,6 +122,23 @@ namespace VoiceCraft.Windows.ViewModels
         {
             IsDeafened = !IsDeafened;
             voipService.DeafenUndeafen();
+        }
+
+        [RelayCommand]
+        public void ShowParticipantVolume(ushort key)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Key == key);
+            if(participant != null)
+            {
+                SelectedParticipant = participant;
+                ShowSlider = true;
+            }
+        }
+
+        [RelayCommand]
+        public void HideParticipantVolume()
+        {
+            ShowSlider = false;
         }
     }
 }

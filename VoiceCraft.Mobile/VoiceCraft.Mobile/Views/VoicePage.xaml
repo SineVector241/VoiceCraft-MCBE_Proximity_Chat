@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
+             xmlns:Animations="clr-namespace:VoiceCraft.Mobile.Animations"
              x:Class="VoiceCraft.Mobile.Views.VoicePage"
              Shell.TabBarIsVisible="False"
              x:Name="Voice">
@@ -14,7 +15,7 @@
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                Aspect="AspectFill"/>
 
-        <Grid Grid.RowDefinitions="auto, *, auto">
+        <Grid Grid.RowDefinitions="auto, *">
             <Frame>
                 <Label Text="{Binding StatusText}" 
                        FontSize="25"
@@ -37,7 +38,7 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Label Text="{Binding Name}"
+                                    <Label Text="{Binding Participant.Name}"
                                            FontAttributes="Bold"
                                            FontSize="22"
                                            VerticalTextAlignment="Center">
@@ -49,7 +50,9 @@
                                                  HorizontalOptions="EndAndExpand"
                                                  Grid.Column="1"
                                                  WidthRequest="28"
-                                                 HeightRequest="28"/>
+                                                 HeightRequest="28"
+                                                 Command="{Binding Source={x:Reference Voice}, Path=BindingContext.ShowParticipantVolumeCommand}"
+                                                 CommandParameter="{Binding Key}"/>
                                 </Grid>
                                 <Frame.Style>
                                     <Style TargetType="Frame">
@@ -68,70 +71,141 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+        </Grid>
+        <Frame VerticalOptions="EndAndExpand">
+            <Grid ColumnDefinitions="*, *, *">
+                <Button Grid.Column="0"
+                        Text="Disconnect"
+                        BackgroundColor="{AppThemeBinding Dark=#8A22, Light=#8F44}"
+                        Command="{Binding DisconnectCommand}"/>
 
-            <Frame Grid.Row="2"
-                   VerticalOptions="EndAndExpand">
-                <Grid ColumnDefinitions="*, *, *">
-                    <Button Grid.Column="0"
-                            Text="Disconnect"
-                            BackgroundColor="{AppThemeBinding Dark=#8A22, Light=#8F44}"
-                            Command="{Binding DisconnectCommand}"/>
+                <Button Grid.Column="1"
+                        Command="{Binding MuteUnmuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="True">
+                                    <Setter Property="Text" Value="Unmute" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
+                                    <Setter Property="Text" Value="Mute" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Grid.Column="2"
+                        Command="{Binding DeafenUndeafenCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
+                                    <Setter Property="Text" Value="Deafen" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
+                                    <Setter Property="Text" Value="Undeafen" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+
+            <Frame.Style>
+                <Style TargetType="Frame">
+                    <Setter Property="CornerRadius" Value="5" />
+                    <Setter Property="Margin" Value="10" />
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                    <Setter Property="VerticalOptions" Value="StartAndExpand" />
+
+                    <Style.Triggers>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#46C6, Light=#66C6}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="False">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                        </DataTrigger>
+
+                        <DataTrigger TargetType="Frame" Binding="{Binding ShowSlider}" Value="False">
+                            <DataTrigger.EnterActions>
+                                <Animations:UnhideAction/>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <Animations:HideAction/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Frame.Style>
+        </Frame>
+
+        <Frame Padding="10"
+               VerticalOptions="EndAndExpand"
+               TranslationY="300">
+            <Grid>
+                <Grid Grid.Row="0">
+                    <Label x:Name="VolumeDisplay"
+                           Grid.Column="0"
+                           Padding="2"
+                           HorizontalTextAlignment="Start"
+                           FontSize="20"
+                           VerticalOptions="Center"
+                           FontAttributes="Bold">
+                        <Label.Text>
+                            <MultiBinding StringFormat="{}{0} : {1:F2}">
+                                <Binding Path="SelectedParticipant.Participant.Name"/>
+                                <Binding Path="SelectedParticipant.Participant.Volume"/>
+                            </MultiBinding>
+                        </Label.Text>
+                    </Label>
 
                     <Button Grid.Column="1"
-                            Command="{Binding MuteUnmuteCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="True">
-                                        <Setter Property="Text" Value="Unmute" />
-                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsMuted}" Value="False">
-                                        <Setter Property="Text" Value="Mute" />
-                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Grid.Column="2"
-                            Command="{Binding DeafenUndeafenCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
-                                        <Setter Property="Text" Value="Deafen" />
-                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
-                                        <Setter Property="Text" Value="Undeafen" />
-                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
+                            Text="X"
+                            HorizontalOptions="End"
+                            FontSize="20"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            Margin="5"
+                            Command="{Binding HideParticipantVolumeCommand}">
                     </Button>
                 </Grid>
+                <Slider Grid.Row="1"
+                        Minimum="0"
+                        Maximum="2"
+                        Value="{Binding SelectedParticipant.Participant.Volume}"
+                        ValueChanged="VolumeValue_Updated"/>
+            </Grid>
+            <Frame.Style>
+                <Style TargetType="Frame">
+                    <Setter Property="CornerRadius" Value="5" />
+                    <Setter Property="Margin" Value="10" />
+                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                    <Setter Property="VerticalOptions" Value="StartAndExpand" />
 
-                <Frame.Style>
-                    <Style TargetType="Frame">
-                        <Setter Property="CornerRadius" Value="5" />
-                        <Setter Property="Margin" Value="10" />
-                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
-                        <Setter Property="VerticalOptions" Value="StartAndExpand" />
+                    <Style.Triggers>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#46C6, Light=#66C6}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="False">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
+                        </DataTrigger>
 
-                        <Style.Triggers>
-                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="True">
-                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#46C6, Light=#66C6}" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Frame" Binding="{Binding IsSpeaking}" Value="False">
-                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#5111, Light=#5FFF}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Frame.Style>
-            </Frame>
-        </Grid>
+                        <DataTrigger TargetType="Frame" Binding="{Binding ShowSlider}" Value="False">
+                            <DataTrigger.EnterActions>
+                                <Animations:HideAction/>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <Animations:UnhideAction/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Frame.Style>
+        </Frame>
     </Grid>
 </ContentPage>

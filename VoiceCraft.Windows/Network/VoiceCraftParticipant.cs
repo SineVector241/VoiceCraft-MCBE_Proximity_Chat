@@ -11,8 +11,24 @@ namespace VoiceCraft.Windows.Network
         private readonly int BufferSize;
         public DateTime LastSpoke { get; private set; }
 
+        private float volume = 1.0f;
+        private float proximityVolume = 0.0f;
+
         public string Name { get; }
-        public float Volume { get; set; }
+        public float Volume { 
+            get { return volume; } 
+            set { 
+                volume = value;
+                UpdateVolume();
+            } 
+        } 
+        public float ProximityVolume { 
+            get { return proximityVolume; } 
+            set { 
+                proximityVolume = value;
+                UpdateVolume(); 
+            } 
+        }
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
@@ -72,12 +88,12 @@ namespace VoiceCraft.Windows.Network
             }
         }
 
-        public void SetVolume(float Volume)
+        //Private Methods
+        private void UpdateVolume()
         {
-            FloatProvider.Volume = Volume;
+            FloatProvider.Volume = proximityVolume * volume;
         }
 
-        //Private Methods
         private static byte[] ShortsToBytes(short[] input, int offset, int length)
         {
             byte[] processedValues = new byte[length * 2];
