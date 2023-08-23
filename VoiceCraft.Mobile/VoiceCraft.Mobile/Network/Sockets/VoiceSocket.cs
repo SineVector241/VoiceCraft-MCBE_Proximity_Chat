@@ -99,7 +99,7 @@ namespace VoiceCraft.Mobile.Network.Sockets
                             var volume = 1 - Vector3.Distance(Packet.PacketPosition, new Vector3()) / Packet.PacketDistance;
                             participant.ProximityVolume = NM.LinearVolume ? (float)((Math.Exp(volume) - 1) / (Math.E - 1)) : volume;
                             var rotationSource = Math.Atan2(Packet.PacketPosition.X, Packet.PacketPosition.Z);
-                            var echoEffect = participant.EchoProvider.EchoFactor = Packet.PacketEchoFactor;
+                            participant.EchoProvider.EchoFactor = Packet.PacketEchoFactor;
                             if (!NM.ClientSided && NM.DirectionalHearing)
                             {
                                 participant.AudioProvider.RightVolume = (float)(0.5 + Math.Sin(rotationSource) * 0.5);
