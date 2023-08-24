@@ -6,7 +6,7 @@ namespace VoiceCraft.Server
     public class MainEntry
     {
         readonly CancellationTokenSource CTS = new CancellationTokenSource();
-        public const string Version = "v1.4.0-alpha";
+        public const string Version = "v1.4.1-alpha";
 
         public MainEntry()
         {
@@ -102,7 +102,7 @@ namespace VoiceCraft.Server
                             //Thread safety
                             Parallel.ForEach(p1, participant =>
                             {
-                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value?.Binded}, IsMuted: {participant.Value?.Muted}, Name: {participant.Value?.MinecraftData.Gamertag}, Dimension: {participant.Value?.MinecraftData.DimensionId}, Position: {participant.Value?.MinecraftData.Position}, Rotation: {participant.Value?.MinecraftData.Rotation}", nameof(MainEntry));
+                                Logger.LogToConsole(LogType.Info, $"Key: {participant.Key}, Binded: {participant.Value?.Binded}, IsMuted: {participant.Value?.Muted}, Name: {participant.Value?.MinecraftData.Gamertag}, Dimension: {participant.Value?.MinecraftData.DimensionId}, Position: {participant.Value?.MinecraftData.Position}, Rotation: {participant.Value?.MinecraftData.Rotation}, IsDead: {participant.Value?.MinecraftData.IsDead}", nameof(MainEntry));
                             });
                             break;
                         case "mute":
@@ -261,6 +261,19 @@ namespace VoiceCraft.Server
                             ServerProperties.Properties.ServerMOTD = motdArg;
                             Logger.LogToConsole(LogType.Success, $"Successfully set MOTD message to {motdArg}", nameof(MainEntry));
                             break;
+                        case "toggleeffects":
+                            var effectsArg = splitCmd.ElementAt(1);
+                            if(string.IsNullOrWhiteSpace(effectsArg))
+                            {
+                                Logger.LogToConsole(LogType.Error, "Error. Toggle argument cannot be empty!", nameof(MainEntry));
+                                break;
+                            }
+
+                            _ = bool.TryParse(effectsArg, out bool effectsArgBool);
+
+                            ServerProperties.Properties.VoiceEffects = effectsArgBool;
+                            Logger.LogToConsole(LogType.Success, $"Successfully set voice effects toggle to {effectsArgBool}", nameof(MainEntry));
+                            break;
                         case "help":
                             Logger.LogToConsole(LogType.Info, "exit: Shuts down the server.", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "mute [key: ushort]: Mutes a participant.", nameof(MainEntry));
@@ -272,6 +285,7 @@ namespace VoiceCraft.Server
                             Logger.LogToConsole(LogType.Info, "setproximity [distance: int]: Sets the proximity distance (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "toggleproximity [toggle: boolean]: Switches proximity chat on or off. If off, then it becomes a regular voice chat. (Defaults to serverProperties.json setting on server restart).", nameof(MainEntry));
                             Logger.LogToConsole(LogType.Info, "setmotd [MOTD: string]: Sets the servers MOTD message. (Defaults to serverProperties.json setting on server restart)", nameof(MainEntry));
+                            Logger.LogToConsole(LogType.Info, "toggleeffects [toggle: boolean]: Switches the voice effects on or off. (Defaults to serverProperties.json setting on server restart)", nameof(MainEntry));
                             break;
                         default:
                             Logger.LogToConsole(LogType.Error, $"Could not find command that matches {cmd.ToLower()}", nameof(MainEntry));

@@ -20,7 +20,7 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto"
                           RowSpacing="0">
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
@@ -82,9 +82,21 @@
                                    VerticalOptions="CenterAndExpand"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Vertical"
+                        <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
                                      Grid.Row="5">
+                            <CheckBox IsChecked="{Binding Settings.LinearVolume}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Linear Proximity Volume"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Vertical"
+                                     Margin="0,10"
+                                     Grid.Row="6">
 
                             <Label Text="Websocket Port"
                                    FontSize="15"
@@ -98,7 +110,7 @@
 
                         <StackLayout Orientation="Vertical"
                                      Margin="0,10"
-                                     Grid.Row="6">
+                                     Grid.Row="7">
 
                             <Label Text="Preferred Permanent Key"
                                    FontSize="15"
@@ -112,7 +124,7 @@
 
                         <StackLayout Orientation="Vertical"
                                      Margin="0,10"
-                                     Grid.Row="7">
+                                     Grid.Row="8">
 
                             <Label Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}' }"
                                    FontSize="15"
@@ -126,13 +138,53 @@
                                     ValueChanged="GainValueChanged"/>
                         </StackLayout>
 
+                        <Grid Margin="0,10"
+                              Grid.Row="9">
+
+                            <Label Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:F2}' }"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"
+                                   x:Name="MicLabel"
+                                   Grid.Row="0"/>
+
+                            <Slider Value="{Binding Settings.MicrophoneDetectionPercentage}"
+                                    Maximum="1.0"
+                                    Minimum="0.01"
+                                    ValueChanged="MicDetectionValueChanged"
+                                    Grid.Row="1"/>
+
+                            <ProgressBar IsVisible="True"
+                                         Progress="{Binding MicDetection}"
+                                         Grid.Row="1"
+                                         Margin="15,0"
+                                         ProgressColor="#CDB4"/>
+                        </Grid>
+
                         <Button Text="Save"
-                                Grid.Row="8"
+                                Grid.Row="10"
                                 Command="{Binding SaveSettingsCommand}"
                                 Margin="0,0,0,10"/>
-                        
+
+                        <Button Grid.Row="11"
+                                Command="{Binding OpenCloseMicrophoneCommand}"
+                                Margin="0,0,0,10">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding MicOpen}" Value="False">
+                                            <Setter Property="Text" Value="Open Microphone"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Button" Binding="{Binding MicOpen}" Value="True">
+                                            <Setter Property="Text" Value="Close Microphone"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
                         <Button Text="Reset Settings"
-                                Grid.Row="9"
+                                Grid.Row="12"
                                 Command="{Binding ResetSettingsCommand}"/>
                     </Grid>
                 </Frame>

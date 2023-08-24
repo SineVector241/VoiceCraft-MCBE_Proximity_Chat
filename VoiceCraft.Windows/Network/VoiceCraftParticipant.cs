@@ -1,17 +1,38 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using System;
+using VoiceCraft.Windows.Audio;
 
 namespace VoiceCraft.Windows.Network
 {
     public class VoiceCraftParticipant
     {
         private readonly int BufferSize;
+        public DateTime LastSpoke { get; private set; }
+
+        private float volume = 1.0f;
+        private float proximityVolume = 0.0f;
 
         public string Name { get; }
+        public float Volume { 
+            get { return volume; } 
+            set { 
+                volume = value;
+                UpdateVolume();
+            } 
+        } 
+        public float ProximityVolume { 
+            get { return proximityVolume; } 
+            set { 
+                proximityVolume = value;
+                UpdateVolume(); 
+            } 
+        }
         public uint PacketCount { get; private set; }
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
+        public EchoSampleProvider EchoProvider;
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
@@ -27,7 +48,8 @@ namespace VoiceCraft.Windows.Network
 
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
-            AudioProvider = new MonoToStereoSampleProvider(FloatProvider.ToSampleProvider());
+            EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
+            AudioProvider = new MonoToStereoSampleProvider(EchoProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 
@@ -57,6 +79,7 @@ namespace VoiceCraft.Windows.Network
                 audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
                 AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
                 this.PacketCount = PacketCount;
+                LastSpoke = DateTime.UtcNow;
             }
             //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
             catch
@@ -65,12 +88,12 @@ namespace VoiceCraft.Windows.Network
             }
         }
 
-        public void SetVolume(float Volume)
+        //Private Methods
+        private void UpdateVolume()
         {
-            FloatProvider.Volume = Volume;
+            FloatProvider.Volume = proximityVolume * volume;
         }
 
-        //Private Methods
         private static byte[] ShortsToBytes(short[] input, int offset, int length)
         {
             byte[] processedValues = new byte[length * 2];

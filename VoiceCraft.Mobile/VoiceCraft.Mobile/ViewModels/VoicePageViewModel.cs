@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Linq;
+using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Services;
 using Xamarin.Essentials;
 using Xamarin.Forms;
@@ -22,7 +24,13 @@ namespace VoiceCraft.Mobile.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ObservableCollection<string> participants = new ObservableCollection<string>();
+        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
+
+        [ObservableProperty]
+        bool showSlider = false;
+
+        [ObservableProperty]
+        ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         [RelayCommand]
         public void MuteUnmute()
@@ -79,7 +87,24 @@ namespace VoiceCraft.Mobile.ViewModels
                 if (IsSpeaking != message.IsSpeaking)
                     IsSpeaking = message.IsSpeaking;
 
-                Participants = new ObservableCollection<string>(message.Participants);
+                foreach (var participant in message.Participants)
+                {
+                    var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
+                    if (displayParticipant != null)
+                    {
+                        if (displayParticipant.IsSpeaking != participant.IsSpeaking)
+                            displayParticipant.IsSpeaking = participant.IsSpeaking;
+                    }
+                    else
+                    {
+                        Participants.Add(participant);
+                    }
+                }
+                for (int i = 0; i < Participants.Count; i++)
+                {
+                    if (!message.Participants.Exists(x => x.Key == Participants[i].Key))
+                        Participants.RemoveAt(i);
+                }
             });
 
             MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>
@@ -98,6 +123,23 @@ namespace VoiceCraft.Mobile.ViewModels
             MessagingCenter.Unsubscribe<StopServiceMessage>(this, "ServiceStopped");
             MessagingCenter.Unsubscribe<UpdateUIMessage>(this, "Update");
             MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnected");
+        }
+
+        [RelayCommand]
+        public void ShowParticipantVolume(ushort key)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Key == key);
+            if (participant != null)
+            {
+                SelectedParticipant = participant;
+                ShowSlider = true;
+            }
+        }
+
+        [RelayCommand]
+        public void HideParticipantVolume()
+        {
+            ShowSlider = false;
         }
     }
 }

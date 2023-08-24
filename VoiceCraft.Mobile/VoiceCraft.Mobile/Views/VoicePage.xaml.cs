@@ -1,4 +1,5 @@
-﻿using VoiceCraft.Mobile.ViewModels;
+﻿using System;
+using VoiceCraft.Mobile.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -31,6 +32,13 @@ namespace VoiceCraft.Mobile.Views
         protected override bool OnBackButtonPressed()
         {
             return true;
+        }
+
+        private void VolumeValue_Updated(object sender, ValueChangedEventArgs e)
+        {
+            var viewModel = (VoicePageViewModel)BindingContext;
+            var volume = viewModel.SelectedParticipant.Participant?.Volume;
+            VolumeDisplay.Text = $"{viewModel.SelectedParticipant.Participant?.Name} : {MathF.Round(volume ?? 0.0f, 2)}";
         }
     }
 }

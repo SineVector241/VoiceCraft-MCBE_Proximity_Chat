@@ -132,6 +132,12 @@ namespace VoiceCraft.Server.Sockets
 
                                         if(vcParticipant.MinecraftData.Rotation != player.Rotation)
                                             vcParticipant.MinecraftData.Rotation = player.Rotation;
+
+                                        if (vcParticipant.MinecraftData.CaveDensity != player.CaveDensity)
+                                            vcParticipant.MinecraftData.CaveDensity = player.CaveDensity;
+
+                                        if(vcParticipant.MinecraftData.IsDead != player.IsDead)
+                                            vcParticipant.MinecraftData.IsDead = player.IsDead;
                                     }
                                 }
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated");
@@ -146,6 +152,7 @@ namespace VoiceCraft.Server.Sockets
 
                                 ServerProperties.Properties.ProximityDistance = json.Settings.ProximityDistance;
                                 ServerProperties.Properties.ProximityToggle = json.Settings.ProximityToggle;
+                                ServerProperties.Properties.VoiceEffects = json.Settings.VoiceEffects;
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
                                 break;
 
@@ -155,7 +162,8 @@ namespace VoiceCraft.Server.Sockets
                                     Settings = new ServerSettings()
                                     {
                                         ProximityDistance = ServerProperties.Properties.ProximityDistance,
-                                        ProximityToggle = ServerProperties.Properties.ProximityToggle
+                                        ProximityToggle = ServerProperties.Properties.ProximityToggle,
+                                        VoiceEffects = ServerProperties.Properties.VoiceEffects
                                     }
                                 };
 
@@ -218,16 +226,15 @@ namespace VoiceCraft.Server.Sockets
         public string DimensionId { get; set; } = "";
         public Vector3 Location { get; set; } = new Vector3();
         public float Rotation { get; set; }
+        public float CaveDensity { get; set; }
+        public bool IsDead { get; set; }
     }
 
     public class ServerSettings
     {
         public int ProximityDistance { get; set; } = 30;
         public bool ProximityToggle { get; set; } = false;
-        /*
-         * Coming Soon!
-        public bool SoundEffects { get; set; } = false;
-        */
+        public bool VoiceEffects { get; set; } = false;
     }
 
     public enum PacketType

@@ -23,6 +23,7 @@ namespace VoiceCraft.Windows.Network.Packets
         private uint Count; //Data containing packet count to detect packet loss.
         private ushort Key; //Data containing the key of a participant.
         private ushort Distance; //Data containing the distance to calculate the volume level.
+        private float EchoFactor; //Data containing how much echo there should be based on CaveDensity.
         private Vector3 Position; //Data containing audio source assuming client audio handling is at 0,0,0 rotation 0.
         private string? EnviromentId; //Data containing the server and dimension the player is in. (Client Sided positioning only)
         private byte[]? Audio; //Data containing encoded audio data.
@@ -51,6 +52,12 @@ namespace VoiceCraft.Windows.Network.Packets
             set { Distance = value; }
         }
 
+        public float PacketEchoFactor
+        {
+            get { return EchoFactor; }
+            set { EchoFactor = value; }
+        }
+
         public Vector3 PacketPosition
         {
             get { return Position; }
@@ -75,6 +82,7 @@ namespace VoiceCraft.Windows.Network.Packets
             PacketCount = 0;
             PacketKey = 0;
             PacketDistance = 0;
+            PacketEchoFactor = 0;
             PacketPosition = new Vector3();
             PacketEnviromentId = string.Empty;
             PacketAudio = Array.Empty<byte>();
@@ -86,20 +94,21 @@ namespace VoiceCraft.Windows.Network.Packets
             PacketCount = BitConverter.ToUInt32(DataStream, 2); //Read packet count - 4 bytes.
             PacketKey = BitConverter.ToUInt16(DataStream, 6); //Read packet key - 2 bytes.
             PacketDistance = BitConverter.ToUInt16(DataStream, 8); //Read packet distance - 2 bytes.
-            PacketPosition = new Vector3(BitConverter.ToSingle(DataStream, 10), BitConverter.ToSingle(DataStream, 14), BitConverter.ToSingle(DataStream, 18)); //Read packet position 12 bytes.
+            PacketEchoFactor = BitConverter.ToSingle(DataStream, 10); //Read packet echo factor - 4 bytes.
+            PacketPosition = new Vector3(BitConverter.ToSingle(DataStream, 14), BitConverter.ToSingle(DataStream, 18), BitConverter.ToSingle(DataStream, 22)); //Read packet position 12 bytes.
 
             //String lengths.
-            int enviromentIdLength = BitConverter.ToInt32(DataStream, 22); //Read enviroment id length - 4 bytes.
-            int audioLength = BitConverter.ToInt32(DataStream, 26); //Read audio length - 4 bytes.
+            int enviromentIdLength = BitConverter.ToInt32(DataStream, 26); //Read enviroment id length - 4 bytes.
+            int audioLength = BitConverter.ToInt32(DataStream, 30); //Read audio length - 4 bytes.
             PacketAudio = new byte[audioLength];
 
             if (enviromentIdLength > 0)
-                PacketEnviromentId = Encoding.UTF8.GetString(DataStream, 30, enviromentIdLength);
+                PacketEnviromentId = Encoding.UTF8.GetString(DataStream, 34, enviromentIdLength);
             else
                 PacketEnviromentId = string.Empty;
 
             if (audioLength > 0)
-                Buffer.BlockCopy(DataStream, 30 + enviromentIdLength, PacketAudio, 0, audioLength);
+                Buffer.BlockCopy(DataStream, 34 + enviromentIdLength, PacketAudio, 0, audioLength);
             else
                 PacketAudio = Array.Empty<byte>();
         }
@@ -112,6 +121,7 @@ namespace VoiceCraft.Windows.Network.Packets
             DataStream.AddRange(BitConverter.GetBytes(Count)); //Packet Count
             DataStream.AddRange(BitConverter.GetBytes(Key)); //Packet Key
             DataStream.AddRange(BitConverter.GetBytes(PacketDistance)); //Packet Distance
+            DataStream.AddRange(BitConverter.GetBytes(PacketEchoFactor)); //Packet Echo Factor
             DataStream.AddRange(BitConverter.GetBytes(Position.X)); //Packet Position X
             DataStream.AddRange(BitConverter.GetBytes(Position.Y)); //Packet Position Y
             DataStream.AddRange(BitConverter.GetBytes(Position.Z)); //Packet Position Z

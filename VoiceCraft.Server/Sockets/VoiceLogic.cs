@@ -31,7 +31,9 @@ namespace VoiceCraft.Server.Sockets
             {
                 if (ServerProperties.Properties.ProximityToggle)
                 {
-                    var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && !x.Value.Deafened && x.Key != audioparticipant.Key && x.Value.MinecraftData.DimensionId != "void" && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance);
+                    if (audioparticipant.Value.MinecraftData.IsDead) return;
+
+                    var list = ServerData.Participants.Where(x => x.Value != null && x.Value.Binded && !x.Value.Deafened && x.Key != audioparticipant.Key && x.Value.MinecraftData.DimensionId != "void" && x.Value.MinecraftData.DimensionId == audioparticipant.Value.MinecraftData.DimensionId && Vector3.Distance(x.Value.MinecraftData.Position, audioparticipant.Value.MinecraftData.Position) <= ServerProperties.Properties.ProximityDistance && !x.Value.MinecraftData.IsDead);
                     for (int i = 0; i < list.Count(); i++)
                     {
                         var participant = list.ElementAt(i);
@@ -49,6 +51,8 @@ namespace VoiceCraft.Server.Sockets
                             Packet.PacketPosition = vec;
                             Packet.PacketKey = audioparticipant.Key;
                             Packet.PacketDistance = (ushort)ServerProperties.Properties.ProximityDistance;
+                            if(ServerProperties.Properties.VoiceEffects)
+                                Packet.PacketEchoFactor = audioparticipant.Value.MinecraftData.CaveDensity * (Vector3.Distance(LocalPlayerCoordinates, AudioSourceCoordinates) / ServerProperties.Properties.ProximityDistance);
                             SendPacket(Packet, participant.Value.SocketData.VoiceAddress);
                         }
                     }

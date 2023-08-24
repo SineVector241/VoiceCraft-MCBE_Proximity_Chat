@@ -16,7 +16,9 @@ while(True):
                 "PlayerId": "",
                 "DimensionId": "",
                 "Location": {"x": 0, "y": 0, "z": 0},
-                "Rotation": 0
+                "Rotation": 0,
+                "CaveDensity": 0.0,
+                "IsDead": False
             }],
             'Settings': {
                 "ProximityDistance": 30,

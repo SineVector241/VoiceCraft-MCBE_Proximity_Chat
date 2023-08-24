@@ -6,6 +6,8 @@ using VoiceCraft.Windows.Services;
 using CommunityToolkit.Mvvm.Input;
 using VoiceCraft.Windows.Storage;
 using System.Windows;
+using VoiceCraft.Windows.Models;
+using System.Linq;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -27,7 +29,13 @@ namespace VoiceCraft.Windows.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ObservableCollection<string> participants = new ObservableCollection<string>();
+        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
+
+        [ObservableProperty]
+        bool showSlider = false;
+
+        [ObservableProperty]
+        ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         public VoicePageViewModel()
         {
@@ -49,7 +57,24 @@ namespace VoiceCraft.Windows.ViewModels
             if (IsSpeaking != Data.IsSpeaking)
                 IsSpeaking = Data.IsSpeaking;
 
-            Participants = new ObservableCollection<string>(Data.Participants);
+            foreach(var participant in Data.Participants)
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
+                if (displayParticipant != null)
+                {
+                    if(displayParticipant.IsSpeaking != participant.IsSpeaking)
+                        displayParticipant.IsSpeaking = participant.IsSpeaking;
+                }
+                else
+                {
+                    Participants.Add(participant);
+                }
+            }
+            for(int i = 0; i < Participants.Count; i++)
+            {
+                if (!Data.Participants.Exists(x => x.Key == Participants[i].Key))
+                    Participants.RemoveAt(i);
+            }
         }
 
         private void OnServiceDisconnect(string? Reason)
@@ -97,6 +122,23 @@ namespace VoiceCraft.Windows.ViewModels
         {
             IsDeafened = !IsDeafened;
             voipService.DeafenUndeafen();
+        }
+
+        [RelayCommand]
+        public void ShowParticipantVolume(ushort key)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Key == key);
+            if(participant != null)
+            {
+                SelectedParticipant = participant;
+                ShowSlider = true;
+            }
+        }
+
+        [RelayCommand]
+        public void HideParticipantVolume()
+        {
+            ShowSlider = false;
         }
     }
 }

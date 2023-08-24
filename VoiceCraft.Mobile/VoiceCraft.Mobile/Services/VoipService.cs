@@ -19,6 +19,7 @@ namespace VoiceCraft.Mobile.Services
         private bool IsMuted = false;
         private bool IsDeafened = false;
         private bool SaveKey = false;
+        private float MicrophoneDetectionPercentage;
         public bool SendDisconnectPacket = false;
 
         private string StatusMessage = "Connecting...";
@@ -29,7 +30,7 @@ namespace VoiceCraft.Mobile.Services
         private DateTime RecordDetection;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
-        private SoftLimiter Normalizer;
+        private SoftLimiter? Normalizer;
 
         //Events
         public delegate void Update(UpdateUIMessage Data);
@@ -45,9 +46,9 @@ namespace VoiceCraft.Mobile.Services
             var audioManager = DependencyService.Get<IAudioManager>();
 
             SaveKey = !settings.PreferredPermanentKeyEnabled;
+            MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage;
 
-            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled);
-            RecordDetection = DateTime.UtcNow;
+            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled, settings.LinearVolume);
             if (settings.SoftLimiterEnabled)
             {
                 Normalizer = new SoftLimiter(Network.Mixer);
@@ -75,8 +76,6 @@ namespace VoiceCraft.Mobile.Services
 
                 AudioRecorder.DataAvailable += DataAvailable;
 
-                RecordDetection = DateTime.UtcNow;
-
                 try
                 {
                     Network.StartConnect();
@@ -89,11 +88,11 @@ namespace VoiceCraft.Mobile.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = Network.Participants.Select(x => x.Value.Name).ToList(),
+                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Participant = x.Value }).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = IsMuted,
                                 IsDeafened = IsDeafened,
-                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1
+                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
                             };
                             Device.BeginInvokeOnMainThread(() =>
                             {
@@ -170,12 +169,12 @@ namespace VoiceCraft.Mobile.Services
                 if (sample32 > max) max = sample32;
             }
 
-            if (max > 0.08)
+            if (max >= MicrophoneDetectionPercentage)
             {
                 RecordDetection = DateTime.UtcNow;
             }
 
-            if (DateTime.UtcNow.Subtract(RecordDetection).Seconds < 1)
+            if (DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1)
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }

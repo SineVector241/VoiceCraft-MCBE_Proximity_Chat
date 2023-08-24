@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
-using System.Linq;
 using VoiceCraft.Windows.Models;
 using VoiceCraft.Windows.Storage;
 using VoiceCraft.Windows.Views;

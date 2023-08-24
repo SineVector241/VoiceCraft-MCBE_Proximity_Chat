@@ -97,6 +97,8 @@ namespace VoiceCraft.Server.Helpers
         public Vector3 Position { get; set; }
         public float Rotation { get; set; }
         public string DimensionId { get; set; } = "void";
+        public float CaveDensity { get; set; } = 0.0f;
+        public bool IsDead { get; set; }
     }
 
     public class SocketData

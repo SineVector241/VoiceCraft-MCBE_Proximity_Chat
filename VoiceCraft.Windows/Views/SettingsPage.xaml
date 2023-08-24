@@ -76,6 +76,9 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0"
                           Margin="0,5">
@@ -188,7 +191,19 @@
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <Grid Grid.Row="8"
+                    <CheckBox Content="Linear Proximity Volume"
+                              FontSize="13"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              Margin="0,5"
+                              IsChecked="{Binding Settings.LinearVolume}"
+                              Grid.Row="8">
+                        <CheckBox.LayoutTransform>
+                            <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                        </CheckBox.LayoutTransform>
+                    </CheckBox>
+
+                    <Grid Grid.Row="9"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -213,7 +228,7 @@
                                  Grid.Column="1"/>
                     </Grid>
 
-                    <Grid Grid.Row="9"
+                    <Grid Grid.Row="10"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -238,7 +253,7 @@
                                  Grid.Column="1"/>
                     </Grid>
 
-                    <Grid Grid.Row="10"
+                    <Grid Grid.Row="11"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -247,13 +262,51 @@
 
                         <TextBlock Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}"
                                    FontSize="20"
-                                   FontWeight="Bold"/>
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
 
                         <Slider Grid.Column="1"
                                 Value="{Binding Settings.SoftLimiterGain}"
                                 Minimum="1.0"
-                                Maximum="20.0" 
-                                Margin="5"/>
+                                Maximum="20.0"
+                                Margin="5"
+                                VerticalAlignment="Center">
+                            <Slider.RenderTransform>
+                                <ScaleTransform ScaleX="1"
+                                                ScaleY="1.3"/>
+                            </Slider.RenderTransform>
+                        </Slider>
+                    </Grid>
+
+                    <Grid Grid.Row="12"
+                          Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:F2}'}"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <ProgressBar Grid.Column="1"
+                                     Margin="3"
+                                     Minimum="0"
+                                     Maximum="1"
+                                     Value="{Binding MicDetection}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="#8B94">
+                        </ProgressBar>
+
+                        <Slider Grid.Column="1"
+                                Value="{Binding Settings.MicrophoneDetectionPercentage}"
+                                Minimum="0.01"
+                                Maximum="1.0"
+                                Margin="5"
+                                VerticalAlignment="Center">
+                        </Slider>
                     </Grid>
 
                     <Button Content="Save Settings"
@@ -262,7 +315,26 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="11"/>
+                            Grid.Row="13"/>
+
+                    <Button FontSize="15"
+                            Command="{Binding OpenCloseMicrophoneCommand}"
+                            Height="40"
+                            Margin="0,5"
+                            Grid.Row="14">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding MicOpen}" Value="True">
+                                        <Setter Property="Content" Value="Close Microphone" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding MicOpen}" Value="False">
+                                        <Setter Property="Content" Value="Open Microphone" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <Button Content="Reset Settings"
                             FontSize="15"
@@ -270,7 +342,7 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="12"/>
+                            Grid.Row="15"/>
                 </Grid>
 
                 <Border.Triggers>

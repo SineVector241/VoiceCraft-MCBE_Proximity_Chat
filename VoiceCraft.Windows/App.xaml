@@ -136,5 +136,13 @@
                 </DrawingGroup>
             </DrawingImage.Drawing>
         </DrawingImage>
+
+        <DrawingImage x:Key="volume_medium">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M5,9L5,15 9,15 14,20 14,4 9,9 M18.5,12C18.5,10.23,17.5,8.71,16,7.97L16,16C17.5,15.29,18.5,13.76,18.5,12z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
     </Application.Resources>
 </Application>

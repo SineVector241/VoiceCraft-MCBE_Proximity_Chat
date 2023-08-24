@@ -135,5 +135,8 @@
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\vc.png" />
   </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\volume_medium.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

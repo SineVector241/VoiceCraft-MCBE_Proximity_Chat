@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Net;
 
 namespace VoiceCraft.Server.Helpers
 {
@@ -138,6 +137,7 @@ namespace VoiceCraft.Server.Helpers
         //Changeable Settings
         public int ProximityDistance { get; set; } = 30;
         public bool ProximityToggle { get; set; } = true;
+        public bool VoiceEffects { get; set; } = true;
         public string ServerMOTD { get; set; } = "VoiceCraft Proximity Chat!";
     }
 
