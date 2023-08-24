@@ -135,6 +135,9 @@ namespace VoiceCraft.Server.Sockets
 
                                         if (vcParticipant.MinecraftData.CaveDensity != player.CaveDensity)
                                             vcParticipant.MinecraftData.CaveDensity = player.CaveDensity;
+
+                                        if(vcParticipant.MinecraftData.IsDead != player.IsDead)
+                                            vcParticipant.MinecraftData.IsDead = player.IsDead;
                                     }
                                 }
                                 SendResponse(ctx, HttpStatusCode.OK, "Updated");
@@ -224,6 +227,7 @@ namespace VoiceCraft.Server.Sockets
         public Vector3 Location { get; set; } = new Vector3();
         public float Rotation { get; set; }
         public float CaveDensity { get; set; }
+        public bool IsDead { get; set; }
     }
 
     public class ServerSettings
