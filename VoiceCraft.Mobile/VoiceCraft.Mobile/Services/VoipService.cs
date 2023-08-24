@@ -19,6 +19,7 @@ namespace VoiceCraft.Mobile.Services
         private bool IsMuted = false;
         private bool IsDeafened = false;
         private bool SaveKey = false;
+        private float MicrophoneDetectionPercentage;
         public bool SendDisconnectPacket = false;
 
         private string StatusMessage = "Connecting...";
@@ -45,6 +46,7 @@ namespace VoiceCraft.Mobile.Services
             var audioManager = DependencyService.Get<IAudioManager>();
 
             SaveKey = !settings.PreferredPermanentKeyEnabled;
+            MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage;
 
             Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled ? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled, settings.LinearVolume);
             if (settings.SoftLimiterEnabled)
@@ -167,7 +169,7 @@ namespace VoiceCraft.Mobile.Services
                 if (sample32 > max) max = sample32;
             }
 
-            if (max > 0.08)
+            if (max >= MicrophoneDetectionPercentage)
             {
                 RecordDetection = DateTime.UtcNow;
             }
