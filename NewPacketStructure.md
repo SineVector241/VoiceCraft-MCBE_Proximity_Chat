@@ -116,7 +116,7 @@ Permanent Data Length: 0 bytes.
 |Deny          |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound-1)               |
 |SendAudio     |[SendAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#send-audio-packet-serverbound)      |
 |ReceiveAudio  |[ReceiveAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#receive-audio-packet-clientbound)|
-|UpdatePosition|[UpdatePositionPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#update-position-serverbound)   |
+|UpdatePosition|[UpdatePositionPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#update-position-packet-serverbound)   |
 |Null          |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both-1)                      |
 
 ## Decapsulated Voice Packets
