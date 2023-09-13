@@ -164,13 +164,13 @@ Permanent Data Length: 4 bytes.
 Permanent Data Length: 22 bytes.
 
 ### Update Position Packet: ServerBound
-|Variable         |DataType        |Description|
-|-----------------|---------------|-----------|
-|x                |float (4 Bytes)|Define X coordinate of the player.|
-|y                |float (4 Bytes)|Define Y coordinate of the player.|
-|z                |float (4 Bytes)|Define Z coordinate of the player.|
-|DimensionIdLength|int (4 Bytes)  |Define length of the dimension ID variable.|
-|DimensionId      |char[]         |Define the dimension the player is currently in.|
+|Variable          |DataType        |Description|
+|------------------|---------------|-----------|
+|x                 |float (4 Bytes)|Define X coordinate of the player.|
+|y                 |float (4 Bytes)|Define Y coordinate of the player.|
+|z                 |float (4 Bytes)|Define Z coordinate of the player.|
+|EnviromentIdLength|int (4 Bytes)  |Define length of the dimension ID variable.|
+|EnviromentId      |char[]         |Define the enviroment the player is currently in.|
 
 Permanent Data Length: 16 bytes.
 
