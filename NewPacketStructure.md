@@ -1,18 +1,18 @@
 ## Encapsulated Signalling Packets TCP
-|PacketType|Data                                        |
-|----------|--------------------------------------------|
-|Login     |[LoginPacket](./blob/#login-packet-both)         |
-|Logout    |[LogoutPacket](./#logout-packet-both)       |
-|Accept    |[AcceptPacket](./#accept-packet-clientbound)|
-|Deny      |[DenyPacket](./#deny-packet-clientbound)    |
-|Binded    |[BindedPacket](./#binded-packet-both)       |
-|Deafen    |[DeafenPacket](./#deafen-packet-both)       |
-|Undeafen  |[UndeafenPacket](./#undeafen-packet-both)   |
-|Mute      |[MutePacket](./#mute-packet-both)           |
-|Unmute    |[UnmutePacket](./#unmute-packet-both)       |
-|Error     |[ErrorPacket](./#error-packet-clientbound)  |
-|Ping      |[PingPacket](./#ping-packet-both)           |
-|Null      |[NullPacket](./#null-packet-both)           |
+|PacketType|Data                                                                                                               |
+|----------|-------------------------------------------------------------------------------------------------------------------|
+|Login     |[LoginPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#login-packet-both)         |
+|Logout    |[LogoutPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#logout-packet-both)       |
+|Accept    |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#accept-packet-clientbound)|
+|Deny      |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#deny-packet-clientbound)    |
+|Binded    |[BindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#binded-packet-both)       |
+|Deafen    |[DeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#deafen-packet-both)       |
+|Undeafen  |[UndeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#undeafen-packet-both)   |
+|Mute      |[MutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#mute-packet-both)           |
+|Unmute    |[UnmutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#unmute-packet-both)       |
+|Error     |[ErrorPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#error-packet-clientbound)  |
+|Ping      |[PingPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#ping-packet-both)           |
+|Null      |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/#null-packet-both)           |
 
 Packet Length: 4 Bytes + DataLengthInBytes.
 
@@ -28,47 +28,47 @@ Packet Length: 4 Bytes + DataLengthInBytes.
 Permanent Length: 10 Bytes.
 
 ### Logout Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the participant to logout with the associated key. Only used from server -> client.|
+|Variable|DataType        |Description|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Define the participant to logout with the associated key. Only used from server -> client.|
 
 Permanent Data Length: 2 Bytes.
 
 ### Accept Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the key picked by the server.|
-|VoicePort      |ushort (2 Bytes)|Define the voice port to connect to.|
+|Variable |DataType        |Description|
+|---------|----------------|-----------|
+|LoginKey |ushort (2 Bytes)|Define the key picked by the server.|
+|VoicePort|ushort (2 Bytes)|Define the voice port to connect to.|
 
 Permanent Data Length: 4 bytes.
 
 ### Deny Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|ReasonLength   |int (4 Bytes)   |Define the length of the reason variable.|
-|Reason         |char[]          |Define the reason for the deny.|
+|Variable    |DataType     |Description|
+|------------|-------------|-----------|
+|ReasonLength|int (4 Bytes)|Define the length of the reason variable.|
+|Reason      |char[]       |Define the reason for the deny.|
 
 Permanent Data Length: 4 bytes.
 
 ### Binded Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|NameLength     |int (4 Bytes)   |Define the length of the name variable.|
-|Name           |char[]          |Define the name of the participant. This variable is used both ways.|
+|Variable  |DataType     |Description|
+|----------|-------------|-----------|
+|NameLength|int (4 Bytes)|Define the length of the name variable.|
+|Name      |char[]       |Define the name of the participant. This variable is used both ways.|
 
 Permanent Data Length: 4 bytes.
 
 ### Deafen Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the participant to deafen. Only used from server -> client.|
+|Variable|DataType        |Description|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Define the participant to deafen. Only used from server -> client.|
 
 Permanent Data Length: 2 bytes.
 
 ### Undeafen Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the participant to undeafen. Only used from server -> client.|
+|Variable|DataType        |Description|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Define the participant to undeafen. Only used from server -> client.|
 
 Permanent Data Length: 2 bytes.
 
@@ -80,31 +80,31 @@ Permanent Data Length: 2 bytes.
 Permanent Data Length: 2 bytes.
 
 ### Unmute Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the participant to unmute. Only used from server -> client.|
+|Variable|DataType        |Description|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Define the participant to unmute. Only used from server -> client.|
 
 Permanent Data Length: 2 bytes.
 
 ### Error Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|ReasonLength   |int (4 Bytes)   |Define the length of the reason variable.|
-|Reason         |char[]          |Define the reason for the error.|
+|Variable    |DataType     |Description|
+|------------|-------------|-----------|
+|ReasonLength|int (4 Bytes)|Define the length of the reason variable.|
+|Reason      |char[]       |Define the reason for the error.|
 
 Permanent Data Length: 4 bytes.
 
 ### Ping Packet: Both
-|Variable        |DataType        |Description|
-|----------------|----------------|-----------|
-|ServerDataLength|int (4 Bytes)   |Define the length of the server data variable.|
-|ServerData      |char[]          |Define the data from the server. Only used from server -> client.|
+|Variable        |DataType     |Description|
+|----------------|-------------|-----------|
+|ServerDataLength|int (4 Bytes)|Define the length of the server data variable.|
+|ServerData      |char[]       |Define the data from the server. Only used from server -> client.|
 
 Permanent Data Length: 4 bytes.
 
 ### Null Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
+|Variable|DataType|Description|
+|--------|--------|-----------|
 
 Permanent Data Length: 0 bytes.
 
@@ -121,59 +121,59 @@ Permanent Data Length: 0 bytes.
 
 ## Decapsulated Voice Packets
 ### Login Packet: ServerBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
+|Variable|DataType|Description|
+|--------|--------|-----------|
 
 Permanent Data Length: 0 bytes.
 
 ### Accept Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
+|Variable|DataType|Description|
+|--------|--------|-----------|
 
 Permanent Data Length: 0 bytes.
 
 ### Deny Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|ReasonLength   |int (4 Bytes)   |Define the length of the reason variable.|
-|Reason         |char[]          |Define the reason for the deny.|
+|Variable    |DataType     |Description|
+|------------|-------------|-----------|
+|ReasonLength|int (4 Bytes)|Define the length of the reason variable.|
+|Reason      |char[]       |Define the reason for the deny.|
 
 Permanent Data Length: 4 bytes.
 
 ### Send Audio Packet: ServerBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|AudioLength    |int (4 Bytes)   |Define the length for the audio variable.|
-|Audio          |byte[]          |Define the audio data to send to all other participants.|
+|Variable   |DataType     |Description|
+|-----------|-------------|-----------|
+|AudioLength|int (4 Bytes)|Define the length for the audio variable.|
+|Audio      |byte[]       |Define the audio data to send to all other participants.|
 
 Permanent Data Length: 4 bytes.
 
 ### Receive Audio Packet: ClientBound
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
-|LoginKey       |ushort (2 Bytes)|Define the participant key the voice packet associates to.|
-|PacketCount    |uint (4 Bytes)  |Define the count of the voice packet.|
-|Volume         |float (4 Bytes) |Define the volume to set the participant volume at.|
-|EchoFactor     |float (4 Bytes) |Define the echo to set the participants echo effect at.|
-|Rotation       |float (4 Bytes) |Define the rotation effect for directional hearing.|
-|AudioLength    |int (4 Bytes)   |Define the length for the audio variable.|
-|Audio          |byte[]          |Define the audio data to input into the buffer for the participant.|
+|Variable   |DataType        |Description|
+|-----------|----------------|-----------|
+|LoginKey   |ushort (2 Bytes)|Define the participant key the voice packet associates to.|
+|PacketCount|uint (4 Bytes)  |Define the count of the voice packet.|
+|Volume     |float (4 Bytes) |Define the volume to set the participant volume at.|
+|EchoFactor |float (4 Bytes) |Define the echo to set the participants echo effect at.|
+|Rotation   |float (4 Bytes) |Define the rotation effect for directional hearing.|
+|AudioLength|int (4 Bytes)   |Define the length for the audio variable.|
+|Audio      |byte[]          |Define the audio data to input into the buffer for the participant.|
 
 Permanent Data Length: 22 bytes.
 
 ### Update Position Packet: ServerBound
 |Variable         |DataType        |Description|
-|-----------------|----------------|-----------|
-|x                |float (4 Bytes) |Define X coordinate of the player.|
-|y                |float (4 Bytes) |Define Y coordinate of the player.|
-|z                |float (4 Bytes) |Define Z coordinate of the player.|
-|DimensionIdLength|int (4 Bytes)   |Define length of the dimension ID variable.|
-|DimensionId      |char[]          |Define the dimension the player is currently in.|
+|-----------------|---------------|-----------|
+|x                |float (4 Bytes)|Define X coordinate of the player.|
+|y                |float (4 Bytes)|Define Y coordinate of the player.|
+|z                |float (4 Bytes)|Define Z coordinate of the player.|
+|DimensionIdLength|int (4 Bytes)  |Define length of the dimension ID variable.|
+|DimensionId      |char[]         |Define the dimension the player is currently in.|
 
 Permanent Data Length: 16 bytes.
 
 ### Null Packet: Both
-|Variable       |DataType        |Description|
-|---------------|----------------|-----------|
+|Variable|DataType|Description|
+|--------|--------|-----------|
 
 Permanent Data Length: 0 bytes.
