@@ -23,7 +23,9 @@ Packet Length: 4 Bytes + DataLengthInBytes.
 |PositioningType|int (4 Bytes)   |Define whether it is requesting ServerSided positioning or ClientSided positioning.|
 |LoginKey       |ushort (2 Bytes)|Define the request key. If conflicted then choose the next available key and respond.|
 |NameLength     |int (4 Bytes)   |Define the length of the name variable.|
+|VersionLength  |int (4 Bytes)   |Define the length of the version variable.|
 |Name           |char[]          |Define the name of the participant. This is only used from server -> client.|
+|Version        |char[]          |Define the version of the client. This is only used from client -> server.|
 
 Permanent Length: 10 Bytes.
 
