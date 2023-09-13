@@ -1,7 +1,7 @@
 ## Encapsulated Signalling Packets TCP
 |PacketType|Data                                        |
 |----------|--------------------------------------------|
-|Login     |[LoginPacket](./#login-packet-both)         |
+|Login     |[LoginPacket](./blob/#login-packet-both)         |
 |Logout    |[LogoutPacket](./#logout-packet-both)       |
 |Accept    |[AcceptPacket](./#accept-packet-clientbound)|
 |Deny      |[DenyPacket](./#deny-packet-clientbound)    |
