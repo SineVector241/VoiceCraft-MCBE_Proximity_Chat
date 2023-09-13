@@ -1,18 +1,18 @@
 ## Encapsulated Signalling Packets TCP
-|PacketType|Data          |
-|----------|--------------|
-|Login     |LoginPacket   |
-|Logout    |LogoutPacket  |
-|Accept    |AcceptPacket  |
-|Deny      |DenyPacket    |
-|Binded    |BindedPacket  |
-|Deafen    |DeafenPacket  |
-|Undeafen  |UndeafenPacket|
-|Mute      |MutePacket    |
-|Unmute    |UnmutePacket  |
-|Error     |ErrorPacket   |
-|Ping      |PingPacket    |
-|Null      |NODATA        |
+|PacketType|Data                                        |
+|----------|--------------------------------------------|
+|Login     |[LoginPacket](./#login-packet-both)         |
+|Logout    |[LogoutPacket](./#logout-packet-both)       |
+|Accept    |[AcceptPacket](./#accept-packet-clientbound)|
+|Deny      |[DenyPacket](./#deny-packet-clientbound)    |
+|Binded    |[BindedPacket](./#binded-packet-both)       |
+|Deafen    |[DeafenPacket](./#deafen-packet-both)       |
+|Undeafen  |[UndeafenPacket](./#undeafen-packet-both)   |
+|Mute      |[MutePacket](./#mute-packet-both)           |
+|Unmute    |[UnmutePacket](./#unmute-packet-both)       |
+|Error     |[ErrorPacket](./#error-packet-clientbound)  |
+|Ping      |[PingPacket](./#ping-packet-both)           |
+|Null      |[NullPacket](./#null-packet-both)           |
 
 Packet Length: 4 Bytes + DataLengthInBytes.
 
@@ -109,14 +109,15 @@ Permanent Data Length: 4 bytes.
 Permanent Data Length: 0 bytes.
 
 ## Encapsulated Voice Packets UDP
-|PacketType    |Data                |
-|--------------|--------------------|
-|Login         |LoginPacket         |
-|Accept        |AcceptPacket        |
-|Deny          |DenyPacket          |
-|Audio         |AudioPacket         |
-|UpdatePosition|UpdatePositionPacket|
-|Null          |NODATA              |
+|PacketType    |Data                                                     |
+|--------------|---------------------------------------------------------|
+|Login         |[LoginPacket](./#login-packet-serverbound)               |
+|Accept        |[AcceptPacket](./#accept-packet-clientbound-1)           |
+|Deny          |[DenyPacket](./#deny-packet-clientbound-1)               |
+|SendAudio     |[SendAudioPacket](./#send-audio-packet-serverbound)      |
+|ReceiveAudio  |[ReceiveAudioPacket](./#receive-audio-packet-clientbound)|
+|UpdatePosition|[UpdatePositionPacket](./#update-position-serverbound)   |
+|Null          |[NullPacket](./#null-packet-both-1)                      |
 
 ## Decapsulated Voice Packets
 ### Login Packet: ServerBound
@@ -139,7 +140,15 @@ Permanent Data Length: 0 bytes.
 
 Permanent Data Length: 4 bytes.
 
-### Audio Packet: ClientBound
+### Send Audio Packet: ServerBound
+|Variable       |DataType        |Description|
+|---------------|----------------|-----------|
+|AudioLength    |int (4 Bytes)   |Define the length for the audio variable.|
+|Audio          |byte[]          |Define the audio data to send to all other participants.|
+
+Permanent Data Length: 4 bytes.
+
+### Receive Audio Packet: ClientBound
 |Variable       |DataType        |Description|
 |---------------|----------------|-----------|
 |LoginKey       |ushort (2 Bytes)|Define the participant key the voice packet associates to.|
@@ -152,6 +161,19 @@ Permanent Data Length: 4 bytes.
 
 Permanent Data Length: 22 bytes.
 
+### Update Position Packet: ServerBound
+|Variable         |DataType        |Description|
+|-----------------|----------------|-----------|
+|x                |float (4 Bytes) |Define X coordinate of the player.|
+|y                |float (4 Bytes) |Define Y coordinate of the player.|
+|z                |float (4 Bytes) |Define Z coordinate of the player.|
+|DimensionIdLength|int (4 Bytes)   |Define length of the dimension ID variable.|
+|DimensionId      |char[]          |Define the dimension the player is currently in.|
+
+Permanent Data Length: 16 bytes.
+
 ### Null Packet: Both
 |Variable       |DataType        |Description|
 |---------------|----------------|-----------|
+
+Permanent Data Length: 0 bytes.
