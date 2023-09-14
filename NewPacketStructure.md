@@ -14,20 +14,20 @@
 |Ping      |[PingPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#ping-packet-both)           |
 |Null      |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both)           |
 
-Packet Length: 4 Bytes + DataLengthInBytes.
+Packet Length: 2 Bytes + DataLengthInBytes.
 
 ## Decapsulated Signalling Packets
 ### Login Packet: Both
 |Variable       |DataType        |Description|
 |---------------|----------------|-----------|
-|PositioningType|int (4 Bytes)   |Define whether it is requesting ServerSided positioning or ClientSided positioning.|
+|PositioningType|int (2 Bytes)   |Define whether it is requesting ServerSided positioning or ClientSided positioning.|
 |LoginKey       |ushort (2 Bytes)|Define the request key. If conflicted then choose the next available key and respond.|
 |NameLength     |int (4 Bytes)   |Define the length of the name variable.|
 |VersionLength  |int (4 Bytes)   |Define the length of the version variable.|
 |Name           |char[]          |Define the name of the participant. This is only used from server -> client.|
 |Version        |char[]          |Define the version of the client. This is only used from client -> server.|
 
-Permanent Length: 14 Bytes.
+Permanent Length: 12 Bytes.
 
 ### Logout Packet: Both
 |Variable|DataType        |Description|
