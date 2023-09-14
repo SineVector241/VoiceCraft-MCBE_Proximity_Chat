@@ -121,6 +121,8 @@ Permanent Data Length: 0 bytes.
 |UpdatePosition|[UpdatePositionPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#update-position-packet-serverbound)   |
 |Null          |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both-1)                      |
 
+Packet Length: 2 Bytes + DataLengthInBytes.
+
 ## Decapsulated Voice Packets
 ### Login Packet: ServerBound
 |Variable|DataType|Description|
