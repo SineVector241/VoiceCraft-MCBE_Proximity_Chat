@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System;
-using VoiceCraft.Network.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Interfaces;
 using System.Text;
 
-namespace VoiceCraft.Network.Packets.Signalling
+namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Binded : IPacketData
     {

@@ -1,22 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using VoiceCraft.Network.Packets.Interfaces;
-using VoiceCraft.Network.Packets.Voice;
+using VoiceCraft.Core.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Voice;
 
-namespace VoiceCraft.Network.Packets
+namespace VoiceCraft.Core.Packets
 {
-    public class VoicePacket : IPacket
+    public class VoicePacket : IVoicePacket
     {
-        public SignallingPacketTypes PacketType { get; set; }
+        public VoicePacketTypes PacketType { get; set; }
         public IPacketData PacketData { get; set; } = new Null();
+
+        public VoicePacket()
+        {
+            PacketType = VoicePacketTypes.Null;
+        }
 
         public VoicePacket(byte[] dataStream)
         {
-            PacketType = (SignallingPacketTypes)BitConverter.ToUInt16(dataStream, 0); //Read packet type - 2 bytes.
+            PacketType = (VoicePacketTypes)BitConverter.ToUInt16(dataStream, 0); //Read packet type - 2 bytes.
             switch (PacketType)
             {
-                case SignallingPacketTypes.Login:
-                    PacketData = new Login();
+                case VoicePacketTypes.Login: PacketData = new Login();
+                    break;
+                case VoicePacketTypes.Accept: PacketData = new Accept();
+                    break;
+                case VoicePacketTypes.Deny: PacketData = new Deny(dataStream, 2);
+                    break;
+                case VoicePacketTypes.ClientAudio: PacketData = new ClientAudio(dataStream, 2);
+                    break;
+                case VoicePacketTypes.ServerAudio: PacketData = new ServerAudio(dataStream, 2);
+                    break;
+                case VoicePacketTypes.UpdatePosition: PacketData = new UpdatePosition(dataStream, 2);
+                    break;
+                default: PacketData = new Null();
                     break;
             }
         }
@@ -37,8 +53,8 @@ namespace VoiceCraft.Network.Packets
         Login,
         Accept,
         Deny,
-        SendAudio,
-        ReceiveAudio,
+        ClientAudio,
+        ServerAudio,
         UpdatePosition,
         Null
     }

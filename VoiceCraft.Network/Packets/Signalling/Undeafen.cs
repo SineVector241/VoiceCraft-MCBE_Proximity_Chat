@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using VoiceCraft.Network.Packets.Interfaces;
-
-namespace VoiceCraft.Network.Packets.Signalling
+using VoiceCraft.Core.Packets.Interfaces;
+    
+namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Undeafen : IPacketData
     {

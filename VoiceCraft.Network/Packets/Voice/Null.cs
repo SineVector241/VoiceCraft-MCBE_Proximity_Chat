@@ -1,6 +1,6 @@
-﻿using VoiceCraft.Network.Packets.Interfaces;
+﻿using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Voice
+namespace VoiceCraft.Core.Packets.Voice
 {
     public class Null : IPacketData
     {

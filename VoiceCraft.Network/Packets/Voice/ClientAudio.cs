@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using VoiceCraft.Network.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Voice
+namespace VoiceCraft.Core.Packets.Voice
 {
-    public class SendAudio : IPacketData
+    public class ClientAudio : IPacketData
     {
         public byte[] Audio = new byte[0];
 
-        public SendAudio()
+        public ClientAudio()
         {
             Audio = new byte[0];
         }
 
-        public SendAudio(byte[] dataStream, int readOffset = 0)
+        public ClientAudio(byte[] dataStream, int readOffset = 0)
         {
             int audioLength = BitConverter.ToInt32(dataStream, readOffset); //Read audio length - 4 bytes.
 

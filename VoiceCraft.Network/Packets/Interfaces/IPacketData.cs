@@ -1,4 +1,4 @@
-﻿namespace VoiceCraft.Network.Packets.Interfaces
+﻿namespace VoiceCraft.Core.Packets.Interfaces
 {
     public interface IPacketData
     {

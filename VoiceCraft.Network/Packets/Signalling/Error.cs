@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Signalling
+namespace VoiceCraft.Core.Packets.Signalling
 {
-    public class Error
+    public class Error : IPacketData
     {
         public string Reason { get; set; } = string.Empty;
 

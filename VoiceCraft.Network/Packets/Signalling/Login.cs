@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using VoiceCraft.Network.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Signalling
+namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Login : IPacketData
     {

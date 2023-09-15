@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using VoiceCraft.Network.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Voice
+namespace VoiceCraft.Core.Packets.Voice
 {
     public class UpdatePosition : IPacketData
     {

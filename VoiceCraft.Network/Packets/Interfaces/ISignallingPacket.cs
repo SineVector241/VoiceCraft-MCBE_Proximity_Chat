@@ -1,6 +1,6 @@
-﻿namespace VoiceCraft.Network.Packets.Interfaces
+﻿namespace VoiceCraft.Core.Packets.Interfaces
 {
-    public interface IPacket
+    public interface ISignallingPacket
     {
         public SignallingPacketTypes PacketType { get; set; }
         public IPacketData PacketData { get; set; }

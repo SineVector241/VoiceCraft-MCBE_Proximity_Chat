@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraft.Server", "VoiceC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraft.Windows", "VoiceCraft.Windows\VoiceCraft.Windows.csproj", "{BC6DA575-57B6-4421-BDBF-784E5DBD87C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceCraft.Network", "VoiceCraft.Network\VoiceCraft.Network.csproj", "{9AD70AC5-760B-4F4C-B0B3-956BF272A1D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VoiceCraft.Core", "VoiceCraft.Network\VoiceCraft.Core.csproj", "{9AD70AC5-760B-4F4C-B0B3-956BF272A1D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using VoiceCraft.Network.Packets.Interfaces;
+using VoiceCraft.Core.Packets.Interfaces;
 
-namespace VoiceCraft.Network.Packets.Voice
+namespace VoiceCraft.Core.Packets.Voice
 {
-    public class ReceiveAudio : IPacketData
+    public class ServerAudio : IPacketData
     {
         public ushort LoginKey { get; set; }
         public uint PacketCount { get; set; }
@@ -13,7 +13,7 @@ namespace VoiceCraft.Network.Packets.Voice
         public float Rotation { get; set; }
         public byte[] Audio { get; set; } = new byte[0];
 
-        public ReceiveAudio()
+        public ServerAudio()
         {
             LoginKey = 0;
             PacketCount = 0;
@@ -23,7 +23,7 @@ namespace VoiceCraft.Network.Packets.Voice
             Audio = new byte[0];
         }
 
-        public ReceiveAudio(byte[] dataStream, int readOffset = 0)
+        public ServerAudio(byte[] dataStream, int readOffset = 0)
         {
             LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //read login key - 2 bytes.
             PacketCount = BitConverter.ToUInt32(dataStream, readOffset + 2); //read packet count - 4 bytes.
