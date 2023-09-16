@@ -1,4 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Threading;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Interfaces;
@@ -46,6 +48,27 @@ namespace VoiceCraft.Core.Sockets.Client
             await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
+        public void SendPacket(ISignallingPacket packet)
+        {
+            UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
+        }
+
+        public void Disconnect()
+        {
+            try
+            {
+                if (UDPSocket.Connected)
+                    UDPSocket.Close();
+                UDPSocket.Dispose();
+            }
+            catch(Exception ex)
+            {
+#if DEBUG
+                Debug.WriteLine(ex);
+#endif
+            }
+        }
+
         private async void ListenAsync()
         {
             while (UDPSocket.Connected && !CTS.IsCancellationRequested)
@@ -60,7 +83,10 @@ namespace VoiceCraft.Core.Sockets.Client
                 catch
                 {
                     if (!UDPSocket.Connected && !CTS.IsCancellationRequested)
+                    {
+                        Disconnect();
                         break;
+                    }
                 }
             }
         }

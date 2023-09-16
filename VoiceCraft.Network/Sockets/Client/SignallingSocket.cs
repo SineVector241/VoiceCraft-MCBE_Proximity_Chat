@@ -1,4 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Threading;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Interfaces;
@@ -57,6 +59,29 @@ namespace VoiceCraft.Core.Sockets.Client
             await TCPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
+        public void SendPacket(ISignallingPacket packet)
+        {
+            TCPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
+        }
+
+        public void Disconnect(bool sendLogoutPacket = false)
+        {
+            try
+            {
+                if (sendLogoutPacket)
+                    SendPacket(new SignallingPacket() { PacketType = SignallingPacketTypes.Logout, PacketData = new Logout() });
+                if (TCPSocket.Connected)
+                    TCPSocket.Close();
+                TCPSocket.Dispose();
+            }
+            catch(Exception ex)
+            {
+#if DEBUG
+                Debug.WriteLine(ex);
+#endif
+            }
+        }
+
         private async void ListenAsync()
         {
             while (TCPSocket.Connected && !CTS.IsCancellationRequested)
@@ -71,7 +96,10 @@ namespace VoiceCraft.Core.Sockets.Client
                 catch
                 {
                     if (!TCPSocket.Connected && !CTS.IsCancellationRequested)
+                    {
+                        Disconnect();
                         break;
+                    }
                 }
             }
         }
@@ -105,7 +133,7 @@ namespace VoiceCraft.Core.Sockets.Client
                     OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unmute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
+                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Error:
                     OnErrorPacketReceived?.Invoke((Error)packet.PacketData);

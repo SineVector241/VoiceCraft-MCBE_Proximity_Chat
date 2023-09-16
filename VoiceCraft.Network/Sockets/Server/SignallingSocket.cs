@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using VoiceCraft.Network.Packets;
-using VoiceCraft.Network.Packets.Signalling;
+using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.Signalling;
 
-namespace VoiceCraft.Network.Sockets.Server
+namespace VoiceCraft.Core.Sockets.Server
 {
     public class SignallingSocket
     {
@@ -101,7 +101,7 @@ namespace VoiceCraft.Network.Sockets.Server
                     OnMutePacketReceived?.Invoke((Mute)packet.PacketData); 
                     break;
                 case SignallingPacketTypes.Unmute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
+                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Error:
                     OnErrorPacketReceived?.Invoke((Error)packet.PacketData);

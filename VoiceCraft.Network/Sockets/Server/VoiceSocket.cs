@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using VoiceCraft.Network.Packets;
-using VoiceCraft.Network.Packets.Voice;
+using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.Voice;
 
-namespace VoiceCraft.Network.Sockets.Server
+namespace VoiceCraft.Core.Sockets.Server
 {
     public class VoiceSocket
     {
