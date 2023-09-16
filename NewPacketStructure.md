@@ -145,12 +145,13 @@ Permanent Data Length: 0 bytes.
 Permanent Data Length: 4 bytes.
 
 ### Send Audio Packet: ServerBound
-|Variable   |DataType     |Description|
-|-----------|-------------|-----------|
-|AudioLength|int (4 Bytes)|Define the length for the audio variable.|
-|Audio      |byte[]       |Define the audio data to send to all other participants.|
+|Variable   |DataType      |Description|
+|-----------|--------------|-----------|
+|PacketCount|uint (4 Bytes)|Define the packet count.|
+|AudioLength|int (4 Bytes) |Define the length for the audio variable.|
+|Audio      |byte[]        |Define the audio data to send to all other participants.|
 
-Permanent Data Length: 4 bytes.
+Permanent Data Length: 8 bytes.
 
 ### Receive Audio Packet: ClientBound
 |Variable   |DataType        |Description|
