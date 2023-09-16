@@ -48,7 +48,7 @@ namespace VoiceCraft.Core.Sockets.Client
             await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
-        public void SendPacket(ISignallingPacket packet)
+        public void SendPacket(IVoicePacket packet)
         {
             UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
         }

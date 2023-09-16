@@ -6,6 +6,7 @@ using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Sockets.Client;
 using System.Collections.Concurrent;
 using System;
+using System.Linq;
 
 namespace VoiceCraft.Core.Sockets
 {
@@ -15,7 +16,7 @@ namespace VoiceCraft.Core.Sockets
         public const int SampleRate = 48000;
 
         //Variables
-        public CancellationTokenSource CTS { get; }
+        private CancellationTokenSource CTS;
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
         public ushort LoginKey { get; private set; }
@@ -209,6 +210,18 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
+        private static short[] BytesToShorts(byte[] input, int offset, int length)
+        {
+            short[] processedValues = new short[length / 2];
+            for (int c = 0; c < processedValues.Length; c++)
+            {
+                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
+                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
+            }
+
+            return processedValues;
+        }
+
         //Public Methods
         public void Connect(string IP, int Port)
         {
@@ -223,6 +236,42 @@ namespace VoiceCraft.Core.Sockets
                     Version = Version
                 } 
             });
+        }
+
+        public void Disconnect()
+        {
+            if (!CTS.IsCancellationRequested)
+            {
+                Signalling.Disconnect(true);
+                CTS.Cancel();
+            }
+        }
+
+        public void SendAudio(byte[] Data, int BytesRecorded)
+        {
+            //Prevent overloading the highest max count of a uint.
+            if (PacketCount >= uint.MaxValue)
+                PacketCount = 0;
+
+            //Count packets
+            PacketCount++;
+
+            byte[] audioEncodeBuffer = new byte[1000];
+            short[] pcm = BytesToShorts(Data, 0, BytesRecorded);
+            var encodedBytes = Encoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
+            byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
+
+            //Packet creation.
+            VoicePacket packet = new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.ClientAudio,
+                PacketData = new Packets.Voice.ClientAudio()
+                {
+                    Audio = audioTrimmed,
+                    PacketCount = PacketCount
+                }
+            }; //Audio packet stuff here.
+            Voice.SendPacketAsync(packet);
         }
     }
 }
