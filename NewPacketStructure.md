@@ -116,8 +116,8 @@ Permanent Data Length: 0 bytes.
 |Login         |[LoginPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#login-packet-serverbound)               |
 |Accept        |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#accept-packet-clientbound-1)           |
 |Deny          |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound-1)               |
-|SendAudio     |[SendAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#send-audio-packet-serverbound)      |
-|ReceiveAudio  |[ReceiveAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#receive-audio-packet-clientbound)|
+|ClientAudio     |[SendAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#client-audio-packet-serverbound)      |
+|ServerAudio  |[ReceiveAudioPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#server-audio-packet-clientbound)|
 |UpdatePosition|[UpdatePositionPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#update-position-packet-serverbound)   |
 |Null          |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both-1)                      |
 
@@ -144,15 +144,16 @@ Permanent Data Length: 0 bytes.
 
 Permanent Data Length: 4 bytes.
 
-### Send Audio Packet: ServerBound
-|Variable   |DataType     |Description|
-|-----------|-------------|-----------|
-|AudioLength|int (4 Bytes)|Define the length for the audio variable.|
-|Audio      |byte[]       |Define the audio data to send to all other participants.|
+### Client Audio Packet: ServerBound
+|Variable   |DataType      |Description|
+|-----------|--------------|-----------|
+|PacketCount|uint (4 Bytes)|Define the packet count.|
+|AudioLength|int (4 Bytes) |Define the length for the audio variable.|
+|Audio      |byte[]        |Define the audio data to send to all other participants.|
 
-Permanent Data Length: 4 bytes.
+Permanent Data Length: 8 bytes.
 
-### Receive Audio Packet: ClientBound
+### Server Audio Packet: ClientBound
 |Variable   |DataType        |Description|
 |-----------|----------------|-----------|
 |LoginKey   |ushort (2 Bytes)|Define the participant key the voice packet associates to.|
