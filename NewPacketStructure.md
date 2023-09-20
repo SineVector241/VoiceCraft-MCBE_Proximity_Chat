@@ -6,7 +6,7 @@
 |Accept    |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#accept-packet-clientbound)|
 |Deny      |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound)    |
 |Binded    |[BindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#binded-packet-both)       |
-|Unbinded  |[Unbinded](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unbinded-packet-serverbound)  |
+|Unbinded  |[UnbindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unbinded-packet-serverbound)  |
 |Deafen    |[DeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deafen-packet-both)       |
 |Undeafen  |[UndeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#undeafen-packet-both)   |
 |Mute      |[MutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#mute-packet-both)           |
