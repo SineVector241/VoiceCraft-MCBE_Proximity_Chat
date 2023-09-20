@@ -4,9 +4,9 @@ using NAudio.Wave.SampleProviders;
 using System;
 using VoiceCraft.Core.Audio;
 
-namespace VoiceCraft.Core
+namespace VoiceCraft.Core.Client
 {
-    public class ClientParticipant
+    public class VoiceCraftParticipant
     {
         private readonly int BufferSize;
         public DateTime LastSpoke { get; private set; }
@@ -43,7 +43,7 @@ namespace VoiceCraft.Core
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
-        public ClientParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
+        public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
         {
             this.Name = Name;
 
@@ -108,7 +108,7 @@ namespace VoiceCraft.Core
             for (int c = 0; c < length; c++)
             {
                 processedValues[c * 2] = (byte)(input[c + offset] & 0xFF);
-                processedValues[c * 2 + 1] = (byte)((input[c + offset] >> 8) & 0xFF);
+                processedValues[c * 2 + 1] = (byte)(input[c + offset] >> 8 & 0xFF);
             }
 
             return processedValues;

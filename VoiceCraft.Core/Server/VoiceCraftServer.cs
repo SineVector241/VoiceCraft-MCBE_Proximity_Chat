@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace VoiceCraft.Network.Sockets.Server
+namespace VoiceCraft.Core.Server
 {
-    public class MCCommSocket
+    public class VoiceCraftServer
     {
     }
 }

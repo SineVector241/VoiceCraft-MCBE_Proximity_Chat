@@ -4,7 +4,7 @@ using System.Threading;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Signalling;
 
-namespace VoiceCraft.Core.Sockets.Server
+namespace VoiceCraft.Core.Server.Sockets
 {
     public class SignallingSocket
     {
@@ -55,7 +55,7 @@ namespace VoiceCraft.Core.Sockets.Server
 
         private async void ListenAsync()
         {
-            while(TCPSocket.Connected && !CTS.IsCancellationRequested)
+            while (TCPSocket.Connected && !CTS.IsCancellationRequested)
             {
                 try
                 {
@@ -66,7 +66,7 @@ namespace VoiceCraft.Core.Sockets.Server
                 }
                 catch
                 {
-                    if(!TCPSocket.Connected && !CTS.IsCancellationRequested)
+                    if (!TCPSocket.Connected && !CTS.IsCancellationRequested)
                         break;
                 }
             }
@@ -74,7 +74,7 @@ namespace VoiceCraft.Core.Sockets.Server
 
         private void HandlePacket(SignallingPacket packet)
         {
-            switch(packet.PacketType)
+            switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login:
                     OnLoginPacketReceived?.Invoke((Login)packet.PacketData);
@@ -98,7 +98,7 @@ namespace VoiceCraft.Core.Sockets.Server
                     OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Mute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData); 
+                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unmute:
                     OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);

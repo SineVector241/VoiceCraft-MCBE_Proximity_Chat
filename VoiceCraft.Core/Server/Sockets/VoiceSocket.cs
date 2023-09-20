@@ -4,7 +4,7 @@ using System.Threading;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Voice;
 
-namespace VoiceCraft.Core.Sockets.Server
+namespace VoiceCraft.Core.Server.Sockets
 {
     public class VoiceSocket
     {

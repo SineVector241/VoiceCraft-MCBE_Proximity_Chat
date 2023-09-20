@@ -3,12 +3,12 @@ using NAudio.Wave.SampleProviders;
 using NAudio.Wave;
 using System.Threading;
 using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Sockets.Client;
 using System.Collections.Concurrent;
 using System;
 using System.Linq;
+using VoiceCraft.Core.Client.Sockets;
 
-namespace VoiceCraft.Core.Sockets
+namespace VoiceCraft.Core.Client
 {
     public class VoiceCraftClient
     {
@@ -29,7 +29,7 @@ namespace VoiceCraft.Core.Sockets
         public bool LinearVolume { get; set; }
 
         //Server Data
-        public ConcurrentDictionary<ushort, ClientParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, ClientParticipant>();
+        public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
         public uint PacketCount { get; private set; }
 
         //Audio Variables
@@ -48,9 +48,9 @@ namespace VoiceCraft.Core.Sockets
         //Delegates
         public delegate void Connected();
         public delegate void Binded(string? name);
-        public delegate void ParticipantJoined(ClientParticipant participant);
-        public delegate void ParticipantLeft(ClientParticipant participant);
-        public delegate void ParticipantUpdated(ClientParticipant participant);
+        public delegate void ParticipantJoined(VoiceCraftParticipant participant);
+        public delegate void ParticipantLeft(VoiceCraftParticipant participant);
+        public delegate void ParticipantUpdated(VoiceCraftParticipant participant);
         public delegate void Disconnected(string? reason);
 
         //Events
@@ -123,9 +123,9 @@ namespace VoiceCraft.Core.Sockets
         private void SignallingLogin(Packets.Signalling.Login packet)
         {
             //Add participant to list
-            if(!Participants.ContainsKey(packet.LoginKey))
+            if (!Participants.ContainsKey(packet.LoginKey))
             {
-                var participant = new ClientParticipant(packet.Name, PlaybackFormat, RecordLengthMS);
+                var participant = new VoiceCraftParticipant(packet.Name, PlaybackFormat, RecordLengthMS);
                 Participants.TryAdd(packet.LoginKey, participant);
                 OnParticipantJoined?.Invoke(participant);
             }
@@ -142,7 +142,7 @@ namespace VoiceCraft.Core.Sockets
             else
             {
                 Participants.TryRemove(packet.LoginKey, out var participant);
-                if(participant != null)
+                if (participant != null)
                 {
                     OnParticipantJoined?.Invoke(participant);
                 }
@@ -152,7 +152,7 @@ namespace VoiceCraft.Core.Sockets
         private void SignallingDeafen(Packets.Signalling.Deafen packet)
         {
             Participants.TryGetValue(packet.LoginKey, out var participant);
-            if(participant != null)
+            if (participant != null)
             {
                 participant.Deafened = true;
             }
@@ -215,8 +215,8 @@ namespace VoiceCraft.Core.Sockets
             short[] processedValues = new short[length / 2];
             for (int c = 0; c < processedValues.Length; c++)
             {
-                processedValues[c] = (short)(((int)input[(c * 2) + offset]) << 0);
-                processedValues[c] += (short)(((int)input[(c * 2) + 1 + offset]) << 8);
+                processedValues[c] = (short)(input[c * 2 + offset] << 0);
+                processedValues[c] += (short)(input[c * 2 + 1 + offset] << 8);
             }
 
             return processedValues;
@@ -228,13 +228,15 @@ namespace VoiceCraft.Core.Sockets
             this.IP = IP;
             this.Port = Port;
             Signalling.Connect(IP, Port);
-            Signalling.SendPacketAsync(new SignallingPacket() { 
+            Signalling.SendPacketAsync(new SignallingPacket()
+            {
                 PacketType = SignallingPacketTypes.Login,
-                PacketData = new Packets.Signalling.Login() { 
+                PacketData = new Packets.Signalling.Login()
+                {
                     LoginKey = LoginKey,
                     PositioningType = PositioningType,
                     Version = Version
-                } 
+                }
             });
         }
 

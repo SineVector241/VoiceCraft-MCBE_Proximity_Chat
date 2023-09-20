@@ -6,7 +6,7 @@ using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Signalling;
 
-namespace VoiceCraft.Core.Sockets.Client
+namespace VoiceCraft.Core.Client.Sockets
 {
     public class SignallingSocket
     {
@@ -74,7 +74,7 @@ namespace VoiceCraft.Core.Sockets.Client
                     TCPSocket.Close();
                 TCPSocket.Dispose();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 #if DEBUG
                 Debug.WriteLine(ex);

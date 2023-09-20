@@ -6,7 +6,7 @@ using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Voice;
 
-namespace VoiceCraft.Core.Sockets.Client
+namespace VoiceCraft.Core.Client.Sockets
 {
     public class VoiceSocket
     {
@@ -61,7 +61,7 @@ namespace VoiceCraft.Core.Sockets.Client
                     UDPSocket.Close();
                 UDPSocket.Dispose();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 #if DEBUG
                 Debug.WriteLine(ex);
