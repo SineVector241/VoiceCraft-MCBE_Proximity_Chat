@@ -2,40 +2,36 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-using VoiceCraft.Windows.Network.Builders;
-using VoiceCraft.Windows.Network.Packets;
-using VoiceCraft.Windows.Storage;
+using System.Numerics;
+using VoiceCraft.Core.Client.Builders;
 
 namespace VoiceCraft.Windows.Network.Sockets
 {
-    public class WebsocketSocket
+    public class MCWSSSocket
     {
         //Variables
-        private readonly NetworkManager NM;
         private WebSocketServer? Socket;
         private ushort SocketCount;
         private List<IWebSocketConnection> AllSockets = new List<IWebSocketConnection>();
         private readonly string[] Dimensions;
-        private bool Binded;
 
         //Events
         public delegate void Connect(string Username);
+        public delegate void PlayerTravelled(Vector3 position, string Dimension);
         public delegate void Disconnect();
 
         public event Connect? OnConnect;
+        public event PlayerTravelled? OnPlayerTravelled;
         public event Disconnect? OnDisconnect;
 
-        public WebsocketSocket(NetworkManager NM)
+        public MCWSSSocket(int Port)
         {
-            this.NM = NM;
-            var settings = Database.GetSettings();
-            Socket = new WebSocketServer($"ws://0.0.0.0:{settings.WebsocketPort}");
+            Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");
             Dimensions = new string[] { "minecraft:overworld", "minecraft:nether", "minecraft:end" };
-            Binded = false;
             SocketCount = 0;
         }
 
-        public void StartConnect()
+        public void Start()
         {
             Socket?.Start(socket =>
             {
@@ -59,7 +55,6 @@ namespace VoiceCraft.Windows.Network.Sockets
                     if (SocketCount <= 0)
                     {
                         OnDisconnect?.Invoke();
-                        NM.Voice.SendPacket(new VoicePacket() { PacketIdentifier = VoicePacketIdentifier.UpdatePosition, PacketEnviromentId = "void" }.GetPacketDataStream());
                     }
                 };
 
@@ -73,11 +68,6 @@ namespace VoiceCraft.Windows.Network.Sockets
                         var playerName = json["body"]?["localplayername"]?.Value<string>();
                         if (!string.IsNullOrWhiteSpace(playerName))
                         {
-                            if (!Binded)
-                            {
-                                NM.Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Binded, PacketVersion = App.Version, PacketMetadata = playerName }.GetPacketDataStream());
-                                Binded = true;
-                            }
                             OnConnect?.Invoke(playerName);
                         }
                     }
@@ -89,14 +79,16 @@ namespace VoiceCraft.Windows.Network.Sockets
                         var z = json["body"]?["player"]?["position"]?["z"]?.Value<float>();
                         var dimensionInt = json["body"]?["dimension"]?.Value<int>();
 
-                        NM.Voice.SendPacket(new VoicePacket() { PacketIdentifier = VoicePacketIdentifier.UpdatePosition, PacketPosition = new System.Numerics.Vector3(x ?? 0, y ?? 0, z ?? 0), PacketEnviromentId = Dimensions[dimensionInt ?? 0] }.GetPacketDataStream());
+                        OnPlayerTravelled?.Invoke(new Vector3(x ?? 0, y ?? 0, z ?? 0), Dimensions[dimensionInt ?? 0]);
+#if DEBUG
                         Debug.WriteLine($"PlayerTravelled: {x}, {y}, {z}, {Dimensions[dimensionInt ?? 0]}");
+#endif
                     }
                 };
             });
         }
 
-        public void StartDisconnect()
+        public void Stop()
         {
             foreach(var socket in AllSockets)
             {

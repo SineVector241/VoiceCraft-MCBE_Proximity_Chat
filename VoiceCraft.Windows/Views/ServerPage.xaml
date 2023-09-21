@@ -113,7 +113,8 @@
                     <TextBlock Grid.Row="1"
                                FontWeight="Bold"
                                FontSize="18"
-                               Text="{Binding ExternalServerInformation}"/>
+                               Text="{Binding ExternalServerInformation}"
+                               TextWrapping="Wrap"/>
 
                     <Button Margin="0,20,0,0"
                             Grid.Row="2"

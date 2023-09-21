@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Signalling;
 
 namespace VoiceCraft.Core.Server.Sockets
@@ -13,25 +15,31 @@ namespace VoiceCraft.Core.Server.Sockets
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
         //Delegates
-        public delegate void LoginPacket(Login packet);
-        public delegate void LogoutPacket(Logout packet);
-        public delegate void AcceptPacket(Accept packet);
-        public delegate void DenyPacket(Deny packet);
-        public delegate void BindedPacket(Binded packet);
-        public delegate void DeafenPacket(Deafen packet);
-        public delegate void UndeafenPacket(Undeafen packet);
-        public delegate void MutePacket(Mute packet);
-        public delegate void UnmutePacket(Unmute packet);
-        public delegate void ErrorPacket(Error packet);
-        public delegate void PingPacket(Ping packet);
-        public delegate void NullPacket(Null packet);
+        public delegate void Started();
+        public delegate void LoginPacket(Login packet, Socket socket);
+        public delegate void LogoutPacket(Logout packet, Socket socket);
+        public delegate void AcceptPacket(Accept packet, Socket socket);
+        public delegate void DenyPacket(Deny packet, Socket socket);
+        public delegate void BindedPacket(Binded packet, Socket socket);
+        public delegate void UnbindedPacket(Unbinded packet, Socket socket);
+        public delegate void DeafenPacket(Deafen packet, Socket socket);
+        public delegate void UndeafenPacket(Undeafen packet, Socket socket);
+        public delegate void MutePacket(Mute packet, Socket socket);
+        public delegate void UnmutePacket(Unmute packet, Socket socket);
+        public delegate void ErrorPacket(Error packet, Socket socket);
+        public delegate void PingPacket(Ping packet, Socket socket);
+        public delegate void NullPacket(Null packet, Socket socket);
+
+        public delegate void SocketDisconnected(Socket socket, string reason);
 
         //Events
+        public event Started? OnStarted;
         public event LoginPacket? OnLoginPacketReceived;
         public event LogoutPacket? OnLogoutPacketReceived;
         public event AcceptPacket? OnAcceptPacketReceived;
         public event DenyPacket? OnDenyPacketReceived;
         public event BindedPacket? OnBindedPacketReceived;
+        public event UnbindedPacket? OnUnbindedPacketReceived;
         public event DeafenPacket? OnDeafenPacketReceived;
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
@@ -40,6 +48,8 @@ namespace VoiceCraft.Core.Server.Sockets
         public event PingPacket? OnPingPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
+        public event SocketDisconnected? OnSocketDisconnected;
+
 
         public SignallingSocket(CancellationToken Token)
         {
@@ -47,70 +57,112 @@ namespace VoiceCraft.Core.Server.Sockets
             CTS = Token;
         }
 
-        public void Start(int Port)
+        public void Start(ushort Port)
         {
             TCPSocket.Bind(new IPEndPoint(IPAddress.Any, Port));
-            ListenAsync();
+            TCPSocket.Listen(100);
+            AcceptConnectionsAsync();
+            OnStarted?.Invoke();
         }
 
-        private async void ListenAsync()
+        public async void SendPacketAsync(ISignallingPacket packet, Socket socket)
         {
-            while (TCPSocket.Connected && !CTS.IsCancellationRequested)
+            await socket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
+        }
+
+        public void SendPacket(ISignallingPacket packet, Socket socket)
+        {
+            socket.Send(packet.GetPacketStream(), SocketFlags.None);
+        }
+
+        public void Stop()
+        {
+            TCPSocket.Close();
+            TCPSocket.Dispose();
+        }
+
+        private async void ListenAsync(Socket socket)
+        {
+            while (!CTS.IsCancellationRequested)
             {
                 try
                 {
+                    CTS.ThrowIfCancellationRequested();
                     var buffer = new byte[1024];
-                    var networkStream = await TCPSocket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
+                    var networkStream = await socket.ReceiveAsync(buffer, SocketFlags.None);
                     var packet = new SignallingPacket(buffer);
-                    HandlePacket(packet);
+                    HandlePacket(packet, socket);
+                }
+                catch (Exception ex)
+                {
+                    if (!socket.Connected || CTS.IsCancellationRequested)
+                    {
+                        OnSocketDisconnected?.Invoke(socket, ex.Message);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private async void AcceptConnectionsAsync()
+        {
+            while (!CTS.IsCancellationRequested)
+            {
+                try
+                {
+                    var handle = await TCPSocket.AcceptAsync();
+                    ListenAsync(handle);
                 }
                 catch
                 {
-                    if (!TCPSocket.Connected && !CTS.IsCancellationRequested)
+                    if (CTS.IsCancellationRequested)
                         break;
                 }
             }
         }
 
-        private void HandlePacket(SignallingPacket packet)
+        private void HandlePacket(SignallingPacket packet, Socket socket)
         {
             switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login:
-                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData);
+                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Logout:
-                    OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData);
+                    OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Accept:
-                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData);
+                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData);
+                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Binded:
-                    OnBindedPacketReceived?.Invoke((Binded)packet.PacketData);
+                    OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
+                    break;
+                case SignallingPacketTypes.Unbinded:
+                    OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Deafen:
-                    OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData);
+                    OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Undeafen:
-                    OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData);
+                    OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Mute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
+                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Unmute:
-                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
+                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Error:
-                    OnErrorPacketReceived?.Invoke((Error)packet.PacketData);
+                    OnErrorPacketReceived?.Invoke((Error)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Ping:
-                    OnPingPacketReceived?.Invoke((Ping)packet.PacketData);
+                    OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Null:
-                    OnNullPacketReceived?.Invoke((Null)packet.PacketData);
+                    OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);
                     break;
             }
         }

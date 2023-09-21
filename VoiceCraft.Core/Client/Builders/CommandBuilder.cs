@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace VoiceCraft.Windows.Network.Builders
+namespace VoiceCraft.Core.Client.Builders
 {
     public class CommandBuilder
     {

@@ -19,6 +19,7 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void AcceptPacket(Accept packet);
         public delegate void DenyPacket(Deny packet);
         public delegate void BindedPacket(Binded packet);
+        public delegate void UnbindedPacket(Unbinded packet);
         public delegate void DeafenPacket(Deafen packet);
         public delegate void UndeafenPacket(Undeafen packet);
         public delegate void MutePacket(Mute packet);
@@ -27,12 +28,15 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void PingPacket(Ping packet);
         public delegate void NullPacket(Null packet);
 
+        public delegate void SocketDisconnected(string reason);
+
         //Events
         public event LoginPacket? OnLoginPacketReceived;
         public event LogoutPacket? OnLogoutPacketReceived;
         public event AcceptPacket? OnAcceptPacketReceived;
         public event DenyPacket? OnDenyPacketReceived;
         public event BindedPacket? OnBindedPacketReceived;
+        public event UnbindedPacket? OnUnbindedPacketReceived;
         public event DeafenPacket? OnDeafenPacketReceived;
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
@@ -41,6 +45,8 @@ namespace VoiceCraft.Core.Client.Sockets
         public event PingPacket? OnPingPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
+        public event SocketDisconnected? OnSocketDisconnected;
+
 
         public SignallingSocket(CancellationToken Token)
         {
@@ -48,30 +54,41 @@ namespace VoiceCraft.Core.Client.Sockets
             CTS = Token;
         }
 
-        public void Connect(string IP, int Port)
+        public async void ConnectAsync(string IP, int Port)
         {
-            TCPSocket.Connect(IP, Port);
-            ListenAsync();
+            try
+            {
+                await TCPSocket.ConnectAsync(IP, Port); //Timeout on this takes forever. I have no idea how to set a custom timeout.
+                ListenAsync();
+            }
+            catch(Exception ex)
+            {
+                if(!CTS.IsCancellationRequested)
+                    OnSocketDisconnected?.Invoke(ex.Message);
+            }
         }
 
         public async void SendPacketAsync(ISignallingPacket packet)
         {
-            await TCPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
+            if(TCPSocket.Connected)
+                await TCPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
         public void SendPacket(ISignallingPacket packet)
         {
-            TCPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
+            if (TCPSocket.Connected)
+                TCPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
         }
 
-        public void Disconnect(bool sendLogoutPacket = false)
+        public void Disconnect(string? reason = null)
         {
             try
             {
-                if (sendLogoutPacket)
-                    SendPacket(new SignallingPacket() { PacketType = SignallingPacketTypes.Logout, PacketData = new Logout() });
                 if (TCPSocket.Connected)
+                {
                     TCPSocket.Close();
+                }
+                if(reason != null && !CTS.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
                 TCPSocket.Dispose();
             }
             catch (Exception ex)
@@ -93,11 +110,19 @@ namespace VoiceCraft.Core.Client.Sockets
                     var packet = new SignallingPacket(buffer);
                     HandlePacket(packet);
                 }
-                catch
+                catch (SocketException ex)
                 {
-                    if (!TCPSocket.Connected && !CTS.IsCancellationRequested)
+                    if (!TCPSocket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
-                        Disconnect();
+                        Disconnect(ex.Message);
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (!TCPSocket.Connected || CTS.IsCancellationRequested)
+                    {
+                        Disconnect(ex.Message);
                         break;
                     }
                 }
@@ -122,6 +147,9 @@ namespace VoiceCraft.Core.Client.Sockets
                     break;
                 case SignallingPacketTypes.Binded:
                     OnBindedPacketReceived?.Invoke((Binded)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.Unbinded:
+                    OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Deafen:
                     OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData);

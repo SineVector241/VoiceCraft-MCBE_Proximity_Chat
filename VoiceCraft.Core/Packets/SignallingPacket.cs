@@ -30,6 +30,8 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case SignallingPacketTypes.Binded: PacketData = new Binded(dataStream, 2);
                     break;
+                case SignallingPacketTypes.Unbinded: PacketData = new Unbinded();
+                    break;
                 case SignallingPacketTypes.Deafen: PacketData = new Deafen(dataStream, 2);
                     break;
                 case SignallingPacketTypes.Undeafen: PacketData = new Undeafen(dataStream, 2);
@@ -65,6 +67,7 @@ namespace VoiceCraft.Core.Packets
         Accept,
         Deny,
         Binded,
+        Unbinded,
         Deafen,
         Undeafen,
         Mute,

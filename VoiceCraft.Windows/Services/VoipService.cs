@@ -3,10 +3,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using VoiceCraft.Windows.Network.Packets;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Windows.Audio;
 using VoiceCraft.Windows.Models;
-using VoiceCraft.Windows.Network;
 using VoiceCraft.Windows.Storage;
 
 namespace VoiceCraft.Windows.Services
@@ -14,17 +13,16 @@ namespace VoiceCraft.Windows.Services
     public class VoipService
     {
         //State Variables
-        private bool IsMuted = false;
-        private bool IsDeafened = false;
-        private bool SaveKey = false;
         private float MicrophoneDetectionPercentage;
-        public bool SendDisconnectPacket = false;
+
+        private string IP = string.Empty;
+        private int Port = 9050;
 
         private string StatusMessage = "Connecting...";
         private string Username = "";
 
         //VOIP and Audio handler variables
-        private NetworkManager Network;
+        public VoiceCraftClient Network { get; private set; }
         private DateTime RecordDetection;
         private IWaveIn AudioRecorder;
         private IWavePlayer AudioPlayer;
@@ -43,10 +41,17 @@ namespace VoiceCraft.Windows.Services
             var server = Database.GetPassableObject<ServerModel>();
             var audioManager = new AudioManager();
 
-            SaveKey = !settings.PreferredPermanentKeyEnabled;
             MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage;
 
-            Network = new NetworkManager(server.IP, server.Port, settings.PreferredPermanentKeyEnabled? settings.PreferredPermanentKey : server.Key, settings.ClientSidedPositioning, settings.DirectionalAudioEnabled, settings.LinearVolume);
+            IP = server.IP;
+            Port = server.Port;
+
+            Network = new VoiceCraftClient(server.Key, settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, App.Version, 40, settings.WebsocketPort)
+            {
+                LinearVolume = settings.LinearVolume,
+                DirectionalHearing = settings.DirectionalAudioEnabled
+            };
+
             if (settings.SoftLimiterEnabled)
             {
                 Normalizer = new SoftLimiter(Network.Mixer);
@@ -65,18 +70,16 @@ namespace VoiceCraft.Windows.Services
             await Task.Run(async () =>
             {
                 //Event Initializations
-                Network.OnSignallingConnect += SC_OnConnect;
-                Network.OnVoiceConnect += VC_OnConnect;
-                Network.OnWebsocketConnect += WS_OnConnect;
-                Network.OnWebsocketDisconnect += WS_OnDisconnect;
-                Network.OnBind += OnBind;
-                Network.OnDisconnect += OnDisconnect;
+                Network.OnConnected += OnConnected;
+                Network.OnBinded += Binded;
+                Network.OnUnbinded += Unbinded;
+                Network.OnDisconnected += OnDisconnected;
 
                 AudioRecorder.DataAvailable += DataAvailable;
 
                 try
                 {
-                    Network.StartConnect();
+                    Network.Connect(IP, Port);
                     while (true)
                     {
                         CT.ThrowIfCancellationRequested();
@@ -88,8 +91,8 @@ namespace VoiceCraft.Windows.Services
                             {
                                 Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Participant = x.Value }).ToList(),
                                 StatusMessage = StatusMessage,
-                                IsMuted = IsMuted,
-                                IsDeafened = IsDeafened,
+                                IsMuted = Network.IsMuted,
+                                IsDeafened = Network.IsDeafened,
                                 IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
                             };
                             App.Current?.Dispatcher.Invoke(() =>
@@ -112,12 +115,10 @@ namespace VoiceCraft.Windows.Services
                 { }
                 finally
                 {
-                    Network.OnSignallingConnect -= SC_OnConnect;
-                    Network.OnVoiceConnect -= VC_OnConnect;
-                    Network.OnWebsocketConnect -= WS_OnConnect;
-                    Network.OnWebsocketDisconnect -= WS_OnDisconnect;
-                    Network.OnBind -= OnBind;
-                    Network.OnDisconnect -= OnDisconnect;
+                    Network.OnConnected -= OnConnected;
+                    Network.OnBinded -= Binded;
+                    Network.OnUnbinded -= Unbinded;
+                    Network.OnDisconnected -= OnDisconnected;
 
                     AudioRecorder.DataAvailable -= DataAvailable;
 
@@ -128,30 +129,15 @@ namespace VoiceCraft.Windows.Services
                     AudioPlayer.Dispose();
                     AudioRecorder.Dispose();
 
-                    Network.StartDisconnect(SendDisconnectPacket: SendDisconnectPacket);
+                    Network.Disconnect();
                 }
             });
-        }
-
-        public void MuteUnmute()
-        {
-            IsMuted = !IsMuted;
-        }
-
-        public void DeafenUndeafen()
-        {
-            IsDeafened = !IsDeafened;
-
-            if(IsDeafened)
-                Network.Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Deafen, PacketVersion = App.Version }.GetPacketDataStream());
-            else
-                Network.Signalling.SendPacket(new SignallingPacket() { PacketIdentifier = SignallingPacketIdentifiers.Undeafen, PacketVersion = App.Version }.GetPacketDataStream());
         }
 
         //Audio Events
         private void DataAvailable(object? sender, WaveInEventArgs e)
         {
-            if (IsMuted || IsDeafened)
+            if (Network.IsMuted || Network.IsDeafened)
                 return;
 
             float max = 0;
@@ -176,23 +162,12 @@ namespace VoiceCraft.Windows.Services
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
-            else
-            {
-                //Reset packet counter as soon as we stop sending audio.
-                Network.ResetPacketCounter();
-            }
         }
 
         //Goes in this protocol order.
-        private void SC_OnConnect(ushort Key, int VoicePort)
+        private void OnConnected()
         {
-            StatusMessage = $"Connecting Voice...\nPort: {Network.VoicePort}";
-            var server = Database.GetPassableObject<ServerModel>();
-            if (server != null && server.Key != Key && SaveKey)
-            {
-                server.Key = Key;
-                Database.UpdateServer(server);
-            }
+            StatusMessage = Network.PositioningType == Core.Packets.PositioningTypes.ServerSided? $"Connected! Key - {Network.LoginKey}\nWaiting for binding..." : $"Connected! Key - {Network.LoginKey}\nWaiting for MCWSS connection...";
 
             App.Current?.Dispatcher.Invoke(() =>
             {
@@ -201,47 +176,18 @@ namespace VoiceCraft.Windows.Services
             });
         }
 
-        private void VC_OnConnect()
+        private void Binded(string? name)
         {
-            StatusMessage = Network.ClientSided ? "Voice Connected\nWaiting for MCWSS Connection..." : $"Connected - Key:{Network.Key}\nWaiting for binding...";
-
-            App.Current?.Dispatcher.Invoke(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
-            });
-        }
-
-        private void WS_OnConnect()
-        {
-            StatusMessage = "Connected\n<Username>";
-
-            App.Current?.Dispatcher.Invoke(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
-            });
-        }
-
-        private void WS_OnDisconnect()
-        {
-            StatusMessage = "MCWSS Disconnected!\nWaiting for reconnection...";
-
-            App.Current?.Dispatcher.Invoke(() =>
-            {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
-            });
-        }
-
-        private void OnBind(string Name)
-        {
-            Username = Name;
-            StatusMessage = $"Connected - Key: {Network.Key}\n{Username}";
+            Username = name ?? "<N.A.>";
+            StatusMessage = $"Connected - Key: {Network.LoginKey}\n{Username}";
 
             //Last step of verification. We start sending data and playing any received data.
-            AudioRecorder.StartRecording();
-            AudioPlayer.Play();
+            try
+            {
+                AudioRecorder.StartRecording();
+                AudioPlayer.Play();
+            }
+            catch { } //Do nothing. This is just to make sure that the recorder and player is working.
 
             App.Current?.Dispatcher.Invoke(() =>
             {
@@ -250,7 +196,18 @@ namespace VoiceCraft.Windows.Services
             });
         }
 
-        private void OnDisconnect(string? Reason = null)
+        private void Unbinded()
+        {
+            StatusMessage = $"Connected - Key: {Network.LoginKey}\nUnbinded. MCWSS Disconnected";
+
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
+                OnUpdate?.Invoke(message);
+            });
+        }
+
+        private void OnDisconnected(string? Reason = null)
         {
             App.Current?.Dispatcher.Invoke(() =>
             {

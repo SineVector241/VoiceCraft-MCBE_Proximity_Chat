@@ -7,6 +7,10 @@ using System.Collections.Concurrent;
 using System;
 using System.Linq;
 using VoiceCraft.Core.Client.Sockets;
+using VoiceCraft.Windows.Network.Sockets;
+using System.Threading.Tasks;
+using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace VoiceCraft.Core.Client
 {
@@ -19,10 +23,13 @@ namespace VoiceCraft.Core.Client
         private CancellationTokenSource CTS;
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
+        public int MCWSSPort { get; private set; }
         public ushort LoginKey { get; private set; }
         public string Version { get; private set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public PositioningTypes PositioningType { get; private set; }
+        public bool IsMuted { get; private set; }
+        public bool IsDeafened { get; private set; }
 
         //Changeable Variables
         public bool DirectionalHearing { get; set; }
@@ -44,30 +51,34 @@ namespace VoiceCraft.Core.Client
         //Sockets
         public SignallingSocket Signalling { get; }
         public VoiceSocket Voice { get; }
+        public MCWSSSocket MCWSS { get; }
 
         //Delegates
         public delegate void Connected();
         public delegate void Binded(string? name);
-        public delegate void ParticipantJoined(VoiceCraftParticipant participant);
-        public delegate void ParticipantLeft(VoiceCraftParticipant participant);
-        public delegate void ParticipantUpdated(VoiceCraftParticipant participant);
+        public delegate void Unbinded();
+        public delegate void ParticipantJoined(VoiceCraftParticipant participant, ushort key);
+        public delegate void ParticipantLeft(VoiceCraftParticipant participant, ushort key);
+        public delegate void ParticipantUpdated(VoiceCraftParticipant participant, ushort key);
         public delegate void Disconnected(string? reason);
 
         //Events
         public event Connected? OnConnected;
         public event Binded? OnBinded;
+        public event Unbinded? OnUnbinded;
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
         public event ParticipantUpdated? OnParticipantUpdated;
         public event Disconnected? OnDisconnected;
 
-        public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, string Version, int RecordLengthMS = 40)
+        public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, string Version, int RecordLengthMS = 40, int MCWSSPort = 8080)
         {
             //Setup variables
             this.LoginKey = LoginKey;
             this.Version = Version;
             this.PositioningType = PositioningType;
             this.RecordLengthMS = RecordLengthMS;
+            this.MCWSSPort = MCWSSPort;
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
@@ -84,6 +95,7 @@ namespace VoiceCraft.Core.Client
             CTS = new CancellationTokenSource();
             Signalling = new SignallingSocket(CTS.Token);
             Voice = new VoiceSocket(CTS.Token);
+            MCWSS = new MCWSSSocket(MCWSSPort);
 
             //Event Registration in login order.
             Signalling.OnAcceptPacketReceived += SignallingAccept;
@@ -91,27 +103,47 @@ namespace VoiceCraft.Core.Client
             Voice.OnAcceptPacketReceived += VoiceAccept;
             Voice.OnDenyPacketReceived += VoiceDeny;
             Signalling.OnBindedPacketReceived += SignallingBinded;
+            MCWSS.OnConnect += WebsocketConnected;
             Signalling.OnLoginPacketReceived += SignallingLogin;
             Voice.OnServerAudioPacketReceived += VoiceServerAudio;
             Signalling.OnLogoutPacketReceived += SignallingLogout;
+            MCWSS.OnDisconnect += WebsocketDisconnected;
+            MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
 
             Signalling.OnDeafenPacketReceived += SignallingDeafen;
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
+
+            Signalling.OnSocketDisconnected += SocketDisconnected;
+        }
+
+        private void SocketDisconnected(string reason)
+        {
+            Disconnect();
+            OnDisconnected?.Invoke(reason);
         }
 
         //Signalling Event Methods
+        #region Signalling
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
+            LoginKey = packet.LoginKey;
             Voice.Connect(IP, packet.VoicePort);
-            Voice.SendPacketAsync(new VoicePacket() { PacketType = VoicePacketTypes.Login, PacketData = new Packets.Voice.Login() });
+            Voice.SendPacketAsync(new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.Login,
+                PacketData = new Packets.Voice.Login()
+                {
+                    LoginKey = LoginKey
+                }
+            });
             //Packets could be dropped. So we need to loop. This will be implemented later.
         }
 
         private void SignallingDeny(Packets.Signalling.Deny packet)
         {
-            CTS.Cancel();
+            Disconnect();
             OnDisconnected?.Invoke(packet.Reason);
         }
 
@@ -122,12 +154,16 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingLogin(Packets.Signalling.Login packet)
         {
-            //Add participant to list
             if (!Participants.ContainsKey(packet.LoginKey))
             {
-                var participant = new VoiceCraftParticipant(packet.Name, PlaybackFormat, RecordLengthMS);
-                Participants.TryAdd(packet.LoginKey, participant);
-                OnParticipantJoined?.Invoke(participant);
+                var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, RecordLengthMS)
+                {
+                    Muted = packet.IsMuted,
+                    Deafened = packet.IsDeafened
+                };
+                Debug.WriteLine(Participants.TryAdd(packet.LoginKey, participant));
+                Mixer.AddMixerInput(participant.AudioProvider);
+                OnParticipantJoined?.Invoke(participant, packet.LoginKey);
             }
         }
 
@@ -136,7 +172,7 @@ namespace VoiceCraft.Core.Client
             //Logout participant. If LoginKey is the same as this then disconnect.
             if (packet.LoginKey == LoginKey)
             {
-                CTS.Cancel();
+                Disconnect();
                 OnDisconnected?.Invoke("Kicked or banned.");
             }
             else
@@ -144,7 +180,8 @@ namespace VoiceCraft.Core.Client
                 Participants.TryRemove(packet.LoginKey, out var participant);
                 if (participant != null)
                 {
-                    OnParticipantJoined?.Invoke(participant);
+                    Mixer.RemoveMixerInput(participant.AudioProvider);
+                    OnParticipantLeft?.Invoke(participant, packet.LoginKey);
                 }
             }
         }
@@ -155,6 +192,7 @@ namespace VoiceCraft.Core.Client
             if (participant != null)
             {
                 participant.Deafened = true;
+                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
 
@@ -164,6 +202,7 @@ namespace VoiceCraft.Core.Client
             if (participant != null)
             {
                 participant.Deafened = false;
+                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
 
@@ -173,6 +212,7 @@ namespace VoiceCraft.Core.Client
             if (participant != null)
             {
                 participant.Muted = true;
+                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
 
@@ -182,18 +222,21 @@ namespace VoiceCraft.Core.Client
             if (participant != null)
             {
                 participant.Muted = false;
+                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
-
+        #endregion
         //Voice Event Methods
+        #region Voice
         private void VoiceAccept(Packets.Voice.Accept packet)
         {
             OnConnected?.Invoke();
+            if(PositioningType == PositioningTypes.ClientSided) MCWSS.Start();
         }
 
         private void VoiceDeny(Packets.Voice.Deny packet)
         {
-            CTS.Cancel();
+            Disconnect();
             OnDisconnected?.Invoke(packet.Reason);
         }
 
@@ -221,13 +264,52 @@ namespace VoiceCraft.Core.Client
 
             return processedValues;
         }
+        #endregion
+        //Websocket Event Methods
+        #region MCWSS
+        private void WebsocketConnected(string Username)
+        {
+            Signalling.SendPacketAsync(new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Binded,
+                PacketData = new Packets.Signalling.Binded()
+                {
+                    Name = Username
+                }
+            });
+            OnBinded?.Invoke(Username);
+        }
 
+        private void WebsocketPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
+        {
+            Voice.SendPacketAsync(new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.UpdatePosition,
+                PacketData = new Packets.Voice.UpdatePosition()
+                {
+                    EnvironmentId = Dimension,
+                    Position = position
+                }
+            });
+        }
+
+        private void WebsocketDisconnected()
+        {
+            Signalling.SendPacketAsync(new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Unbinded,
+                PacketData = new Packets.Signalling.Unbinded()
+            });
+            Participants.Clear(); //Clear the entire list
+            OnUnbinded?.Invoke();
+        }
+        #endregion
         //Public Methods
         public void Connect(string IP, int Port)
         {
             this.IP = IP;
             this.Port = Port;
-            Signalling.Connect(IP, Port);
+            Signalling.ConnectAsync(IP, Port);
             Signalling.SendPacketAsync(new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Login,
@@ -244,13 +326,17 @@ namespace VoiceCraft.Core.Client
         {
             if (!CTS.IsCancellationRequested)
             {
-                Signalling.Disconnect(true);
                 CTS.Cancel();
+                Signalling.Disconnect();
+                Voice.Disconnect();
+                if (PositioningType == PositioningTypes.ClientSided) MCWSS.Stop();
             }
         }
 
         public void SendAudio(byte[] Data, int BytesRecorded)
         {
+            if (IsDeafened || IsMuted) return;
+
             //Prevent overloading the highest max count of a uint.
             if (PacketCount >= uint.MaxValue)
                 PacketCount = 0;
@@ -274,6 +360,72 @@ namespace VoiceCraft.Core.Client
                 }
             }; //Audio packet stuff here.
             Voice.SendPacketAsync(packet);
+        }
+
+        public void MuteUnmute()
+        {
+            IsMuted = !IsMuted;
+            if(IsMuted)
+            {
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.Mute,
+                    PacketData = new Packets.Signalling.Mute()
+                });
+            }
+            else
+            {
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.Unmute,
+                    PacketData = new Packets.Signalling.Unmute()
+                });
+            }
+        }
+
+        public void DeafenUndeafen()
+        {
+            IsDeafened = !IsDeafened;
+            if (IsDeafened)
+            {
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.Deafen,
+                    PacketData = new Packets.Signalling.Deafen()
+                });
+            }
+            else
+            {
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.Undeafen,
+                    PacketData = new Packets.Signalling.Undeafen()
+                });
+            }
+        }
+
+        //Static methods
+        public static async Task<string> PingAsync(string IP, int Port)
+        {
+            try
+            {
+                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                await socket.ConnectAsync(IP, Port);
+                var buffer = new byte[1024];
+                var pingTime = DateTime.UtcNow;
+                await socket.SendAsync(new SignallingPacket() { PacketType = SignallingPacketTypes.Ping, PacketData = new Packets.Signalling.Ping() { } }.GetPacketStream(), SocketFlags.None);
+                var networkStream = await socket.ReceiveAsync(buffer, SocketFlags.None);
+                var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                var packet = new SignallingPacket(buffer);
+                var data = (Packets.Signalling.Ping)packet.PacketData;
+                socket.Close();
+                socket.Dispose();
+                return $"{data.ServerData}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+            }
+            catch(Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
     }
 }

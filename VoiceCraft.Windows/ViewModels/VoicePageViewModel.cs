@@ -8,6 +8,7 @@ using VoiceCraft.Windows.Storage;
 using System.Windows;
 using VoiceCraft.Windows.Models;
 using System.Linq;
+using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -105,7 +106,6 @@ namespace VoiceCraft.Windows.ViewModels
         [RelayCommand]
         public void Disconnect()
         {
-            voipService.SendDisconnectPacket = true;
             cts.Cancel();
             Navigator.GoToPreviousPage();
         }
@@ -114,14 +114,14 @@ namespace VoiceCraft.Windows.ViewModels
         public void MuteUnmute()
         {
             IsMuted = !IsMuted;
-            voipService.MuteUnmute();
+            voipService.Network.MuteUnmute();
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
             IsDeafened = !IsDeafened;
-            voipService.DeafenUndeafen();
+            voipService.Network.DeafenUndeafen();
         }
 
         [RelayCommand]

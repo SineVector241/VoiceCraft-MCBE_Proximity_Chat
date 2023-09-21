@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Windows.Network;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Windows.Models
 {

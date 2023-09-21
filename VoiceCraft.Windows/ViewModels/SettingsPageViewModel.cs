@@ -7,7 +7,7 @@ using VoiceCraft.Windows.Storage;
 using System;
 using System.Windows;
 using VoiceCraft.Windows.Audio;
-using VoiceCraft.Windows.Network;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -59,7 +59,7 @@ namespace VoiceCraft.Windows.ViewModels
             }
 
             var audioManager = new AudioManager();
-            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(NetworkManager.SampleRate, 1));
+            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
             AudioRecorder.DataAvailable += AudioDataAvailable;
             AudioRecorder.RecordingStopped += RecorderStopped;
         }

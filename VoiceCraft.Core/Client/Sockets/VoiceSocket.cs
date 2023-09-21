@@ -82,7 +82,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch
                 {
-                    if (!UDPSocket.Connected && !CTS.IsCancellationRequested)
+                    if (!UDPSocket.Connected || CTS.IsCancellationRequested)
                     {
                         Disconnect();
                         break;

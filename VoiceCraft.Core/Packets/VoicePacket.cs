@@ -20,7 +20,7 @@ namespace VoiceCraft.Core.Packets
             PacketType = (VoicePacketTypes)BitConverter.ToUInt16(dataStream, 0); //Read packet type - 2 bytes.
             switch (PacketType)
             {
-                case VoicePacketTypes.Login: PacketData = new Login();
+                case VoicePacketTypes.Login: PacketData = new Login(dataStream, 2);
                     break;
                 case VoicePacketTypes.Accept: PacketData = new Accept();
                     break;

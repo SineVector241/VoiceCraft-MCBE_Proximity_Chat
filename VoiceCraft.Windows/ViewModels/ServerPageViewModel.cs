@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Threading.Tasks;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Windows.Models;
-using VoiceCraft.Windows.Network;
 using VoiceCraft.Windows.Storage;
 using VoiceCraft.Windows.Views;
 
@@ -20,7 +20,7 @@ namespace VoiceCraft.Windows.ViewModels
         {
             Server = Database.GetPassableObject<ServerModel>();
             _ = Task.Run(async () => {
-                var res = await NetworkManager.InfoPingAsync(server.IP, server.Port);
+                var res = await VoiceCraftClient.PingAsync(server.IP, server.Port);
                 ExternalServerInformation = res;
             });
 

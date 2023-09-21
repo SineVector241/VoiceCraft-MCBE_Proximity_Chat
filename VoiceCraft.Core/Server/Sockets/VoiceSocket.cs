@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Voice;
 
 namespace VoiceCraft.Core.Server.Sockets
@@ -13,15 +15,17 @@ namespace VoiceCraft.Core.Server.Sockets
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
         //Delegates
-        public delegate void LoginPacket(Login packet);
-        public delegate void AcceptPacket(Accept packet);
-        public delegate void DenyPacket(Deny packet);
-        public delegate void ClientAudioPacket(ClientAudio packet);
-        public delegate void ServerAudioPacket(ServerAudio packet);
-        public delegate void UpdatePositionPacket(UpdatePosition packet);
-        public delegate void NullPacket(Null packet);
+        public delegate void Started();
+        public delegate void LoginPacket(Login packet, EndPoint endPoint);
+        public delegate void AcceptPacket(Accept packet, EndPoint endPoint);
+        public delegate void DenyPacket(Deny packet, EndPoint endPoint);
+        public delegate void ClientAudioPacket(ClientAudio packet, EndPoint endPoint);
+        public delegate void ServerAudioPacket(ServerAudio packet, EndPoint endPoint);
+        public delegate void UpdatePositionPacket(UpdatePosition packet, EndPoint endPoint);
+        public delegate void NullPacket(Null packet, EndPoint endPoint);
 
         //Events
+        public event Started? OnStarted;
         public event LoginPacket? OnLoginPacketReceived;
         public event AcceptPacket? OnAcceptPacketReceived;
         public event DenyPacket? OnDenyPacketReceived;
@@ -36,55 +40,72 @@ namespace VoiceCraft.Core.Server.Sockets
             CTS = Token;
         }
 
-        public void Start(int Port)
+        public void Start(ushort Port)
         {
             UDPSocket.Bind(new IPEndPoint(IPAddress.Any, Port));
             ListenAsync();
+            OnStarted?.Invoke();
+        }
+
+        public async void SendPacketAsync(IVoicePacket packet, EndPoint EP)
+        {
+            await UDPSocket.SendToAsync(packet.GetPacketStream(), SocketFlags.None, EP);
+        }
+
+        public void SendPacket(IVoicePacket packet, EndPoint EP)
+        {
+            UDPSocket.SendTo(packet.GetPacketStream(), SocketFlags.None, EP);
+        }
+
+        public void Stop()
+        {
+            UDPSocket.Close();
+            UDPSocket.Dispose();
         }
 
         private async void ListenAsync()
         {
-            while (UDPSocket.Connected && !CTS.IsCancellationRequested)
+            while (!CTS.IsCancellationRequested)
             {
                 try
                 {
                     var buffer = new byte[1024];
                     var networkStream = await UDPSocket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
                     var packet = new VoicePacket(buffer);
-                    HandlePacket(packet);
+                    HandlePacket(packet, networkStream.RemoteEndPoint);
                 }
                 catch
                 {
-                    if (!UDPSocket.Connected && !CTS.IsCancellationRequested)
+                    if (CTS.IsCancellationRequested)
                         break;
                 }
             }
         }
 
-        private void HandlePacket(VoicePacket packet)
+        private void HandlePacket(VoicePacket packet, EndPoint EP)
         {
             switch (packet.PacketType)
             {
                 case VoicePacketTypes.Login:
-                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData);
+                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.Accept:
-                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData);
+                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData);
+                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.ClientAudio:
-                    OnClientAudioPacketReceived?.Invoke((ClientAudio)packet.PacketData);
+                    OnClientAudioPacketReceived?.Invoke((ClientAudio)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.ServerAudio:
-                    OnServerAudioPacketReceived?.Invoke((ServerAudio)packet.PacketData);
+                    OnServerAudioPacketReceived?.Invoke((ServerAudio)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.UpdatePosition:
-                    OnUpdatePositionPacketReceived?.Invoke((UpdatePosition)packet.PacketData);
+                    OnUpdatePositionPacketReceived?.Invoke((UpdatePosition)packet.PacketData, EP);
                     break;
                 case VoicePacketTypes.Null:
-                    OnNullPacketReceived?.Invoke((Null)packet.PacketData);
+                    OnNullPacketReceived?.Invoke((Null)packet.PacketData, EP);
                     break;
             }
         }
