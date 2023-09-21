@@ -23,6 +23,8 @@ Packet Length: 2 Bytes + DataLengthInBytes.
 |---------------|----------------|-----------|
 |PositioningType|int (2 Bytes)   |Define whether it is requesting ServerSided positioning or ClientSided positioning.|
 |LoginKey       |ushort (2 Bytes)|Define the request key. If conflicted then choose the next available key and respond.|
+|IsDeafened     |bool (1 Byte)   |Define if the participant is deafened. This is only used from server -> client|
+|IsMuted        |bool (1 Byte)   |Define if the participant is muted. This is only used from server -> client|
 |NameLength     |int (4 Bytes)   |Define the length of the name variable.|
 |VersionLength  |int (4 Bytes)   |Define the length of the version variable.|
 |Name           |char[]          |Define the name of the participant. This is only used from server -> client.|
