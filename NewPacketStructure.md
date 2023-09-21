@@ -6,6 +6,7 @@
 |Accept    |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#accept-packet-clientbound)|
 |Deny      |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound)    |
 |Binded    |[BindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#binded-packet-both)       |
+|Unbinded  |[UnbindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unbinded-packet-serverbound)  |
 |Deafen    |[DeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deafen-packet-both)       |
 |Undeafen  |[UndeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#undeafen-packet-both)   |
 |Mute      |[MutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#mute-packet-both)           |
@@ -22,12 +23,14 @@ Packet Length: 2 Bytes + DataLengthInBytes.
 |---------------|----------------|-----------|
 |PositioningType|int (2 Bytes)   |Define whether it is requesting ServerSided positioning or ClientSided positioning.|
 |LoginKey       |ushort (2 Bytes)|Define the request key. If conflicted then choose the next available key and respond.|
+|IsDeafened     |bool (1 Byte)   |Define if the participant is deafened. This is only used from server -> client|
+|IsMuted        |bool (1 Byte)   |Define if the participant is muted. This is only used from server -> client|
 |NameLength     |int (4 Bytes)   |Define the length of the name variable.|
 |VersionLength  |int (4 Bytes)   |Define the length of the version variable.|
 |Name           |char[]          |Define the name of the participant. This is only used from server -> client.|
 |Version        |char[]          |Define the version of the client. This is only used from client -> server.|
 
-Permanent Length: 12 Bytes.
+Permanent Length: 14 Bytes.
 
 ### Logout Packet: Both
 |Variable|DataType        |Description|
@@ -59,6 +62,12 @@ Permanent Data Length: 4 bytes.
 |Name      |char[]       |Define the name of the participant. This variable is used both ways.|
 
 Permanent Data Length: 4 bytes.
+
+### Unbinded Packet: ServerBound
+|Variable  |DataType     |Description|
+|----------|-------------|-----------|
+
+Permanent Data Length: 0 bytes.
 
 ### Deafen Packet: Both
 |Variable|DataType        |Description|
@@ -126,9 +135,10 @@ Packet Length: 2 Bytes + DataLengthInBytes.
 ## Decapsulated Voice Packets
 ### Login Packet: ServerBound
 |Variable|DataType|Description|
-|--------|--------|-----------|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Login key. This is just used so if there are multiple clients from the same IP they do not conflict|
 
-Permanent Data Length: 0 bytes.
+Permanent Data Length: 2 bytes.
 
 ### Accept Packet: ClientBound
 |Variable|DataType|Description|
