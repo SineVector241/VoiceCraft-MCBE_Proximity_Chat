@@ -174,9 +174,9 @@
                     </TextBox>
 
                     <TextBlock Text="Port"
-                           Foreground="Transparent"
-                           FontSize="20"
-                           Margin="0,10,0,0">
+                               Foreground="Transparent"
+                               FontSize="20"
+                               Margin="0,10,0,0">
                         <TextBlock.RenderTransform>
                             <TranslateTransform Y="20">
                             </TranslateTransform>
@@ -200,16 +200,16 @@
                     </TextBlock>
 
                     <TextBox FontWeight="Medium"
-                         PreviewTextInput="NumbersOnlyTextInput"
-                         FontSize="18"
-                         Foreground="Transparent"
-                         Background="Transparent"
-                         CaretBrush="LightGray"
-                         BorderBrush="Transparent"
-                         BorderThickness="0,0,0,2"
-                         Height="28"
-                         Margin="0,2,0,0"
-                         Text="{Binding Server.Port}">
+                             PreviewTextInput="NumbersOnlyTextInput"
+                             FontSize="18"
+                             Foreground="Transparent"
+                             Background="Transparent"
+                             CaretBrush="LightGray"
+                             BorderBrush="Transparent"
+                             BorderThickness="0,0,0,2"
+                             Height="28"
+                             Margin="0,2,0,0"
+                             Text="{Binding Server.Port}">
                         <TextBox.RenderTransform>
                             <TranslateTransform Y="20">
                             </TranslateTransform>
@@ -230,6 +230,70 @@
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="20" />
                                             <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBox.Triggers>
+                    </TextBox>
+
+                    <TextBlock Text="Key"
+                               Foreground="Transparent"
+                               FontSize="20"
+                               Margin="0,10,0,0">
+                        <TextBlock.RenderTransform>
+                            <TranslateTransform Y="20">
+                            </TranslateTransform>
+                        </TextBlock.RenderTransform>
+                        <TextBlock.Triggers>
+                            <EventTrigger RoutedEvent="TextBlock.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
+                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.6" />
+                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.9" />
+                                        </ColorAnimationUsingKeyFrames>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                            <DiscreteDoubleKeyFrame KeyTime="0:0:0.6" Value="20" />
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.9" Value="0"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBlock.Triggers>
+                    </TextBlock>
+
+                    <TextBox FontWeight="Medium"
+                             PreviewTextInput="NumbersOnlyTextInput"
+                             FontSize="18"
+                             Foreground="Transparent"
+                             Background="Transparent"
+                             CaretBrush="LightGray"
+                             BorderBrush="Transparent"
+                             BorderThickness="0,0,0,2"
+                             Height="28"
+                             Margin="0,2,0,0"
+                             Text="{Binding Server.Key}">
+                        <TextBox.RenderTransform>
+                            <TranslateTransform Y="20">
+                            </TranslateTransform>
+                        </TextBox.RenderTransform>
+
+                        <TextBox.Triggers>
+                            <EventTrigger RoutedEvent="TextBox.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
+                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.7" />
+                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:1" />
+                                        </ColorAnimationUsingKeyFrames>
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush.Color">
+                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.7" />
+                                            <LinearColorKeyFrame Value="DarkGray" KeyTime="0:0:1" />
+                                        </ColorAnimationUsingKeyFrames>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                            <DiscreteDoubleKeyFrame KeyTime="0:0:0.7" Value="20" />
+                                            <LinearDoubleKeyFrame KeyTime="0:0:1" Value="0"/>
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
