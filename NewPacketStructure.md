@@ -30,7 +30,7 @@ Packet Length: 2 Bytes + DataLengthInBytes.
 |Name           |char[]          |Define the name of the participant. This is only used from server -> client.|
 |Version        |char[]          |Define the version of the client. This is only used from client -> server.|
 
-Permanent Length: 12 Bytes.
+Permanent Length: 14 Bytes.
 
 ### Logout Packet: Both
 |Variable|DataType        |Description|
