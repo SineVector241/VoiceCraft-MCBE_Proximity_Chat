@@ -133,9 +133,10 @@ Packet Length: 2 Bytes + DataLengthInBytes.
 ## Decapsulated Voice Packets
 ### Login Packet: ServerBound
 |Variable|DataType|Description|
-|--------|--------|-----------|
+|--------|----------------|-----------|
+|LoginKey|ushort (2 Bytes)|Login key. This is just used so if there are multiple clients from the same IP they do not conflict|
 
-Permanent Data Length: 0 bytes.
+Permanent Data Length: 2 bytes.
 
 ### Accept Packet: ClientBound
 |Variable|DataType|Description|
