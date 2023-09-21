@@ -61,46 +61,46 @@ namespace VoiceCraft.Server
 
         private void SignallingStarted()
         {
-            Logger.LogToConsole(LogType.Success, $"Signalling Started - Port:{server.ServerProperties.SignallingPortTCP} TCP", "Socket");
+            Logger.LogToConsole(LogType.Success, $"Signalling started - Port:{server.ServerProperties.SignallingPortTCP} TCP", "Socket");
         }
 
         private void VoiceStarted()
         {
-            Logger.LogToConsole(LogType.Success, $"Voice Started      - Port:{server.ServerProperties.VoicePortUDP} UDP", "Socket");
+            Logger.LogToConsole(LogType.Success, $"Voice started - Port:{server.ServerProperties.VoicePortUDP} UDP", "Socket");
             if (server.ServerProperties.ConnectionType == ConnectionTypes.Client)
             {
-                Logger.LogToConsole(LogType.Success, "Server Started!", "Server");
+                Logger.LogToConsole(LogType.Success, "Server started!", "Server");
                 Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
             }
         }
 
         private void WebserverStarted()
         {
-            Logger.LogToConsole(LogType.Success, $"MCComm Started     - Port:{server.ServerProperties.MCCommPortTCP} TCP", "Socket");
-            Logger.LogToConsole(LogType.Success, "Server Started!", "Server");
-            Logger.LogToConsole(LogType.Success, $"MCComm Server Key:{server.ServerProperties.PermanentServerKey}", "Server");
+            Logger.LogToConsole(LogType.Success, $"MCComm started - Port:{server.ServerProperties.MCCommPortTCP} TCP", "Socket");
+            Logger.LogToConsole(LogType.Success, "Server started!", "Server");
+            Logger.LogToConsole(LogType.Info, $"Server key: {server.ServerProperties.PermanentServerKey}", "Server");
 
             Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
         }
 
         private void ParticipantConnected(VoiceCraftParticipant participant, ushort key)
         {
-            Logger.LogToConsole(LogType.Success, $"Participant Connected: Key - {key}, Positioning Type - {participant.PositioningType}", "Server");
+            Logger.LogToConsole(LogType.Success, $"Participant connected: Key - {key}, Positioning Type - {participant.PositioningType}", "Server");
         }
 
         private void ParticipantBinded(VoiceCraftParticipant participant, ushort key)
         {
-            Logger.LogToConsole(LogType.Success, $"Participant Binded: Key - {key}, Name - {participant.Name}", "Server");
+            Logger.LogToConsole(LogType.Success, $"Participant binded: Key - {key}, Name - {participant.Name}", "Server");
         }
 
         private void ParticipantUnbinded(VoiceCraftParticipant participant, ushort key)
         {
-            Logger.LogToConsole(LogType.Warn, $"Participant Unbinded: Key - {key}, Name - {participant.Name}", "Server");
+            Logger.LogToConsole(LogType.Warn, $"Participant unbinded: Key - {key}, Name - {participant.Name}", "Server");
         }
 
         private void ParticipantDisconnected(string reason, VoiceCraftParticipant participant, ushort key)
         {
-            Logger.LogToConsole(LogType.Warn, $"Participant Disconnected: Key - {key}, Reason - {reason}", "Server");
+            Logger.LogToConsole(LogType.Warn, $"Participant disconnected: Key - {key}, Reason - {reason}", "Server");
         }
     }
 }

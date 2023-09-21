@@ -16,14 +16,14 @@ namespace VoiceCraft.Server
             //Load properties files and create if not exists.
             if (!File.Exists(PropertiesDirectory))
             {
-                Logger.LogToConsole(LogType.Warn, $"{PropertiesDirectory} file does not exist. Creating file.", "Properties");
+                Logger.LogToConsole(LogType.Warn, $"{PropertiesDirectory} file does not exist. Creating file...", "Properties");
                 string jsonString = JsonConvert.SerializeObject(ServerProperties, Formatting.Indented);
                 File.WriteAllText(PropertiesDirectory, jsonString);
                 Logger.LogToConsole(LogType.Success, $"Successfully created file {PropertiesDirectory}.", "Properties");
             }
             else
             {
-                Logger.LogToConsole(LogType.Info, "Loading Properties...", "Properties");
+                Logger.LogToConsole(LogType.Info, "Loading properties...", "Properties");
                 string jsonString = File.ReadAllText(PropertiesDirectory);
                 var properties = JsonConvert.DeserializeObject<Properties>(jsonString);
                 if (properties != null)
@@ -53,7 +53,7 @@ namespace VoiceCraft.Server
                 ServerProperties.ServerMOTD = "VoiceCraft Proximity Chat!";
             }
 
-            Logger.LogToConsole(LogType.Success, "Loaded Properties Successfully!", "Properties");
+            Logger.LogToConsole(LogType.Success, "Loaded properties successfully!", "Properties");
 
             return ServerProperties;
         }
@@ -63,14 +63,14 @@ namespace VoiceCraft.Server
             //Load banlist files and create if not exists.
             if (!File.Exists(BanlistDirectory))
             {
-                Logger.LogToConsole(LogType.Warn, $"{BanlistDirectory} file does not exist. Creating file.", "Banlist");
+                Logger.LogToConsole(LogType.Warn, $"{BanlistDirectory} file does not exist. Creating file...", "Banlist");
                 string jsonString = JsonConvert.SerializeObject(BanlistData, Formatting.Indented);
                 File.WriteAllText(BanlistDirectory, jsonString);
                 Logger.LogToConsole(LogType.Success, $"Successfully created file {BanlistDirectory}.", "Banlist");
             }
             else
             {
-                Logger.LogToConsole(LogType.Info, "Loading Banlist...", "Banlist");
+                Logger.LogToConsole(LogType.Info, "Loading banlist...", "Banlist");
                 string jsonString = File.ReadAllText(BanlistDirectory);
                 var properties = JsonConvert.DeserializeObject<Banlist>(jsonString);
                 if (properties != null)
@@ -79,7 +79,7 @@ namespace VoiceCraft.Server
                     Logger.LogToConsole(LogType.Warn, $"Failed to parse {BanlistDirectory}. Falling back to default banlist.", "Banlist");
             }
 
-            Logger.LogToConsole(LogType.Success, "Loaded Banlist Successfully!", "Banlist");
+            Logger.LogToConsole(LogType.Success, "Loaded banlist successfully!", "Banlist");
 
             return BanlistData;
         }

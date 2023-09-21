@@ -13,6 +13,7 @@ namespace VoiceCraft.Core.Server
         public bool Binded { get; set; }
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
+        public bool IsServerMuted { get; set; }
 
         //Minecraft Data
         public Vector3 Position { get; set; }
