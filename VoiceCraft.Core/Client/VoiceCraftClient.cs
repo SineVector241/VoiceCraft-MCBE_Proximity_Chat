@@ -20,6 +20,8 @@ namespace VoiceCraft.Core.Client
         public const int SampleRate = 48000;
 
         //Variables
+        private bool SignallingConnected = false;
+        private bool VoiceConnected = false;
         private CancellationTokenSource CTS;
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
@@ -128,6 +130,7 @@ namespace VoiceCraft.Core.Client
         #region Signalling
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
+            SignallingConnected = true;
             LoginKey = packet.LoginKey;
             Voice.Connect(IP, packet.VoicePort);
             Voice.SendPacketAsync(new VoicePacket()
@@ -161,7 +164,7 @@ namespace VoiceCraft.Core.Client
                     Muted = packet.IsMuted,
                     Deafened = packet.IsDeafened
                 };
-                Debug.WriteLine(Participants.TryAdd(packet.LoginKey, participant));
+                Participants.TryAdd(packet.LoginKey, participant);
                 Mixer.AddMixerInput(participant.AudioProvider);
                 OnParticipantJoined?.Invoke(participant, packet.LoginKey);
             }
@@ -230,6 +233,7 @@ namespace VoiceCraft.Core.Client
         #region Voice
         private void VoiceAccept(Packets.Voice.Accept packet)
         {
+            VoiceConnected = true;
             OnConnected?.Invoke();
             if(PositioningType == PositioningTypes.ClientSided) MCWSS.Start();
         }
@@ -305,11 +309,12 @@ namespace VoiceCraft.Core.Client
         }
         #endregion
         //Public Methods
-        public void Connect(string IP, int Port)
+        #region Public Methods
+        public async void Connect(string IP, int Port)
         {
             this.IP = IP;
             this.Port = Port;
-            Signalling.ConnectAsync(IP, Port);
+            await Signalling.ConnectAsync(IP, Port);
             Signalling.SendPacketAsync(new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Login,
@@ -327,6 +332,8 @@ namespace VoiceCraft.Core.Client
             if (!CTS.IsCancellationRequested)
             {
                 CTS.Cancel();
+                SignallingConnected = false;
+                VoiceConnected = false;
                 Signalling.Disconnect();
                 Voice.Disconnect();
                 if (PositioningType == PositioningTypes.ClientSided) MCWSS.Stop();
@@ -410,22 +417,35 @@ namespace VoiceCraft.Core.Client
             try
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await socket.ConnectAsync(IP, Port);
-                var buffer = new byte[1024];
                 var pingTime = DateTime.UtcNow;
-                await socket.SendAsync(new SignallingPacket() { PacketType = SignallingPacketTypes.Ping, PacketData = new Packets.Signalling.Ping() { } }.GetPacketStream(), SocketFlags.None);
-                var networkStream = await socket.ReceiveAsync(buffer, SocketFlags.None);
-                var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
-                var packet = new SignallingPacket(buffer);
-                var data = (Packets.Signalling.Ping)packet.PacketData;
-                socket.Close();
-                socket.Dispose();
-                return $"{data.ServerData}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                if (socket.ConnectAsync(IP, Port).Wait(5000))
+                {
+                    var buffer = new byte[1024];
+                    await socket.SendAsync(new SignallingPacket() { PacketType = SignallingPacketTypes.Ping, PacketData = new Packets.Signalling.Ping() { } }.GetPacketStream(), SocketFlags.None);
+                    var networkStream = await socket.ReceiveAsync(buffer, SocketFlags.None);
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                    var packet = new SignallingPacket(buffer);
+                    if (packet.PacketType == SignallingPacketTypes.Ping)
+                    {
+                        var data = (Packets.Signalling.Ping)packet.PacketData;
+                        socket.Close();
+                        socket.Dispose();
+                        return $"{data.ServerData}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                    }
+                    else
+                        return $"Unexpected packet received\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+                else
+                {
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                    return $"Timed out\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
             }
             catch(Exception ex)
             {
                 return $"Error: {ex.Message}";
             }
         }
+        #endregion
     }
 }

@@ -65,6 +65,10 @@ namespace VoiceCraft.Windows.ViewModels
                 {
                     if(displayParticipant.IsSpeaking != participant.IsSpeaking)
                         displayParticipant.IsSpeaking = participant.IsSpeaking;
+                    if(displayParticipant.IsMuted != participant.IsMuted)
+                        displayParticipant.IsMuted = participant.IsMuted;
+                    if(displayParticipant.IsDeafened != participant.IsDeafened)
+                        displayParticipant.IsDeafened = participant.IsDeafened;
                 }
                 else
                 {

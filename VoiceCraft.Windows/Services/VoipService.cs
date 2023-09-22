@@ -89,7 +89,12 @@ namespace VoiceCraft.Windows.Services
                             //Event Message Update
                             var message = new UpdateUIMessage()
                             {
-                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, Participant = x.Value }).ToList(),
+                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { 
+                                    IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, 
+                                    Participant = x.Value,
+                                    IsMuted = x.Value.Muted,
+                                    IsDeafened = x.Value.Deafened
+                                }).ToList(),
                                 StatusMessage = StatusMessage,
                                 IsMuted = Network.IsMuted,
                                 IsDeafened = Network.IsDeafened,

@@ -8,6 +8,10 @@ namespace VoiceCraft.Windows.Models
         [ObservableProperty]
         public bool isSpeaking;
         [ObservableProperty]
+        public bool isMuted;
+        [ObservableProperty]
+        public bool isDeafened;
+        [ObservableProperty]
         public ushort key;
         [ObservableProperty]
         public VoiceCraftParticipant? participant;

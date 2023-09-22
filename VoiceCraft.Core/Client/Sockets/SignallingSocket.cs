@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Signalling;
@@ -54,11 +55,11 @@ namespace VoiceCraft.Core.Client.Sockets
             CTS = Token;
         }
 
-        public async void ConnectAsync(string IP, int Port)
+        public async Task ConnectAsync(string IP, int Port)
         {
             try
             {
-                await TCPSocket.ConnectAsync(IP, Port); //Timeout on this takes forever. I have no idea how to set a custom timeout.
+                await TCPSocket.ConnectAsync(IP, Port);
                 ListenAsync();
             }
             catch(Exception ex)

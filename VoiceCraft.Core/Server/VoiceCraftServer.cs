@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
@@ -64,10 +65,16 @@ namespace VoiceCraft.Core.Server
             Signalling.OnUnbindedPacketReceived += SignallingUnbinded;
             MCComm.OnBindedPacketReceived += MCCommBinded;
             Voice.OnClientAudioPacketReceived += VoiceClientAudio;
+            Voice.OnUpdatePositionPacketReceived += VoiceUpdatePosition;
+            MCComm.OnUpdatePacketReceived += MCCommUpdate;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
             Signalling.OnDeafenPacketReceived += SignallingDeafen;
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
+
+            MCComm.OnGetSettingsPacketReceived += MCCommGetSettings;
+            MCComm.OnUpdateSettingsPacketReceived += MCCommUpdateSettings;
+            MCComm.OnRemoveParticipantPacketReceived += MCCommRemoveParticipant;
 
             //Ping Packet
             Signalling.OnPingPacketReceived += PingReceived;
@@ -480,7 +487,8 @@ namespace VoiceCraft.Core.Server
                                     LoginKey = participant.Key,
                                     PacketCount = packet.PacketCount,
                                     Volume = volume,
-                                    EchoFactor = ServerProperties.VoiceEffects? participant.Value.CaveDensity * volume : 0.0f
+                                    EchoFactor = ServerProperties.VoiceEffects? participant.Value.CaveDensity * volume : 0.0f,
+                                    Rotation = (float)Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - client.Value.Rotation
                                 }
                             }, client.Value.VoiceEndpoint);
                         }
@@ -514,6 +522,16 @@ namespace VoiceCraft.Core.Server
                         }
                     }
                 }
+            }
+        }
+
+        private void VoiceUpdatePosition(Packets.Voice.UpdatePosition packet, EndPoint endPoint)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
+            if(participant.Value != null && participant.Value.Binded && participant.Value.PositioningType == PositioningTypes.ClientSided)
+            {
+                participant.Value.EnvironmentId = packet.EnvironmentId;
+                participant.Value.Position = packet.Position;
             }
         }
         #endregion
@@ -591,6 +609,88 @@ namespace VoiceCraft.Core.Server
             }
 
             OnParticipantBinded?.Invoke(participant.Value, participant.Key);
+        }
+
+        private void MCCommUpdate(WebserverPacket packet, HttpListenerContext ctx)
+        {
+            for(int i = 0; i < packet.Players.Count; i++)
+            {
+                var player = packet.Players[i];
+                var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == player.PlayerId && x.Value.PositioningType == PositioningTypes.ServerSided);
+                if(participant.Value != null)
+                {
+                    if (!participant.Value.Position.Equals(player.Location))
+                        participant.Value.Position = player.Location;
+
+                    if (participant.Value.EnvironmentId != player.DimensionId)
+                        participant.Value.EnvironmentId = player.DimensionId;
+
+                    if (participant.Value.Rotation != player.Rotation)
+                        participant.Value.Rotation = player.Rotation;
+
+                    if (participant.Value.CaveDensity != player.CaveDensity)
+                        participant.Value.CaveDensity = player.CaveDensity;
+
+                    if (participant.Value.IsDead != player.IsDead)
+                        participant.Value.IsDead = player.IsDead;
+                }
+            }
+        }
+
+        private void MCCommGetSettings(WebserverPacket packet, HttpListenerContext ctx)
+        {
+            var settingsPacket = new WebserverPacket()
+            {
+                Settings = new ServerSettings()
+                {
+                    ProximityDistance = ServerProperties.ProximityDistance,
+                    ProximityToggle = ServerProperties.ProximityToggle,
+                    VoiceEffects = ServerProperties.VoiceEffects
+                }
+            };
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, JsonConvert.SerializeObject(settingsPacket));
+        }
+
+        private void MCCommUpdateSettings(WebserverPacket packet, HttpListenerContext ctx)
+        {
+            if (packet.Settings.ProximityDistance <= 0 || packet.Settings.ProximityDistance > 60)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, "Error. Proximity distance must be higher than 0 or lower than 61!");
+                return;
+            }
+
+            ServerProperties.ProximityDistance = packet.Settings.ProximityDistance;
+            ServerProperties.ProximityToggle = packet.Settings.ProximityToggle;
+            ServerProperties.VoiceEffects = packet.Settings.VoiceEffects;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
+        }
+
+        private void MCCommRemoveParticipant(WebserverPacket packet, HttpListenerContext ctx)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (participant.Value != null)
+            {
+                Participants.TryRemove(participant.Key, out _);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, "Removed");
+                OnParticipantDisconnected?.Invoke("MCComm server kicked.", participant.Value, participant.Key);
+                var list = Participants.Where(x => x.Key != participant.Key);
+                for (ushort i = 0; i < list.Count(); i++)
+                {
+                    var client = list.ElementAt(i);
+                    Signalling.SendPacketAsync(new SignallingPacket()
+                    {
+                        PacketType = SignallingPacketTypes.Logout,
+                        PacketData = new Packets.Signalling.Logout()
+                        {
+                            LoginKey = participant.Key
+                        }
+                    }, client.Value.SignallingSocket);
+                }
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, "Could Not Find Participant");
         }
         #endregion
     }
