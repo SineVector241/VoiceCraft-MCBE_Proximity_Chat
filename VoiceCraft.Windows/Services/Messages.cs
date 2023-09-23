@@ -47,8 +47,11 @@ namespace VoiceCraft.Windows.Services
         public string StatusMessage { get; set; } = string.Empty;
     }
 
-    public class UpdateParticipantsMessage
+    public class UpdateMessage
     {
+        public bool IsMuted { get; set; }
+        public bool IsDeafened { get; set; }
+        public bool IsSpeaking { get; set; }
         public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
     }
 }

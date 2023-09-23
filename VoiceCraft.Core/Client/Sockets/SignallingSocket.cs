@@ -12,8 +12,8 @@ namespace VoiceCraft.Core.Client.Sockets
     public class SignallingSocket : IDisposable
     {
         public Socket TCPSocket { get; }
-        public CancellationToken CTS { get; }
-        public bool Connected { get; private set; }
+        public CancellationToken CT { get; private set; }
+        public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
 
         //Delegates
@@ -31,7 +31,6 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void PingPacket(Ping packet);
         public delegate void NullPacket(Null packet);
 
-        public delegate void SocketConnected(ushort LoginKey, ushort VoicePort);
         public delegate void SocketDisconnected(string reason);
 
         //Events
@@ -50,18 +49,19 @@ namespace VoiceCraft.Core.Client.Sockets
         public event NullPacket? OnNullPacketReceived;
 
         public event SocketDisconnected? OnSocketDisconnected;
-        public event SocketConnected? OnSocketConnected;
 
 
-        public SignallingSocket(CancellationToken Token)
+        public SignallingSocket()
         {
             TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            CTS = Token;
+            CT = new CancellationTokenSource().Token;
         }
 
-        public async void ConnectAsync(string IP, int Port, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
+        public async Task ConnectAsync(string IP, int Port, CancellationToken CT, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(SignallingSocket));
+            if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
+            if (CT != this.CT) this.CT = CT;
 
             try
             {
@@ -70,8 +70,8 @@ namespace VoiceCraft.Core.Client.Sockets
                 await await Task.WhenAny(connectTask, cancelTask);
                 if(cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
 
-                ListenAsync();
-                SendPacketAsync(new SignallingPacket()
+                _ = ListenAsync();
+                _ = SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Login,
                     PacketData = new Login()
@@ -83,16 +83,15 @@ namespace VoiceCraft.Core.Client.Sockets
                 });
 
                 await Task.Delay(3000);
-                if (!Connected) throw new Exception("Signalling timed out");
+                if (!IsConnected) throw new Exception("Signalling timed out");
             }
             catch(Exception ex)
             {
-                if(!CTS.IsCancellationRequested)
-                    OnSocketDisconnected?.Invoke(ex.Message);
+                Disconnect(ex.Message);
             }
         }
 
-        public async void SendPacketAsync(ISignallingPacket packet)
+        public async Task SendPacketAsync(ISignallingPacket packet)
         {
             if (TCPSocket.Connected)
             {
@@ -120,8 +119,8 @@ namespace VoiceCraft.Core.Client.Sockets
                 {
                     TCPSocket.Disconnect(true);
                 }
-                if(reason != null && !CTS.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
-                Connected = false;
+                if(!string.IsNullOrWhiteSpace(reason) && !CT.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
+                IsConnected = false;
             }
             catch (Exception ex)
             {
@@ -131,18 +130,12 @@ namespace VoiceCraft.Core.Client.Sockets
             }
         }
 
-        public void Dispose()
-        {
-            TCPSocket.Dispose();
-            IsDisposed = true;
-        }
-
-        private async void ListenAsync()
+        private async Task ListenAsync()
         {
             byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
             var stream = new NetworkStream(TCPSocket);
-            while (TCPSocket.Connected && !CTS.IsCancellationRequested)
+            while (TCPSocket.Connected && !CT.IsCancellationRequested)
             {
                 try
                 {
@@ -173,7 +166,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch (SocketException ex)
                 {
-                    if (!TCPSocket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
+                    if (!TCPSocket.Connected || CT.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
                         Disconnect(ex.Message);
                         break;
@@ -181,7 +174,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch (Exception ex)
                 {
-                    if (!TCPSocket.Connected || CTS.IsCancellationRequested)
+                    if (!TCPSocket.Connected || CT.IsCancellationRequested)
                     {
                         Disconnect(ex.Message);
                         break;
@@ -197,57 +190,84 @@ namespace VoiceCraft.Core.Client.Sockets
             switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login:
-                    if(Connected)
+                    if(IsConnected)
                         OnLoginPacketReceived?.Invoke((Login)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Logout:
-                    if (Connected)
+                    if (IsConnected)
                         OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Accept:
-                    Connected = true;
+                    IsConnected = true;
                     OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData);
+                    var packetData = (Deny)packet.PacketData;
+                    OnDenyPacketReceived?.Invoke(packetData);
+                    Disconnect(packetData.Reason);
                     break;
                 case SignallingPacketTypes.Binded:
-                    if (Connected)
+                    if (IsConnected)
                         OnBindedPacketReceived?.Invoke((Binded)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unbinded:
-                    if (Connected)
+                    if (IsConnected)
                         OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Deafen:
-                    if (Connected)
+                    if (IsConnected)
                         OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Undeafen:
-                    if (Connected)
+                    if (IsConnected)
                         OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Mute:
-                    if (Connected)
+                    if (IsConnected)
                         OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unmute:
-                    if (Connected)
+                    if (IsConnected)
                         OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Error:
-                    if (Connected)
+                    if (IsConnected)
                         OnErrorPacketReceived?.Invoke((Error)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Ping:
-                    if (Connected)
+                    if (IsConnected)
                         OnPingPacketReceived?.Invoke((Ping)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Null:
-                    if (Connected)
+                    if (IsConnected)
                         OnNullPacketReceived?.Invoke((Null)packet.PacketData);
                     break;
             }
+        }
+
+        //Dispose Handlers
+        ~SignallingSocket()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    TCPSocket.Close();
+                    IsConnected = false;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

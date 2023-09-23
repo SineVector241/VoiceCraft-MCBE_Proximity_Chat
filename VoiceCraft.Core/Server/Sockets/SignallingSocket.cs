@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -103,7 +105,8 @@ namespace VoiceCraft.Core.Server.Sockets
                 {
                     //TCP Is Annoying
                     var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
-                    if (bytes == 0) break; //Socket is closed.
+                    if (bytes == 0) 
+                        break; //Socket is closed.
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
                     //If packets are an invalid length then we break out to prevent memory exceptions and disconnect the client.
@@ -127,6 +130,14 @@ namespace VoiceCraft.Core.Server.Sockets
                     var packet = new SignallingPacket(packetBuffer);
                     HandlePacket(packet, socket);
                 }
+                catch(IOException)
+                {
+                    if (!socket.Connected || CTS.IsCancellationRequested)
+                    {
+                        OnSocketDisconnected?.Invoke(socket, "Lost connection.");
+                        break;
+                    }
+                }
                 catch (Exception ex)
                 {
                     if (!socket.Connected || CTS.IsCancellationRequested)
@@ -138,6 +149,7 @@ namespace VoiceCraft.Core.Server.Sockets
             }
 
             await stream.DisposeAsync();
+            OnSocketDisconnected?.Invoke(socket, "Client logged out");
         }
 
         private async void AcceptConnectionsAsync()

@@ -31,7 +31,7 @@ namespace VoiceCraft.Windows.Services
 
         //Events
         public delegate void UpdateStatus(UpdateStatusMessage message);
-        public delegate void ParticipantsUpdate(UpdateParticipantsMessage message);
+        public delegate void ParticipantsUpdate(UpdateMessage message);
         public delegate void Disconnect(string? Reason);
 
         public event UpdateStatus? OnUpdateStatus;
@@ -89,14 +89,19 @@ namespace VoiceCraft.Windows.Services
                         try
                         {
                             await Task.Delay(200);
-                            var message = new UpdateParticipantsMessage();
+                            var message = new UpdateMessage()
+                            {
+                                IsDeafened = Network.IsDeafened,
+                                IsMuted = Network.IsMuted,
+                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
+                            };
                             for(int i = 0; i < Network.Participants.Count; i++)
                             {
                                 message.Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
                                 {
                                     IsDeafened = x.Value.Deafened,
                                     IsMuted = x.Value.Muted,
-                                    IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1,
+                                    IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalSeconds < 1,
                                     Key = x.Key,
                                     Participant = x.Value
                                 }).ToList();
@@ -139,6 +144,7 @@ namespace VoiceCraft.Windows.Services
                     AudioRecorder.Dispose();
 
                     Network.Disconnect();
+                    Network.Dispose();
                 }
             });
         }

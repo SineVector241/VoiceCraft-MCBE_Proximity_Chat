@@ -10,18 +10,17 @@ using VoiceCraft.Core.Client.Sockets;
 using VoiceCraft.Windows.Network.Sockets;
 using System.Threading.Tasks;
 using System.Net.Sockets;
-using System.IO;
 using System.Diagnostics;
 
 namespace VoiceCraft.Core.Client
 {
-    public class VoiceCraftClient
+    public class VoiceCraftClient : IDisposable
     {
+        #region Fields
         //Constants
         public const int SampleRate = 48000;
 
         //Variables
-        private bool VoiceConnected = false;
         private CancellationTokenSource CTS;
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
@@ -32,6 +31,10 @@ namespace VoiceCraft.Core.Client
         public PositioningTypes PositioningType { get; private set; }
         public bool IsMuted { get; private set; }
         public bool IsDeafened { get; private set; }
+
+        //Object states
+        public bool IsConnected { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         //Changeable Variables
         public bool DirectionalHearing { get; set; }
@@ -72,7 +75,7 @@ namespace VoiceCraft.Core.Client
         public event ParticipantLeft? OnParticipantLeft;
         public event ParticipantUpdated? OnParticipantUpdated;
         public event Disconnected? OnDisconnected;
-
+        #endregion
         public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, string Version, int RecordLengthMS = 40, int MCWSSPort = 8080)
         {
             //Setup variables
@@ -95,35 +98,38 @@ namespace VoiceCraft.Core.Client
 
             //Socket Setup
             CTS = new CancellationTokenSource();
-            Signalling = new SignallingSocket(CTS.Token);
-            Voice = new VoiceSocket(CTS.Token);
+            Signalling = new SignallingSocket();
+            Voice = new VoiceSocket();
             MCWSS = new MCWSSSocket(MCWSSPort);
 
             //Event Registration in login order.
+            //Signalling
             Signalling.OnAcceptPacketReceived += SignallingAccept;
-            Signalling.OnDenyPacketReceived += SignallingDeny;
-            Voice.OnAcceptPacketReceived += VoiceAccept;
-            Voice.OnDenyPacketReceived += VoiceDeny;
             Signalling.OnBindedPacketReceived += SignallingBinded;
-            MCWSS.OnConnect += WebsocketConnected;
             Signalling.OnLoginPacketReceived += SignallingLogin;
-            Voice.OnServerAudioPacketReceived += VoiceServerAudio;
             Signalling.OnLogoutPacketReceived += SignallingLogout;
-            MCWSS.OnDisconnect += WebsocketDisconnected;
-            MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
-
             Signalling.OnDeafenPacketReceived += SignallingDeafen;
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
 
+            //Voice
+            Voice.OnAcceptPacketReceived += VoiceAccept;
+            Voice.OnServerAudioPacketReceived += VoiceServerAudio;
+
+            //MCWSS
+            MCWSS.OnConnect += WebsocketConnected;
+            MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
+            MCWSS.OnDisconnect += WebsocketDisconnected;
+
+            //Socket Disconnections
             Signalling.OnSocketDisconnected += SocketDisconnected;
+            Voice.OnSocketDisconnected += SocketDisconnected;
         }
 
         private void SocketDisconnected(string reason)
         {
-            Disconnect();
-            OnDisconnected?.Invoke(reason);
+            Disconnect(reason);
         }
 
         //Signalling Event Methods
@@ -131,44 +137,17 @@ namespace VoiceCraft.Core.Client
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
             LoginKey = packet.LoginKey;
-            Voice.Connect(IP, packet.VoicePort);
-            Voice.SendPacketAsync(new VoicePacket()
-            {
-                PacketType = VoicePacketTypes.Login,
-                PacketData = new Packets.Voice.Login()
-                {
-                    LoginKey = LoginKey
-                }
-            });
-            //Packets could be dropped. So we need to loop. This will be implemented later.
-
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(5000);
-                if(!VoiceConnected && !CTS.IsCancellationRequested)
-                {
-                    Disconnect();
-                    OnDisconnected?.Invoke("Voice connection timed out");
-                }
-            });
-        }
-
-        private void SignallingDeny(Packets.Signalling.Deny packet)
-        {
-            Disconnect();
-            OnDisconnected?.Invoke(packet.Reason);
+            _ = Voice.ConnectAsync(IP, packet.VoicePort, CTS.Token, LoginKey);
         }
 
         private void SignallingBinded(Packets.Signalling.Binded packet)
         {
-            if (!VoiceConnected) return;
-
             OnBinded?.Invoke(packet.Name);
         }
 
         private void SignallingLogin(Packets.Signalling.Login packet)
         {
-            if (!Participants.ContainsKey(packet.LoginKey) && VoiceConnected)
+            if (!Participants.ContainsKey(packet.LoginKey))
             {
                 var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, RecordLengthMS)
                 {
@@ -183,8 +162,6 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingLogout(Packets.Signalling.Logout packet)
         {
-            if (!VoiceConnected) return;
-
             //Logout participant. If LoginKey is the same as this then disconnect.
             if (packet.LoginKey == LoginKey)
             {
@@ -204,8 +181,6 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingDeafen(Packets.Signalling.Deafen packet)
         {
-            if (!VoiceConnected) return;
-
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
             {
@@ -216,8 +191,6 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingUndeafen(Packets.Signalling.Undeafen packet)
         {
-            if (!VoiceConnected) return;
-
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
             {
@@ -228,8 +201,6 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingMute(Packets.Signalling.Mute packet)
         {
-            if (!VoiceConnected) return;
-
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
             {
@@ -240,8 +211,6 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingUnmute(Packets.Signalling.Unmute packet)
         {
-            if (!VoiceConnected) return;
-
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
             {
@@ -254,15 +223,8 @@ namespace VoiceCraft.Core.Client
         #region Voice
         private void VoiceAccept(Packets.Voice.Accept packet)
         {
-            VoiceConnected = true;
+            IsConnected = true;
             OnConnected?.Invoke();
-            if(PositioningType == PositioningTypes.ClientSided) MCWSS.Start();
-        }
-
-        private void VoiceDeny(Packets.Voice.Deny packet)
-        {
-            Disconnect();
-            OnDisconnected?.Invoke(packet.Reason);
         }
 
         private void VoiceServerAudio(Packets.Voice.ServerAudio packet)
@@ -277,24 +239,14 @@ namespace VoiceCraft.Core.Client
                 participant.AddAudioSamples(packet.Audio, packet.PacketCount);
             }
         }
-
-        private static short[] BytesToShorts(byte[] input, int offset, int length)
-        {
-            short[] processedValues = new short[length / 2];
-            for (int c = 0; c < processedValues.Length; c++)
-            {
-                processedValues[c] = (short)(input[c * 2 + offset] << 0);
-                processedValues[c] += (short)(input[c * 2 + 1 + offset] << 8);
-            }
-
-            return processedValues;
-        }
         #endregion
         //Websocket Event Methods
         #region MCWSS
         private void WebsocketConnected(string Username)
         {
-            Signalling.SendPacketAsync(new SignallingPacket()
+            if (!IsConnected) return;
+
+            _ = Signalling.SendPacketAsync(new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Binded,
                 PacketData = new Packets.Signalling.Binded()
@@ -307,7 +259,9 @@ namespace VoiceCraft.Core.Client
 
         private void WebsocketPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
         {
-            Voice.SendPacketAsync(new VoicePacket()
+            if(!IsConnected) return;
+
+            _ = Voice.SendPacketAsync(new VoicePacket()
             {
                 PacketType = VoicePacketTypes.UpdatePosition,
                 PacketData = new Packets.Voice.UpdatePosition()
@@ -320,7 +274,9 @@ namespace VoiceCraft.Core.Client
 
         private void WebsocketDisconnected()
         {
-            Signalling.SendPacketAsync(new SignallingPacket()
+            if (!IsConnected) return;
+
+            _ = Signalling.SendPacketAsync(new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Unbinded,
                 PacketData = new Packets.Signalling.Unbinded()
@@ -333,7 +289,9 @@ namespace VoiceCraft.Core.Client
         #region Public Methods
         public void Connect(string IP, int Port)
         {
-            VoiceConnected = false;
+            if(IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
+
             this.IP = IP;
             this.Port = Port;
 
@@ -341,28 +299,37 @@ namespace VoiceCraft.Core.Client
             {
                 CTS.Dispose();
                 CTS = new CancellationTokenSource();
-                Signalling = new SignallingSocket(CTS.Token);
-                Voice = new VoiceSocket(CTS.Token);
-                MCWSS = new MCWSSSocket(MCWSSPort);
             }
-            Signalling.ConnectAsync(IP, Port, LoginKey, PositioningType, Version);
+            _ = Signalling.ConnectAsync(IP, Port, CTS.Token, LoginKey, PositioningType, Version);
         }
 
-        public void Disconnect()
+        public void Disconnect(string? Reason = null)
         {
-            if (!CTS.IsCancellationRequested)
+            try
             {
-                CTS.Cancel();
-                VoiceConnected = false;
-                Signalling.Disconnect();
-                Voice.Disconnect();
-                if (PositioningType == PositioningTypes.ClientSided) MCWSS.Stop();
+                if(!CTS.IsCancellationRequested)
+                {
+                    CTS.Cancel();
+                    Signalling.Disconnect();
+                    Voice.Disconnect();
+                    MCWSS.Stop();
+                    if (!string.IsNullOrWhiteSpace(Reason)) OnDisconnected?.Invoke(Reason);
+                    IsConnected = false;
+                    IsMuted = false;
+                    IsDeafened = false;
+                }
+            }
+            catch(Exception ex)
+            {
+#if DEBUG
+                Debug.WriteLine(ex);
+#endif
             }
         }
 
         public void SendAudio(byte[] Data, int BytesRecorded)
         {
-            if (IsDeafened || IsMuted) return;
+            if (IsDeafened || IsMuted || !IsConnected) return;
 
             //Prevent overloading the highest max count of a uint.
             if (PacketCount >= uint.MaxValue)
@@ -386,15 +353,17 @@ namespace VoiceCraft.Core.Client
                     PacketCount = PacketCount
                 }
             }; //Audio packet stuff here.
-            Voice.SendPacketAsync(packet);
+            _ = Voice.SendPacketAsync(packet);
         }
 
         public void SetMute(bool Muted)
         {
+            if(!IsConnected) return;
+
             IsMuted = Muted;
             if(IsMuted)
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
+                _ = Signalling.SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Mute,
                     PacketData = new Packets.Signalling.Mute()
@@ -402,7 +371,7 @@ namespace VoiceCraft.Core.Client
             }
             else
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
+                _ = Signalling.SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Unmute,
                     PacketData = new Packets.Signalling.Unmute()
@@ -412,10 +381,12 @@ namespace VoiceCraft.Core.Client
 
         public void SetDeafen(bool Deafened)
         {
+            if (!IsConnected) return;
+
             IsDeafened = Deafened;
             if (IsDeafened)
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
+                _ = Signalling.SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Deafen,
                     PacketData = new Packets.Signalling.Deafen()
@@ -423,7 +394,7 @@ namespace VoiceCraft.Core.Client
             }
             else
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
+                _ = Signalling.SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Undeafen,
                     PacketData = new Packets.Signalling.Undeafen()
@@ -498,5 +469,64 @@ namespace VoiceCraft.Core.Client
             return message;
         }
         #endregion
+
+        //Dispose Handlers
+        ~VoiceCraftClient()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(!IsDisposed)
+            {
+                if(disposing)
+                {
+                    CTS.Dispose();
+                    Signalling.Dispose();
+                    MCWSS.Dispose();
+                    Voice.Dispose();
+                    Participants.Clear();
+                    IsConnected = false;
+
+                    //Deregister Events
+                    Signalling.OnAcceptPacketReceived -= SignallingAccept;
+                    Signalling.OnBindedPacketReceived -= SignallingBinded;
+                    Signalling.OnLoginPacketReceived -= SignallingLogin;
+                    Signalling.OnLogoutPacketReceived -= SignallingLogout;
+                    Signalling.OnDeafenPacketReceived -= SignallingDeafen;
+                    Signalling.OnUndeafenPacketReceived -= SignallingUndeafen;
+                    Signalling.OnMutePacketReceived -= SignallingMute;
+                    Signalling.OnUnmutePacketReceived -= SignallingUnmute;
+                    Voice.OnAcceptPacketReceived -= VoiceAccept;
+                    Voice.OnServerAudioPacketReceived -= VoiceServerAudio;
+                    MCWSS.OnConnect -= WebsocketConnected;
+                    MCWSS.OnPlayerTravelled -= WebsocketPlayerTravelled;
+                    MCWSS.OnDisconnect -= WebsocketDisconnected;
+                    Signalling.OnSocketDisconnected -= SocketDisconnected;
+                    Voice.OnSocketDisconnected -= SocketDisconnected;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        //private methods
+        private static short[] BytesToShorts(byte[] input, int offset, int length)
+        {
+            short[] processedValues = new short[length / 2];
+            for (int c = 0; c < processedValues.Length; c++)
+            {
+                processedValues[c] = (short)(input[c * 2 + offset] << 0);
+                processedValues[c] += (short)(input[c * 2 + 1 + offset] << 8);
+            }
+
+            return processedValues;
+        }
     }
 }

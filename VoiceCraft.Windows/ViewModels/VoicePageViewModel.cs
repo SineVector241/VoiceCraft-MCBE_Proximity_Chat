@@ -44,7 +44,7 @@ namespace VoiceCraft.Windows.ViewModels
             voipService.OnParticipantsUpdate += ParticipantsUpdate;
         }
 
-        private void ParticipantsUpdate(UpdateParticipantsMessage message)
+        private void ParticipantsUpdate(UpdateMessage message)
         {
             for (int i = 0; i < message.Participants.Count; i++)
             {
@@ -70,6 +70,10 @@ namespace VoiceCraft.Windows.ViewModels
                     Participants.Remove(Participants[i]);
                 }
             }
+
+            IsSpeaking = message.IsSpeaking;
+            IsDeafened = message.IsDeafened;
+            IsMuted = message.IsMuted;
         }
 
         private void OnServerUpdateStatus(UpdateStatusMessage message)

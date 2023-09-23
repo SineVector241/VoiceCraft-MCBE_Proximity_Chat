@@ -1,19 +1,22 @@
 ﻿using Fleck;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 using VoiceCraft.Core.Client.Builders;
 
 namespace VoiceCraft.Windows.Network.Sockets
 {
-    public class MCWSSSocket
+    public class MCWSSSocket : IDisposable
     {
         //Variables
-        private WebSocketServer? Socket;
-        private ushort SocketCount;
-        private List<IWebSocketConnection> AllSockets = new List<IWebSocketConnection>();
+        private WebSocketServer Socket;
+        private IWebSocketConnection? ConnectedSocket;
         private readonly string[] Dimensions;
+        private int Port;
+
+        public bool IsConnected { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         //Events
         public delegate void Connect(string Username);
@@ -26,23 +29,23 @@ namespace VoiceCraft.Windows.Network.Sockets
 
         public MCWSSSocket(int Port)
         {
+            this.Port = Port;
             Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");
             Dimensions = new string[] { "minecraft:overworld", "minecraft:nether", "minecraft:end" };
-            SocketCount = 0;
         }
 
         public void Start()
         {
-            Socket?.Start(socket =>
+            Socket.Start(socket =>
             {
                 socket.OnOpen = () =>
                 {
-                    AllSockets.Add(socket);
-                    SocketCount++;
-                    if (SocketCount <= 1)
+                    if (ConnectedSocket == null)
                     {
                         socket.Send(new CommandBuilder().SetCommand("/getlocalplayername").Build());
                         socket.Send(new EventBuilder().SetEventType(EventType.PlayerTravelled).Build());
+                        ConnectedSocket = socket;
+                        IsConnected = true;
                     }
                     else
                         socket.Close();
@@ -50,10 +53,10 @@ namespace VoiceCraft.Windows.Network.Sockets
 
                 socket.OnClose = () =>
                 {
-                    AllSockets.Remove(socket);
-                    SocketCount--;
-                    if (SocketCount <= 0)
+                    if (socket == ConnectedSocket)
                     {
+                        ConnectedSocket = null;
+                        IsConnected = false;
                         OnDisconnect?.Invoke();
                     }
                 };
@@ -90,14 +93,35 @@ namespace VoiceCraft.Windows.Network.Sockets
 
         public void Stop()
         {
-            foreach(var socket in AllSockets)
-            {
-                socket.Close();
-            }
+            if (ConnectedSocket != null) ConnectedSocket.Close();
+            ConnectedSocket = null;
+            Socket.Dispose();
+            Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");
+        }
 
-            AllSockets.Clear();
-            Socket?.Dispose();
-            Socket = null;
+        //Dispose Handlers
+        ~MCWSSSocket()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    Socket.Dispose();
+                    IsConnected = false;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
