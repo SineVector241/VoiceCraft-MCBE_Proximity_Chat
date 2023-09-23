@@ -45,12 +45,14 @@ namespace VoiceCraft.Core.Client.Sockets
 
         public async void SendPacketAsync(IVoicePacket packet)
         {
-            await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
+            if(UDPSocket.Connected)
+                await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
         public void SendPacket(IVoicePacket packet)
         {
-            UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
+            if (UDPSocket.Connected)
+                UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
         }
 
         public void Disconnect()

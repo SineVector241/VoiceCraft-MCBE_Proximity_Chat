@@ -14,6 +14,7 @@ namespace VoiceCraft.Windows.Services
         public Exception? Exception { get; set; }
     }
 
+    //Control Messages
     public class MuteUnmuteMessage
     { }
 
@@ -29,15 +30,25 @@ namespace VoiceCraft.Windows.Services
     public class DisconnectMessage
     { }
 
-    public class UpdateUIMessage
+    //UI Updates
+    public class RequestUIMessage
+    { }
+
+    public class ResponseUIMessage
     {
-        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
-        public string StatusMessage { get; set; } = "";
+        public string StatusMessage { get; set; } = string.Empty;
         public bool IsMuted { get; set; }
         public bool IsDeafened { get; set; }
-        public bool IsSpeaking { get; set; }
+        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
     }
 
-    public class RequestUIUpdate
-    { }
+    public class  UpdateStatusMessage
+    {
+        public string StatusMessage { get; set; } = string.Empty;
+    }
+
+    public class UpdateParticipantsMessage
+    {
+        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
+    }
 }

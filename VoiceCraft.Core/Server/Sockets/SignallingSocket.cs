@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -67,12 +68,22 @@ namespace VoiceCraft.Core.Server.Sockets
 
         public async void SendPacketAsync(ISignallingPacket packet, Socket socket)
         {
-            await socket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
+            if (socket.Connected)
+            {
+                var packetStream = packet.GetPacketStream();
+                await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                await socket.SendAsync(packetStream, SocketFlags.None);
+            }
         }
 
         public void SendPacket(ISignallingPacket packet, Socket socket)
         {
-            socket.Send(packet.GetPacketStream(), SocketFlags.None);
+            if (socket.Connected)
+            {
+                var packetStream = packet.GetPacketStream();
+                socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                socket.Send(packetStream, SocketFlags.None);
+            }
         }
 
         public void Stop()
@@ -83,14 +94,37 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private async void ListenAsync(Socket socket)
         {
+            byte[]? packetBuffer = null;
+            byte[] lengthBuffer = new byte[2];
+            var stream = new NetworkStream(socket);
             while (!CTS.IsCancellationRequested)
             {
                 try
                 {
-                    CTS.ThrowIfCancellationRequested();
-                    var buffer = new byte[1024];
-                    var networkStream = await socket.ReceiveAsync(buffer, SocketFlags.None);
-                    var packet = new SignallingPacket(buffer);
+                    //TCP Is Annoying
+                    var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
+                    if (bytes == 0) break; //Socket is closed.
+
+                    ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
+                    //If packets are an invalid length then we break out to prevent memory exceptions and disconnect the client.
+                    if (packetLength > 1024)
+                    {
+                        socket.Close(); //Close the socket because the client sent an invalid packet.
+                        throw new Exception("Invalid packet received.");
+                    }//Packets will never be bigger than 500 bytes but the hard limit is 1024 bytes/1mb
+
+                    packetBuffer = new byte[packetLength];
+
+                    //Read until packet is fully received
+                    int offset = 0;
+                    while (offset < packetLength)
+                    {
+                        int bytesRead = await stream.ReadAsync(packetBuffer, offset, packetLength).ConfigureAwait(false);
+                        if (bytesRead == 0) break; //Socket is closed.
+
+                        offset += bytesRead;
+                    }
+                    var packet = new SignallingPacket(packetBuffer);
                     HandlePacket(packet, socket);
                 }
                 catch (Exception ex)
@@ -102,6 +136,8 @@ namespace VoiceCraft.Core.Server.Sockets
                     }
                 }
             }
+
+            await stream.DisposeAsync();
         }
 
         private async void AcceptConnectionsAsync()

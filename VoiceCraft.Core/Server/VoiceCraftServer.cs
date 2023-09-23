@@ -456,7 +456,7 @@ namespace VoiceCraft.Core.Server
         {
             var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
             if (participant.Value != null && 
-                !participant.Value.IsMuted && participant.Value.IsDeafened && 
+                !participant.Value.IsMuted && !participant.Value.IsDeafened && 
                 !participant.Value.IsServerMuted && participant.Value.Binded &&
                 !string.IsNullOrWhiteSpace(participant.Value.EnvironmentId))
             {
@@ -477,7 +477,7 @@ namespace VoiceCraft.Core.Server
 
                         if (client.Value.VoiceEndpoint != null)
                         {
-                            var volume = Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
+                            var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
                             Voice.SendPacketAsync(new VoicePacket()
                             {
                                 PacketType = VoicePacketTypes.ServerAudio,
@@ -635,6 +635,8 @@ namespace VoiceCraft.Core.Server
                         participant.Value.IsDead = player.IsDead;
                 }
             }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated");
         }
 
         private void MCCommGetSettings(WebserverPacket packet, HttpListenerContext ctx)

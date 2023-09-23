@@ -58,6 +58,11 @@ namespace VoiceCraft.Core.Packets
 
             return dataStream.ToArray();
         }
+
+        public static ushort GetPacketLength(byte[] dataStream)
+        {
+            return BitConverter.ToUInt16(dataStream, 0);
+        }
     }
 
     public enum SignallingPacketTypes

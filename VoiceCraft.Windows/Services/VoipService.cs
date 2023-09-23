@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,10 +30,12 @@ namespace VoiceCraft.Windows.Services
         private SoftLimiter? Normalizer;
 
         //Events
-        public delegate void Update(UpdateUIMessage Data);
+        public delegate void UpdateStatus(UpdateStatusMessage message);
+        public delegate void ParticipantsUpdate(UpdateParticipantsMessage message);
         public delegate void Disconnect(string? Reason);
 
-        public event Update? OnUpdate;
+        public event UpdateStatus? OnUpdateStatus;
+        public event ParticipantsUpdate? OnParticipantsUpdate;
         public event Disconnect? OnServiceDisconnect;
 
         public VoipService()
@@ -85,29 +88,30 @@ namespace VoiceCraft.Windows.Services
                         CT.ThrowIfCancellationRequested();
                         try
                         {
-                            await Task.Delay(500);
-                            //Event Message Update
-                            var message = new UpdateUIMessage()
+                            await Task.Delay(200);
+                            var message = new UpdateParticipantsMessage();
+                            for(int i = 0; i < Network.Participants.Count; i++)
                             {
-                                Participants = Network.Participants.Select(x => new ParticipantDisplayModel() { 
-                                    IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalMilliseconds <= 100, 
-                                    Participant = x.Value,
+                                message.Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
+                                {
+                                    IsDeafened = x.Value.Deafened,
                                     IsMuted = x.Value.Muted,
-                                    IsDeafened = x.Value.Deafened
-                                }).ToList(),
-                                StatusMessage = StatusMessage,
-                                IsMuted = Network.IsMuted,
-                                IsDeafened = Network.IsDeafened,
-                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
-                            };
+                                    IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1,
+                                    Key = x.Key,
+                                    Participant = x.Value
+                                }).ToList();
+                            }
+
                             App.Current?.Dispatcher.Invoke(() =>
                             {
-                                OnUpdate?.Invoke(message);
+                                OnParticipantsUpdate?.Invoke(message);
                             });
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex);
+#if DEBUG
+                            Debug.WriteLine(ex);
+#endif
                             App.Current?.Dispatcher.Invoke(() =>
                             {
                                 var message = new ServiceErrorMessage() { Exception = ex };
@@ -169,6 +173,25 @@ namespace VoiceCraft.Windows.Services
             }
         }
 
+        public ResponseUIMessage RequestUI()
+        {
+            var message = new ResponseUIMessage()
+            {
+                IsDeafened = Network.IsDeafened,
+                IsMuted = Network.IsMuted,
+                Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
+                {
+                    IsDeafened = x.Value.Deafened,
+                    IsMuted = x.Value.Muted,
+                    IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1,
+                    Key = x.Key,
+                    Participant = x.Value
+                }).ToList(),
+                StatusMessage = StatusMessage
+            };
+            return message;
+        }
+
         //Goes in this protocol order.
         private void OnConnected()
         {
@@ -176,8 +199,8 @@ namespace VoiceCraft.Windows.Services
 
             App.Current?.Dispatcher.Invoke(() =>
             {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
+                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
+                OnUpdateStatus?.Invoke(message);
             });
         }
 
@@ -196,8 +219,8 @@ namespace VoiceCraft.Windows.Services
 
             App.Current?.Dispatcher.Invoke(() =>
             {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
+                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
+                OnUpdateStatus?.Invoke(message);
             });
         }
 
@@ -207,8 +230,8 @@ namespace VoiceCraft.Windows.Services
 
             App.Current?.Dispatcher.Invoke(() =>
             {
-                var message = new UpdateUIMessage() { StatusMessage = StatusMessage };
-                OnUpdate?.Invoke(message);
+                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
+                OnUpdateStatus?.Invoke(message);
             });
         }
 

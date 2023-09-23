@@ -8,7 +8,6 @@ using VoiceCraft.Windows.Storage;
 using System.Windows;
 using VoiceCraft.Windows.Models;
 using System.Linq;
-using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -41,45 +40,41 @@ namespace VoiceCraft.Windows.ViewModels
         public VoicePageViewModel()
         {
             voipService.OnServiceDisconnect += OnServiceDisconnect;
-            voipService.OnUpdate += OnUpdate;
+            voipService.OnUpdateStatus += OnServerUpdateStatus;
+            voipService.OnParticipantsUpdate += ParticipantsUpdate;
         }
 
-        private void OnUpdate(UpdateUIMessage Data)
+        private void ParticipantsUpdate(UpdateParticipantsMessage message)
         {
-            if(StatusText != Data.StatusMessage)
-                StatusText = Data.StatusMessage;
-
-            if(IsMuted != Data.IsMuted)
-                IsMuted = Data.IsMuted;
-
-            if (IsDeafened != Data.IsDeafened)
-                IsDeafened = Data.IsDeafened;
-
-            if (IsSpeaking != Data.IsSpeaking)
-                IsSpeaking = Data.IsSpeaking;
-
-            foreach(var participant in Data.Participants)
+            for (int i = 0; i < message.Participants.Count; i++)
             {
+                var participant = message.Participants[i];
                 var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
                 if (displayParticipant != null)
                 {
-                    if(displayParticipant.IsSpeaking != participant.IsSpeaking)
-                        displayParticipant.IsSpeaking = participant.IsSpeaking;
-                    if(displayParticipant.IsMuted != participant.IsMuted)
-                        displayParticipant.IsMuted = participant.IsMuted;
-                    if(displayParticipant.IsDeafened != participant.IsDeafened)
-                        displayParticipant.IsDeafened = participant.IsDeafened;
+                    displayParticipant.IsDeafened = participant.IsDeafened;
+                    displayParticipant.IsMuted = participant.IsMuted;
+                    displayParticipant.IsSpeaking = participant.IsSpeaking;
                 }
                 else
                 {
                     Participants.Add(participant);
                 }
             }
-            for(int i = 0; i < Participants.Count; i++)
+
+            for (int i = 0; i < Participants.Count; i++)
             {
-                if (!Data.Participants.Exists(x => x.Key == Participants[i].Key))
-                    Participants.RemoveAt(i);
+                var participant = message.Participants.FirstOrDefault(x => x.Key == Participants[i].Key);
+                if(participant == null)
+                {
+                    Participants.Remove(Participants[i]);
+                }
             }
+        }
+
+        private void OnServerUpdateStatus(UpdateStatusMessage message)
+        {
+            StatusText = message.StatusMessage;
         }
 
         private void OnServiceDisconnect(string? Reason)
@@ -118,14 +113,14 @@ namespace VoiceCraft.Windows.ViewModels
         public void MuteUnmute()
         {
             IsMuted = !IsMuted;
-            voipService.Network.MuteUnmute();
+            voipService.Network.SetMute(IsMuted);
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
             IsDeafened = !IsDeafened;
-            voipService.Network.DeafenUndeafen();
+            voipService.Network.SetDeafen(IsDeafened);
         }
 
         [RelayCommand]
