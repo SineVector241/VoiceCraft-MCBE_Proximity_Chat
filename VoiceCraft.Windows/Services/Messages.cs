@@ -31,17 +31,6 @@ namespace VoiceCraft.Windows.Services
     { }
 
     //UI Updates
-    public class RequestUIMessage
-    { }
-
-    public class ResponseUIMessage
-    {
-        public string StatusMessage { get; set; } = string.Empty;
-        public bool IsMuted { get; set; }
-        public bool IsDeafened { get; set; }
-        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
-    }
-
     public class  UpdateStatusMessage
     {
         public string StatusMessage { get; set; } = string.Empty;

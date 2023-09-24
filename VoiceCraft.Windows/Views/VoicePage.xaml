@@ -67,7 +67,7 @@
                     <DataTemplate>
                         <Grid>
                             <Border Padding="10"
-                                    Margin="0"
+                                    Margin="2,4"
                                     HorizontalAlignment="Stretch">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -101,7 +101,7 @@
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsMuted}" Value="False">
-                                                            <Setter Property="Visibility" Value="Hidden"/>
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -120,7 +120,7 @@
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsDeafened}" Value="False">
-                                                            <Setter Property="Visibility" Value="Hidden"/>
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

@@ -2,10 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
 using System;
-using System.Diagnostics;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Interfaces;
 using VoiceCraft.Mobile.Models;
-using VoiceCraft.Mobile.Network;
 using VoiceCraft.Mobile.Storage;
 using Xamarin.Forms;
 
@@ -27,7 +26,7 @@ namespace VoiceCraft.Mobile.ViewModels
         public SettingsPageViewModel()
         {
             var audioManager = DependencyService.Get<IAudioManager>();
-            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(NetworkManager.SampleRate, 1));
+            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
         }
 
         private void RecorderStopped(object? sender, StoppedEventArgs e)

@@ -66,7 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NAudio.Core">
-      <Version>2.1.0</Version>
+      <Version>2.2.1</Version>
     </PackageReference>
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2578" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.5" />
@@ -103,6 +103,10 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\VoiceCraft.Core\VoiceCraft.Core.csproj">
+      <Project>{9ad70ac5-760b-4f4c-b0b3-956bf272a1d2}</Project>
+      <Name>VoiceCraft.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VoiceCraft.Mobile\VoiceCraft.Mobile.csproj">
       <Project>{43224577-9FDD-4434-B7FD-FCAAC3504F01}</Project>
       <Name>VoiceCraft.Mobile</Name>

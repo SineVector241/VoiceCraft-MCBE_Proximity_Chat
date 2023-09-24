@@ -71,7 +71,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 if(cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
 
                 _ = ListenAsync();
-                _ = SendPacketAsync(new SignallingPacket()
+                await SendPacketAsync(new SignallingPacket()
                 {
                     PacketType = SignallingPacketTypes.Login,
                     PacketData = new Login()
@@ -95,9 +95,18 @@ namespace VoiceCraft.Core.Client.Sockets
         {
             if (TCPSocket.Connected)
             {
-                var packetStream = packet.GetPacketStream();
-                await TCPSocket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
-                await TCPSocket.SendAsync(packetStream, SocketFlags.None);
+                try
+                {
+                    var packetStream = packet.GetPacketStream();
+                    await TCPSocket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                    await TCPSocket.SendAsync(packetStream, SocketFlags.None);
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine(ex);
+#endif
+                }
             }
         }
 
@@ -105,9 +114,18 @@ namespace VoiceCraft.Core.Client.Sockets
         {
             if (TCPSocket.Connected)
             {
-                var packetStream = packet.GetPacketStream();
-                TCPSocket.Send(BitConverter.GetBytes((ushort)(packetStream.Length)), SocketFlags.None);
-                TCPSocket.Send(packetStream, SocketFlags.None);
+                try
+                {
+                    var packetStream = packet.GetPacketStream();
+                    TCPSocket.Send(BitConverter.GetBytes((ushort)(packetStream.Length)), SocketFlags.None);
+                    TCPSocket.Send(packetStream, SocketFlags.None);
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine(ex);
+#endif
+                }
             }
         }
 

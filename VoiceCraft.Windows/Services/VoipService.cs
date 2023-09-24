@@ -35,7 +35,7 @@ namespace VoiceCraft.Windows.Services
         public delegate void Disconnect(string? Reason);
 
         public event UpdateStatus? OnUpdateStatus;
-        public event ParticipantsUpdate? OnParticipantsUpdate;
+        public event ParticipantsUpdate? OnUpdate;
         public event Disconnect? OnServiceDisconnect;
 
         public VoipService()
@@ -109,7 +109,7 @@ namespace VoiceCraft.Windows.Services
 
                             App.Current?.Dispatcher.Invoke(() =>
                             {
-                                OnParticipantsUpdate?.Invoke(message);
+                                OnUpdate?.Invoke(message);
                             });
                         }
                         catch (Exception ex)
@@ -177,25 +177,6 @@ namespace VoiceCraft.Windows.Services
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
-        }
-
-        public ResponseUIMessage RequestUI()
-        {
-            var message = new ResponseUIMessage()
-            {
-                IsDeafened = Network.IsDeafened,
-                IsMuted = Network.IsMuted,
-                Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
-                {
-                    IsDeafened = x.Value.Deafened,
-                    IsMuted = x.Value.Muted,
-                    IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1,
-                    Key = x.Key,
-                    Participant = x.Value
-                }).ToList(),
-                StatusMessage = StatusMessage
-            };
-            return message;
         }
 
         //Goes in this protocol order.

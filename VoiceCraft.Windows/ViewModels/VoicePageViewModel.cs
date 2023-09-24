@@ -40,11 +40,11 @@ namespace VoiceCraft.Windows.ViewModels
         public VoicePageViewModel()
         {
             voipService.OnServiceDisconnect += OnServiceDisconnect;
-            voipService.OnUpdateStatus += OnServerUpdateStatus;
-            voipService.OnParticipantsUpdate += ParticipantsUpdate;
+            voipService.OnUpdateStatus += OnUpdateStatus;
+            voipService.OnUpdate += Update;
         }
 
-        private void ParticipantsUpdate(UpdateMessage message)
+        private void Update(UpdateMessage message)
         {
             for (int i = 0; i < message.Participants.Count; i++)
             {
@@ -76,7 +76,7 @@ namespace VoiceCraft.Windows.ViewModels
             IsMuted = message.IsMuted;
         }
 
-        private void OnServerUpdateStatus(UpdateStatusMessage message)
+        private void OnUpdateStatus(UpdateStatusMessage message)
         {
             StatusText = message.StatusMessage;
         }

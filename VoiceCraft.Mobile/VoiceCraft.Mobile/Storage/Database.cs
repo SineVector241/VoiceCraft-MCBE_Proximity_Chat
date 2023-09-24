@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using VoiceCraft.Mobile.Models;
-using Xamarin.Forms;
 
 namespace VoiceCraft.Mobile.Storage
 {
@@ -21,9 +20,9 @@ namespace VoiceCraft.Mobile.Storage
         public delegate void ServerUpdated(ServerModel Server);
         public delegate void ServerRemove(ServerModel Server);
 
-        public static event ServerAdd OnServerAdd;
-        public static event ServerUpdated OnServerUpdated;
-        public static event ServerRemove OnServerRemove;
+        public static event ServerAdd? OnServerAdd;
+        public static event ServerUpdated? OnServerUpdated;
+        public static event ServerRemove? OnServerRemove;
 
         public static List<ServerModel> GetServers()
         {
@@ -83,7 +82,6 @@ namespace VoiceCraft.Mobile.Storage
         {
             if (settings.WebsocketPort < 1025) throw new Exception("Websocket Port cannot be lower than 1025");
             else if (settings.WebsocketPort > 65535) throw new Exception("Websocket Port cannot be higher than 65535");
-            else if (settings.PreferredPermanentKey > 65535) throw new Exception("Preferred Permanent Key cannot be higher than 65535");
             else if (settings.SoftLimiterGain < 1) throw new Exception("SoftLimiter Gain cannot be lower than 1");
             else if (settings.SoftLimiterGain > 20) throw new Exception("SoftLimiter Gain cannot be higher than 20");
             DBData.Settings = settings;

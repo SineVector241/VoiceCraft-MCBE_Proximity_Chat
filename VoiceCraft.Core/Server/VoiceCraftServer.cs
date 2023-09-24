@@ -59,19 +59,23 @@ namespace VoiceCraft.Core.Server
             MCComm.OnStarted += MCCommStarted;
 
             //Event methods in order!
+            //Signalling
             Signalling.OnLoginPacketReceived += SignallingLogin;
-            Voice.OnLoginPacketReceived += OnVoiceLogin;
             Signalling.OnBindedPacketReceived += SignallingBinded;
-            Signalling.OnUnbindedPacketReceived += SignallingUnbinded;
-            MCComm.OnBindedPacketReceived += MCCommBinded;
-            Voice.OnClientAudioPacketReceived += VoiceClientAudio;
-            Voice.OnUpdatePositionPacketReceived += VoiceUpdatePosition;
-            MCComm.OnUpdatePacketReceived += MCCommUpdate;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
             Signalling.OnDeafenPacketReceived += SignallingDeafen;
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
+            Signalling.OnUnbindedPacketReceived += SignallingUnbinded;
 
+            //Voice
+            Voice.OnLoginPacketReceived += OnVoiceLogin;
+            Voice.OnClientAudioPacketReceived += VoiceClientAudio;
+            Voice.OnUpdatePositionPacketReceived += VoiceUpdatePosition;
+
+            //MCComm
+            MCComm.OnBindedPacketReceived += MCCommBinded;
+            MCComm.OnUpdatePacketReceived += MCCommUpdate;
             MCComm.OnGetSettingsPacketReceived += MCCommGetSettings;
             MCComm.OnUpdateSettingsPacketReceived += MCCommUpdateSettings;
             MCComm.OnRemoveParticipantPacketReceived += MCCommRemoveParticipant;
@@ -454,75 +458,78 @@ namespace VoiceCraft.Core.Server
 
         private void VoiceClientAudio(Packets.Voice.ClientAudio packet, EndPoint endPoint)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
-            if (participant.Value != null && 
-                !participant.Value.IsMuted && !participant.Value.IsDeafened && 
-                !participant.Value.IsServerMuted && participant.Value.Binded &&
-                !string.IsNullOrWhiteSpace(participant.Value.EnvironmentId))
+            _ = Task.Run(() =>
             {
-                if (ServerProperties.ProximityToggle && !participant.Value.IsDead)
+                var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
+                if (participant.Value != null &&
+                    !participant.Value.IsMuted && !participant.Value.IsDeafened &&
+                    !participant.Value.IsServerMuted && participant.Value.Binded &&
+                    !string.IsNullOrWhiteSpace(participant.Value.EnvironmentId))
                 {
-                    var list = Participants.Where(x =>
-                    x.Key != participant.Key &&
-                    x.Value.Binded &&
-                    !x.Value.IsDeafened &&
-                    !x.Value.IsDead &&
-                    !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
-                    x.Value.EnvironmentId == participant.Value.EnvironmentId &&
-                    Vector3.Distance(x.Value.Position, participant.Value.Position) <= ServerProperties.ProximityDistance);
-
-                    for (ushort i = 0; i < list.Count(); i++)
+                    if (ServerProperties.ProximityToggle && !participant.Value.IsDead)
                     {
-                        var client = list.ElementAt(i);
+                        var list = Participants.Where(x =>
+                        x.Key != participant.Key &&
+                        x.Value.Binded &&
+                        !x.Value.IsDeafened &&
+                        !x.Value.IsDead &&
+                        !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
+                        x.Value.EnvironmentId == participant.Value.EnvironmentId &&
+                        Vector3.Distance(x.Value.Position, participant.Value.Position) <= ServerProperties.ProximityDistance);
 
-                        if (client.Value.VoiceEndpoint != null)
+                        for (ushort i = 0; i < list.Count(); i++)
                         {
-                            var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
-                            Voice.SendPacketAsync(new VoicePacket()
+                            var client = list.ElementAt(i);
+
+                            if (client.Value.VoiceEndpoint != null)
                             {
-                                PacketType = VoicePacketTypes.ServerAudio,
-                                PacketData = new Packets.Voice.ServerAudio()
+                                var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
+                                Voice.SendPacketAsync(new VoicePacket()
                                 {
-                                    Audio = packet.Audio,
-                                    LoginKey = participant.Key,
-                                    PacketCount = packet.PacketCount,
-                                    Volume = volume,
-                                    EchoFactor = ServerProperties.VoiceEffects? participant.Value.CaveDensity * volume : 0.0f,
-                                    Rotation = (float)Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - client.Value.Rotation
-                                }
-                            }, client.Value.VoiceEndpoint);
+                                    PacketType = VoicePacketTypes.ServerAudio,
+                                    PacketData = new Packets.Voice.ServerAudio()
+                                    {
+                                        Audio = packet.Audio,
+                                        LoginKey = participant.Key,
+                                        PacketCount = packet.PacketCount,
+                                        Volume = volume,
+                                        EchoFactor = ServerProperties.VoiceEffects ? participant.Value.CaveDensity * volume : 0.0f,
+                                        Rotation = (float)Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - client.Value.Rotation
+                                    }
+                                }, client.Value.VoiceEndpoint);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var list = Participants.Where(x =>
+                        x.Key != participant.Key &&
+                        x.Value.Binded);
+
+                        for (ushort i = 0; i < list.Count(); i++)
+                        {
+                            var client = list.ElementAt(i);
+
+                            if (client.Value.VoiceEndpoint != null)
+                            {
+                                Voice.SendPacketAsync(new VoicePacket()
+                                {
+                                    PacketType = VoicePacketTypes.ServerAudio,
+                                    PacketData = new Packets.Voice.ServerAudio()
+                                    {
+                                        Audio = packet.Audio,
+                                        LoginKey = participant.Key,
+                                        PacketCount = packet.PacketCount,
+                                        Volume = 1.0f,
+                                        EchoFactor = 0.0f,
+                                        Rotation = 0.0f
+                                    }
+                                }, client.Value.VoiceEndpoint);
+                            }
                         }
                     }
                 }
-                else
-                {
-                    var list = Participants.Where(x =>
-                    x.Key != participant.Key &&
-                    x.Value.Binded);
-
-                    for (ushort i = 0; i < list.Count(); i++)
-                    {
-                        var client = list.ElementAt(i);
-
-                        if (client.Value.VoiceEndpoint != null)
-                        {
-                            Voice.SendPacketAsync(new VoicePacket()
-                            {
-                                PacketType = VoicePacketTypes.ServerAudio,
-                                PacketData = new Packets.Voice.ServerAudio()
-                                {
-                                    Audio = packet.Audio,
-                                    LoginKey = participant.Key,
-                                    PacketCount = packet.PacketCount,
-                                    Volume = 1.0f,
-                                    EchoFactor = 0.0f,
-                                    Rotation = 0.0f
-                                }
-                            }, client.Value.VoiceEndpoint);
-                        }
-                    }
-                }
-            }
+            });
         }
 
         private void VoiceUpdatePosition(Packets.Voice.UpdatePosition packet, EndPoint endPoint)

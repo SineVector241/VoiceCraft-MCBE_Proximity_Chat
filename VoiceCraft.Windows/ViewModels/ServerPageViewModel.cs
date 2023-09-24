@@ -20,7 +20,7 @@ namespace VoiceCraft.Windows.ViewModels
         {
             Server = Database.GetPassableObject<ServerModel>();
             _ = Task.Run(async () => {
-                var res = await VoiceCraftClient.PingAsync(server.IP, server.Port);
+                var res = await VoiceCraftClient.PingAsync(Server.IP, Server.Port);
                 ExternalServerInformation = res;
             });
 

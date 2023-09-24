@@ -52,8 +52,9 @@ namespace VoiceCraft.Core.Client.Sockets
 
             try
             {
-                await UDPSocket.ConnectAsync(IP, Port);
-                _ = SendPacketAsync(new VoicePacket()
+                UDPSocket.Connect(IP, Port);
+                _ = ListenAsync();
+                await SendPacketAsync(new VoicePacket()
                 {
                     PacketType = VoicePacketTypes.Login,
                     PacketData = new Login()
@@ -61,7 +62,6 @@ namespace VoiceCraft.Core.Client.Sockets
                         LoginKey = LoginKey
                     }
                 });
-                _ = ListenAsync();
                 await Task.Delay(5000);
                 if (!IsConnected) throw new Exception("Voice timed out");
             }

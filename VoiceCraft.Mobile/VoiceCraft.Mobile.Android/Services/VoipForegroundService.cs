@@ -34,22 +34,22 @@ namespace VoiceCraft.Mobile.Droid.Services
                 {
                     voipService = new VoipService();
                     voipService.OnUpdate += OnUpdate;
+                    voipService.OnUpdateStatus += UpdateStatus;
                     voipService.OnServiceDisconnect += ServiceDisconnect;
 
                     MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message =>
                     {
-                        voipService.SendDisconnectPacket = true;
                         cts.Cancel();
                     });
 
                     MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message =>
                     {
-                        voipService.MuteUnmute();
+                        voipService.Network.SetMute(message.Value);
                     });
 
                     MessagingCenter.Subscribe<DeafenUndeafen>(this, "DeafenUndeafen", message => 
                     {
-                        voipService.DeafenUndeafen();
+                        voipService.Network.SetDeafen(message.Value);
                     });
 
                     voipService.Start(cts.Token).Wait();
@@ -70,6 +70,7 @@ namespace VoiceCraft.Mobile.Droid.Services
                     });
 
                     voipService.OnUpdate -= OnUpdate;
+                    voipService.OnUpdateStatus -= UpdateStatus;
                     voipService.OnServiceDisconnect -= ServiceDisconnect;
                 }
             }, cts.Token);
@@ -108,7 +109,14 @@ namespace VoiceCraft.Mobile.Droid.Services
             });
         }
 
-        private void OnUpdate(UpdateUIMessage Data)
+        private void UpdateStatus(UpdateStatusMessage Data)
+        {
+            Device.BeginInvokeOnMainThread(() => {
+                MessagingCenter.Send(Data, "UpdateStatus");
+            });
+        }
+
+        private void OnUpdate(UpdateMessage Data)
         {
             Device.BeginInvokeOnMainThread(() => {
                 MessagingCenter.Send(Data, "Update");
