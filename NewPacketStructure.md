@@ -1,19 +1,19 @@
 ## Encapsulated Signalling Packets TCP
-|PacketLength    |PacketType|Data                                                                                                                                    |
-|----------------|----------|----------------------------------------------------------------------------------------------------------------------------------------|
-|ushort (2 Bytes)|Login     |[LoginPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#login-packet-both)         |
-|ushort (2 Bytes)|Logout    |[LogoutPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#logout-packet-both)       |
-|ushort (2 Bytes)|Accept    |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#accept-packet-clientbound)|
-|ushort (2 Bytes)|Deny      |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound)    |
-|ushort (2 Bytes)|Binded    |[BindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#binded-packet-both)       |
-|ushort (2 Bytes)|Unbinded  |[UnbindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unbinded-packet-serverbound)  |
-|ushort (2 Bytes)|Deafen    |[DeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deafen-packet-both)       |
-|ushort (2 Bytes)|Undeafen  |[UndeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#undeafen-packet-both)   |
-|ushort (2 Bytes)|Mute      |[MutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#mute-packet-both)           |
-|ushort (2 Bytes)|Unmute    |[UnmutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unmute-packet-both)       |
-|ushort (2 Bytes)|Error     |[ErrorPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#error-packet-clientbound)  |
-|ushort (2 Bytes)|Ping      |[PingPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#ping-packet-both)           |
-|ushort (2 Bytes)|Null      |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both)           |
+|PacketType|Data                                                                                                                                    |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------|
+|Login     |[LoginPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#login-packet-both)         |
+|Logout    |[LogoutPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#logout-packet-both)       |
+|Accept    |[AcceptPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#accept-packet-clientbound)|
+|Deny      |[DenyPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deny-packet-clientbound)    |
+|Binded    |[BindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#binded-packet-both)       |
+|Unbinded  |[UnbindedPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unbinded-packet-serverbound)  |
+|Deafen    |[DeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#deafen-packet-both)       |
+|Undeafen  |[UndeafenPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#undeafen-packet-both)   |
+|Mute      |[MutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#mute-packet-both)           |
+|Unmute    |[UnmutePacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#unmute-packet-both)       |
+|Error     |[ErrorPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#error-packet-clientbound)  |
+|Ping      |[PingPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#ping-packet-both)           |
+|Null      |[NullPacket](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/blob/dev/NewPacketStructure.md#null-packet-both)           |
 
 Packet Length: 4 Bytes + DataLengthInBytes.
 
