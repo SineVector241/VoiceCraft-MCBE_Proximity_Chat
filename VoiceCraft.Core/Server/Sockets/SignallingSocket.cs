@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -149,6 +147,7 @@ namespace VoiceCraft.Core.Server.Sockets
             }
 
             await stream.DisposeAsync();
+            socket.Dispose();
             OnSocketDisconnected?.Invoke(socket, "Client logged out");
         }
 

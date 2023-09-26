@@ -463,11 +463,12 @@ namespace VoiceCraft.Core.Server
                 var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
                 if (participant.Value != null &&
                     !participant.Value.IsMuted && !participant.Value.IsDeafened &&
-                    !participant.Value.IsServerMuted && participant.Value.Binded &&
-                    !string.IsNullOrWhiteSpace(participant.Value.EnvironmentId))
+                    !participant.Value.IsServerMuted && participant.Value.Binded)
                 {
-                    if (ServerProperties.ProximityToggle && !participant.Value.IsDead)
+                    if (ServerProperties.ProximityToggle)
                     {
+                        if (participant.Value.IsDead && string.IsNullOrWhiteSpace(participant.Value.EnvironmentId)) return;
+
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
                         x.Value.Binded &&
