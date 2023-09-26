@@ -11,5 +11,7 @@
         public bool ClientSidedPositioning { get; set; }
         public bool LinearVolume { get; set; }
         public bool SoftLimiterEnabled { get; set; } = true;
+        public string MuteKeybind { get; set; } = "LControlKey+M";
+        public string DeafenKeybind { get; set; } = "LControlKey+LShiftKey+D";
     }
 }

@@ -235,7 +235,11 @@ namespace VoiceCraft.Core.Client
             {
                 participant.ProximityVolume = LinearVolume ? (float)((Math.Exp(packet.Volume) - 1) / (Math.E - 1)) : packet.Volume;
                 participant.EchoProvider.EchoFactor = packet.EchoFactor;
-                //Directional Hearing implemented later...
+                if (PositioningType != PositioningTypes.ClientSided && DirectionalHearing)
+                {
+                    participant.AudioProvider.RightVolume = (float)(0.5 + Math.Cos(packet.Rotation) * 0.5);
+                    participant.AudioProvider.LeftVolume = (float)(0.5 - Math.Cos(packet.Rotation) * 0.5);
+                }
                 participant.AddAudioSamples(packet.Audio, packet.PacketCount);
             }
         }

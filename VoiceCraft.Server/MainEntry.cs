@@ -154,7 +154,7 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "Unmute [key: ushort] - Unmutes a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Kick [key: ushort] - Kicks a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Ban [key: ushort] - Bans a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans an IP address.", "Commands");
             Logger.LogToConsole(LogType.Info, "Banlist - Shows a list of banned IP addresses.", "Commands");
             Logger.LogToConsole(LogType.Info, "SetProximity [Distance: int] - Sets the proximity distance.", "Commands");
             Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");

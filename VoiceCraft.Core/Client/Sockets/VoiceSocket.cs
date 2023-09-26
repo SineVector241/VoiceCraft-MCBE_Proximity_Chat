@@ -73,13 +73,13 @@ namespace VoiceCraft.Core.Client.Sockets
 
         public async Task SendPacketAsync(IVoicePacket packet)
         {
-            if(UDPSocket.Connected)
+            if(IsConnected)
                 await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
         public void SendPacket(IVoicePacket packet)
         {
-            if (UDPSocket.Connected)
+            if (IsConnected)
                 UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
         }
 
@@ -87,10 +87,6 @@ namespace VoiceCraft.Core.Client.Sockets
         {
             try
             {
-                if(UDPSocket.Connected)
-                {
-                    UDPSocket.Disconnect(true);
-                }
                 if (!string.IsNullOrWhiteSpace(reason) && !CT.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
                 IsConnected = false;
             }

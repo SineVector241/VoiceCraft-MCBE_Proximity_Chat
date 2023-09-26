@@ -76,6 +76,8 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0"
                           Margin="0,5">
@@ -253,19 +255,83 @@
                         </Slider>
                     </Grid>
 
+                    <Grid Grid.Row="10"
+                          Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding Settings.MuteKeybind, StringFormat='Mute Keybind: {0}'}"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <Button FontSize="15"
+                                Command="{Binding SetMuteKeybindCommand}"
+                                Height="40"
+                                Margin="10,0,0,0"
+                                Grid.Column="1">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SettingMute}" Value="True">
+                                            <Setter Property="Content" Value="Cancel" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SettingMute}" Value="False">
+                                            <Setter Property="Content" Value="Set Keybind" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="11"
+                          Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding Settings.DeafenKeybind, StringFormat='Deafen Keybind: {0}'}"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+
+                        <Button FontSize="15"
+                                Command="{Binding SetDeafenKeybindCommand}"
+                                Height="40"
+                                Margin="10,0,0,0"
+                                Grid.Column="1">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SettingDeafen}" Value="True">
+                                            <Setter Property="Content" Value="Cancel" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SettingDeafen}" Value="False">
+                                            <Setter Property="Content" Value="Set Keybind" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
                     <Button Content="Save Settings"
                             FontSize="15"
                             Command="{Binding SaveCommand}"
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="10"/>
+                            Grid.Row="12"/>
 
                     <Button FontSize="15"
                             Command="{Binding OpenCloseMicrophoneCommand}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="11">
+                            Grid.Row="13">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
                                 <Style.Triggers>
@@ -286,7 +352,7 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="12"/>
+                            Grid.Row="14"/>
                 </Grid>
 
                 <Border.Triggers>

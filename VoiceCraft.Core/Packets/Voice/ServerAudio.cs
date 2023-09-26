@@ -48,7 +48,7 @@ namespace VoiceCraft.Core.Packets.Voice
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
             dataStream.AddRange(BitConverter.GetBytes(Volume));
             dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
-            dataStream.AddRange(BitConverter.GetBytes(Volume));
+            dataStream.AddRange(BitConverter.GetBytes(Rotation));
 
             if (Audio.Length > 0)
                 dataStream.AddRange(BitConverter.GetBytes(Audio.Length));

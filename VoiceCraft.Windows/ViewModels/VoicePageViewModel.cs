@@ -8,6 +8,9 @@ using VoiceCraft.Windows.Storage;
 using System.Windows;
 using VoiceCraft.Windows.Models;
 using System.Linq;
+using Gma.System.MouseKeyHook;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -15,6 +18,7 @@ namespace VoiceCraft.Windows.ViewModels
     {
         private VoipService voipService = new VoipService();
         private CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
+        private IKeyboardMouseEvents Events { get; set; } = Hook.GlobalEvents();
 
         [ObservableProperty]
         string statusText = "Connecting...";
@@ -37,11 +41,46 @@ namespace VoiceCraft.Windows.ViewModels
         [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
+        private List<System.Windows.Forms.Keys> PressedKeys = new List<System.Windows.Forms.Keys>();
+        private string MuteKeybind = "Undefined";
+        private string DeafenKeybind = "Undefined";
+
         public VoicePageViewModel()
         {
             voipService.OnServiceDisconnect += OnServiceDisconnect;
             voipService.OnUpdateStatus += OnUpdateStatus;
             voipService.OnUpdate += Update;
+
+            Events.KeyDown += KeyDown;
+            Events.KeyUp += KeyUp;
+        }
+
+        private void KeyUp(object? sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            PressedKeys.Remove(e.KeyCode);
+        }
+
+        private void KeyDown(object? sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (!PressedKeys.Contains(e.KeyCode))
+            {
+                PressedKeys.Add(e.KeyCode);
+                var combinedKeys = string.Empty;
+                for(int i = 0; i < PressedKeys.Count; i++)
+                {
+                    combinedKeys += string.IsNullOrWhiteSpace(combinedKeys)? PressedKeys[i].ToString() : $"+{PressedKeys[i].ToString()}";
+                }
+                if(combinedKeys == MuteKeybind)
+                {
+                    IsMuted = !IsMuted;
+                    voipService.Network.SetMute(IsMuted);
+                }
+                if(combinedKeys == DeafenKeybind)
+                {
+                    IsDeafened = !IsDeafened;
+                    voipService.Network.SetDeafen(IsDeafened);
+                }
+            }
         }
 
         private void Update(UpdateMessage message)
@@ -84,6 +123,12 @@ namespace VoiceCraft.Windows.ViewModels
         private void OnServiceDisconnect(string? Reason)
         {
             cts.Cancel();
+            Events.Dispose();
+            Events.KeyDown -= KeyDown;
+            Events.KeyUp -= KeyUp;
+            voipService.OnServiceDisconnect -= OnServiceDisconnect;
+            voipService.OnUpdate -= Update;
+            voipService.OnUpdateStatus -= OnUpdateStatus;
             if (!string.IsNullOrWhiteSpace(Reason))
                 MessageBox.Show(Reason, "Disconnect", MessageBoxButton.OK, MessageBoxImage.Warning);
             Navigator.GoToPreviousPage();
@@ -97,6 +142,8 @@ namespace VoiceCraft.Windows.ViewModels
                 try
                 {
                     var settings = Database.GetSettings();
+                    MuteKeybind = settings.MuteKeybind;
+                    DeafenKeybind = settings.DeafenKeybind;
                     voipService.Start(cts.Token).Wait();
                 }
                 catch
@@ -110,6 +157,12 @@ namespace VoiceCraft.Windows.ViewModels
         public void Disconnect()
         {
             cts.Cancel();
+            Events.Dispose();
+            Events.KeyDown -= KeyDown;
+            Events.KeyUp -= KeyUp;
+            voipService.OnServiceDisconnect -= OnServiceDisconnect;
+            voipService.OnUpdate -= Update;
+            voipService.OnUpdateStatus -= OnUpdateStatus;
             Navigator.GoToPreviousPage();
         }
 
