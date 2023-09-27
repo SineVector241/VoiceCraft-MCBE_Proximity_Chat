@@ -194,6 +194,19 @@ namespace VoiceCraft.Core.Server
                 }, socket);
                 return;
             }
+            if (Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket).Value != null)
+            {
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.Deny,
+                    PacketData = new Packets.Signalling.Deny()
+                    {
+                        Reason = "Already logged in!"
+                    }
+                }, socket);
+                return;
+            }
+
             var key = packet.LoginKey;
             var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
 
