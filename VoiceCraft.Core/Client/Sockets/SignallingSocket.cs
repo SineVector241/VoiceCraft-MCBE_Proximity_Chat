@@ -12,7 +12,7 @@ namespace VoiceCraft.Core.Client.Sockets
     public class SignallingSocket : IDisposable
     {
         public Socket TCPSocket { get; }
-        public CancellationToken CT { get; private set; }
+        public CancellationTokenSource CTS { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
 
@@ -54,14 +54,13 @@ namespace VoiceCraft.Core.Client.Sockets
         public SignallingSocket()
         {
             TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            CT = new CancellationTokenSource().Token;
+            CTS = new CancellationTokenSource();
         }
 
-        public async Task ConnectAsync(string IP, int Port, CancellationToken CT, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
+        public async Task ConnectAsync(string IP, int Port, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(SignallingSocket));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
-            if (CT != this.CT) this.CT = CT;
 
             try
             {
@@ -133,11 +132,12 @@ namespace VoiceCraft.Core.Client.Sockets
         {
             try
             {
+                CTS.Cancel();
                 if (TCPSocket.Connected)
                 {
                     TCPSocket.Disconnect(true);
                 }
-                if(!string.IsNullOrWhiteSpace(reason) && !CT.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
+                if(!string.IsNullOrWhiteSpace(reason)) OnSocketDisconnected?.Invoke(reason);
                 IsConnected = false;
             }
             catch (Exception ex)
@@ -153,13 +153,17 @@ namespace VoiceCraft.Core.Client.Sockets
             byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
             var stream = new NetworkStream(TCPSocket);
-            while (TCPSocket.Connected && !CT.IsCancellationRequested)
+            while (TCPSocket.Connected && !CTS.IsCancellationRequested)
             {
                 try
                 {
                     //TCP Is Annoying
                     var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
-                    if (bytes == 0) break; //Socket is closed.
+                    if (bytes == 0)
+                    {
+                        if (!TCPSocket.Connected || CTS.IsCancellationRequested)
+                            break;
+                    }//Socket is closed.
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
                     //If packets are an invalid length then we break out to prevent memory exceptions
@@ -184,7 +188,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch (SocketException ex)
                 {
-                    if (!TCPSocket.Connected || CT.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
+                    if (!TCPSocket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
                         Disconnect(ex.Message);
                         break;
@@ -192,7 +196,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch (Exception ex)
                 {
-                    if (!TCPSocket.Connected || CT.IsCancellationRequested)
+                    if (!TCPSocket.Connected || CTS.IsCancellationRequested)
                     {
                         Disconnect(ex.Message);
                         break;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace VoiceCraft.Core.Client.Sockets
     public class VoiceSocket : IDisposable
     {
         public Socket UDPSocket { get; }
-        public CancellationToken CT { get; private set; }
+        public CancellationTokenSource CTS { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
 
@@ -41,14 +42,13 @@ namespace VoiceCraft.Core.Client.Sockets
         public VoiceSocket()
         {
             UDPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            CT = new CancellationTokenSource().Token;
+            CTS = new CancellationTokenSource();
         }
 
-        public async Task ConnectAsync(string IP, int Port, CancellationToken CT, ushort LoginKey = 0)
+        public async Task ConnectAsync(string IP, int Port, ushort LoginKey = 0)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(SignallingSocket));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
-            if(CT != this.CT) this.CT = CT;
 
             try
             {
@@ -73,13 +73,13 @@ namespace VoiceCraft.Core.Client.Sockets
 
         public async Task SendPacketAsync(IVoicePacket packet)
         {
-            if(IsConnected)
+            if(!CTS.IsCancellationRequested)
                 await UDPSocket.SendAsync(packet.GetPacketStream(), SocketFlags.None);
         }
 
         public void SendPacket(IVoicePacket packet)
         {
-            if (IsConnected)
+            if (!CTS.IsCancellationRequested)
                 UDPSocket.Send(packet.GetPacketStream(), SocketFlags.None);
         }
 
@@ -87,7 +87,8 @@ namespace VoiceCraft.Core.Client.Sockets
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(reason) && !CT.IsCancellationRequested) OnSocketDisconnected?.Invoke(reason);
+                CTS.Cancel();
+                if (!string.IsNullOrWhiteSpace(reason)) OnSocketDisconnected?.Invoke(reason);
                 IsConnected = false;
             }
             catch (Exception ex)
@@ -100,7 +101,7 @@ namespace VoiceCraft.Core.Client.Sockets
 
         private async Task ListenAsync()
         {
-            while (UDPSocket.Connected && !CT.IsCancellationRequested)
+            while (!CTS.IsCancellationRequested)
             {
                 try
                 {
@@ -111,7 +112,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 }
                 catch
                 {
-                    if (!UDPSocket.Connected || CT.IsCancellationRequested)
+                    if (CTS.IsCancellationRequested)
                     {
                         Disconnect();
                         break;

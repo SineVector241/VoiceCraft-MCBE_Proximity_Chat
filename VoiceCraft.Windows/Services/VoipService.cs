@@ -79,6 +79,7 @@ namespace VoiceCraft.Windows.Services
                 Network.OnDisconnected += OnDisconnected;
 
                 AudioRecorder.DataAvailable += DataAvailable;
+                AudioRecorder.RecordingStopped += RecordingStopped;
 
                 try
                 {
@@ -95,7 +96,7 @@ namespace VoiceCraft.Windows.Services
                                 IsMuted = Network.IsMuted,
                                 IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1
                             };
-                            for(int i = 0; i < Network.Participants.Count; i++)
+                            for (int i = 0; i < Network.Participants.Count; i++)
                             {
                                 message.Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
                                 {
@@ -111,6 +112,8 @@ namespace VoiceCraft.Windows.Services
                             {
                                 OnUpdate?.Invoke(message);
                             });
+
+                            if (AudioPlayer.PlaybackState != PlaybackState.Playing) AudioPlayer.Play();
                         }
                         catch (Exception ex)
                         {
@@ -135,6 +138,7 @@ namespace VoiceCraft.Windows.Services
                     Network.OnDisconnected -= OnDisconnected;
 
                     AudioRecorder.DataAvailable -= DataAvailable;
+                    AudioRecorder.RecordingStopped -= RecordingStopped;
 
                     if (AudioPlayer.PlaybackState == PlaybackState.Playing)
                         AudioPlayer.Stop();
@@ -177,6 +181,11 @@ namespace VoiceCraft.Windows.Services
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
+        }
+
+        private void RecordingStopped(object? sender, StoppedEventArgs e)
+        {
+            AudioRecorder.StartRecording();
         }
 
         //Goes in this protocol order.

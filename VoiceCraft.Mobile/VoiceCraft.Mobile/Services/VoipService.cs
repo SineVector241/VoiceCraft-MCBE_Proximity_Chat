@@ -81,6 +81,7 @@ namespace VoiceCraft.Mobile.Services
                 Network.OnDisconnected += OnDisconnected;
 
                 AudioRecorder.DataAvailable += DataAvailable;
+                AudioRecorder.RecordingStopped += RecordingStopped;
 
                 try
                 {
@@ -138,6 +139,7 @@ namespace VoiceCraft.Mobile.Services
                     Network.OnDisconnected -= OnDisconnected;
 
                     AudioRecorder.DataAvailable -= DataAvailable;
+                    AudioRecorder.RecordingStopped -= RecordingStopped;
 
                     if (AudioPlayer.PlaybackState == PlaybackState.Playing)
                         AudioPlayer.Stop();
@@ -180,6 +182,11 @@ namespace VoiceCraft.Mobile.Services
             {
                 Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
+        }
+
+        private void RecordingStopped(object? sender, StoppedEventArgs e)
+        {
+            AudioRecorder.StartRecording();
         }
 
         //Goes in this protocol order.

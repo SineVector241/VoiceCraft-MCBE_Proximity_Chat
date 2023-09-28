@@ -507,7 +507,7 @@ namespace VoiceCraft.Core.Server
                                         LoginKey = participant.Key,
                                         PacketCount = packet.PacketCount,
                                         Volume = volume,
-                                        EchoFactor = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * volume : 0.0f,
+                                        EchoFactor = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f,
                                         Rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180))
                                     }
                                 }, client.Value.VoiceEndpoint);

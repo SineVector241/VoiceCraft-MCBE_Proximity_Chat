@@ -68,7 +68,7 @@ namespace VoiceCraft.Server
 #if DEBUG
                         Logger.LogToConsole(LogType.Error, ex.ToString(), "Commands");
 #else
-                        Logger.LogToConsole(LogType.Error, exception.Message.ToString(), "Socket");
+                        Logger.LogToConsole(LogType.Error, ex.Message.ToString(), "Socket");
 #endif
                     }
                 }
@@ -78,7 +78,7 @@ namespace VoiceCraft.Server
 #if DEBUG
                 Logger.LogToConsole(LogType.Error, ex.ToString(), "Server");
 #else
-                Logger.LogToConsole(LogType.Error, exception.Message.ToString(), "Socket");
+                Logger.LogToConsole(LogType.Error, ex.Message.ToString(), "Socket");
 #endif
                 Logger.LogToConsole(LogType.Info, "Shutting down server in 10 seconds...", "Server");
                 await Task.Delay(10000);
@@ -90,12 +90,12 @@ namespace VoiceCraft.Server
         {
 #if DEBUG
             Logger.LogToConsole(LogType.Error, ex.ToString(), "Socket");
+#else
+            Logger.LogToConsole(LogType.Error, ex.Message.ToString(), "Socket");
+#endif
             Logger.LogToConsole(LogType.Info, "Shutting down server in 10 seconds...", "Server");
             Task.Delay(10000).Wait();
             Environment.Exit(0);
-#else
-            Logger.LogToConsole(LogType.Error, exception.Message.ToString(), "Socket");
-#endif
         }
 
         private void SignallingStarted()

@@ -137,7 +137,7 @@ namespace VoiceCraft.Core.Client
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
             LoginKey = packet.LoginKey;
-            _ = Voice.ConnectAsync(IP, packet.VoicePort, CTS.Token, LoginKey);
+            _ = Voice.ConnectAsync(IP, packet.VoicePort, LoginKey);
         }
 
         private void SignallingBinded(Packets.Signalling.Binded packet)
@@ -304,7 +304,7 @@ namespace VoiceCraft.Core.Client
                 CTS.Dispose();
                 CTS = new CancellationTokenSource();
             }
-            _ = Signalling.ConnectAsync(IP, Port, CTS.Token, LoginKey, PositioningType, Version);
+            _ = Signalling.ConnectAsync(IP, Port, LoginKey, PositioningType, Version);
         }
 
         public void Disconnect(string? Reason = null)
