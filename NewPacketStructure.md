@@ -171,10 +171,11 @@ Permanent Data Length: 8 bytes.
 |Volume     |float (4 Bytes) |Define the volume to set the participant volume at.|
 |EchoFactor |float (4 Bytes) |Define the echo to set the participants echo effect at.|
 |Rotation   |float (4 Bytes) |Define the rotation effect for directional hearing.|
+|Muffled    |bool (1 byte)   |Define if the audio should be muffled for underwater effect.|
 |AudioLength|int (4 Bytes)   |Define the length for the audio variable.|
 |Audio      |byte[]          |Define the audio data to input into the buffer for the participant.|
 
-Permanent Data Length: 22 bytes.
+Permanent Data Length: 23 bytes.
 
 ### Update Position Packet: ServerBound
 |Variable           |DataType        |Description|
