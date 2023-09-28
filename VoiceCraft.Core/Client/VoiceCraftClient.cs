@@ -235,6 +235,7 @@ namespace VoiceCraft.Core.Client
             {
                 participant.ProximityVolume = LinearVolume ? (float)((Math.Exp(packet.Volume) - 1) / (Math.E - 1)) : packet.Volume;
                 participant.EchoProvider.EchoFactor = packet.EchoFactor;
+                participant.LowpassProvider.Enabled = packet.Muffled;
                 if (PositioningType != PositioningTypes.ClientSided && DirectionalHearing)
                 {
                     participant.AudioProvider.RightVolume = (float)(0.5 + Math.Cos(packet.Rotation) * 0.5);

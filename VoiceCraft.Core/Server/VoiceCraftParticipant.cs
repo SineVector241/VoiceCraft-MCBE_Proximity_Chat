@@ -20,6 +20,7 @@ namespace VoiceCraft.Core.Server
         public float Rotation { get; set; }
         public float CaveDensity { get; set; }
         public bool IsDead { get; set; }
+        public bool InWater { get; set; }
         public string EnvironmentId { get; set; } = string.Empty;
         public string MinecraftId { get; set; } = string.Empty;
 

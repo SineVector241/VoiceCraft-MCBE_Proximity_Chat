@@ -68,22 +68,31 @@ namespace VoiceCraft.Core.Server.Sockets
 
         public async void SendPacketAsync(ISignallingPacket packet, Socket socket)
         {
-            if (socket.Connected)
+            try
             {
-                var packetStream = packet.GetPacketStream();
-                await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
-                await socket.SendAsync(packetStream, SocketFlags.None);
+                if (socket.Connected)
+                {
+                    var packetStream = packet.GetPacketStream();
+                    await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                    await socket.SendAsync(packetStream, SocketFlags.None);
+                }
             }
+            catch
+            { }
         }
 
         public void SendPacket(ISignallingPacket packet, Socket socket)
         {
-            if (socket.Connected)
+            try
             {
-                var packetStream = packet.GetPacketStream();
-                socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
-                socket.Send(packetStream, SocketFlags.None);
+                if (socket.Connected)
+                {
+                    var packetStream = packet.GetPacketStream();
+                    socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                    socket.Send(packetStream, SocketFlags.None);
+                }
             }
+            catch { }
         }
 
         public void Stop()
@@ -103,10 +112,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 {
                     //TCP Is Annoying
                     var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
-                    if (bytes == 0)
-                    {
-                        if (!socket.Connected || CT.IsCancellationRequested) break;
-                    }
+                    if (bytes == 0) break;
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
                     //If packets are an invalid length then we break out to prevent memory exceptions and disconnect the client.
@@ -148,6 +154,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
             }
 
+            socket.Close();
             await stream.DisposeAsync();
             socket.Dispose();
             OnSocketDisconnected?.Invoke(socket, "Client logged out");

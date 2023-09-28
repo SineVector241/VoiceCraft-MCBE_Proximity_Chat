@@ -508,6 +508,7 @@ namespace VoiceCraft.Core.Server
                                         PacketCount = packet.PacketCount,
                                         Volume = volume,
                                         EchoFactor = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f,
+                                        Muffled = client.Value.InWater || participant.Value.InWater,
                                         Rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180))
                                     }
                                 }, client.Value.VoiceEndpoint);
@@ -536,6 +537,7 @@ namespace VoiceCraft.Core.Server
                                         PacketCount = packet.PacketCount,
                                         Volume = 1.0f,
                                         EchoFactor = 0.0f,
+                                        Muffled = false,
                                         Rotation = 1.5f //I should've used Math.Sin();
                                     }
                                 }, client.Value.VoiceEndpoint);
@@ -654,6 +656,9 @@ namespace VoiceCraft.Core.Server
 
                     if (participant.Value.IsDead != player.IsDead)
                         participant.Value.IsDead = player.IsDead;
+
+                    if(participant.Value.InWater != player.InWater)
+                        participant.Value.InWater = player.InWater;
                 }
             }
 
