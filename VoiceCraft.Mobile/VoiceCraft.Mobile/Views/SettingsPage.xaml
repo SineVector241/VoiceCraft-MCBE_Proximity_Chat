@@ -6,12 +6,11 @@
     <ContentPage.BindingContext>
         <vm:SettingsPageViewModel />
     </ContentPage.BindingContext>
-
-    <ScrollView>
-        <Grid>
-            <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
+    <Grid>
+        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
                    Aspect="AspectFill"/>
 
+        <ScrollView>
             <Grid Grid.RowDefinitions="auto">
                 <Frame>
                     <Label Text="Settings" 
@@ -151,6 +150,6 @@
                     </Grid>
                 </Frame>
             </Grid>
-        </Grid>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>
