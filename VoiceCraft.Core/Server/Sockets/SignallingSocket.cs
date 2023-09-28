@@ -12,7 +12,7 @@ namespace VoiceCraft.Core.Server.Sockets
     public class SignallingSocket
     {
         public Socket TCPSocket { get; }
-        public CancellationToken CTS { get; }
+        public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
         //Delegates
@@ -52,10 +52,10 @@ namespace VoiceCraft.Core.Server.Sockets
         public event SocketDisconnected? OnSocketDisconnected;
 
 
-        public SignallingSocket(CancellationToken Token)
+        public SignallingSocket(CancellationToken CT)
         {
             TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            CTS = Token;
+            this.CT = CT;
         }
 
         public void Start(ushort Port)
@@ -97,14 +97,16 @@ namespace VoiceCraft.Core.Server.Sockets
             byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
             var stream = new NetworkStream(socket);
-            while (!CTS.IsCancellationRequested)
+            while (!CT.IsCancellationRequested)
             {
                 try
                 {
                     //TCP Is Annoying
                     var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
-                    if (bytes == 0) 
-                        break; //Socket is closed.
+                    if (bytes == 0)
+                    {
+                        if (!socket.Connected || CT.IsCancellationRequested) break;
+                    }
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
                     //If packets are an invalid length then we break out to prevent memory exceptions and disconnect the client.
@@ -130,7 +132,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch(IOException)
                 {
-                    if (!socket.Connected || CTS.IsCancellationRequested)
+                    if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, "Lost connection.");
                         break;
@@ -138,7 +140,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch (Exception ex)
                 {
-                    if (!socket.Connected || CTS.IsCancellationRequested)
+                    if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, ex.Message);
                         break;
@@ -153,7 +155,7 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private async void AcceptConnectionsAsync()
         {
-            while (!CTS.IsCancellationRequested)
+            while (!CT.IsCancellationRequested)
             {
                 try
                 {
@@ -162,7 +164,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch
                 {
-                    if (CTS.IsCancellationRequested)
+                    if (CT.IsCancellationRequested)
                         break;
                 }
             }

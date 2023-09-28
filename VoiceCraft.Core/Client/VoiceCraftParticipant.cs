@@ -40,6 +40,7 @@ namespace VoiceCraft.Core.Client
         public BufferedWaveProvider AudioBuffer;
         public Wave16ToFloatProvider FloatProvider;
         public EchoSampleProvider EchoProvider;
+        public LowpassSampleProvider LowpassProvider;
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
 
@@ -57,7 +58,8 @@ namespace VoiceCraft.Core.Client
             AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
             FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
             EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
-            AudioProvider = new MonoToStereoSampleProvider(EchoProvider);
+            LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
+            AudioProvider = new MonoToStereoSampleProvider(LowpassProvider);
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 

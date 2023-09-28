@@ -536,7 +536,7 @@ namespace VoiceCraft.Core.Server
                                         PacketCount = packet.PacketCount,
                                         Volume = 1.0f,
                                         EchoFactor = 0.0f,
-                                        Rotation = 0.0f
+                                        Rotation = 1.5f //I should've used Math.Sin();
                                     }
                                 }, client.Value.VoiceEndpoint);
                             }

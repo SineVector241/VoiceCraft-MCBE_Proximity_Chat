@@ -13,7 +13,7 @@ namespace VoiceCraft.Core.Server.Sockets
     {
         private readonly HttpListener Listener;
         private string ServerKey = string.Empty;
-        public CancellationToken CTS { get; }
+        public CancellationToken CT { get; }
 
         //Delegates
         public delegate void Started();
@@ -31,9 +31,9 @@ namespace VoiceCraft.Core.Server.Sockets
         public event GetSettingsPacket? OnGetSettingsPacketReceived;
         public event RemoveParticipantPacket? OnRemoveParticipantPacketReceived;
 
-        public MCCommSocket(CancellationToken CTS)
+        public MCCommSocket(CancellationToken CT)
         {
-            this.CTS = CTS;
+            this.CT = CT;
             Listener = new HttpListener();
         }
 
@@ -56,7 +56,7 @@ namespace VoiceCraft.Core.Server.Sockets
         {
             try
             {
-                CTS.ThrowIfCancellationRequested();
+                CT.ThrowIfCancellationRequested();
                 var ctx = Listener.EndGetContext(result);
                 Listener.BeginGetContext(new AsyncCallback(Listen), null);
                 if (ctx.Request.HttpMethod == "POST")
@@ -116,7 +116,7 @@ namespace VoiceCraft.Core.Server.Sockets
             }
             catch
             {
-                if (CTS.IsCancellationRequested)
+                if (CT.IsCancellationRequested)
                     Stop();
             }
         }

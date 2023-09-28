@@ -11,7 +11,7 @@ namespace VoiceCraft.Core.Server.Sockets
     public class VoiceSocket
     {
         public Socket UDPSocket { get; }
-        public CancellationToken CTS { get; }
+        public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
         //Delegates
@@ -34,10 +34,10 @@ namespace VoiceCraft.Core.Server.Sockets
         public event UpdatePositionPacket? OnUpdatePositionPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
-        public VoiceSocket(CancellationToken Token)
+        public VoiceSocket(CancellationToken CT)
         {
             UDPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            CTS = Token;
+            this.CT = CT;
         }
 
         public void Start(ushort Port)
@@ -65,7 +65,7 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private async void ListenAsync()
         {
-            while (!CTS.IsCancellationRequested)
+            while (!CT.IsCancellationRequested)
             {
                 try
                 {
@@ -76,7 +76,7 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch
                 {
-                    if (CTS.IsCancellationRequested)
+                    if (CT.IsCancellationRequested)
                         break;
                 }
             }
