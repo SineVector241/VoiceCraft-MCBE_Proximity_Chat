@@ -116,7 +116,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 try
                 {
                     var packetStream = packet.GetPacketStream();
-                    TCPSocket.Send(BitConverter.GetBytes((ushort)(packetStream.Length)), SocketFlags.None);
+                    TCPSocket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     TCPSocket.Send(packetStream, SocketFlags.None);
                 }
                 catch (Exception ex)

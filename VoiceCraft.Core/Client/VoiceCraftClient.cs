@@ -238,8 +238,8 @@ namespace VoiceCraft.Core.Client
                 participant.LowpassProvider.Enabled = packet.Muffled;
                 if (PositioningType != PositioningTypes.ClientSided && DirectionalHearing)
                 {
-                    participant.AudioProvider.RightVolume = (float)(0.5 + Math.Cos(packet.Rotation) * 0.5);
-                    participant.AudioProvider.LeftVolume = (float)(0.5 - Math.Cos(packet.Rotation) * 0.5);
+                    participant.AudioProvider.RightVolume = (float)Math.Max(0.5 + Math.Cos(packet.Rotation) * 0.5, 0.2);
+                    participant.AudioProvider.LeftVolume = (float)Math.Max(0.5 - Math.Cos(packet.Rotation) * 0.5, 0.2);
                 }
                 participant.AddAudioSamples(packet.Audio, packet.PacketCount);
             }

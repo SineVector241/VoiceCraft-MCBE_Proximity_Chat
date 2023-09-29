@@ -24,7 +24,7 @@ namespace VoiceCraft.Core.Packets.Signalling
 
         public Login(byte[] dataStream, int readOffset = 0)
         {
-            PositioningType = (PositioningTypes)BitConverter.ToUInt32(dataStream, readOffset); //Read positioning type - 2 Bytes.
+            PositioningType = (PositioningTypes)BitConverter.ToUInt16(dataStream, readOffset); //Read positioning type - 2 Bytes.
             LoginKey = BitConverter.ToUInt16(dataStream, readOffset + 2); //Read login key - 2 bytes.
             IsDeafened = BitConverter.ToBoolean(dataStream, readOffset + 4); //Read deafen variable - 1 byte.
             IsMuted = BitConverter.ToBoolean(dataStream, readOffset + 5); //Read muted variable - 1 byte.
