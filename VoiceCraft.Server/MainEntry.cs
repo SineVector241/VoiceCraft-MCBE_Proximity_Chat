@@ -334,8 +334,8 @@ namespace VoiceCraft.Server
 
             if (ushort.TryParse(args[0], out ushort value))
             {
-                if (value > 60 || value < 1)
-                    throw new ArgumentException("Invalid distance! Distance can only be between 1 and 60!");
+                if (value > 120 || value < 1)
+                    throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
                 server.ServerProperties.ProximityDistance = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity distance: {value}", "Commands");
             }

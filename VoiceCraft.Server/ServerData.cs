@@ -40,6 +40,8 @@ namespace VoiceCraft.Server
                 throw new Exception("One of the ports is higher than the maximum port 65535!");
             if (ServerProperties.ServerMOTD.Length > 30)
                 throw new Exception("Server MOTD cannot be longer than 30 characters!");
+            if (ServerProperties.ProximityDistance > 120 || ServerProperties.ProximityDistance < 1)
+                throw new Exception("Proximity distance can only be between 1 and 120!");
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))
             {

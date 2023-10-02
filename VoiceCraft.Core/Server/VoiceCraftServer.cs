@@ -682,9 +682,9 @@ namespace VoiceCraft.Core.Server
 
         private void MCCommUpdateSettings(WebserverPacket packet, HttpListenerContext ctx)
         {
-            if (packet.Settings.ProximityDistance <= 0 || packet.Settings.ProximityDistance > 60)
+            if (packet.Settings.ProximityDistance < 1 || packet.Settings.ProximityDistance > 120)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, "Error. Proximity distance must be higher than 0 or lower than 61!");
+                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, "Error. Proximity distance must be between 1 and 120!");
                 return;
             }
 
