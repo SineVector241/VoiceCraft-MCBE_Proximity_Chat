@@ -12,9 +12,8 @@ Please refer to the [wiki](https://github.com/SineVector241/VoiceCraft-MCBE_Prox
 
 ## TODO LIST
 - [x] Add AGC (Automatic Gain Control) for PC.
-- [ ] Implement auto binding.
+- [x] Implement auto binding.
 - [x] Implement auto connecting/server linking.
-- [ ] Implement experimental accurate player position depending on velocity and latency to client.
 - [x] Implement experimental directional hearing.
 - [x] Implement second experimental algorithm using Minecraft Websocket Client to Client Communication. (Allows voice proximity chat on any server but limits device support)
 - [x] Design a logo.

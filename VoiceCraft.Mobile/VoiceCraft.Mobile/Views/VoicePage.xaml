@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              xmlns:Animations="clr-namespace:VoiceCraft.Mobile.Animations"
              x:Class="VoiceCraft.Mobile.Views.VoicePage"
              Shell.TabBarIsVisible="False"
@@ -43,16 +44,65 @@
                                            FontSize="22"
                                            VerticalTextAlignment="Center">
                                     </Label>
+                                    <Grid Grid.Column="1"
+                                          HorizontalOptions="EndAndExpand">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="auto" />
+                                        </Grid.ColumnDefinitions>
 
-                                    <ImageButton Source="volume_medium"
-                                                 BackgroundColor="{AppThemeBinding Dark=#8666, Light=#8FFF}"
-                                                 Scale="1.3"
-                                                 HorizontalOptions="EndAndExpand"
-                                                 Grid.Column="1"
-                                                 WidthRequest="28"
-                                                 HeightRequest="28"
-                                                 Command="{Binding Source={x:Reference Voice}, Path=BindingContext.ShowParticipantVolumeCommand}"
-                                                 CommandParameter="{Binding Key}"/>
+                                        <Image Source="microphone_off"
+                                               Grid.Column="0"
+                                               WidthRequest="28"
+                                               HeightRequest="28"
+                                               xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White, Light=Black}"
+                                               Margin="2,0">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Style.Triggers>
+                                                        <DataTrigger TargetType="Image" Binding="{Binding IsMuted}" Value="False">
+                                                            <Setter Property="IsVisible" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Image" Binding="{Binding IsMuted}" Value="True">
+                                                            <Setter Property="IsVisible" Value="True" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+
+                                        <Image Source="headphones_off"
+                                               Grid.Column="1"
+                                               WidthRequest="28"
+                                               HeightRequest="28"
+                                               xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White, Light=Black}"
+                                               Margin="2,0">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Style.Triggers>
+                                                        <DataTrigger TargetType="Image" Binding="{Binding IsDeafened}" Value="False">
+                                                            <Setter Property="IsVisible" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Image" Binding="{Binding IsDeafened}" Value="True">
+                                                            <Setter Property="IsVisible" Value="True" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+
+                                        <ImageButton Source="volume_medium"
+                                                     BackgroundColor="{AppThemeBinding Dark=#8666, Light=#8FFF}"
+                                                     Scale="1.3"
+                                                     Grid.Column="2"
+                                                     WidthRequest="28"
+                                                     HeightRequest="28"
+                                                     Command="{Binding Source={x:Reference Voice}, Path=BindingContext.ShowParticipantVolumeCommand}"
+                                                     CommandParameter="{Binding Key}"
+                                                     xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White, Light=Black}"
+                                                     Margin="2,0"/>
+                                    </Grid>
                                 </Grid>
                                 <Frame.Style>
                                     <Style TargetType="Frame">

@@ -17,11 +17,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="Concentus" Version="1.1.7" />
     <PackageReference Include="Fleck" Version="1.2.0" />
-    <PackageReference Include="NAudio" Version="2.1.0" />
+    <PackageReference Include="MouseKeyHook" Version="5.7.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VoiceCraft.Core\VoiceCraft.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

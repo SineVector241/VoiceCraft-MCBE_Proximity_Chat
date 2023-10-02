@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Mobile.Network;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Mobile.Models
 {
@@ -7,6 +7,10 @@ namespace VoiceCraft.Mobile.Models
     {
         [ObservableProperty]
         public bool isSpeaking;
+        [ObservableProperty]
+        public bool isMuted;
+        [ObservableProperty]
+        public bool isDeafened;
         [ObservableProperty]
         public ushort key;
         [ObservableProperty]

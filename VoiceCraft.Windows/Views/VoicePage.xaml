@@ -67,7 +67,7 @@
                     <DataTemplate>
                         <Grid>
                             <Border Padding="10"
-                                    Margin="0"
+                                    Margin="2,4"
                                     HorizontalAlignment="Stretch">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -75,20 +75,68 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Participant.Name}"
-                                           FontWeight="Bold"
-                                           FontSize="22"
-                                           VerticalAlignment="Center"
-                                           Grid.Column="0"
-                                           Margin="0,0,10,0"/>
-                                    <Button Style="{StaticResource ButtonStyle}"
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Right"
-                                            Command="{Binding Source={x:Reference Voice}, Path=DataContext.ShowParticipantVolumeCommand}"
-                                            CommandParameter="{Binding Key}">
-                                        <Image Source="{StaticResource volume_medium}"
+                                               FontWeight="Bold"
+                                               FontSize="22"
+                                               VerticalAlignment="Center"
+                                               Grid.Column="0"
+                                               Margin="0,0,10,0"/>
+                                    <Grid Grid.Column="1"
+                                          HorizontalAlignment="Right">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="auto" />
+                                            <ColumnDefinition Width="auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Image Source="{StaticResource microphone_off}"
+                                               HorizontalAlignment="Right"
+                                               Grid.Column="0"
                                                Width="35"
-                                               Height="35"/>
-                                    </Button>
+                                               Height="35"
+                                               Margin="5,0">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsMuted}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                        <Image Source="{StaticResource headphones_off}"
+                                               HorizontalAlignment="Right"
+                                               Grid.Column="1"
+                                               Width="35"
+                                               Height="35"
+                                               Margin="5,0">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDeafened}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsDeafened}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                        <Button Style="{StaticResource ButtonStyle}"
+                                                Grid.Column="2"
+                                                HorizontalAlignment="Right"
+                                                Command="{Binding Source={x:Reference Voice}, Path=DataContext.ShowParticipantVolumeCommand}"
+                                                CommandParameter="{Binding Key}"
+                                                Margin="5,0">
+                                            <Image Source="{StaticResource volume_medium}"
+                                                   Width="35"
+                                                   Height="35"/>
+                                        </Button>
+                                    </Grid>
                                 </Grid>
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">

@@ -22,7 +22,7 @@
 
                 <Frame Grid.Row="1">
                     <Grid VerticalOptions="StartAndExpand"
-                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto">
+                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto">
                         <Label Text="{Binding Server.Name}"
                                FontSize="25"
                                FontAttributes="Bold"
@@ -51,11 +51,22 @@
                                Text="{Binding Server.Port}"
                                Placeholder="9050" />
 
-                        <Button Grid.Row="5"
+                        <Label Margin="0,20,0,0"
+                               Grid.Row="5"
+                               Text="Key"
+                               FontSize="15"
+                               FontAttributes="Bold"/>
+
+                        <Entry Grid.Row="6"
+                               Keyboard="Numeric"
+                               Text="{Binding Server.Key}"
+                               Placeholder="9050" />
+
+                        <Button Grid.Row="7"
                                 Text="Save Edits"
                                 Command="{Binding EditServerCommand}"/>
 
-                        <Button Grid.Row="6"
+                        <Button Grid.Row="8"
                                 Text="Cancel"
                                 Command="{Binding CancelCommand}"/>
                     </Grid>

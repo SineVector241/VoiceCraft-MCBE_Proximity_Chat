@@ -144,5 +144,21 @@
                 </DrawingGroup>
             </DrawingImage.Drawing>
         </DrawingImage>
+
+        <DrawingImage x:Key="microphone_off">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M19,11C19,12.19,18.66,13.3,18.1,14.28L16.87,13.05C17.14,12.43,17.3,11.74,17.3,11L19,11 M15,11.16L9,5.18 9,5A3,3,0,0,1,12,2A3,3,0,0,1,15,5L15,11 15,11.16 M4.27,3L21,19.73 19.73,21 15.54,16.81C14.77,17.27,13.91,17.58,13,17.72L13,21 11,21 11,17.72C7.72,17.23,5,14.41,5,11L6.7,11C6.7,14 9.24,16.1 12,16.1 12.81,16.1 13.6,15.91 14.31,15.58L12.65,13.92 12,14A3,3,0,0,1,9,11L9,10.28 3,4.27 4.27,3z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="headphones_off">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M12,1A9,9,0,0,1,21,10L21,17C21,17.62,20.81,18.19,20.5,18.67L15,13.18 15,12 19,12 19,10A7,7,0,0,0,12,3C10,3,8.23,3.82,6.96,5.14L5.55,3.72C7.18,2.04,9.47,1,12,1 M2.78,3.5L20.5,21.22 19.23,22.5 16.73,20 15,20 15,18.27 9,12.27 9,20 6,20A3,3,0,0,1,3,17L3,10C3,8.89,3.2,7.82,3.57,6.84L1.5,4.77 2.78,3.5 M5.17,8.44C5.06,8.94,5,9.46,5,10L5,12 8.73,12 5.17,8.44z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
     </Application.Resources>
 </Application>

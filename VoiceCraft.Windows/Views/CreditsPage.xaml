@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
       xmlns:app="clr-namespace:VoiceCraft.Windows"
+      xmlns:vc="clr-namespace:VoiceCraft.Core.Client;assembly=VoiceCraft.Core"
       mc:Ignorable="d" 
       Title="CreditsPage">
 
@@ -68,6 +69,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock FontWeight="Bold"
@@ -83,11 +85,16 @@
                     <TextBlock FontWeight="Bold"
                                FontSize="18"
                                Grid.Row="2" 
-                               Text="{Binding Source={x:Static app:App.Version}, StringFormat='Version: {0}'}"/>
+                               Text="{Binding Source={x:Static app:App.Version}, StringFormat='App Version: {0}'}"/>
 
                     <TextBlock FontWeight="Bold"
                                FontSize="18"
-                               Grid.Row="3"
+                               Grid.Row="3" 
+                               Text="{Binding Source={x:Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}'}"/>
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Grid.Row="4"
                                Text="Codec: Opus - Concentus" />
                 </Grid>
 

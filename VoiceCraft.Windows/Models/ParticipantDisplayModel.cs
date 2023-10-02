@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Windows.Network;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Windows.Models
 {
@@ -7,6 +7,10 @@ namespace VoiceCraft.Windows.Models
     {
         [ObservableProperty]
         public bool isSpeaking;
+        [ObservableProperty]
+        public bool isMuted;
+        [ObservableProperty]
+        public bool isDeafened;
         [ObservableProperty]
         public ushort key;
         [ObservableProperty]

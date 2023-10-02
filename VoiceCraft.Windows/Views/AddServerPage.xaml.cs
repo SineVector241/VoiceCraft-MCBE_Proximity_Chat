@@ -21,7 +21,7 @@ namespace VoiceCraft.Windows.Views
         public static bool IsValid(string str)
         {
             int i;
-            return int.TryParse(str, out i) && i >= 1 && i <= 65535;
+            return int.TryParse(str, out i) && i >= 0 && i <= 65535;
         }
     }
 }

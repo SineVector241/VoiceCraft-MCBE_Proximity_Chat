@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:app="clr-namespace:VoiceCraft.Mobile"
+             xmlns:vc="clr-namespace:VoiceCraft.Core.Client;assembly=VoiceCraft.Core"
              x:Class="VoiceCraft.Mobile.Views.CreditsPage">
     <Grid>
         <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
@@ -26,11 +27,16 @@
                            FontAttributes="Bold" />
 
                     <Label Grid.Row="2"
-                           Text="{Binding Source={Static app:App.Version}, StringFormat='Version: {0}' }"
+                           Text="{Binding Source={Static app:App.Version}, StringFormat='App Version: {0}' }"
                            FontSize="20"
                            FontAttributes="Bold" />
 
                     <Label Grid.Row="3"
+                           Text="{Binding Source={Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}' }"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+
+                    <Label Grid.Row="4"
                            Text="Codec: Opus - Concentus"
                            FontSize="20"
                            FontAttributes="Bold" />

@@ -7,7 +7,8 @@ using VoiceCraft.Windows.Storage;
 using System;
 using System.Windows;
 using VoiceCraft.Windows.Audio;
-using VoiceCraft.Windows.Network;
+using VoiceCraft.Core.Client;
+using Gma.System.MouseKeyHook;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -28,7 +29,14 @@ namespace VoiceCraft.Windows.ViewModels
         [ObservableProperty]
         private bool micOpen = false;
 
+        [ObservableProperty]
+        private bool settingMute = false;
+
+        [ObservableProperty]
+        private bool settingDeafen = false;
+
         private IWaveIn AudioRecorder;
+        private IKeyboardMouseEvents? Events;
         public SettingsPageViewModel()
         {
             InputDevices.Add("Default");
@@ -59,7 +67,7 @@ namespace VoiceCraft.Windows.ViewModels
             }
 
             var audioManager = new AudioManager();
-            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(NetworkManager.SampleRate, 1));
+            AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
             AudioRecorder.DataAvailable += AudioDataAvailable;
             AudioRecorder.RecordingStopped += RecorderStopped;
         }
@@ -87,9 +95,88 @@ namespace VoiceCraft.Windows.ViewModels
         }
 
         [RelayCommand]
+        public void SetMuteKeybind()
+        {
+            if (!SettingMute)
+            {
+                SettingMute = true;
+                Events = Hook.GlobalEvents();
+                var keys = "";
+                Events.KeyDown += (object? sender, System.Windows.Forms.KeyEventArgs e) =>
+                {
+                    keys += string.IsNullOrWhiteSpace(keys) ? e.KeyCode : $"+{e.KeyCode}";
+                    if (
+                    !System.Windows.Forms.Keys.LControlKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RControlKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.LMenu.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RMenu.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RShiftKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.LShiftKey.HasFlag(e.KeyCode) //Don't ask. IDK what I'm doing here...
+                    )
+                    {
+                        Events.Dispose();
+                        Events = null;
+                        Settings.MuteKeybind = keys;
+                        SettingMute = false;
+                        OnPropertyChanged(nameof(Settings));
+                    }
+                };
+            }
+            else
+            {
+                SettingMute = false;
+                Events?.Dispose();
+                Events = null;
+            }
+        }
+
+        [RelayCommand]
+        public void SetDeafenKeybind()
+        {
+            if (!SettingDeafen)
+            {
+                SettingDeafen = true;
+                Events = Hook.GlobalEvents();
+                var keys = "";
+                Events.KeyDown += (object? sender, System.Windows.Forms.KeyEventArgs e) =>
+                {
+                    keys += string.IsNullOrWhiteSpace(keys) ? e.KeyCode : $"+{e.KeyCode}";
+                    if (
+                    !System.Windows.Forms.Keys.LControlKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RControlKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.LMenu.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RMenu.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.RShiftKey.HasFlag(e.KeyCode) &&
+                    !System.Windows.Forms.Keys.LShiftKey.HasFlag(e.KeyCode) //Don't ask. IDK what I'm doing here...
+                    )
+                    {
+                        Events.Dispose();
+                        Events = null;
+                        Settings.DeafenKeybind = keys;
+                        SettingDeafen = false;
+                        OnPropertyChanged(nameof(Settings));
+                    }
+                };
+            }
+            else
+            {
+                SettingDeafen = false;
+                Events?.Dispose();
+                Events = null;
+            }
+        }
+
+        [RelayCommand]
         public void GoBack()
         {
-            if(MicOpen)
+            if (Events != null)
+            {
+                SettingDeafen = false;
+                SettingMute = false;
+                Events.Dispose();
+                Events = null;
+            }
+            if (MicOpen)
                 AudioRecorder.StopRecording();
             AudioRecorder.DataAvailable -= AudioDataAvailable;
             AudioRecorder.RecordingStopped -= RecorderStopped;
@@ -139,6 +226,13 @@ namespace VoiceCraft.Windows.ViewModels
         {
             try
             {
+                if (Events != null)
+                {
+                    SettingDeafen = false;
+                    SettingMute = false;
+                    Events.Dispose();
+                    Events = null;
+                }
                 Settings = new SettingsModel();
                 Database.SetSettings(Settings);
                 MessageBox.Show("Successfully reset settings.", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);

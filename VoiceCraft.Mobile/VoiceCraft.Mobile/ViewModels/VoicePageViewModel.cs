@@ -35,17 +35,17 @@ namespace VoiceCraft.Mobile.ViewModels
         [RelayCommand]
         public void MuteUnmute()
         {
-            var message = new MuteUnmuteMessage();
-            MessagingCenter.Send(message, "MuteUnmute");
             IsMuted = !IsMuted;
+            var message = new MuteUnmuteMessage() { Value = IsMuted };
+            MessagingCenter.Send(message, "MuteUnmute");
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
-            var message = new DeafenUndeafen();
-            MessagingCenter.Send(message, "DeafenUndeafen");
             IsDeafened = !IsDeafened;
+            var message = new DeafenUndeafen() { Value = IsDeafened };
+            MessagingCenter.Send(message, "DeafenUndeafen");
         }
 
         [RelayCommand]
@@ -73,38 +73,42 @@ namespace VoiceCraft.Mobile.ViewModels
                 });
             });
 
-            MessagingCenter.Subscribe<UpdateUIMessage>(this, "Update", message =>
+            MessagingCenter.Subscribe<UpdateMessage>(this, "Update", message =>
             {
-                if (StatusText != message.StatusMessage)
-                    StatusText = message.StatusMessage;
-
-                if (IsMuted != message.IsMuted)
-                    IsMuted = message.IsMuted;
-
-                if(IsDeafened != message.IsDeafened)
-                    IsDeafened = message.IsDeafened;
-
-                if (IsSpeaking != message.IsSpeaking)
-                    IsSpeaking = message.IsSpeaking;
-
-                foreach (var participant in message.Participants)
+                for (int i = 0; i < message.Participants.Count; i++)
                 {
+                    var participant = message.Participants[i];
                     var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
                     if (displayParticipant != null)
                     {
-                        if (displayParticipant.IsSpeaking != participant.IsSpeaking)
-                            displayParticipant.IsSpeaking = participant.IsSpeaking;
+                        displayParticipant.IsDeafened = participant.IsDeafened;
+                        displayParticipant.IsMuted = participant.IsMuted;
+                        displayParticipant.IsSpeaking = participant.IsSpeaking;
                     }
                     else
                     {
                         Participants.Add(participant);
                     }
                 }
+
                 for (int i = 0; i < Participants.Count; i++)
                 {
-                    if (!message.Participants.Exists(x => x.Key == Participants[i].Key))
-                        Participants.RemoveAt(i);
+                    var participant = message.Participants.FirstOrDefault(x => x.Key == Participants[i].Key);
+                    if (participant == null)
+                    {
+                        Participants.Remove(Participants[i]);
+                    }
                 }
+
+                IsSpeaking = message.IsSpeaking;
+                IsDeafened = message.IsDeafened;
+                IsMuted = message.IsMuted;
+                StatusText = message.StatusMessage;
+            });
+
+            MessagingCenter.Subscribe<UpdateStatusMessage>(this, "UpdateStatus", message =>
+            {
+                StatusText = message.StatusMessage;
             });
 
             MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>
@@ -121,7 +125,8 @@ namespace VoiceCraft.Mobile.ViewModels
         public void OnDisappearing()
         {
             MessagingCenter.Unsubscribe<StopServiceMessage>(this, "ServiceStopped");
-            MessagingCenter.Unsubscribe<UpdateUIMessage>(this, "Update");
+            MessagingCenter.Unsubscribe<UpdateMessage>(this, "Update");
+            MessagingCenter.Unsubscribe<UpdateStatusMessage>(this, "UpdateStatus");
             MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnected");
         }
 

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
              x:Class="VoiceCraft.Mobile.Views.ServersPage"
              x:Name="Servers">
@@ -50,7 +51,8 @@
                                                      TranslationY="5"
                                                      HorizontalOptions="EndAndExpand"
                                                      Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
-                                                     CommandParameter="{Binding}"/>
+                                                     CommandParameter="{Binding}"
+                                                     xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White, Light=Black}"/>
                                     </StackLayout>
 
                                     <Label Grid.Row="1"
