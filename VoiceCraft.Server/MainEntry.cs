@@ -173,8 +173,9 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, $"Connected participants: {server.Participants.Count}", "Commands");
             for (ushort i = 0; i < server.Participants.Count; i++)
             {
-                if(server.Participants.TryGetValue(i, out VoiceCraftParticipant? participant))
-                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Binded}, ServerMuted: {participant.IsServerMuted}, Name: {participant.Name ?? "N.A." }", "Commands");
+                var participant = server.Participants.ElementAt(i);
+                if (participant.Value != null)
+                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.IsServerMuted}, Name: {participant.Value.Name ?? "N.A." }, Key: {participant.Key}", "Commands");
             }
         }
 
@@ -189,7 +190,7 @@ namespace VoiceCraft.Server
             {
                 if (server.Participants.TryGetValue(value, out var participant))
                 {
-                    participant.IsMuted = true;
+                    participant.IsServerMuted = true;
                     Logger.LogToConsole(LogType.Success, $"Muted participant: {(string.IsNullOrWhiteSpace(participant.Name) ? value : participant.Name)}", "Commands");
                 }
                 else
