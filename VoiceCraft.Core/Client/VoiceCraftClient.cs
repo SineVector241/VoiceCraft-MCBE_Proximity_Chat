@@ -19,6 +19,7 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
+        public const string Version = "v1.0.0";
 
         //Variables
         private CancellationTokenSource CTS;
@@ -26,7 +27,6 @@ namespace VoiceCraft.Core.Client
         public int Port { get; private set; }
         public int MCWSSPort { get; private set; }
         public ushort LoginKey { get; private set; }
-        public string Version { get; private set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public PositioningTypes PositioningType { get; private set; }
         public bool IsMuted { get; private set; }
@@ -76,11 +76,10 @@ namespace VoiceCraft.Core.Client
         public event ParticipantUpdated? OnParticipantUpdated;
         public event Disconnected? OnDisconnected;
         #endregion
-        public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, string Version, int RecordLengthMS = 40, int MCWSSPort = 8080)
+        public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, int RecordLengthMS = 40, int MCWSSPort = 8080)
         {
             //Setup variables
             this.LoginKey = LoginKey;
-            this.Version = Version;
             this.PositioningType = PositioningType;
             this.RecordLengthMS = RecordLengthMS;
             this.MCWSSPort = MCWSSPort;
