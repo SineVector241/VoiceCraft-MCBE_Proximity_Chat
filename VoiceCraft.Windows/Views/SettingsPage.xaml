@@ -130,7 +130,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </Grid>
-                    <CheckBox Content="Directional Hearing (Experimental)"
+                    <CheckBox Content="Directional Hearing"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"

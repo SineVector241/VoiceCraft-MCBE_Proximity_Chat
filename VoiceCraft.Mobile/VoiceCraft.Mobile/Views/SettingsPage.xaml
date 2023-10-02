@@ -27,7 +27,7 @@
                             <CheckBox IsChecked="{Binding Settings.DirectionalAudioEnabled}"
                                       Scale="1.3"/>
 
-                            <Label Text="Directional Audio (Experimental)"
+                            <Label Text="Directional Hearing"
                                    FontSize="15"
                                    FontAttributes="Bold"
                                    VerticalOptions="CenterAndExpand"/>
