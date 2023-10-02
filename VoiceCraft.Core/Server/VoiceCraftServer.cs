@@ -480,7 +480,7 @@ namespace VoiceCraft.Core.Server
                 {
                     if (ServerProperties.ProximityToggle)
                     {
-                        if (participant.Value.IsDead && string.IsNullOrWhiteSpace(participant.Value.EnvironmentId)) return;
+                        if (participant.Value.IsDead || string.IsNullOrWhiteSpace(participant.Value.EnvironmentId)) return;
 
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
