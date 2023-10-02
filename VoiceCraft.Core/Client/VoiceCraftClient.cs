@@ -224,6 +224,8 @@ namespace VoiceCraft.Core.Client
         {
             IsConnected = true;
             OnConnected?.Invoke();
+
+            if (PositioningType == PositioningTypes.ClientSided) MCWSS.Start();
         }
 
         private void VoiceServerAudio(Packets.Voice.ServerAudio packet)
