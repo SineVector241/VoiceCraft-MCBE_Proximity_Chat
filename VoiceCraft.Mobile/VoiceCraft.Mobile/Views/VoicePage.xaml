@@ -153,11 +153,11 @@
                         <Style TargetType="Button">
                             <Style.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="True">
-                                    <Setter Property="Text" Value="Deafen" />
+                                    <Setter Property="Text" Value="Undeafen" />
                                     <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8999, Light=#CFFF}" />
                                 </DataTrigger>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsDeafened}" Value="False">
-                                    <Setter Property="Text" Value="Undeafen" />
+                                    <Setter Property="Text" Value="Deafen" />
                                     <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark=#8666, Light=#8FFF}" />
                                 </DataTrigger>
                             </Style.Triggers>
