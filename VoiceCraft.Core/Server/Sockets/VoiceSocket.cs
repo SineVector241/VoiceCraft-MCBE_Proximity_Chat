@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using VoiceCraft.Core.Packets;
@@ -13,6 +15,13 @@ namespace VoiceCraft.Core.Server.Sockets
         public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
+        //Debug Settings
+        public bool LogExceptions { get; set; } = false;
+        public bool LogInbound { get; set; } = false;
+        public bool LogOutbound { get; set; } = false;
+        public List<VoicePacketTypes> InboundFilter { get; set; } = new List<VoicePacketTypes>();
+        public List<VoicePacketTypes> OutboundFilter { get; set; } = new List<VoicePacketTypes>();
+
         //Delegates
         public delegate void Started();
         public delegate void LoginPacket(Login packet, EndPoint endPoint);
@@ -23,6 +32,10 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void UpdatePositionPacket(UpdatePosition packet, EndPoint endPoint);
         public delegate void NullPacket(Null packet, EndPoint endPoint);
 
+        public delegate void OutboundPacket(IVoicePacket packet, EndPoint endPoint);
+        public delegate void InboundPacket(IVoicePacket packet, EndPoint endPoint);
+        public delegate void ExceptionError(Exception error);
+
         //Events
         public event Started? OnStarted;
         public event LoginPacket? OnLoginPacketReceived;
@@ -32,6 +45,10 @@ namespace VoiceCraft.Core.Server.Sockets
         public event ServerAudioPacket? OnServerAudioPacketReceived;
         public event UpdatePositionPacket? OnUpdatePositionPacketReceived;
         public event NullPacket? OnNullPacketReceived;
+
+        public event OutboundPacket? OnOutboundPacket;
+        public event InboundPacket? OnInboundPacket;
+        public event ExceptionError? OnExceptionError;
 
         public VoiceSocket(CancellationToken CT)
         {
@@ -48,12 +65,34 @@ namespace VoiceCraft.Core.Server.Sockets
 
         public async void SendPacketAsync(IVoicePacket packet, EndPoint EP)
         {
-            await UDPSocket.SendToAsync(packet.GetPacketStream(), SocketFlags.None, EP);
+            try
+            {
+                await UDPSocket.SendToAsync(packet.GetPacketStream(), SocketFlags.None, EP);
+
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, EP);
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void SendPacket(IVoicePacket packet, EndPoint EP)
         {
-            UDPSocket.SendTo(packet.GetPacketStream(), SocketFlags.None, EP);
+            try
+            {
+                UDPSocket.SendTo(packet.GetPacketStream(), SocketFlags.None, EP);
+
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, EP);
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void Stop()
@@ -71,10 +110,16 @@ namespace VoiceCraft.Core.Server.Sockets
                     var buffer = new byte[1024];
                     var networkStream = await UDPSocket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
                     var packet = new VoicePacket(buffer);
+
+                    if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                        OnInboundPacket?.Invoke(packet, networkStream.RemoteEndPoint);
                     HandlePacket(packet, networkStream.RemoteEndPoint);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (CT.IsCancellationRequested)
                         break;
                 }

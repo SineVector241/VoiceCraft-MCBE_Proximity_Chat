@@ -91,6 +91,11 @@ namespace VoiceCraft.Core.Server
             {
                 try
                 {
+                    Signalling.LogInbound = ServerProperties.Debugger.LogInboundSignallingPackets;
+                    Signalling.LogOutbound = ServerProperties.Debugger.LogOutboundSignallingPackets;
+                    Signalling.InboundFilter = ServerProperties.Debugger.InboundSignallingFilter;
+                    Signalling.OutboundFilter = ServerProperties.Debugger.OutboundSignallingFilter;
+                    Signalling.LogExceptions = ServerProperties.Debugger.LogExceptions;
                     Signalling.Start(ServerProperties.SignallingPortTCP);
                 }
                 catch (Exception ex)
@@ -137,6 +142,11 @@ namespace VoiceCraft.Core.Server
             {
                 try
                 {
+                    Voice.LogInbound = ServerProperties.Debugger.LogInboundVoicePackets;
+                    Voice.LogOutbound = ServerProperties.Debugger.LogOutboundVoicePackets;
+                    Voice.InboundFilter = ServerProperties.Debugger.InboundVoiceFilter;
+                    Voice.OutboundFilter = ServerProperties.Debugger.OutboundVoiceFilter;
+                    Voice.LogExceptions = ServerProperties.Debugger.LogExceptions;
                     Voice.Start(ServerProperties.VoicePortUDP);
                 }
                 catch (Exception ex)

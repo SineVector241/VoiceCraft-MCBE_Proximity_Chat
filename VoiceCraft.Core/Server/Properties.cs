@@ -18,6 +18,7 @@
         public bool ProximityToggle { get; set; } = true;
         public bool VoiceEffects { get; set; } = true;
         public string ServerMOTD { get; set; } = "VoiceCraft Proximity Chat!";
+        public DebugProperties Debugger { get; set; } = new DebugProperties();
     }
 
     public enum ConnectionTypes

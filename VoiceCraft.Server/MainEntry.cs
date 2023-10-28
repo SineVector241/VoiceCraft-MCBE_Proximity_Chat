@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using Newtonsoft.Json;
+using System.Net.Sockets;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Signalling;
 using VoiceCraft.Core.Server;
@@ -21,6 +22,13 @@ namespace VoiceCraft.Server
             server.OnParticipantBinded += ParticipantBinded;
             server.OnParticipantUnbinded += ParticipantUnbinded;
             server.OnParticipantDisconnected += ParticipantDisconnected;
+
+            server.Signalling.OnOutboundPacket += SignallingOutbound;
+            server.Signalling.OnInboundPacket += SignallingInbound;
+            server.Signalling.OnExceptionError += ExceptionError;
+            server.Voice.OnOutboundPacket += VoiceOutbound;
+            server.Voice.OnInboundPacket += VoiceInbound;
+            server.Voice.OnExceptionError += ExceptionError;
         }
 
         public async Task Start()
@@ -32,7 +40,11 @@ namespace VoiceCraft.Server
             Console.WriteLine(@" \ \ / / _ \| |/ __/ _ \ |   | '__/ _` | |_| __|");
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
-            Console.WriteLine("[v1.0.0]========================================\n");
+#if DEBUG
+            Console.WriteLine("[v1.0.0]=================================[DEBUG]\n");
+#else
+            Console.WriteLine("[v1.0.0]===============================[RELEASE]\n");
+#endif
 
             //Register Commands
             CommandHandler.RegisterCommand("help", HelpCommand);
@@ -48,6 +60,7 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("toggleproximity", ToggleProximityCommand);
             CommandHandler.RegisterCommand("setmotds", SetMotdCommand);
             CommandHandler.RegisterCommand("toggleeffects", ToggleEffectsCommand);
+            CommandHandler.RegisterCommand("debug", DebugCommand);
 
             try
             {
@@ -142,6 +155,31 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Warn, $"Participant disconnected: Key - {key}, Reason - {reason}", "Server");
         }
 
+        //Debug Events
+        private void SignallingOutbound(Core.Packets.Interfaces.ISignallingPacket packet, Socket socket)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-SO");
+        }
+
+        private void SignallingInbound(Core.Packets.Interfaces.ISignallingPacket packet, Socket socket)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-SI");
+        }
+
+        private void VoiceOutbound(Core.Packets.Interfaces.IVoicePacket packet, System.Net.EndPoint endPoint)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-VO");
+        }
+
+        private void VoiceInbound(Core.Packets.Interfaces.IVoicePacket packet, System.Net.EndPoint endPoint)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-VI");
+        }
+
+        private void ExceptionError(Exception error)
+        {
+            Logger.LogToConsole(LogType.Warn, error.ToString(), "DEBUG_EXCEPTION");
+        }
         #endregion
 
         #region Commands
@@ -160,6 +198,7 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");
             Logger.LogToConsole(LogType.Info, "SetMotd [Message: string] - Sets the server MOTD.", "Commands");
             Logger.LogToConsole(LogType.Info, "ToggleEffects [Toggle: boolean] - Toggles the voice effect on or off.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - SignallingInbound, 1 - SignallingOutbound, 2 - VoiceInbound, 3 - VoiceOutbound", "Commands");
         }
 
         void ExitCommand(string[] args)
@@ -392,6 +431,43 @@ namespace VoiceCraft.Server
             {
                 server.ServerProperties.VoiceEffects = value;
                 Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void DebugCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: debug <type: int>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                switch(value)
+                {
+                    case 0:
+                        server.Signalling.LogInbound = !server.Signalling.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set signalling inbound debug: {server.Signalling.LogInbound}", "Commands");
+                        break;
+                    case 1:
+                        server.Signalling.LogOutbound = !server.Signalling.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set signalling outbound debug: {server.Signalling.LogOutbound}", "Commands");
+                        break;
+                    case 2:
+                        server.Voice.LogInbound = !server.Voice.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voice inbound debug: {server.Voice.LogInbound}", "Commands");
+                        break;
+                    case 3:
+                        server.Voice.LogOutbound = !server.Voice.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voice outbound debug: {server.Voice.LogOutbound}", "Commands");
+                        break;
+                    default:
+                        throw new Exception("Invalid type specified!");
+                }
             }
             else
             {

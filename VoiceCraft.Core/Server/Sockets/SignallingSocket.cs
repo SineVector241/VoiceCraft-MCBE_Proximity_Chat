@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -14,6 +15,13 @@ namespace VoiceCraft.Core.Server.Sockets
         public Socket TCPSocket { get; }
         public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
+
+        //Debug Settings
+        public bool LogExceptions { get; set; } = false;
+        public bool LogInbound { get; set; } = false;
+        public bool LogOutbound { get; set; } = false;
+        public List<SignallingPacketTypes> InboundFilter { get; set; } = new List<SignallingPacketTypes>();
+        public List<SignallingPacketTypes> OutboundFilter { get; set; } = new List<SignallingPacketTypes>();
 
         //Delegates
         public delegate void Started();
@@ -32,6 +40,9 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void NullPacket(Null packet, Socket socket);
 
         public delegate void SocketDisconnected(Socket socket, string reason);
+        public delegate void OutboundPacket(ISignallingPacket packet, Socket socket);
+        public delegate void InboundPacket(ISignallingPacket packet, Socket socket);
+        public delegate void ExceptionError(Exception error);
 
         //Events
         public event Started? OnStarted;
@@ -50,6 +61,9 @@ namespace VoiceCraft.Core.Server.Sockets
         public event NullPacket? OnNullPacketReceived;
 
         public event SocketDisconnected? OnSocketDisconnected;
+        public event OutboundPacket? OnOutboundPacket;
+        public event InboundPacket? OnInboundPacket;
+        public event ExceptionError? OnExceptionError;
 
 
         public SignallingSocket(CancellationToken CT)
@@ -75,10 +89,16 @@ namespace VoiceCraft.Core.Server.Sockets
                     var packetStream = packet.GetPacketStream();
                     await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     await socket.SendAsync(packetStream, SocketFlags.None);
+
+                    if(LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                        OnOutboundPacket?.Invoke(packet, socket);
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void SendPacket(ISignallingPacket packet, Socket socket)
@@ -90,9 +110,16 @@ namespace VoiceCraft.Core.Server.Sockets
                     var packetStream = packet.GetPacketStream();
                     socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     socket.Send(packetStream, SocketFlags.None);
+
+                    if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                        OnOutboundPacket?.Invoke(packet, socket);
                 }
             }
-            catch { }
+            catch(Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void Stop()
@@ -134,10 +161,16 @@ namespace VoiceCraft.Core.Server.Sockets
                         offset += bytesRead;
                     }
                     var packet = new SignallingPacket(packetBuffer);
+
+                    if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                        OnInboundPacket?.Invoke(packet, socket);
                     HandlePacket(packet, socket);
                 }
-                catch(IOException)
+                catch(IOException ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, "Lost connection.");
@@ -146,6 +179,9 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch (Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, ex.Message);
@@ -169,8 +205,11 @@ namespace VoiceCraft.Core.Server.Sockets
                     var handle = await TCPSocket.AcceptAsync();
                     ListenAsync(handle);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (CT.IsCancellationRequested)
                         break;
                 }
