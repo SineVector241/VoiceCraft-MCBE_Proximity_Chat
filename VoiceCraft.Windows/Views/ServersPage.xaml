@@ -123,13 +123,28 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0"
-                                           FontSize="17">
-                                    <TextBlock.Text>
-                                        <MultiBinding StringFormat="Address: {0}:{1}">
-                                            <Binding Path="IP"/>
-                                            <Binding Path="Port"/>
-                                        </MultiBinding>
-                                    </TextBlock.Text>
+                                           FontSize="17"
+                                           FontWeight="Bold"
+                                           Foreground="White">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=DataContext.Settings.HideAddress}" Value="False">
+                                                    <Setter Property="Text">
+                                                        <Setter.Value>
+                                                            <MultiBinding StringFormat="Address: {0}:{1}">
+                                                                <Binding Path="IP"/>
+                                                                <Binding Path="Port"/>
+                                                            </MultiBinding>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=DataContext.Settings.HideAddress}" Value="True">
+                                                    <Setter Property="Text" Value="Address: ****:****"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
                                 </TextBlock>
 
                                 <TextBlock Grid.Row="1"

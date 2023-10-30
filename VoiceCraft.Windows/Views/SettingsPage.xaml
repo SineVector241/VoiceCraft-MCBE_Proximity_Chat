@@ -78,6 +78,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0"
                           Margin="0,5">
@@ -178,7 +179,19 @@
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <Grid Grid.Row="7"
+                    <CheckBox Content="Hide Address"
+                              FontSize="13"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              Margin="0,5"
+                              IsChecked="{Binding Settings.HideAddress}"
+                              Grid.Row="7">
+                        <CheckBox.LayoutTransform>
+                            <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                        </CheckBox.LayoutTransform>
+                    </CheckBox>
+
+                    <Grid Grid.Row="8"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -203,7 +216,7 @@
                                  Grid.Column="1"/>
                     </Grid>
 
-                    <Grid Grid.Row="8"
+                    <Grid Grid.Row="9"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -224,7 +237,7 @@
                         </Slider>
                     </Grid>
 
-                    <Grid Grid.Row="9"
+                    <Grid Grid.Row="10"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -255,7 +268,7 @@
                         </Slider>
                     </Grid>
 
-                    <Grid Grid.Row="10"
+                    <Grid Grid.Row="11"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -287,7 +300,7 @@
                         </Button>
                     </Grid>
 
-                    <Grid Grid.Row="11"
+                    <Grid Grid.Row="12"
                           Margin="0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -325,13 +338,13 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="12"/>
+                            Grid.Row="13"/>
 
                     <Button FontSize="15"
                             Command="{Binding OpenCloseMicrophoneCommand}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="13">
+                            Grid.Row="14">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
                                 <Style.Triggers>
@@ -352,7 +365,7 @@
                             Style="{StaticResource ButtonStyle}"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="14"/>
+                            Grid.Row="15"/>
                 </Grid>
 
                 <Border.Triggers>

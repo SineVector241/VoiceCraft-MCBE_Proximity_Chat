@@ -56,13 +56,27 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock FontWeight="Bold"
-                               FontSize="18">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="Address: {0}:{1}">
-                                <Binding Path="Server.IP"/>
-                                <Binding Path="Server.Port"/>
-                            </MultiBinding>
-                        </TextBlock.Text>
+                               FontSize="18"
+                               Foreground="White">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Settings.HideAddress}" Value="False">
+                                        <Setter Property="Text">
+                                            <Setter.Value>
+                                                <MultiBinding StringFormat="Address: {0}:{1}">
+                                                    <Binding Path="Server.IP"/>
+                                                    <Binding Path="Server.Port"/>
+                                                </MultiBinding>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Settings.HideAddress}" Value="True">
+                                        <Setter Property="Text" Value="Address: ****:****"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
                     </TextBlock>
 
                     <TextBlock FontWeight="Bold"

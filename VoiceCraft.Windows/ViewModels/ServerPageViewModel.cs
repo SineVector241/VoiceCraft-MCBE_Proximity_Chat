@@ -16,9 +16,13 @@ namespace VoiceCraft.Windows.ViewModels
         [ObservableProperty]
         ServerModel server;
 
+        [ObservableProperty]
+        SettingsModel settings;
+
         public ServerPageViewModel()
         {
             Server = Database.GetPassableObject<ServerModel>();
+            Settings = Database.GetSettings();
             _ = Task.Run(async () => {
                 var res = await VoiceCraftClient.PingAsync(Server.IP, Server.Port);
                 ExternalServerInformation = res;

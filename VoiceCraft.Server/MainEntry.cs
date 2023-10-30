@@ -178,9 +178,13 @@ namespace VoiceCraft.Server
 
         private void ExceptionError(Exception error)
         {
+#if DEBUG
             Logger.LogToConsole(LogType.Warn, error.ToString(), "DEBUG_EXCEPTION");
+#else
+            Logger.LogToConsole(LogType.Warn, error.Message.ToString(), "DEBUG_EXCEPTION");
+#endif
         }
-        #endregion
+#endregion
 
         #region Commands
         void HelpCommand(string[] args)
