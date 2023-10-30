@@ -19,10 +19,12 @@ namespace VoiceCraft.Mobile.Storage
         public delegate void ServerAdd(ServerModel Server);
         public delegate void ServerUpdated(ServerModel Server);
         public delegate void ServerRemove(ServerModel Server);
+        public delegate void SettingsUpdated(SettingsModel Settings);
 
         public static event ServerAdd? OnServerAdd;
         public static event ServerUpdated? OnServerUpdated;
         public static event ServerRemove? OnServerRemove;
+        public static event SettingsUpdated? OnSettingsUpdated;
 
         public static List<ServerModel> GetServers()
         {
@@ -86,6 +88,7 @@ namespace VoiceCraft.Mobile.Storage
             else if (settings.SoftLimiterGain > 20) throw new Exception("SoftLimiter Gain cannot be higher than 20");
             DBData.Settings = settings;
             SaveDatabase();
+            OnSettingsUpdated?.Invoke(settings);
         }
 
         public static void SetPassableObject(object obj)

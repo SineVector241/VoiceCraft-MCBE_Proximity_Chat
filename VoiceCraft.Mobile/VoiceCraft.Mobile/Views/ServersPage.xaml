@@ -58,12 +58,25 @@
                                     <Label Grid.Row="1"
                                            FontAttributes="Bold"
                                            FontSize="18">
-                                        <Label.Text>
-                                            <MultiBinding StringFormat="Address: {0}:{1}">
-                                                <Binding Path="IP"/>
-                                                <Binding Path="Port"/>
-                                            </MultiBinding>
-                                        </Label.Text>
+                                        <Label.Style>
+                                            <Style TargetType="Label">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=BindingContext.Settings.HideAddress}" Value="False" TargetType="Label">
+                                                        <Setter Property="Text">
+                                                            <Setter.Value>
+                                                                <MultiBinding StringFormat="Address: {0}:{1}">
+                                                                    <Binding Path="IP"/>
+                                                                    <Binding Path="Port"/>
+                                                                </MultiBinding>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=BindingContext.Settings.HideAddress}" Value="True" TargetType="Label">
+                                                        <Setter Property="Text" Value="Address: ****:****"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Label.Style>
                                     </Label>
 
                                     <Label Grid.Row="2"

@@ -13,11 +13,20 @@ namespace VoiceCraft.Mobile.ViewModels
         [ObservableProperty]
         ObservableCollection<ServerModel> servers = new ObservableCollection<ServerModel>(Database.GetServers());
 
+        [ObservableProperty]
+        SettingsModel settings = Database.GetSettings();
+
         public ServersPageViewModel()
         {
             Database.OnServerAdd += ServerAdded;
             Database.OnServerUpdated += ServerUpdated;
             Database.OnServerRemove += ServerRemoved;
+            Database.OnSettingsUpdated += SettingsUpdated;
+        }
+
+        private void SettingsUpdated(SettingsModel Settings)
+        {
+            this.Settings = Settings;
         }
 
         private void ServerAdded(ServerModel Server)

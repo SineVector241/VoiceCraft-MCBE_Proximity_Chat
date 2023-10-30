@@ -10,6 +10,7 @@
         public bool DirectionalAudioEnabled { get; set; }
         public bool ClientSidedPositioning { get; set; }
         public bool LinearVolume { get; set; }
+        public bool HideAddress { get; set; }
         public bool SoftLimiterEnabled { get; set; } = true;
     }
 }

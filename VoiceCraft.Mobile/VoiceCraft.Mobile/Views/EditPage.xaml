@@ -15,7 +15,7 @@
         <ScrollView>
             <Grid Grid.RowDefinitions="auto">
                 <Frame>
-                    <Label Text="Add Server" 
+                    <Label Text="Edit Server" 
                            FontSize="25"
                            FontAttributes="Bold"/>
                 </Frame>
