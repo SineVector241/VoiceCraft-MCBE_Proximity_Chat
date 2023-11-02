@@ -437,6 +437,9 @@ namespace VoiceCraft.Core.Server
                 {
                     try
                     {
+                        MCComm.LogInbound = ServerProperties.Debugger.LogInboundMCCommPackets;
+                        MCComm.InboundFilter = ServerProperties.Debugger.InboundMCCommFilter;
+                        MCComm.LogExceptions = ServerProperties.Debugger.LogExceptions;
                         MCComm.Start(ServerProperties.MCCommPortTCP, ServerProperties.PermanentServerKey);
                     }
                     catch (Exception ex)

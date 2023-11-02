@@ -15,6 +15,11 @@ namespace VoiceCraft.Core.Server.Sockets
         private string ServerKey = string.Empty;
         public CancellationToken CT { get; }
 
+        //Debug Settings
+        public bool LogExceptions { get; set; } = false;
+        public bool LogInbound { get; set; } = false;
+        public List<PacketType> InboundFilter { get; set; } = new List<PacketType>();
+
         //Delegates
         public delegate void Started();
         public delegate void BindedPacket(WebserverPacket packet, HttpListenerContext ctx);
@@ -23,6 +28,9 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void GetSettingsPacket(WebserverPacket packet, HttpListenerContext ctx);
         public delegate void RemoveParticipantPacket(WebserverPacket packet, HttpListenerContext ctx);
 
+        public delegate void InboundPacket(WebserverPacket packet);
+        public delegate void ExceptionError(Exception error);
+
         //events
         public event Started? OnStarted;
         public event BindedPacket? OnBindedPacketReceived;
@@ -30,6 +38,9 @@ namespace VoiceCraft.Core.Server.Sockets
         public event UpdateSettingsPacket? OnUpdateSettingsPacketReceived;
         public event GetSettingsPacket? OnGetSettingsPacketReceived;
         public event RemoveParticipantPacket? OnRemoveParticipantPacketReceived;
+
+        public event InboundPacket? OnInboundPacket;
+        public event ExceptionError? OnExceptionError;
 
         public MCCommSocket(CancellationToken CT)
         {
@@ -72,7 +83,11 @@ namespace VoiceCraft.Core.Server.Sockets
                             SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Content");
                             return;
                         }
-                        else if (json.LoginKey != ServerKey)
+
+                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(json.Type)))
+                            OnInboundPacket?.Invoke(json);
+
+                        if (json.LoginKey != ServerKey)
                         {
                             SendResponse(ctx, HttpStatusCode.Forbidden, "Invalid Login Key");
                             return;
@@ -114,8 +129,11 @@ namespace VoiceCraft.Core.Server.Sockets
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                if(LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+
                 if (CT.IsCancellationRequested)
                     Stop();
             }
