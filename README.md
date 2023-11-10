@@ -11,4 +11,4 @@ VoiceCraft proximity chat is a VOIP program developed on .NET 7.0 WPF framework 
 Please refer to the [wiki](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/wiki) for installations.
 
 ## Discord Server
-![Discord Shield](https://discordapp.com/api/guilds/847396393068265472/widget.png?style=shield)
+[![Discord Shield](https://discordapp.com/api/guilds/847396393068265472/widget.png?style=shield)](https://discord.gg/fJGsRY5hh9)
