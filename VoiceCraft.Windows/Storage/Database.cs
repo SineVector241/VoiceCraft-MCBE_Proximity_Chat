@@ -14,6 +14,7 @@ namespace VoiceCraft.Windows.Storage
         const string DbFile = "Database.json";
         static readonly string DatabasePath = Path.Combine("./", DbFile);
         static DatabaseModel DBData = new DatabaseModel();
+        static bool LoadedDB = false;
 
         //Events
         public delegate void ServerAdd(ServerModel Server);
@@ -26,6 +27,7 @@ namespace VoiceCraft.Windows.Storage
         public static event ServerRemove? OnServerRemove;
         public static event SettingsUpdated? OnSettingsUpdated;
 
+        #region Server Methods
         public static List<ServerModel> GetServers()
         {
             LoadDatabase();
@@ -73,7 +75,9 @@ namespace VoiceCraft.Windows.Storage
             OnServerRemove?.Invoke(server);
             SaveDatabase();
         }
+        #endregion
 
+        #region Setting Methods
         public static SettingsModel GetSettings()
         {
             LoadDatabase();
@@ -90,6 +94,7 @@ namespace VoiceCraft.Windows.Storage
             SaveDatabase();
             OnSettingsUpdated?.Invoke(settings);
         }
+        #endregion
 
         public static void SetPassableObject(object obj)
         {
@@ -104,17 +109,23 @@ namespace VoiceCraft.Windows.Storage
         //Private Methods
         private static void LoadDatabase()
         {
-            if (!File.Exists(DatabasePath))
+            if (!LoadedDB)
             {
-                File.WriteAllText(DatabasePath, JsonConvert.SerializeObject(DBData));
-                return;
-            }
-            var ReadDBData = JsonConvert.DeserializeObject<DatabaseModel>(File.ReadAllText(DatabasePath));
-            if(ReadDBData != null)
-                DBData = ReadDBData;
+                if (!File.Exists(DatabasePath))
+                {
+                    File.WriteAllText(DatabasePath, JsonConvert.SerializeObject(DBData));
+                    return;
+                }
+                var ReadDBData = JsonConvert.DeserializeObject<DatabaseModel>(File.ReadAllText(DatabasePath));
+                if (ReadDBData != null)
+                    DBData = ReadDBData;
 
-            //Make sure the application doesn't crash.
-            if(DBData.Servers == null || DBData.Settings == null) DBData = new DatabaseModel();
+                //Make sure the application doesn't crash.
+                if (DBData.Servers == null || DBData.Settings == null)
+                    DBData = new DatabaseModel();
+
+                LoadedDB = true;
+            }
         }
 
         private static void SaveDatabase()
