@@ -155,36 +155,5 @@ namespace VoiceCraft.Core.Server.Sockets
         public string PlayerId { get; set; } = "";
         public ushort PlayerKey { get; set; }
         public string Gamertag { get; set; } = "";
-
-        public List<Player> Players { get; set; } = new List<Player>();
-        public ServerSettings Settings { get; set; } = new ServerSettings();
-    }
-
-    public class Player
-    {
-        public string PlayerId { get; set; } = "";
-        public string DimensionId { get; set; } = "";
-        public Vector3 Location { get; set; } = new Vector3();
-        public float Rotation { get; set; }
-        public float CaveDensity { get; set; }
-        public bool IsDead { get; set; }
-        public bool InWater { get; set; }
-    }
-
-    public class ServerSettings
-    {
-        public int ProximityDistance { get; set; } = 30;
-        public bool ProximityToggle { get; set; } = false;
-        public bool VoiceEffects { get; set; } = false;
-    }
-
-    public enum PacketType
-    {
-        Login,
-        Bind,
-        Update,
-        UpdateSettings,
-        GetSettings,
-        RemoveParticipant
     }
 }
