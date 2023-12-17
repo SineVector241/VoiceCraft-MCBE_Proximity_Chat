@@ -2,5 +2,6 @@
 {
     public class RemoveParticipant
     {
+        public string PlayerId { get; set; } = string.Empty;
     }
 }
