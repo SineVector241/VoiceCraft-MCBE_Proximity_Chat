@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Server.Sockets;
 
 namespace VoiceCraft.Core.Server
 {
@@ -16,6 +15,6 @@ namespace VoiceCraft.Core.Server
         public List<VoicePacketTypes> OutboundVoiceFilter { get; set; } = new List<VoicePacketTypes>();
         public List<SignallingPacketTypes> InboundSignallingFilter { get; set; } = new List<SignallingPacketTypes>();
         public List<SignallingPacketTypes> OutboundSignallingFilter { get; set; } = new List<SignallingPacketTypes>();
-        public List<PacketType> InboundMCCommFilter { get; set; } = new List<PacketType>();
+        public List<MCCommPacketTypes> InboundMCCommFilter { get; set; } = new List<MCCommPacketTypes>();
     }
 }

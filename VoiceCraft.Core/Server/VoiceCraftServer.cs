@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -19,6 +19,8 @@ namespace VoiceCraft.Core.Server
 
         //Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
+        public List<ExternalServer> ExternalServers = new List<ExternalServer>();
+
         public Properties ServerProperties { get; set; } = new Properties();
         public Banlist Banlist { get; set; } = new Banlist();
         private CancellationTokenSource CTS { get; } = new CancellationTokenSource();
@@ -74,6 +76,7 @@ namespace VoiceCraft.Core.Server
             Voice.OnUpdatePositionPacketReceived += VoiceUpdatePosition;
 
             //MCComm
+            MCComm.OnLoginPacketReceived += MCCommLogin;
             MCComm.OnBindedPacketReceived += MCCommBinded;
             MCComm.OnUpdatePacketReceived += MCCommUpdate;
             MCComm.OnGetSettingsPacketReceived += MCCommGetSettings;
@@ -579,8 +582,65 @@ namespace VoiceCraft.Core.Server
             OnWebserverStarted?.Invoke();
         }
 
-        private void MCCommBinded(WebserverPacket packet, HttpListenerContext ctx)
+        private void MCCommLogin(Packets.MCComm.Login packet, HttpListenerContext ctx)
         {
+            if(packet.LoginKey != MCComm.ServerKey)
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Invalid Key!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+            if(ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Already Logged In!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, denyPacket.GetPacketString());
+                return;
+            }
+
+            var server = new ExternalServer()
+            {
+                IP = ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault() ?? string.Empty
+            };
+            ExternalServers.Add(server);
+
+            var acceptPacket = new MCCommPacket()
+            {
+                PacketType = MCCommPacketTypes.Accept,
+                PacketData = new Packets.MCComm.Accept()
+            };
+            MCComm.SendResponse(ctx, HttpStatusCode.Conflict, acceptPacket.GetPacketString());
+        }
+
+        private void MCCommBinded(Packets.MCComm.Bind packet, HttpListenerContext ctx)
+        {
+            if (!ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Not logged in!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+
             var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
             if (participant.Value == null)
             {
@@ -647,9 +707,23 @@ namespace VoiceCraft.Core.Server
             OnParticipantBinded?.Invoke(participant.Value, participant.Key);
         }
 
-        private void MCCommUpdate(WebserverPacket packet, HttpListenerContext ctx)
+        private void MCCommUpdate(Packets.MCComm.Update packet, HttpListenerContext ctx)
         {
-            for(int i = 0; i < packet.Players.Count; i++)
+            if (!ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Not logged in!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+
+            for (int i = 0; i < packet.Players.Count; i++)
             {
                 var player = packet.Players[i];
                 var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == player.PlayerId && x.Value.PositioningType == PositioningTypes.ServerSided);
@@ -678,11 +752,26 @@ namespace VoiceCraft.Core.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated");
         }
 
-        private void MCCommGetSettings(WebserverPacket packet, HttpListenerContext ctx)
+        private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
         {
-            var settingsPacket = new WebserverPacket()
+            if (!ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
             {
-                Settings = new ServerSettings()
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Not logged in!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+
+            var settingsPacket = new MCCommPacket()
+            {
+                PacketType = MCCommPacketTypes.UpdateSettings,
+                PacketData = new Packets.MCComm.UpdateSettings()
                 {
                     ProximityDistance = ServerProperties.ProximityDistance,
                     ProximityToggle = ServerProperties.ProximityToggle,
@@ -690,25 +779,53 @@ namespace VoiceCraft.Core.Server
                 }
             };
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, JsonConvert.SerializeObject(settingsPacket));
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket.GetPacketString());
         }
 
-        private void MCCommUpdateSettings(WebserverPacket packet, HttpListenerContext ctx)
+        private void MCCommUpdateSettings(Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
         {
-            if (packet.Settings.ProximityDistance < 1 || packet.Settings.ProximityDistance > 120)
+            if (!ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Not logged in!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+
+            if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, "Error. Proximity distance must be between 1 and 120!");
                 return;
             }
 
-            ServerProperties.ProximityDistance = packet.Settings.ProximityDistance;
-            ServerProperties.ProximityToggle = packet.Settings.ProximityToggle;
-            ServerProperties.VoiceEffects = packet.Settings.VoiceEffects;
+            ServerProperties.ProximityDistance = packet.ProximityDistance;
+            ServerProperties.ProximityToggle = packet.ProximityToggle;
+            ServerProperties.VoiceEffects = packet.VoiceEffects;
             MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
         }
 
-        private void MCCommRemoveParticipant(WebserverPacket packet, HttpListenerContext ctx)
+        private void MCCommRemoveParticipant(Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
         {
+            if (!ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+            {
+                var denyPacket = new MCCommPacket()
+                {
+                    PacketType = MCCommPacketTypes.Deny,
+                    PacketData = new Packets.MCComm.Deny()
+                    {
+                        Reason = "Not logged in!"
+                    }
+                };
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                return;
+            }
+
             var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (participant.Value != null)
             {

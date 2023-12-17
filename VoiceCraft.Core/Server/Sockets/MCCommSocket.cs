@@ -1,38 +1,40 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System;
 using System.Net;
-using System.Numerics;
 using System.Text;
 using System.Threading;
+using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.MCComm;
 
 namespace VoiceCraft.Core.Server.Sockets
 {
     public class MCCommSocket
     {
         private readonly HttpListener Listener;
-        private string ServerKey = string.Empty;
+        public string ServerKey { get; private set; } = string.Empty;
         public CancellationToken CT { get; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;
-        public List<PacketType> InboundFilter { get; set; } = new List<PacketType>();
+        public List<MCCommPacketTypes> InboundFilter { get; set; } = new List<MCCommPacketTypes>();
 
         //Delegates
         public delegate void Started();
-        public delegate void BindedPacket(WebserverPacket packet, HttpListenerContext ctx);
-        public delegate void UpdatePacket(WebserverPacket packet, HttpListenerContext ctx);
-        public delegate void UpdateSettingsPacket(WebserverPacket packet, HttpListenerContext ctx);
-        public delegate void GetSettingsPacket(WebserverPacket packet, HttpListenerContext ctx);
-        public delegate void RemoveParticipantPacket(WebserverPacket packet, HttpListenerContext ctx);
+        public delegate void LoginPacket(Login packet, HttpListenerContext ctx);
+        public delegate void BindedPacket(Bind packet, HttpListenerContext ctx);
+        public delegate void UpdatePacket(Update packet, HttpListenerContext ctx);
+        public delegate void UpdateSettingsPacket(UpdateSettings packet, HttpListenerContext ctx);
+        public delegate void GetSettingsPacket(GetSettings packet, HttpListenerContext ctx);
+        public delegate void RemoveParticipantPacket(RemoveParticipant packet, HttpListenerContext ctx);
 
-        public delegate void InboundPacket(WebserverPacket packet);
+        public delegate void InboundPacket(MCCommPacket packet);
         public delegate void ExceptionError(Exception error);
 
         //events
         public event Started? OnStarted;
+        public event LoginPacket? OnLoginPacketReceived;
         public event BindedPacket? OnBindedPacketReceived;
         public event UpdatePacket? OnUpdatePacketReceived;
         public event UpdateSettingsPacket? OnUpdateSettingsPacketReceived;
@@ -75,57 +77,12 @@ namespace VoiceCraft.Core.Server.Sockets
                     try
                     {
                         var content = new StreamReader(ctx.Request.InputStream).ReadToEnd();
-                        var json = JsonConvert.DeserializeObject<WebserverPacket>(content);
-
-                        //If json is not null and key matches then continue. If one or the other is invalid it will respond differently to each one and return.
-                        if (json == null)
-                        {
-                            SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Content");
-                            return;
-                        }
-
-                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(json.Type)))
-                            OnInboundPacket?.Invoke(json);
-
-                        if (json.LoginKey != ServerKey)
-                        {
-                            SendResponse(ctx, HttpStatusCode.Forbidden, "Invalid Login Key");
-                            return;
-                        }
-
-                        switch (json.Type)
-                        {
-                            case PacketType.Login:
-                                SendResponse(ctx, HttpStatusCode.OK, "Key Accepted");
-                                break;
-
-                            case PacketType.Bind:
-                                OnBindedPacketReceived?.Invoke(json, ctx);
-                                break;
-
-                            case PacketType.Update:
-                                OnUpdatePacketReceived?.Invoke(json, ctx);
-                                break;
-
-                            case PacketType.UpdateSettings:
-                                OnUpdateSettingsPacketReceived?.Invoke(json, ctx);
-                                break;
-
-                            case PacketType.GetSettings:
-                                OnGetSettingsPacketReceived?.Invoke(json, ctx);
-                                break;
-
-                            case PacketType.RemoveParticipant:
-                                OnRemoveParticipantPacketReceived?.Invoke(json, ctx);
-                                break;
-                            default:
-                                break;
-                        }
-
+                        var packet = new MCCommPacket(content);
+                        HandlePacket(packet, ctx);
                     }
                     catch
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Content");
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
                     }
                 }
             }
@@ -139,6 +96,70 @@ namespace VoiceCraft.Core.Server.Sockets
             }
         }
 
+        private void HandlePacket(MCCommPacket packet, HttpListenerContext ctx)
+        {
+            if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                OnInboundPacket?.Invoke(packet);
+
+            switch(packet.PacketType)
+            {
+                case MCCommPacketTypes.Login:
+                    var loginData = (Login)packet.PacketData;
+                    if(loginData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnLoginPacketReceived?.Invoke(loginData, ctx);
+                    break;
+                case MCCommPacketTypes.Bind:
+                    var bindData = (Bind)packet.PacketData;
+                    if (bindData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnBindedPacketReceived?.Invoke(bindData, ctx);
+                    break;
+                case MCCommPacketTypes.Update:
+                    var updateData = (Update)packet.PacketData;
+                    if (updateData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnUpdatePacketReceived?.Invoke(updateData, ctx);
+                    break;
+                case MCCommPacketTypes.UpdateSettings:
+                    var updateSettingsData = (UpdateSettings)packet.PacketData;
+                    if (updateSettingsData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnUpdateSettingsPacketReceived?.Invoke(updateSettingsData, ctx);
+                    break;
+                case MCCommPacketTypes.GetSettings:
+                    var getSettingsData = (GetSettings)packet.PacketData;
+                    if (getSettingsData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnGetSettingsPacketReceived?.Invoke(getSettingsData, ctx);
+                    break;
+                case MCCommPacketTypes.RemoveParticipant:
+                    var removeParticipantData = (RemoveParticipant)packet.PacketData;
+                    if (removeParticipantData == null)
+                    {
+                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        break;
+                    }
+                    OnRemoveParticipantPacketReceived?.Invoke(removeParticipantData, ctx);
+                    break;
+            }
+        }
+
         public void SendResponse(HttpListenerContext ctx, HttpStatusCode code, string Content)
         {
             var content = Encoding.UTF8.GetBytes(Content);
@@ -147,13 +168,5 @@ namespace VoiceCraft.Core.Server.Sockets
             ctx.Response.OutputStream.Write(content, 0, content.Length);
             ctx.Response.OutputStream.Close();
         }
-    }
-    public class WebserverPacket
-    {
-        public PacketType Type { get; set; }
-        public string LoginKey { get; set; } = "";
-        public string PlayerId { get; set; } = "";
-        public ushort PlayerKey { get; set; }
-        public string Gamertag { get; set; } = "";
     }
 }

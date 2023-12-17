@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Net.Sockets;
-using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Signalling;
 using VoiceCraft.Core.Server;
 
@@ -178,7 +177,7 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-VI");
         }
 
-        private void MCCommInbound(Core.Server.Sockets.WebserverPacket packet)
+        private void MCCommInbound(Core.Packets.MCCommPacket packet)
         {
             Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-MCI");
         }
@@ -290,9 +289,9 @@ namespace VoiceCraft.Server
             {
                 if (server.Participants.TryGetValue(value, out var participant))
                 {
-                    var packet = new SignallingPacket()
+                    var packet = new Core.Packets.SignallingPacket()
                     {
-                        PacketType = SignallingPacketTypes.Logout,
+                        PacketType = Core.Packets.SignallingPacketTypes.Logout,
                         PacketData = new Login() { LoginKey = value }
                     };
                     server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
@@ -326,9 +325,9 @@ namespace VoiceCraft.Server
                     if (!string.IsNullOrWhiteSpace(ip))
                     {
                         server.Banlist.IPBans.Add(ip);
-                        var packet = new SignallingPacket()
+                        var packet = new Core.Packets.SignallingPacket()
                         {
-                            PacketType = SignallingPacketTypes.Logout,
+                            PacketType = Core.Packets.SignallingPacketTypes.Logout,
                             PacketData = new Login() { LoginKey = value }
                         };
                         server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
