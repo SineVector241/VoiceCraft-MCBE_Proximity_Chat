@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.MCComm;
 
@@ -7,7 +8,7 @@ namespace VoiceCraft.Core.Packets
     public class MCCommPacket : IMCCommPacket
     {
         public MCCommPacketTypes PacketType { get; set; } = MCCommPacketTypes.Null;
-        public object PacketData { get; set; }
+        public IMCCommPacketData PacketData { get; set; }
 
         public MCCommPacket()
         {
@@ -18,34 +19,71 @@ namespace VoiceCraft.Core.Packets
         {
             PacketData = new Null();
 
-            var jsonData = JsonConvert.DeserializeObject<MCPacket>(data);
+            var jsonData = JObject.Parse(data);
             if (jsonData != null)
             {
-                switch (jsonData.PacketType)
+                var type = jsonData["PacketType"]?.Value<int>();
+                if (type == null)
+                    throw new JsonReaderException("Invalid content!");
+
+                PacketType = (MCCommPacketTypes)type;
+                switch (PacketType)
                 {
                     case MCCommPacketTypes.Login:
-                        PacketData = (Login)jsonData.PacketData;
+                        var loginData = jsonData["PacketData"]?.ToObject<Login>();
+                        if (loginData != null)
+                            PacketData = loginData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.Accept:
-                        PacketData = (Accept)jsonData.PacketData;
+                        var acceptData = jsonData["PacketData"]?.ToObject<Accept>();
+                        if (acceptData != null)
+                            PacketData = acceptData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.Deny:
-                        PacketData = (Deny)jsonData.PacketData;
+                        var denyData = jsonData["PacketData"]?.ToObject<Deny>();
+                        if (denyData != null)
+                            PacketData = denyData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.Bind:
-                        PacketData = (Bind)jsonData.PacketData;
+                        var bindData = jsonData["PacketData"]?.ToObject<Bind>();
+                        if (bindData != null)
+                            PacketData = bindData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.Update:
-                        PacketData = (Update)jsonData.PacketData;
+                        var updateData = jsonData["PacketData"]?.ToObject<Update>();
+                        if (updateData != null)
+                            PacketData = updateData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.UpdateSettings:
-                        PacketData = (UpdateSettings)jsonData.PacketData;
+                        var updateSettingsData = jsonData["PacketData"]?.ToObject<UpdateSettings>();
+                        if (updateSettingsData != null)
+                            PacketData = updateSettingsData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.GetSettings:
-                        PacketData = (GetSettings)jsonData.PacketData;
+                        var getSettingsData = jsonData["PacketData"]?.ToObject<GetSettings>();
+                        if (getSettingsData != null)
+                            PacketData = getSettingsData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                     case MCCommPacketTypes.RemoveParticipant:
-                        PacketData = (RemoveParticipant)jsonData.PacketData;
+                        var removeParticipantData = jsonData["PacketData"]?.ToObject<RemoveParticipant>();
+                        if (removeParticipantData != null)
+                            PacketData = removeParticipantData;
+                        else
+                            throw new JsonReaderException("Invalid data!");
                         break;
                 }
             }
@@ -56,12 +94,6 @@ namespace VoiceCraft.Core.Packets
         public string GetPacketString()
         {
             return JsonConvert.SerializeObject(this);
-        }
-
-        private class MCPacket
-        {
-            public MCCommPacketTypes PacketType { get; set; } = MCCommPacketTypes.Null;
-            public object PacketData { get; set; } = new Null();
         }
     }
 

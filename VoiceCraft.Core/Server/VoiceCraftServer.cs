@@ -16,6 +16,7 @@ namespace VoiceCraft.Core.Server
     {
         //Constants
         public const string Version = "v1.0.0";
+        public const int ActivityInterval = 5000;
 
         //Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
@@ -24,6 +25,7 @@ namespace VoiceCraft.Core.Server
         public Properties ServerProperties { get; set; } = new Properties();
         public Banlist Banlist { get; set; } = new Banlist();
         private CancellationTokenSource CTS { get; } = new CancellationTokenSource();
+        private System.Timers.Timer ActivityChecker { get; set; }
 
         //Sockets
         public SignallingSocket Signalling { get; set; }
@@ -34,6 +36,8 @@ namespace VoiceCraft.Core.Server
         public delegate void SignallingStarted();
         public delegate void VoiceStarted();
         public delegate void WebserverStarted();
+        public delegate void ExternalServerConnected(ExternalServer server);
+        public delegate void ExternalServerDisconnected(ExternalServer server, string reason);
         public delegate void ParticipantConnected(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantBinded(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantUnbinded(VoiceCraftParticipant participant, ushort key);
@@ -44,6 +48,8 @@ namespace VoiceCraft.Core.Server
         public event SignallingStarted? OnSignallingStarted;
         public event VoiceStarted? OnVoiceStarted;
         public event WebserverStarted? OnWebserverStarted;
+        public event ExternalServerConnected? OnExternalServerConnected;
+        public event ExternalServerDisconnected? OnExternalServerDisconnected;
         public event ParticipantConnected? OnParticipantConnected;
         public event ParticipantBinded? OnParticipantBinded;
         public event ParticipantUnbinded? OnParticipantUnbinded;
@@ -59,6 +65,9 @@ namespace VoiceCraft.Core.Server
             Signalling.OnStarted += SignallingSocketStarted;
             Voice.OnStarted += VoiceSocketStarted;
             MCComm.OnStarted += MCCommStarted;
+
+            ActivityChecker = new System.Timers.Timer(ActivityInterval);
+            ActivityChecker.Elapsed += DoServerChecks;
 
             //Event methods in order!
             //Signalling
@@ -90,6 +99,8 @@ namespace VoiceCraft.Core.Server
 
         public void Start()
         {
+            ActivityChecker.Start();
+
             _ = Task.Run(() =>
             {
                 try
@@ -107,6 +118,20 @@ namespace VoiceCraft.Core.Server
                     CTS.Cancel();
                 }
             });
+        }
+
+        private void DoServerChecks(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            for(int i = ExternalServers.Count - 1; i >= 0; i--)
+            {
+                var server = ExternalServers[i];
+
+                if (DateTime.UtcNow.Subtract(server.LastUsed).Milliseconds > ServerProperties.ExternalServerTimeoutMS)
+                {
+                    ExternalServers.RemoveAt(i);
+                    OnExternalServerDisconnected?.Invoke(server, "Timeout");
+                }
+            }
         }
 
         //Event Methods
@@ -616,6 +641,7 @@ namespace VoiceCraft.Core.Server
                 IP = ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault() ?? string.Empty
             };
             ExternalServers.Add(server);
+            OnExternalServerConnected?.Invoke(server);
 
             var acceptPacket = new MCCommPacket()
             {

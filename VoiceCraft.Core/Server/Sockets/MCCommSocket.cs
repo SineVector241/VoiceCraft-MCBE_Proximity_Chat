@@ -80,8 +80,11 @@ namespace VoiceCraft.Core.Server.Sockets
                         var packet = new MCCommPacket(content);
                         HandlePacket(packet, ctx);
                     }
-                    catch
+                    catch(Exception ex)
                     {
+                        if (LogExceptions)
+                            OnExceptionError?.Invoke(ex);
+
                         SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
                     }
                 }
