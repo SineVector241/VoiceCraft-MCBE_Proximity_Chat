@@ -78,6 +78,7 @@ namespace VoiceCraft.Core.Server
             Signalling.OnDeafenPacketReceived += SignallingDeafen;
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnUnbindedPacketReceived += SignallingUnbinded;
+            Signalling.OnPingCheckPacketReceived += SignallingPingCheck;
 
             //Voice
             Voice.OnLoginPacketReceived += OnVoiceLogin;
@@ -126,7 +127,7 @@ namespace VoiceCraft.Core.Server
             {
                 var server = ExternalServers[i];
 
-                if (DateTime.UtcNow.Subtract(server.LastUsed).TotalMilliseconds > ServerProperties.ExternalServerTimeoutMS)
+                if (DateTime.UtcNow.Subtract(server.LastActive).TotalMilliseconds > ServerProperties.ExternalServerTimeoutMS)
                 {
                     ExternalServers.RemoveAt(i);
                     OnExternalServerDisconnected?.Invoke(server, "Timeout");
@@ -277,6 +278,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && !participant.Value.Binded)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.Binded = true;
                 participant.Value.Name = packet.Name;
                 var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
@@ -316,6 +318,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && participant.Value.Binded)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.Binded = false;
                 var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
                 for (ushort i = 0; i < list.Count(); i++)
@@ -340,6 +343,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && !participant.Value.IsMuted)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.IsMuted = true;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
@@ -364,6 +368,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.IsMuted)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.IsMuted = false;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
@@ -388,6 +393,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && !participant.Value.IsDeafened)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.IsDeafened = true;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
@@ -412,6 +418,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.IsDeafened)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.IsDeafened = false;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
@@ -451,6 +458,21 @@ namespace VoiceCraft.Core.Server
                         }
                     }, client.Value.SignallingSocket);
                 }
+            }
+        }
+
+        private void SignallingPingCheck(Packets.Signalling.PingCheck packet, Socket socket)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+            if (participant.Value != null)
+            {
+                participant.Value.LastActive = DateTime.UtcNow;
+
+                Signalling.SendPacketAsync(new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.PingCheck,
+                    PacketData = new Packets.Signalling.PingCheck()
+                }, socket);
             }
         }
         #endregion
@@ -835,7 +857,7 @@ namespace VoiceCraft.Core.Server
             }
             else
             {
-                server.LastUsed = DateTime.UtcNow;
+                server.LastActive = DateTime.UtcNow;
                 return true;
             }
         }

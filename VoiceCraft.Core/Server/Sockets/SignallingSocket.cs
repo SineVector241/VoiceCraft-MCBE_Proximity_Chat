@@ -37,6 +37,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void UnmutePacket(Unmute packet, Socket socket);
         public delegate void ErrorPacket(Error packet, Socket socket);
         public delegate void PingPacket(Ping packet, Socket socket);
+        public delegate void PingCheckPacket(PingCheck packet, Socket socket);
         public delegate void NullPacket(Null packet, Socket socket);
 
         public delegate void SocketDisconnected(Socket socket, string reason);
@@ -58,6 +59,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public event UnmutePacket? OnUnmutePacketReceived;
         public event ErrorPacket? OnErrorPacketReceived;
         public event PingPacket? OnPingPacketReceived;
+        public event PingCheckPacket? OnPingCheckPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
         public event SocketDisconnected? OnSocketDisconnected;
@@ -255,6 +257,9 @@ namespace VoiceCraft.Core.Server.Sockets
                     break;
                 case SignallingPacketTypes.Ping:
                     OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
+                    break;
+                case SignallingPacketTypes.PingCheck:
+                    OnPingCheckPacketReceived?.Invoke((PingCheck)packet.PacketData, socket);
                     break;
                 case SignallingPacketTypes.Null:
                     OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);

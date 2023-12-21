@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using VoiceCraft.Core.Packets;
@@ -14,6 +15,7 @@ namespace VoiceCraft.Core.Server
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public bool IsServerMuted { get; set; }
+        public DateTime LastActive { get; set; } = DateTime.UtcNow;
 
         //Minecraft Data
         public Vector3 Position { get; set; }

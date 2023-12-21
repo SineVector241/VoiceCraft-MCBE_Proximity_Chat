@@ -44,6 +44,8 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case SignallingPacketTypes.Ping: PacketData = new Ping(dataStream, 2);
                     break;
+                case SignallingPacketTypes.PingCheck: PacketData = new PingCheck();
+                    break;
                 default: PacketData = new Null();
                     break;
             }
@@ -79,6 +81,7 @@ namespace VoiceCraft.Core.Packets
         Unmute,
         Error,
         Ping,
+        PingCheck,
         Null
     }
 
