@@ -15,7 +15,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public Socket TCPSocket { get; }
         public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
-
+        
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;

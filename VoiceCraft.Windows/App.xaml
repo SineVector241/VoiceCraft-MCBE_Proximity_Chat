@@ -160,5 +160,21 @@
                 </DrawingGroup>
             </DrawingImage.Drawing>
         </DrawingImage>
+
+        <DrawingImage x:Key="view_channels">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FFF" Geometry="F1 M24,24z M0,0z M9,5L9,9 21,9 21,5 M9,19L21,19 21,15 9,15 M9,14L21,14 21,10 9,10 M4,9L8,9 8,5 4,5 M4,19L8,19 8,15 4,15 M4,14L8,14 8,10 4,10 4,14z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <DrawingImage x:Key="lock">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                    <GeometryDrawing Brush="#FF000000" Geometry="F1 M24,24z M0,0z M12,17A2,2,0,0,0,14,15C14,13.89,13.1,13,12,13A2,2,0,0,0,10,15A2,2,0,0,0,12,17 M18,8A2,2,0,0,1,20,10L20,20A2,2,0,0,1,18,22L6,22A2,2,0,0,1,4,20L4,10C4,8.89,4.9,8,6,8L7,8 7,6A5,5,0,0,1,12,1A5,5,0,0,1,17,6L17,8 18,8 M12,3A3,3,0,0,0,9,6L9,8 15,8 15,6A3,3,0,0,0,12,3z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
     </Application.Resources>
 </Application>

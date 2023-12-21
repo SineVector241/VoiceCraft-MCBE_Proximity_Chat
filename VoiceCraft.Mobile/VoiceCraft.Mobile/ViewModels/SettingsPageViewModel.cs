@@ -67,7 +67,7 @@ namespace VoiceCraft.Mobile.ViewModels
         }
 
         [RelayCommand]
-        public void OpenCloseMicrophone()
+        public async void OpenCloseMicrophone()
         {
             try
             {
@@ -79,13 +79,17 @@ namespace VoiceCraft.Mobile.ViewModels
                 }
                 else
                 {
-                    AudioRecorder.StartRecording();
-                    MicOpen = true;
+                    var granted = await Utils.CheckAndRequestPermissions();
+                    if (granted)
+                    {
+                        AudioRecorder.StartRecording();
+                        MicOpen = true;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
+                _ = Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
             }
         }
 

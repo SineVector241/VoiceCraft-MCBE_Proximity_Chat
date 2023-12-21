@@ -15,6 +15,7 @@ namespace VoiceCraft.Core.Client.Sockets
         public CancellationTokenSource CTS { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
+        public DateTime LastActive { get; private set; }
 
         //Delegates
         public delegate void LoginPacket(Login packet);
@@ -81,7 +82,7 @@ namespace VoiceCraft.Core.Client.Sockets
                     }
                 });
 
-                await Task.Delay(3000);
+                await Task.Delay(5000);
                 if (!IsConnected) throw new Exception("Signalling timed out");
             }
             catch(Exception ex)
@@ -209,6 +210,7 @@ namespace VoiceCraft.Core.Client.Sockets
 
         private void HandlePacket(SignallingPacket packet)
         {
+            LastActive = DateTime.UtcNow;
             switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login:

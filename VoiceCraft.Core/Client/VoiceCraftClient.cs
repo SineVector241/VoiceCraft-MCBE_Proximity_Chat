@@ -19,10 +19,13 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
-        public const string Version = "v1.0.0";
+        public const int ActivityInterval = 5000;
+        public const int ActivityTimeout = 5000;
+        public const string Version = "v1.0.1";
 
         //Variables
         private CancellationTokenSource CTS;
+        private System.Timers.Timer ActivityChecker { get; set; }
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
         public int MCWSSPort { get; private set; }
@@ -101,6 +104,9 @@ namespace VoiceCraft.Core.Client
             Voice = new VoiceSocket();
             MCWSS = new MCWSSSocket(MCWSSPort);
 
+            ActivityChecker = new System.Timers.Timer(ActivityInterval);
+            ActivityChecker.Elapsed += DoActivityChecks;
+
             //Event Registration in login order.
             //Signalling
             Signalling.OnAcceptPacketReceived += SignallingAccept;
@@ -129,6 +135,14 @@ namespace VoiceCraft.Core.Client
         private void SocketDisconnected(string reason)
         {
             Disconnect(reason);
+        }
+
+        private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
+            {
+                Disconnect("Signalling Server Timeout");
+            }
         }
 
         //Signalling Event Methods

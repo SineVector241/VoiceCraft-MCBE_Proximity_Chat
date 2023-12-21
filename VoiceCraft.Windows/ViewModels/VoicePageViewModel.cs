@@ -39,7 +39,15 @@ namespace VoiceCraft.Windows.ViewModels
         bool showSlider = false;
 
         [ObservableProperty]
+        bool showChannels = false;
+
+        [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
+
+        [ObservableProperty]
+        ObservableCollection<ChannelDisplayModel> channels = new ObservableCollection<ChannelDisplayModel>()
+        {
+        };
 
         private List<System.Windows.Forms.Keys> PressedKeys = new List<System.Windows.Forms.Keys>();
         private string MuteKeybind = "Undefined";
@@ -195,6 +203,12 @@ namespace VoiceCraft.Windows.ViewModels
         public void HideParticipantVolume()
         {
             ShowSlider = false;
+        }
+
+        [RelayCommand]
+        public void ToggleChannelVisibility()
+        {
+            ShowChannels = !ShowChannels;
         }
     }
 }

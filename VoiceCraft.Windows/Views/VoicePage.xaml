@@ -15,162 +15,261 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="60px" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Grid Background="#5111"
                   Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <Button Style="{StaticResource ButtonStyle}"
+                        Grid.Column="0"
+                        Width="40"
+                        Height="40"
+                        Command="{Binding ToggleChannelVisibilityCommand}"
+                        HorizontalAlignment="Right"
+                        Margin="5,0,0,0">
+                    <Image Source="{StaticResource view_channels}" />
+                </Button>
 
-                <TextBlock Grid.Column="0"
-                       Text="VoiceCraft Windows"
-                       FontSize="20"
-                       VerticalAlignment="Center"
-                       Margin="10,0"/>
+                <TextBlock Grid.Column="1"
+                           Text="VoiceCraft Windows"
+                           FontSize="20"
+                           VerticalAlignment="Center"
+                           Margin="10,0"/>
             </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
 
-            <Border Grid.Row="1"
-                Style="{StaticResource DefaultBorder}"
-                Margin="5"
-                Padding="10">
-                <TextBlock FontWeight="Bold"
-                       FontSize="18"
-                       Text="{Binding StatusText}"
-                       HorizontalAlignment="Center"
-                       TextAlignment="Center">
-                </TextBlock>
-            </Border>
+                <Border Grid.Row="0"
+                        Margin="5"
+                        Padding="10">
 
-            <ListView Grid.Row="2"
-                  ItemsSource="{Binding Participants}"
-                  Background="Transparent"
-                  BorderBrush="Transparent"
-                  HorizontalContentAlignment="Stretch">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListViewItem">
-                                    <ContentPresenter />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ItemTemplate>
-                    <DataTemplate>
+                    <Border.Style>
+                        <Style TargetType="Border"
+                               BasedOn="{StaticResource DefaultBorder}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowChannels}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding ShowChannels}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid Grid.Column="0"
+                          Width="250">
                         <Grid>
-                            <Border Padding="10"
-                                    Margin="2,4"
-                                    HorizontalAlignment="Stretch">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Participant.Name}"
-                                               FontWeight="Bold"
-                                               FontSize="22"
-                                               VerticalAlignment="Center"
-                                               Grid.Column="0"
-                                               Margin="0,0,10,0"/>
-                                    <Grid Grid.Column="1"
-                                          HorizontalAlignment="Right">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="auto" />
-                                            <ColumnDefinition Width="auto" />
-                                        </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
 
-                                        <Image Source="{StaticResource microphone_off}"
-                                               HorizontalAlignment="Right"
-                                               Grid.Column="0"
-                                               Width="35"
-                                               Height="35"
-                                               Margin="5,0">
-                                            <Image.Style>
-                                                <Style TargetType="Image">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMuted}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsMuted}" Value="False">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Image.Style>
-                                        </Image>
-                                        <Image Source="{StaticResource headphones_off}"
-                                               HorizontalAlignment="Right"
-                                               Grid.Column="1"
-                                               Width="35"
-                                               Height="35"
-                                               Margin="5,0">
-                                            <Image.Style>
-                                                <Style TargetType="Image">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsDeafened}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsDeafened}" Value="False">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Image.Style>
-                                        </Image>
-                                        <Button Style="{StaticResource ButtonStyle}"
-                                                Grid.Column="2"
-                                                HorizontalAlignment="Right"
-                                                Command="{Binding Source={x:Reference Voice}, Path=DataContext.ShowParticipantVolumeCommand}"
-                                                CommandParameter="{Binding Key}"
-                                                Margin="5,0">
-                                            <Image Source="{StaticResource volume_medium}"
-                                                   Width="35"
-                                                   Height="35"/>
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
-                                        <Setter Property="BorderThickness" Value="2" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
-                                                <Setter Property="BorderBrush" Value="#58F3" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding IsSpeaking}" Value="False">
-                                                <Setter Property="BorderBrush" Value="#5111" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
+                            <TextBlock FontWeight="Bold"
+                                       FontSize="20"
+                                       Text="Server Channels"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center">
+                            </TextBlock>
+                            <ListView Grid.Row="1"
+                                      ItemsSource="{Binding Channels}"
+                                      Background="Transparent"
+                                      BorderBrush="Transparent"
+                                      HorizontalContentAlignment="Stretch">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListViewItem">
+                                                    <ContentPresenter />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
-                                </Border.Style>
-                            </Border>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <TextBlock Text="{Binding Channel.Name}"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"
+                                                       VerticalAlignment="Center"
+                                                       Grid.Column="0"
+                                                       Margin="0,0,10,0"/>
 
-            <Border Grid.Row="3"
+                                            <Button Style="{StaticResource ButtonStyle}"
+                                                    Grid.Column="2"
+                                                    HorizontalAlignment="Right"
+                                                    Margin="5,0">
+                                                <Image Source="{StaticResource arrow_right_thick}"
+                                                       Width="35"
+                                                       Height="35"/>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Style="{StaticResource DefaultBorder}"
+                            Margin="5"
+                            Padding="10">
+                        <TextBlock FontWeight="Bold"
+                                   FontSize="18"
+                                   Text="{Binding StatusText}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center">
+                        </TextBlock>
+                    </Border>
+
+                    <ListView Grid.Row="1"
+                              ItemsSource="{Binding Participants}"
+                              Background="Transparent"
+                              BorderBrush="Transparent"
+                              HorizontalContentAlignment="Stretch">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListViewItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Border Padding="10"
+                                            Margin="2,4"
+                                            HorizontalAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Participant.Name}"
+                                                       FontWeight="Bold"
+                                                       FontSize="22"
+                                                       VerticalAlignment="Center"
+                                                       Grid.Column="0"
+                                                       Margin="0,0,10,0"/>
+                                            <Grid Grid.Column="1"
+                                                  HorizontalAlignment="Right">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="auto" />
+                                                    <ColumnDefinition Width="auto" />
+                                                    <ColumnDefinition Width="auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Image Source="{StaticResource microphone_off}"
+                                                       HorizontalAlignment="Right"
+                                                       Grid.Column="0"
+                                                       Width="35"
+                                                       Height="35"
+                                                       Margin="5,0">
+                                                    <Image.Style>
+                                                        <Style TargetType="Image">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsMuted}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+                                                <Image Source="{StaticResource headphones_off}"
+                                                       HorizontalAlignment="Right"
+                                                       Grid.Column="1"
+                                                       Width="35"
+                                                       Height="35"
+                                                       Margin="5,0">
+                                                    <Image.Style>
+                                                        <Style TargetType="Image">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsDeafened}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsDeafened}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+                                                <Button Style="{StaticResource ButtonStyle}"
+                                                        Grid.Column="2"
+                                                        HorizontalAlignment="Right"
+                                                        Command="{Binding Source={x:Reference Voice}, Path=DataContext.ShowParticipantVolumeCommand}"
+                                                        CommandParameter="{Binding Key}"
+                                                        Margin="5,0">
+                                                    <Image Source="{StaticResource volume_medium}"
+                                                           Width="35"
+                                                           Height="35"/>
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#58F3" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsSpeaking}" Value="False">
+                                                        <Setter Property="BorderBrush" Value="#5111" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Border Grid.Row="2"
                     Margin="10"
                     Padding="10">
-                <Border.RenderTransform>
-                    <TranslateTransform Y="0" />
-                </Border.RenderTransform>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
+                        <Border.RenderTransform>
+                            <TranslateTransform Y="0" />
+                        </Border.RenderTransform>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
 
-                    <Button Content="Disconnect"
+                            <Button Content="Disconnect"
                             FontSize="15"
                             Command="{Binding DisconnectCommand}"
                             Style="{StaticResource ButtonStyle}"
@@ -179,98 +278,100 @@
                             Margin="5,0"
                             Grid.Column="0"/>
 
-                    <Button Grid.Column="1"
+                            <Button Grid.Column="1"
                             FontSize="15"
                             Height="40"
                             Margin="5,0"
                             Command="{Binding MuteUnmuteCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsMuted}" Value="True">
-                                        <Setter Property="Content" Value="Unmute" />
-                                        <Setter Property="Background" Value="#8AAA" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsMuted}" Value="False">
-                                        <Setter Property="Content" Value="Mute" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                <Setter Property="Content" Value="Unmute" />
+                                                <Setter Property="Background" Value="#8AAA" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsMuted}" Value="False">
+                                                <Setter Property="Content" Value="Mute" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
 
-                    <Button Grid.Column="2"
+                            <Button Grid.Column="2"
                             FontSize="15"
                             Height="40"
                             Margin="5,0"
                             Command="{Binding DeafenUndeafenCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDeafened}" Value="True">
+                                                <Setter Property="Content" Value="Undeafen" />
+                                                <Setter Property="Background" Value="#8AAA" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsDeafened}" Value="False">
+                                                <Setter Property="Content" Value="Deafen" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsDeafened}" Value="True">
-                                        <Setter Property="Content" Value="Undeafen" />
-                                        <Setter Property="Background" Value="#8AAA" />
+                                    <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Background.(SolidColorBrush.Color)">
+                                                        <EasingColorKeyFrame KeyTime="0:0:0.1" 
+                                                                     Value="#46C6" />
+                                                    </ColorAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
+                                                            To="{x:Null}"
+                                                            Duration="0:0:0.1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsDeafened}" Value="False">
-                                        <Setter Property="Content" Value="Deafen" />
+
+                                    <DataTrigger Binding="{Binding ShowSlider}" Value="False">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
+                                                    </DoubleAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
+                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="-5"/>
+                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="-5"/>
+                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="300"/>
+                                                    </DoubleAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </Button.Style>
-                    </Button>
+                        </Border.Style>
+                    </Border>
                 </Grid>
-
-                <Border.Style>
-                    <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
-                                <DataTrigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Background.(SolidColorBrush.Color)">
-                                                <EasingColorKeyFrame KeyTime="0:0:0.1" 
-                                                                     Value="#46C6" />
-                                            </ColorAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.EnterActions>
-                                <DataTrigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
-                                                            To="{x:Null}"
-                                                            Duration="0:0:0.1"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.ExitActions>
-                            </DataTrigger>
-
-                            <DataTrigger Binding="{Binding ShowSlider}" Value="False">
-                                <DataTrigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
-                                                <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
-                                            </DoubleAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.EnterActions>
-                                <DataTrigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
-                                                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="-5"/>
-                                                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="-5"/>
-                                                <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="300"/>
-                                            </DoubleAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.ExitActions>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-            </Border>
+            </Grid>
         </Grid>
         <Border Padding="10"
                 VerticalAlignment="Bottom">

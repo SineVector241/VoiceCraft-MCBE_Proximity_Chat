@@ -15,7 +15,7 @@ namespace VoiceCraft.Core.Server
     public class VoiceCraftServer
     {
         //Constants
-        public const string Version = "v1.0.0";
+        public const string Version = "v1.0.1";
         public const int ActivityInterval = 5000;
 
         //Data

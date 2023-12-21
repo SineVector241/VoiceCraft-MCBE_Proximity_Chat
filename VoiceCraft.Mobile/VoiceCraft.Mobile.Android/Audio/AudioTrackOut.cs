@@ -1,6 +1,7 @@
 ﻿using Android.Media;
 using NAudio.CoreAudioApi;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace NAudio.Wave
