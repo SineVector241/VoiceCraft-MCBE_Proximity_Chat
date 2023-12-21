@@ -126,7 +126,7 @@ namespace VoiceCraft.Core.Server
             {
                 var server = ExternalServers[i];
 
-                if (DateTime.UtcNow.Subtract(server.LastUsed).Milliseconds > ServerProperties.ExternalServerTimeoutMS)
+                if (DateTime.UtcNow.Subtract(server.LastUsed).TotalMilliseconds > ServerProperties.ExternalServerTimeoutMS)
                 {
                     ExternalServers.RemoveAt(i);
                     OnExternalServerDisconnected?.Invoke(server, "Timeout");

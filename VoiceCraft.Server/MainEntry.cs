@@ -21,6 +21,8 @@ namespace VoiceCraft.Server
             server.OnParticipantBinded += ParticipantBinded;
             server.OnParticipantUnbinded += ParticipantUnbinded;
             server.OnParticipantDisconnected += ParticipantDisconnected;
+            server.OnExternalServerConnected += ExternalServerConnected;
+            server.OnExternalServerDisconnected += ExternalServerDisconnected;
 
             server.Signalling.OnOutboundPacket += SignallingOutbound;
             server.Signalling.OnInboundPacket += SignallingInbound;
@@ -134,6 +136,16 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, $"Server key: {server.ServerProperties.PermanentServerKey}", "Server");
 
             Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
+        }
+
+        private void ExternalServerConnected(ExternalServer server)
+        {
+            Logger.LogToConsole(LogType.Success, $"External Server Connected: IP - {server.IP}", "Server");
+        }
+
+        private void ExternalServerDisconnected(ExternalServer server, string reason)
+        {
+            Logger.LogToConsole(LogType.Warn, $"External Server Disconnected: IP - {server.IP}, Reason - {reason}", "Server");
         }
 
         private void ParticipantConnected(VoiceCraftParticipant participant, ushort key)
