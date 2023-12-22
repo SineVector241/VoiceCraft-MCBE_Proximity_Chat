@@ -19,7 +19,7 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
-        public const int ActivityInterval = 5000;
+        public const int ActivityInterval = 1000;
         public const int ActivityTimeout = 5000;
         public const string Version = "v1.0.1";
 
@@ -139,16 +139,31 @@ namespace VoiceCraft.Core.Client
 
         private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
+            Debug.WriteLine(DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds);
+            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 2)
             {
-                Disconnect("Signalling Server Timeout");
+                if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
+                {
+                    Disconnect("Signalling Server Timeout");
+                    return;
+                }
+
+                var packet = new SignallingPacket()
+                {
+                    PacketType = SignallingPacketTypes.PingCheck,
+                    PacketData = new Packets.Signalling.PingCheck()
+                };
+                Signalling.SendPacket(packet);
             }
+            else if (!Signalling.IsConnected)
+                ActivityChecker.Stop();
         }
 
         //Signalling Event Methods
         #region Signalling
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
+            ActivityChecker.Start();
             LoginKey = packet.LoginKey;
             _ = Voice.ConnectAsync(IP, packet.VoicePort, LoginKey);
         }
@@ -329,6 +344,7 @@ namespace VoiceCraft.Core.Client
             {
                 if(!CTS.IsCancellationRequested)
                 {
+                    ActivityChecker.Stop();
                     CTS.Cancel();
                     Signalling.Disconnect();
                     Voice.Disconnect();
@@ -502,6 +518,7 @@ namespace VoiceCraft.Core.Client
             {
                 if(disposing)
                 {
+                    ActivityChecker.Dispose();
                     CTS.Dispose();
                     Signalling.Dispose();
                     MCWSS.Dispose();

@@ -133,6 +133,18 @@ namespace VoiceCraft.Core.Server
                     OnExternalServerDisconnected?.Invoke(server, "Timeout");
                 }
             }
+
+            for (int i = Participants.Count - 1; i >= 0; i--)
+            {
+                var participant = Participants.ElementAt(i);
+
+                if (DateTime.UtcNow.Subtract(participant.Value.LastActive).TotalMilliseconds > ServerProperties.ClientTimeoutMS)
+                {
+                    Participants.TryRemove(participant.Key, out _);
+                    participant.Value.SignallingSocket.Close();
+                    OnParticipantDisconnected?.Invoke("Timeout", participant.Value, participant.Key);
+                }
+            }
         }
 
         //Event Methods
