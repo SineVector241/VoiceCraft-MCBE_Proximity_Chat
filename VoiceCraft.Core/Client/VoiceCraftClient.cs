@@ -139,7 +139,6 @@ namespace VoiceCraft.Core.Client
 
         private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
         {
-            Debug.WriteLine(DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds);
             if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 2)
             {
                 if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)

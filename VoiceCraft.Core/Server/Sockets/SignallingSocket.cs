@@ -22,6 +22,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public bool LogOutbound { get; set; } = false;
         public List<SignallingPacketTypes> InboundFilter { get; set; } = new List<SignallingPacketTypes>();
         public List<SignallingPacketTypes> OutboundFilter { get; set; } = new List<SignallingPacketTypes>();
+        public Dictionary<Socket, NetworkStream> ConnectedSockets { get; set; } = new Dictionary<Socket, NetworkStream>();
 
         //Delegates
         public delegate void Started();
@@ -130,11 +131,10 @@ namespace VoiceCraft.Core.Server.Sockets
             TCPSocket.Dispose();
         }
 
-        private async void ListenAsync(Socket socket)
+        private async void ListenAsync(Socket socket, NetworkStream stream)
         {
             byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
-            var stream = new NetworkStream(socket);
             while (!CT.IsCancellationRequested)
             {
                 try
@@ -192,9 +192,9 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
             }
 
-            socket.Close();
             await stream.DisposeAsync();
-            socket.Dispose();
+            socket.Close();
+            ConnectedSockets.Remove(socket);
             OnSocketDisconnected?.Invoke(socket, "Client logged out");
         }
 
@@ -205,7 +205,9 @@ namespace VoiceCraft.Core.Server.Sockets
                 try
                 {
                     var handle = await TCPSocket.AcceptAsync();
-                    ListenAsync(handle);
+                    var stream = new NetworkStream(handle);
+                    ConnectedSockets.Add(handle, stream);
+                    ListenAsync(handle, stream);
                 }
                 catch(Exception ex)
                 {
