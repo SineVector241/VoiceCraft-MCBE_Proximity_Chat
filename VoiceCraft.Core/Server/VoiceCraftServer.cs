@@ -95,6 +95,7 @@ namespace VoiceCraft.Core.Server
 
             //Ping Packet
             Signalling.OnPingPacketReceived += PingReceived;
+            Signalling.OnSocketConnected += SignallingSocketConnected;
             Signalling.OnSocketDisconnected += SignallingSocketDisconnected;
         }
 
@@ -259,7 +260,8 @@ namespace VoiceCraft.Core.Server
             }
 
             var key = packet.LoginKey;
-            var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
+            Signalling.ConnectedSockets.TryGetValue(socket, out var stream);
+            var participant = new VoiceCraftParticipant(socket, stream, packet.PositioningType);
 
             if (Participants.ContainsKey(packet.LoginKey))
             {
@@ -450,27 +452,23 @@ namespace VoiceCraft.Core.Server
             }
         }
 
+        private void SignallingSocketConnected(Socket socket, NetworkStream stream)
+        {
+            //Wait 5 seconds before checking if the socket is used.
+            Task.Delay(5000).ContinueWith(t => {
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if(participant.Value == null)
+                {
+                    stream.Close();
+                    socket.Close();
+                }
+            });
+        }
+
         private void SignallingSocketDisconnected(Socket socket, string reason)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null)
-            {
-                Participants.TryRemove(participant.Key, out _);
-                OnParticipantDisconnected?.Invoke(reason, participant.Value, participant.Key);
-                var list = Participants.Where(x => x.Key != participant.Key);
-                for (ushort i = 0; i < list.Count(); i++)
-                {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Logout,
-                        PacketData = new Packets.Signalling.Logout()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
-                }
-            }
+            RemoveParticipant(participant, true, reason);
         }
 
         private void SignallingPingCheck(Packets.Signalling.PingCheck packet, Socket socket)
@@ -871,6 +869,46 @@ namespace VoiceCraft.Core.Server
             {
                 server.LastActive = DateTime.UtcNow;
                 return true;
+            }
+        }
+        #endregion
+
+        #region Public Methods
+        public void AddParticipant(VoiceCraftParticipant participant, bool broadcast = true)
+        {
+
+        }
+
+        public void RemoveParticipant(ushort key, bool broadcast = true, string? reason = null)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Key == key);
+            if(participant.Value != null)
+            {
+                RemoveParticipant(participant, broadcast, reason);
+            }
+        }
+
+        public void RemoveParticipant(KeyValuePair<ushort, VoiceCraftParticipant> participant, bool broadcast = true, string? reason = null)
+        {
+            if (participant.Value != null)
+            {
+                Participants.TryRemove(participant.Key, out _);
+                OnParticipantDisconnected?.Invoke(reason ?? "No Reason", participant.Value, participant.Key);
+
+                if (broadcast)
+                {
+                    foreach (var client in Participants)
+                    {
+                        Signalling.SendPacketAsync(new SignallingPacket()
+                        {
+                            PacketType = SignallingPacketTypes.Logout,
+                            PacketData = new Packets.Signalling.Logout()
+                            {
+                                LoginKey = participant.Key
+                            }
+                        }, client.Value.SignallingSocket);
+                    }
+                }
             }
         }
         #endregion

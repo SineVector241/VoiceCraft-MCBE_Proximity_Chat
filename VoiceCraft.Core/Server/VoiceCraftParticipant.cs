@@ -33,11 +33,12 @@ namespace VoiceCraft.Core.Server
         //EndPoint Stream
         public NetworkStream NetworkStream { get; }
 
-        public VoiceCraftParticipant(Socket SignallingSocket, PositioningTypes PositioningType)
+        public VoiceCraftParticipant(Socket SignallingSocket, NetworkStream NetworkStream, PositioningTypes PositioningType)
         {
             this.PositioningType = PositioningType;
             this.SignallingSocket = SignallingSocket;
-            NetworkStream = new NetworkStream(SignallingSocket);
+            this.NetworkStream = NetworkStream;
+
         }
     }
 }

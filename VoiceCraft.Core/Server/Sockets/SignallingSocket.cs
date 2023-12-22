@@ -41,6 +41,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void PingCheckPacket(PingCheck packet, Socket socket);
         public delegate void NullPacket(Null packet, Socket socket);
 
+        public delegate void SocketConnected(Socket socket, NetworkStream stream);
         public delegate void SocketDisconnected(Socket socket, string reason);
         public delegate void OutboundPacket(ISignallingPacket packet, Socket socket);
         public delegate void InboundPacket(ISignallingPacket packet, Socket socket);
@@ -63,6 +64,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public event PingCheckPacket? OnPingCheckPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
+        public event SocketConnected? OnSocketConnected;
         public event SocketDisconnected? OnSocketDisconnected;
         public event OutboundPacket? OnOutboundPacket;
         public event InboundPacket? OnInboundPacket;
@@ -204,10 +206,11 @@ namespace VoiceCraft.Core.Server.Sockets
             {
                 try
                 {
-                    var handle = await TCPSocket.AcceptAsync();
-                    var stream = new NetworkStream(handle);
-                    ConnectedSockets.Add(handle, stream);
-                    ListenAsync(handle, stream);
+                    var socket = await TCPSocket.AcceptAsync();
+                    var stream = new NetworkStream(socket);
+                    ConnectedSockets.Add(socket, stream);
+                    OnSocketConnected?.Invoke(socket, stream);
+                    ListenAsync(socket, stream);
                 }
                 catch(Exception ex)
                 {
