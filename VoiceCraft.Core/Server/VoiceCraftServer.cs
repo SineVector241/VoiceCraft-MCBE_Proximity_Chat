@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Server.Sockets;
+using static VoiceCraft.Core.Client.VoiceCraftClient;
 
 namespace VoiceCraft.Core.Server
 {
@@ -79,6 +80,8 @@ namespace VoiceCraft.Core.Server
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnUnbindedPacketReceived += SignallingUnbinded;
             Signalling.OnPingCheckPacketReceived += SignallingPingCheck;
+            Signalling.OnJoinChannelPacketReceived += SignallingJoinChannel;
+            Signalling.OnLeaveChannelPacketReceived += SignallingLeaveChannel;
 
             //Voice
             Voice.OnLoginPacketReceived += OnVoiceLogin;
@@ -350,6 +353,69 @@ namespace VoiceCraft.Core.Server
             }
         }
 
+        private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet, Socket socket)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+            if (participant.Value != null && participant.Value.Binded)
+            {
+                var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
+                if(participant.Value.Channel != packet.ChannelId && channel.Password == packet.Password)
+                {
+                    if(participant.Value.Channel != 0)
+                        Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
+
+                    var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < channelList.Count(); i++)
+                    {
+                        var client = channelList.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+
+                    participant.Value.Channel = packet.ChannelId;
+                    channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < channelList.Count(); i++)
+                    {
+                        var client = channelList.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                    }
+
+                    Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
+                }
+                else if(channel.Password != packet.Password)
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
+                }
+                else
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Channel does not exist!", false), socket);
+                }
+            }
+        }
+
+        private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+            if (participant.Value != null && participant.Value.Binded &&packet.ChannelId == participant.Value.Channel)
+            {
+                var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                for (ushort i = 0; i < channelList.Count(); i++)
+                {
+                    var client = channelList.ElementAt(i);
+                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                }
+
+                participant.Value.Channel = 0;
+                channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                for (ushort i = 0; i < channelList.Count(); i++)
+                {
+                    var client = channelList.ElementAt(i);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                }
+
+                Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(packet.ChannelId), socket);
+            }
+        }
+
         private void SignallingSocketConnected(Socket socket, NetworkStream stream)
         {
             //Wait 5 seconds before checking if the socket is used.
@@ -478,7 +544,8 @@ namespace VoiceCraft.Core.Server
                     {
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
-                        x.Value.Binded);
+                        x.Value.Binded &&
+                        x.Value.Channel == participant.Value.Channel);
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {

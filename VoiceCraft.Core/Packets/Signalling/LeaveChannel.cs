@@ -24,7 +24,7 @@ namespace VoiceCraft.Core.Packets.Signalling
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(byte channelId, string password)
+        public static SignallingPacket Create(byte channelId)
         {
             return new SignallingPacket()
             {
