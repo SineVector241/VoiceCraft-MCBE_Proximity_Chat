@@ -11,6 +11,7 @@ using VoiceCraft.Windows.Network.Sockets;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace VoiceCraft.Core.Client
 {
@@ -45,6 +46,7 @@ namespace VoiceCraft.Core.Client
 
         //Server Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
+        public List<VoiceCraftChannel> Channels { get; private set; } = new List<VoiceCraftChannel>();
         public uint PacketCount { get; private set; }
 
         //Audio Variables
@@ -68,6 +70,9 @@ namespace VoiceCraft.Core.Client
         public delegate void ParticipantJoined(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantUpdated(VoiceCraftParticipant participant, ushort key);
+        public delegate void ChannelAdded(VoiceCraftChannel channel);
+        public delegate void ChannelJoined(VoiceCraftChannel channel);
+        public delegate void ChannelLeft(VoiceCraftChannel channel);
         public delegate void Disconnected(string? reason);
 
         //Events
@@ -77,6 +82,9 @@ namespace VoiceCraft.Core.Client
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
         public event ParticipantUpdated? OnParticipantUpdated;
+        public event ChannelAdded? OnChannelAdded;
+        public event ChannelJoined? OnChannelJoined;
+        public event ChannelLeft? OnChannelLeft;
         public event Disconnected? OnDisconnected;
         #endregion
         public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, int RecordLengthMS = 40, int MCWSSPort = 8080)
@@ -328,6 +336,8 @@ namespace VoiceCraft.Core.Client
                     Signalling.Disconnect();
                     Voice.Disconnect();
                     MCWSS.Stop();
+                    Participants.Clear();
+                    Channels.Clear();
                     if (!string.IsNullOrWhiteSpace(Reason)) OnDisconnected?.Invoke(Reason);
                     IsConnected = false;
                     IsMuted = false;
@@ -483,6 +493,7 @@ namespace VoiceCraft.Core.Client
                     MCWSS.Dispose();
                     Voice.Dispose();
                     Participants.Clear();
+                    Channels.Clear();
                     IsConnected = false;
 
                     //Deregister Events

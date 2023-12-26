@@ -49,7 +49,7 @@ namespace VoiceCraft.Core.Packets.Signalling
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(string name, bool requiresPassword)
+        public static SignallingPacket Create(string name, byte channelId, bool requiresPassword)
         {
             return new SignallingPacket()
             {
@@ -57,6 +57,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketData = new AddChannel()
                 {
                     Name = name,
+                    ChannelId = channelId,
                     RequiresPassword = requiresPassword
                 }
             };

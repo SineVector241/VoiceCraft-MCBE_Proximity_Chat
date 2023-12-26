@@ -454,6 +454,7 @@ namespace VoiceCraft.Core.Server
                         x.Value.Binded &&
                         !x.Value.IsDeafened &&
                         !x.Value.IsDead &&
+                        x.Value.Channel == participant.Value.Channel &&
                         !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
                         x.Value.EnvironmentId == participant.Value.EnvironmentId &&
                         Vector3.Distance(x.Value.Position, participant.Value.Position) <= ServerProperties.ProximityDistance);
@@ -575,6 +576,13 @@ namespace VoiceCraft.Core.Server
                 var client = list.ElementAt(i);
                 Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
                 Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+            }
+
+            var channelList = ServerProperties.Channels;
+            for(int i = 0; i < channelList.Count; i++)
+            {
+                var channel = ServerProperties.Channels[i];
+                Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
             }
 
             OnParticipantBinded?.Invoke(participant.Value, participant.Key);
