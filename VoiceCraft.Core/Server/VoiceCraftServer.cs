@@ -359,9 +359,17 @@ namespace VoiceCraft.Core.Server
                 var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
                 if(participant.Value == null)
                 {
-                    socket.Disconnect(false);
-                    stream.Close();
-                    socket.Close();
+                    //If client closed the socket, We catch it otherwise we close the connection.
+                    try
+                    {
+                        socket.Disconnect(false);
+                        stream.Close();
+                        socket.Close();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        return;
+                    }
                 }
             });
         }

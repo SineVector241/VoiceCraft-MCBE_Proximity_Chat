@@ -450,7 +450,7 @@ namespace VoiceCraft.Core.Client
                 if (socket.ConnectAsync(IP, Port).Wait(5000))
                 {
                     var stream = new NetworkStream(socket);
-                    var pingPacket = new SignallingPacket() { PacketType = SignallingPacketTypes.Ping, PacketData = new Packets.Signalling.Ping() { } }.GetPacketStream();
+                    var pingPacket = Packets.Signalling.Ping.Create(string.Empty).GetPacketStream();
                     await socket.SendAsync(BitConverter.GetBytes((ushort)pingPacket.Length), SocketFlags.None);
                     await socket.SendAsync(pingPacket, SocketFlags.None);
                     //TCP Is Annoying
@@ -495,6 +495,9 @@ namespace VoiceCraft.Core.Client
                     var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
                     message = $"Timed out\nPing Time: {Math.Floor(pingTimeMS)}ms";
                 }
+
+                socket.Disconnect(false);
+                socket.Close();
             }
             catch(Exception ex)
             {
