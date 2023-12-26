@@ -28,6 +28,7 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void UndeafenPacket(Undeafen packet);
         public delegate void MutePacket(Mute packet);
         public delegate void UnmutePacket(Unmute packet);
+        public delegate void AddChannel(AddChannel packet);
         public delegate void ErrorPacket(Error packet);
         public delegate void PingPacket(Ping packet);
         public delegate void NullPacket(Null packet);
@@ -45,6 +46,7 @@ namespace VoiceCraft.Core.Client.Sockets
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
         public event UnmutePacket? OnUnmutePacketReceived;
+        public event AddChannel? OnAddChannelReceived;
         public event ErrorPacket? OnErrorPacketReceived;
         public event PingPacket? OnPingPacketReceived;
         public event NullPacket? OnNullPacketReceived;
@@ -219,7 +221,8 @@ namespace VoiceCraft.Core.Client.Sockets
                 case SignallingPacketTypes.Deny:
                     var packetData = (Deny)packet.PacketData;
                     OnDenyPacketReceived?.Invoke(packetData);
-                    Disconnect(packetData.Reason);
+                    if(packetData.Disconnect)
+                        Disconnect(packetData.Reason);
                     break;
                 case SignallingPacketTypes.Binded:
                     if (IsConnected)

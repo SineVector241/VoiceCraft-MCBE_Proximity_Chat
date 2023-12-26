@@ -21,113 +21,32 @@
             <Grid Background="#5111"
                   Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <TextBlock Text="VoiceCraft Windows"
+                           FontSize="20"
+                           VerticalAlignment="Center"
+                           Margin="10,0"/>
+                
                 <Button Style="{StaticResource ButtonStyle}"
-                        Grid.Column="0"
+                        Grid.Column="2"
                         Width="40"
                         Height="40"
                         Command="{Binding ToggleChannelVisibilityCommand}"
                         HorizontalAlignment="Right"
-                        Margin="5,0,0,0">
+                        Margin="0,0,5,0">
                     <Image Source="{StaticResource view_channels}" />
                 </Button>
-
-                <TextBlock Grid.Column="1"
-                           Text="VoiceCraft Windows"
-                           FontSize="20"
-                           VerticalAlignment="Center"
-                           Margin="10,0"/>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Row="0"
-                        Margin="5"
-                        Padding="10">
-
-                    <Border.Style>
-                        <Style TargetType="Border"
-                               BasedOn="{StaticResource DefaultBorder}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ShowChannels}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-
-                                <DataTrigger Binding="{Binding ShowChannels}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-
-                    <Grid Grid.Column="0"
-                          Width="250">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-
-                            <TextBlock FontWeight="Bold"
-                                       FontSize="20"
-                                       Text="Server Channels"
-                                       HorizontalAlignment="Center"
-                                       TextAlignment="Center">
-                            </TextBlock>
-                            <ListView Grid.Row="1"
-                                      ItemsSource="{Binding Channels}"
-                                      Background="Transparent"
-                                      BorderBrush="Transparent"
-                                      HorizontalContentAlignment="Stretch">
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListViewItem">
-                                                    <ContentPresenter />
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="5">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition />
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            
-                                            <TextBlock Text="{Binding Channel.Name}"
-                                                       FontWeight="Bold"
-                                                       FontSize="18"
-                                                       VerticalAlignment="Center"
-                                                       Grid.Column="0"
-                                                       Margin="0,0,10,0"/>
-
-                                            <Button Style="{StaticResource ButtonStyle}"
-                                                    Grid.Column="2"
-                                                    HorizontalAlignment="Right"
-                                                    Margin="5,0">
-                                                <Image Source="{StaticResource arrow_right_thick}"
-                                                       Width="35"
-                                                       Height="35"/>
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </Grid>
-                    </Grid>
-                </Border>
-
-                <Grid Grid.Column="1">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition />
@@ -371,6 +290,85 @@
                         </Border.Style>
                     </Border>
                 </Grid>
+                <Border Grid.Column="1"
+                        Margin="5"
+                        Padding="10">
+
+                    <Border.Style>
+                        <Style TargetType="Border"
+                               BasedOn="{StaticResource DefaultBorder}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowChannels}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding ShowChannels}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid Grid.Column="0"
+                          Width="250">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock FontWeight="Bold"
+                                       FontSize="20"
+                                       Text="Server Channels"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center">
+                            </TextBlock>
+                            <ListView Grid.Row="1"
+                                      ItemsSource="{Binding Channels}"
+                                      Background="Transparent"
+                                      BorderBrush="Transparent"
+                                      HorizontalContentAlignment="Stretch">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListViewItem">
+                                                    <ContentPresenter />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition />
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding Channel.Name}"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"
+                                                       VerticalAlignment="Center"
+                                                       Grid.Column="0"
+                                                       Margin="0,0,10,0"/>
+
+                                            <Button Style="{StaticResource ButtonStyle}"
+                                                    Grid.Column="2"
+                                                    HorizontalAlignment="Right"
+                                                    Margin="5,0">
+                                                <Image Source="{StaticResource arrow_right_thick}"
+                                                       Width="35"
+                                                       Height="35"/>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
         <Border Padding="10"

@@ -40,6 +40,12 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case SignallingPacketTypes.Unmute: PacketData = new Unmute(dataStream, 2);
                     break;
+                case SignallingPacketTypes.AddChannel: PacketData = new AddChannel(dataStream, 2);
+                    break;
+                case SignallingPacketTypes.JoinChannel: PacketData = new JoinChannel(dataStream, 2);
+                    break;
+                case SignallingPacketTypes.LeaveChannel: PacketData = new LeaveChannel(dataStream, 2);
+                    break;
                 case SignallingPacketTypes.Error: PacketData = new Error(dataStream, 2);
                     break;
                 case SignallingPacketTypes.Ping: PacketData = new Ping(dataStream, 2);
@@ -69,16 +75,26 @@ namespace VoiceCraft.Core.Packets
 
     public enum SignallingPacketTypes
     {
+        //Login Protocol
         Login,
         Logout,
         Accept,
         Deny,
         Binded,
         Unbinded,
+
+        //States
         Deafen,
         Undeafen,
         Mute,
         Unmute,
+
+        //Channels
+        AddChannel,
+        JoinChannel,
+        LeaveChannel,
+
+        //Other stuff
         Error,
         Ping,
         PingCheck,

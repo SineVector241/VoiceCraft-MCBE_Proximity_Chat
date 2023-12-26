@@ -7,7 +7,5 @@ namespace VoiceCraft.Windows.Models
     {
         [ObservableProperty]
         public VoiceCraftChannel? channel;
-        [ObservableProperty]
-        public bool requiresPassword = false;
     }
 }

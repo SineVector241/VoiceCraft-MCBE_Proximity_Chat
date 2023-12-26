@@ -196,29 +196,29 @@ namespace VoiceCraft.Core.Server
         {
             if (Version != packet.Version)
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Versions do not match!"), socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Versions do not match!", true), socket);
                 return;
             }
             if (Banlist.IPBans.Exists(x => x == socket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault()))
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("You have been banned from the server!"), socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("You have been banned from the server!", true), socket);
                 return;
             }
             if (packet.PositioningType != PositioningTypes.ClientSided &&
                 (ServerProperties.ConnectionType == ConnectionTypes.Client || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts client sided positioning!"), socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts client sided positioning!", true), socket);
                 return;
             }
             else if (packet.PositioningType != PositioningTypes.ServerSided &&
                 (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts server sided positioning!"), socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts server sided positioning!", true), socket);
                 return;
             }
             if (Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket).Value != null)
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Already logged in!"), socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Already logged in!", true), socket);
                 return;
             }
 
