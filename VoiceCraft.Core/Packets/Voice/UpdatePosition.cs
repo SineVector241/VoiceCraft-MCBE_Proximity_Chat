@@ -47,5 +47,18 @@ namespace VoiceCraft.Core.Packets.Voice
 
             return dataStream.ToArray();
         }
+
+        public static VoicePacket Create(Vector3 position, string environmentId)
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.UpdatePosition,
+                PacketData = new UpdatePosition()
+                {
+                    Position = position,
+                    EnvironmentId = environmentId
+                }
+            };
+        }
     }
 }

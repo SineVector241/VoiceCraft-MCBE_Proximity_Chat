@@ -643,27 +643,13 @@ namespace VoiceCraft.Core.Server
         {
             if(packet.LoginKey != MCComm.ServerKey)
             {
-                var denyPacket = new MCCommPacket()
-                {
-                    PacketType = MCCommPacketTypes.Deny,
-                    PacketData = new Packets.MCComm.Deny()
-                    {
-                        Reason = "Invalid Key!"
-                    }
-                };
+                var denyPacket = Packets.MCComm.Deny.Create("Invalid Key!");
                 MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
                 return;
             }
             if(ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
             {
-                var denyPacket = new MCCommPacket()
-                {
-                    PacketType = MCCommPacketTypes.Deny,
-                    PacketData = new Packets.MCComm.Deny()
-                    {
-                        Reason = "Already Logged In!"
-                    }
-                };
+                var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
                 MCComm.SendResponse(ctx, HttpStatusCode.Conflict, denyPacket.GetPacketString());
                 return;
             }
@@ -675,11 +661,7 @@ namespace VoiceCraft.Core.Server
             ExternalServers.Add(server);
             OnExternalServerConnected?.Invoke(server);
 
-            var acceptPacket = new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.Accept,
-                PacketData = new Packets.MCComm.Accept()
-            };
+            var acceptPacket = Packets.MCComm.Accept.Create();
             MCComm.SendResponse(ctx, HttpStatusCode.Conflict, acceptPacket.GetPacketString());
         }
 
@@ -790,17 +772,7 @@ namespace VoiceCraft.Core.Server
         {
             if (!ServerLoggedIn(ctx)) return;
 
-            var settingsPacket = new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.UpdateSettings,
-                PacketData = new Packets.MCComm.UpdateSettings()
-                {
-                    ProximityDistance = ServerProperties.ProximityDistance,
-                    ProximityToggle = ServerProperties.ProximityToggle,
-                    VoiceEffects = ServerProperties.VoiceEffects
-                }
-            };
-
+            var settingsPacket = Packets.MCComm.UpdateSettings.Create(ServerProperties.ProximityDistance, ServerProperties.ProximityToggle, ServerProperties.VoiceEffects);
             MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket.GetPacketString());
         }
 
@@ -827,22 +799,8 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (participant.Value != null)
             {
-                Participants.TryRemove(participant.Key, out _);
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, "Removed");
+                RemoveParticipant(participant, true, "MCComm server kicked.");
                 OnParticipantDisconnected?.Invoke("MCComm server kicked.", participant.Value, participant.Key);
-                var list = Participants.Where(x => x.Key != participant.Key);
-                for (ushort i = 0; i < list.Count(); i++)
-                {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Logout,
-                        PacketData = new Packets.Signalling.Logout()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
-                }
                 return;
             }
 
@@ -854,14 +812,7 @@ namespace VoiceCraft.Core.Server
             var server = ExternalServers.FirstOrDefault(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault());
             if (server == null)
             {
-                var denyPacket = new MCCommPacket()
-                {
-                    PacketType = MCCommPacketTypes.Deny,
-                    PacketData = new Packets.MCComm.Deny()
-                    {
-                        Reason = "Not logged in!"
-                    }
-                };
+                var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
                 MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
                 return false;
             }
@@ -879,16 +830,17 @@ namespace VoiceCraft.Core.Server
 
         }
 
-        public void RemoveParticipant(ushort key, bool broadcast = true, string? reason = null)
+        public bool RemoveParticipant(ushort key, bool broadcast = true, string? reason = null)
         {
             var participant = Participants.FirstOrDefault(x => x.Key == key);
             if(participant.Value != null)
             {
-                RemoveParticipant(participant, broadcast, reason);
+                return RemoveParticipant(participant, broadcast, reason);
             }
+            return false;
         }
 
-        public void RemoveParticipant(KeyValuePair<ushort, VoiceCraftParticipant> participant, bool broadcast = true, string? reason = null)
+        public bool RemoveParticipant(KeyValuePair<ushort, VoiceCraftParticipant> participant, bool broadcast = true, string? reason = null)
         {
             if (participant.Value != null)
             {
@@ -909,7 +861,9 @@ namespace VoiceCraft.Core.Server
                         }, client.Value.SignallingSocket);
                     }
                 }
+                return true;
             }
+            return false;
         }
         #endregion
     }

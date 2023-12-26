@@ -8,5 +8,14 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             return new byte[0];
         }
+
+        public static SignallingPacket Create()
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Null,
+                PacketData = new Null()
+            };
+        }
     }
 }

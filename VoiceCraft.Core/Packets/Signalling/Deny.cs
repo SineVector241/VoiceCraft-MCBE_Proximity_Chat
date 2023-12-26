@@ -37,5 +37,17 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(string reason)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Deafen,
+                PacketData = new Deny()
+                {
+                    Reason = reason
+                }
+            };
+        }
     }
 }

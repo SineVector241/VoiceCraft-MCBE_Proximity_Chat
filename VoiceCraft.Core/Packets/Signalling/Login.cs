@@ -70,5 +70,22 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(PositioningTypes positioningType, ushort loginKey, bool isDeafened, bool isMuted, string name, string version)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Login,
+                PacketData = new Login()
+                {
+                    PositioningType = positioningType,
+                    LoginKey = loginKey,
+                    IsDeafened = isDeafened,
+                    IsMuted = isMuted,
+                    Name = name,
+                    Version = version
+                }
+            };
+        }
     }
 }

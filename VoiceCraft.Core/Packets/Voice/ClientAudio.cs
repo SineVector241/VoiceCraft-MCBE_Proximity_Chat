@@ -43,5 +43,18 @@ namespace VoiceCraft.Core.Packets.Voice
 
             return dataStream.ToArray();
         }
+
+        public static VoicePacket Create(uint packetCount, byte[] audio)
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.ClientAudio,
+                PacketData = new ClientAudio()
+                {
+                    PacketCount = packetCount,
+                    Audio = audio,
+                }
+            };
+        }
     }
 }
