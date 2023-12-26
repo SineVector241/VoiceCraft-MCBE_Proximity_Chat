@@ -226,7 +226,7 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");
             Logger.LogToConsole(LogType.Info, "SetMotd [Message: string] - Sets the server MOTD.", "Commands");
             Logger.LogToConsole(LogType.Info, "ToggleEffects [Toggle: boolean] - Toggles the voice effect on or off.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - SignallingInbound, 1 - SignallingOutbound, 2 - VoiceInbound, 3 - VoiceOutbound, 3 - MCCommInbound", "Commands");
+            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - SignallingInbound, 1 - SignallingOutbound, 2 - VoiceInbound, 3 - VoiceOutbound, 4 - MCCommInbound, 5 - MCCommOutbound", "Commands");
         }
 
         void ExitCommand(string[] args)
@@ -496,6 +496,10 @@ namespace VoiceCraft.Server
                     case 4:
                         server.MCComm.LogInbound = !server.MCComm.LogInbound;
                         Logger.LogToConsole(LogType.Success, $"Set mccomm inbound debug: {server.MCComm.LogInbound}", "Commands");
+                        break;
+                    case 5:
+                        server.MCComm.LogOutbound = !server.MCComm.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set mccomm outbound debug: {server.MCComm.LogOutbound}", "Commands");
                         break;
                     default:
                         throw new Exception("Invalid type specified!");
