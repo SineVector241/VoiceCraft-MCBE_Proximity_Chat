@@ -147,12 +147,7 @@ namespace VoiceCraft.Core.Client
                     return;
                 }
 
-                var packet = new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.PingCheck,
-                    PacketData = new Packets.Signalling.PingCheck()
-                };
-                Signalling.SendPacket(packet);
+                Signalling.SendPacket(Packets.Signalling.PingCheck.Create());
             }
             else if (!Signalling.IsConnected)
                 ActivityChecker.Stop();
@@ -280,14 +275,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!IsConnected) return;
 
-            _ = Signalling.SendPacketAsync(new SignallingPacket()
-            {
-                PacketType = SignallingPacketTypes.Binded,
-                PacketData = new Packets.Signalling.Binded()
-                {
-                    Name = Username
-                }
-            });
+            _ = Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(Username));
             OnBinded?.Invoke(Username);
         }
 
@@ -295,15 +283,7 @@ namespace VoiceCraft.Core.Client
         {
             if(!IsConnected) return;
 
-            _ = Voice.SendPacketAsync(new VoicePacket()
-            {
-                PacketType = VoicePacketTypes.UpdatePosition,
-                PacketData = new Packets.Voice.UpdatePosition()
-                {
-                    EnvironmentId = Dimension,
-                    Position = position
-                }
-            });
+            _ = Voice.SendPacketAsync(Packets.Voice.UpdatePosition.Create(position, Dimension));
         }
 
         private void WebsocketDisconnected()
@@ -378,17 +358,8 @@ namespace VoiceCraft.Core.Client
             var encodedBytes = Encoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
-            //Packet creation.
-            VoicePacket packet = new VoicePacket()
-            {
-                PacketType = VoicePacketTypes.ClientAudio,
-                PacketData = new Packets.Voice.ClientAudio()
-                {
-                    Audio = audioTrimmed,
-                    PacketCount = PacketCount
-                }
-            }; //Audio packet stuff here.
-            _ = Voice.SendPacketAsync(packet);
+            //Send the audio
+            _ = Voice.SendPacketAsync(Packets.Voice.ClientAudio.Create(PacketCount, audioTrimmed));
         }
 
         public void SetMute(bool Muted)
@@ -398,19 +369,11 @@ namespace VoiceCraft.Core.Client
             IsMuted = Muted;
             if(IsMuted)
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Mute,
-                    PacketData = new Packets.Signalling.Mute()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(0));
             }
             else
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Unmute,
-                    PacketData = new Packets.Signalling.Unmute()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Unmute.Create(0));
             }
         }
 
@@ -421,19 +384,11 @@ namespace VoiceCraft.Core.Client
             IsDeafened = Deafened;
             if (IsDeafened)
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deafen,
-                    PacketData = new Packets.Signalling.Deafen()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(0));
             }
             else
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Undeafen,
-                    PacketData = new Packets.Signalling.Undeafen()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(0));
             }
         }
 
