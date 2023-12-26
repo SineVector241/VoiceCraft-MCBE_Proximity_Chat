@@ -377,7 +377,6 @@ namespace VoiceCraft.Core.Client
                     IsConnected = false;
                     IsMuted = false;
                     IsDeafened = false;
-                    JoinedChannel = null;
                 }
             }
             catch(Exception ex)
@@ -534,7 +533,6 @@ namespace VoiceCraft.Core.Client
                     Participants.Clear();
                     Channels.Clear();
                     IsConnected = false;
-                    JoinedChannel = null;
 
                     //Deregister Events
                     Signalling.OnAcceptPacketReceived -= SignallingAccept;

@@ -11,10 +11,12 @@ namespace VoiceCraft.Core.Server
         public bool LogInboundSignallingPackets { get; set; } = false;
         public bool LogOutboundSignallingPackets { get; set; } = false;
         public bool LogInboundMCCommPackets { get; set; } = false;
+        public bool LogOutboundMCCommPackets { get; set; } = false;
         public List<VoicePacketTypes> InboundVoiceFilter { get; set; } = new List<VoicePacketTypes>();
         public List<VoicePacketTypes> OutboundVoiceFilter { get; set; } = new List<VoicePacketTypes>();
         public List<SignallingPacketTypes> InboundSignallingFilter { get; set; } = new List<SignallingPacketTypes>();
         public List<SignallingPacketTypes> OutboundSignallingFilter { get; set; } = new List<SignallingPacketTypes>();
         public List<MCCommPacketTypes> InboundMCCommFilter { get; set; } = new List<MCCommPacketTypes>();
+        public List<MCCommPacketTypes> OutboundMCCommFilter { get; set; } = new List<MCCommPacketTypes>();
     }
 }

@@ -141,9 +141,7 @@ namespace VoiceCraft.Core.Server
 
                 if (DateTime.UtcNow.Subtract(participant.Value.LastActive).TotalMilliseconds > ServerProperties.ClientTimeoutMS)
                 {
-                    Participants.TryRemove(participant.Key, out _);
-                    participant.Value.SignallingSocket.Close();
-                    OnParticipantDisconnected?.Invoke("Timeout", participant.Value, participant.Key);
+                    RemoveParticipant(participant, true, "Timeout");
                 }
             }
         }
@@ -250,7 +248,7 @@ namespace VoiceCraft.Core.Server
                 participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.Binded = true;
                 participant.Value.Name = packet.Name;
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -269,7 +267,7 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = DateTime.UtcNow;
                 participant.Value.Binded = false;
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -289,7 +287,7 @@ namespace VoiceCraft.Core.Server
                 participant.Value.IsMuted = true;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -307,7 +305,7 @@ namespace VoiceCraft.Core.Server
                 participant.Value.IsMuted = false;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -325,7 +323,7 @@ namespace VoiceCraft.Core.Server
                 participant.Value.IsDeafened = true;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -343,7 +341,7 @@ namespace VoiceCraft.Core.Server
                 participant.Value.IsDeafened = false;
                 if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
 
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
@@ -403,7 +401,9 @@ namespace VoiceCraft.Core.Server
                     try
                     {
                         MCComm.LogInbound = ServerProperties.Debugger.LogInboundMCCommPackets;
+                        MCComm.LogOutbound = ServerProperties.Debugger.LogOutboundMCCommPackets;
                         MCComm.InboundFilter = ServerProperties.Debugger.InboundMCCommFilter;
+                        MCComm.OutboundFilter = ServerProperties.Debugger.OutboundMCCommFilter;
                         MCComm.LogExceptions = ServerProperties.Debugger.LogExceptions;
                         MCComm.Start(ServerProperties.MCCommPortTCP, ServerProperties.PermanentServerKey);
                     }
@@ -517,13 +517,13 @@ namespace VoiceCraft.Core.Server
             if(packet.LoginKey != MCComm.ServerKey)
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Invalid Key!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
                 return;
             }
             if(ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, denyPacket.GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, denyPacket);
                 return;
             }
 
@@ -535,7 +535,7 @@ namespace VoiceCraft.Core.Server
             OnExternalServerConnected?.Invoke(server);
 
             var acceptPacket = Packets.MCComm.Accept.Create();
-            MCComm.SendResponse(ctx, HttpStatusCode.Conflict, acceptPacket.GetPacketString());
+            MCComm.SendResponse(ctx, HttpStatusCode.Conflict, acceptPacket);
         }
 
         private void MCCommBinded(Packets.MCComm.Bind packet, HttpListenerContext ctx)
@@ -545,22 +545,22 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
             if (participant.Value == null)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!").GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!"));
                 return;
             }
             if (participant.Value.Binded)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Key has already been binded to a participant!").GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Key has already been binded to a participant!"));
                 return;
             }
             if (Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId).Value != null)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("PlayerId is already binded to a participant!").GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("PlayerId is already binded to a participant!"));
                 return;
             }
             if (participant.Value.PositioningType == PositioningTypes.ClientSided)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is using client sided positioning!").GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is using client sided positioning!"));
                 return;
             }
 
@@ -569,8 +569,8 @@ namespace VoiceCraft.Core.Server
             participant.Value.Binded = true;
             Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(participant.Value.Name), participant.Value.SignallingSocket);
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
-            var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+            var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
             for (ushort i = 0; i < list.Count(); i++)
             {
                 var client = list.ElementAt(i);
@@ -618,7 +618,7 @@ namespace VoiceCraft.Core.Server
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
         }
 
         private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
@@ -626,7 +626,7 @@ namespace VoiceCraft.Core.Server
             if (!ServerLoggedIn(ctx)) return;
 
             var settingsPacket = Packets.MCComm.UpdateSettings.Create(ServerProperties.ProximityDistance, ServerProperties.ProximityToggle, ServerProperties.VoiceEffects);
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket.GetPacketString());
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket);
         }
 
         private void MCCommUpdateSettings(Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
@@ -635,14 +635,14 @@ namespace VoiceCraft.Core.Server
 
             if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!").GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!"));
                 return;
             }
 
             ServerProperties.ProximityDistance = packet.ProximityDistance;
             ServerProperties.ProximityToggle = packet.ProximityToggle;
             ServerProperties.VoiceEffects = packet.VoiceEffects;
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
         }
 
         private void MCCommRemoveParticipant(Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
@@ -657,7 +657,7 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!").GetPacketString());
+            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!"));
         }
 
         private bool ServerLoggedIn(HttpListenerContext ctx)
@@ -666,7 +666,7 @@ namespace VoiceCraft.Core.Server
             if (server == null)
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket.GetPacketString());
+                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
                 return false;
             }
             else
@@ -678,11 +678,6 @@ namespace VoiceCraft.Core.Server
         #endregion
 
         #region Public Methods
-        public void AddParticipant(VoiceCraftParticipant participant, bool broadcast = true)
-        {
-
-        }
-
         public bool RemoveParticipant(ushort key, bool broadcast = true, string? reason = null)
         {
             var participant = Participants.FirstOrDefault(x => x.Key == key);
@@ -704,7 +699,8 @@ namespace VoiceCraft.Core.Server
                 {
                     foreach (var client in Participants)
                     {
-                        Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                        if(client.Value.Channel == participant.Value.Channel)
+                            Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
                     }
                 }
                 return true;

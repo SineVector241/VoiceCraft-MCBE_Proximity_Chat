@@ -18,7 +18,9 @@ namespace VoiceCraft.Core.Server.Sockets
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;
+        public bool LogOutbound { get; set; } = false;
         public List<MCCommPacketTypes> InboundFilter { get; set; } = new List<MCCommPacketTypes>();
+        public List<MCCommPacketTypes> OutboundFilter { get; set; } = new List<MCCommPacketTypes>();
 
         //Delegates
         public delegate void Started();
@@ -30,6 +32,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void RemoveParticipantPacket(RemoveParticipant packet, HttpListenerContext ctx);
 
         public delegate void InboundPacket(MCCommPacket packet);
+        public delegate void OutboundPacket(MCCommPacket packet);
         public delegate void ExceptionError(Exception error);
 
         //events
@@ -42,6 +45,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public event RemoveParticipantPacket? OnRemoveParticipantPacketReceived;
 
         public event InboundPacket? OnInboundPacket;
+        public event OutboundPacket? OnOutboundPacket;
         public event ExceptionError? OnExceptionError;
 
         public MCCommSocket(CancellationToken CT)
@@ -85,7 +89,7 @@ namespace VoiceCraft.Core.Server.Sockets
                         if (LogExceptions)
                             OnExceptionError?.Invoke(ex);
 
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.BadRequest, Deny.Create("Invalid Data!"));
                     }
                 }
             }
@@ -110,7 +114,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var loginData = (Login)packet.PacketData;
                     if(loginData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnLoginPacketReceived?.Invoke(loginData, ctx);
@@ -119,7 +123,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var bindData = (Bind)packet.PacketData;
                     if (bindData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnBindedPacketReceived?.Invoke(bindData, ctx);
@@ -128,7 +132,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var updateData = (Update)packet.PacketData;
                     if (updateData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnUpdatePacketReceived?.Invoke(updateData, ctx);
@@ -137,7 +141,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var updateSettingsData = (UpdateSettings)packet.PacketData;
                     if (updateSettingsData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnUpdateSettingsPacketReceived?.Invoke(updateSettingsData, ctx);
@@ -146,7 +150,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var getSettingsData = (GetSettings)packet.PacketData;
                     if (getSettingsData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnGetSettingsPacketReceived?.Invoke(getSettingsData, ctx);
@@ -155,7 +159,7 @@ namespace VoiceCraft.Core.Server.Sockets
                     var removeParticipantData = (RemoveParticipant)packet.PacketData;
                     if (removeParticipantData == null)
                     {
-                        SendResponse(ctx, HttpStatusCode.BadRequest, "Invalid Data!");
+                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
                         break;
                     }
                     OnRemoveParticipantPacketReceived?.Invoke(removeParticipantData, ctx);
@@ -163,11 +167,14 @@ namespace VoiceCraft.Core.Server.Sockets
             }
         }
 
-        public void SendResponse(HttpListenerContext ctx, HttpStatusCode code, string Content)
+        public void SendResponse(HttpListenerContext ctx, HttpStatusCode code, MCCommPacket packet)
         {
-            var content = Encoding.UTF8.GetBytes(Content);
+            if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                OnOutboundPacket?.Invoke(packet);
+
+            var content = Encoding.UTF8.GetBytes(packet.GetPacketString());
             ctx.Response.StatusCode = (int)code;
-            ctx.Response.ContentType = "text/plain";
+            ctx.Response.ContentType = "application/json";
             ctx.Response.OutputStream.Write(content, 0, content.Length);
             ctx.Response.OutputStream.Close();
         }

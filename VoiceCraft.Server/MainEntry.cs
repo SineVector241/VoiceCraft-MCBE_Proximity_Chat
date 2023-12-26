@@ -31,6 +31,7 @@ namespace VoiceCraft.Server
             server.Voice.OnInboundPacket += VoiceInbound;
             server.Voice.OnExceptionError += ExceptionError;
             server.MCComm.OnInboundPacket += MCCommInbound;
+            server.MCComm.OnOutboundPacket += MCCommOutbound;
             server.MCComm.OnExceptionError += ExceptionError;
         }
 
@@ -192,6 +193,11 @@ namespace VoiceCraft.Server
         private void MCCommInbound(Core.Packets.MCCommPacket packet)
         {
             Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-MCI");
+        }
+
+        private void MCCommOutbound(Core.Packets.MCCommPacket packet)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-MCO");
         }
 
         private void ExceptionError(Exception error)
