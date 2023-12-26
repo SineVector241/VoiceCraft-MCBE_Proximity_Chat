@@ -359,7 +359,7 @@ namespace VoiceCraft.Core.Server
             if (participant.Value != null && participant.Value.Binded)
             {
                 var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
-                if(participant.Value.Channel != packet.ChannelId && channel.Password == packet.Password)
+                if(participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
                 {
                     if(participant.Value.Channel != 0)
                         Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
@@ -381,7 +381,7 @@ namespace VoiceCraft.Core.Server
 
                     Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
                 }
-                else if(channel.Password != packet.Password)
+                else if(channel.Password != packet.Password || string.IsNullOrWhiteSpace(channel.Password))
                 {
                     Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
                 }
@@ -395,7 +395,7 @@ namespace VoiceCraft.Core.Server
         private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.Binded &&packet.ChannelId == participant.Value.Channel)
+            if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
             {
                 var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < channelList.Count(); i++)
