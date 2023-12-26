@@ -47,7 +47,6 @@ namespace VoiceCraft.Core.Client
         //Server Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
         public List<VoiceCraftChannel> Channels { get; private set; } = new List<VoiceCraftChannel>();
-        public VoiceCraftChannel? JoinedChannel { get; private set; }
         public uint PacketCount { get; private set; }
 
         //Audio Variables
@@ -270,7 +269,7 @@ namespace VoiceCraft.Core.Client
             var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
             if(channel != null)
             {
-                JoinedChannel = channel;
+                channel.Joined = true;
                 OnChannelJoined?.Invoke(channel);
             }
         }
@@ -278,9 +277,9 @@ namespace VoiceCraft.Core.Client
         private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet)
         {
             var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
-            if (channel != null && channel == JoinedChannel)
+            if (channel != null && channel.Joined)
             {
-                JoinedChannel = null;
+                channel.Joined = false;
                 OnChannelLeft?.Invoke(channel);
             }
         }
