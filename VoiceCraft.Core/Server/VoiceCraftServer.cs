@@ -164,17 +164,10 @@ namespace VoiceCraft.Core.Server
                     break;
             }
 
-            Signalling.SendPacket(new SignallingPacket()
-            {
-                PacketType = SignallingPacketTypes.Ping,
-                PacketData = new Packets.Signalling.Ping()
-                {
-                    ServerData =
+            Signalling.SendPacket(Packets.Signalling.Ping.Create(
                     $"MOTD: {ServerProperties.ServerMOTD}" +
                     $"\nConnection Type: {connType}" +
-                    $"\nConnected Participants: {Participants.Count}"
-                }
-            }, socket);
+                    $"\nConnected Participants: {Participants.Count}"), socket);
         }
 
         private void SignallingSocketStarted()
@@ -203,59 +196,29 @@ namespace VoiceCraft.Core.Server
         {
             if (Version != packet.Version)
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deny,
-                    PacketData = new Packets.Signalling.Deny() { Reason = "Versions do not match!" }
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Versions do not match!"), socket);
                 return;
             }
             if (Banlist.IPBans.Exists(x => x == socket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault()))
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deny,
-                    PacketData = new Packets.Signalling.Deny() { Reason = "You have been banned from the server!" }
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("You have been banned from the server!"), socket);
                 return;
             }
-
             if (packet.PositioningType != PositioningTypes.ClientSided &&
                 (ServerProperties.ConnectionType == ConnectionTypes.Client || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deny,
-                    PacketData = new Packets.Signalling.Deny()
-                    {
-                        Reason = "Server only accepts client sided positioning!"
-                    }
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts client sided positioning!"), socket);
                 return;
             }
             else if (packet.PositioningType != PositioningTypes.ServerSided &&
                 (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deny,
-                    PacketData = new Packets.Signalling.Deny()
-                    {
-                        Reason = "Server only accepts server sided positioning!"
-                    }
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts server sided positioning!"), socket);
                 return;
             }
             if (Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket).Value != null)
             {
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deny,
-                    PacketData = new Packets.Signalling.Deny()
-                    {
-                        Reason = "Already logged in!"
-                    }
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Already logged in!"), socket);
                 return;
             }
 
@@ -276,15 +239,7 @@ namespace VoiceCraft.Core.Server
             }
 
             Participants.TryAdd(key, participant);
-            Signalling.SendPacketAsync(new SignallingPacket()
-            {
-                PacketType = SignallingPacketTypes.Accept,
-                PacketData = new Packets.Signalling.Accept()
-                {
-                    LoginKey = key,
-                    VoicePort = ServerProperties.VoicePortUDP
-                }
-            }, socket);
+            Signalling.SendPacketAsync(Packets.Signalling.Accept.Create(key, ServerProperties.VoicePortUDP), socket);
         }
 
         private void SignallingBinded(Packets.Signalling.Binded packet, Socket socket)
@@ -299,29 +254,9 @@ namespace VoiceCraft.Core.Server
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Login,
-                        PacketData = new Packets.Signalling.Login()
-                        {
-                            LoginKey = client.Key,
-                            Name = client.Value.Name,
-                            IsDeafened = client.Value.IsDeafened,
-                            IsMuted = client.Value.IsMuted
-                        }
-                    }, participant.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
 
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Login,
-                        PacketData = new Packets.Signalling.Login()
-                        {
-                            LoginKey = participant.Key,
-                            Name = participant.Value.Name,
-                            IsDeafened = participant.Value.IsDeafened,
-                            IsMuted = participant.Value.IsMuted
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
                 }
                 OnParticipantBinded?.Invoke(participant.Value, participant.Key);
             }
@@ -339,14 +274,7 @@ namespace VoiceCraft.Core.Server
                 {
                     var client = list.ElementAt(i);
                     //Logout the unbinded participant from all other clients.
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Logout,
-                        PacketData = new Packets.Signalling.Logout()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
                 }
                 OnParticipantUnbinded?.Invoke(participant.Value, participant.Key);
             }
@@ -365,14 +293,7 @@ namespace VoiceCraft.Core.Server
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Mute,
-                        PacketData = new Packets.Signalling.Mute()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(participant.Key), client.Value.SignallingSocket);
                 }
             }
         }
@@ -390,14 +311,7 @@ namespace VoiceCraft.Core.Server
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Unmute,
-                        PacketData = new Packets.Signalling.Unmute()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Unmute.Create(participant.Key), client.Value.SignallingSocket);
                 }
             }
         }
@@ -415,14 +329,7 @@ namespace VoiceCraft.Core.Server
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Deafen,
-                        PacketData = new Packets.Signalling.Deafen()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(participant.Key), client.Value.SignallingSocket);
                 }
             }
         }
@@ -440,14 +347,7 @@ namespace VoiceCraft.Core.Server
                 for (ushort i = 0; i < list.Count(); i++)
                 {
                     var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(new SignallingPacket()
-                    {
-                        PacketType = SignallingPacketTypes.Undeafen,
-                        PacketData = new Packets.Signalling.Undeafen()
-                        {
-                            LoginKey = participant.Key
-                        }
-                    }, client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(participant.Key), client.Value.SignallingSocket);
                 }
             }
         }
@@ -459,6 +359,7 @@ namespace VoiceCraft.Core.Server
                 var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
                 if(participant.Value == null)
                 {
+                    socket.Disconnect(false);
                     stream.Close();
                     socket.Close();
                 }
@@ -478,11 +379,7 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = DateTime.UtcNow;
 
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.PingCheck,
-                    PacketData = new Packets.Signalling.PingCheck()
-                }, socket);
+                Signalling.SendPacketAsync(Packets.Signalling.PingCheck.Create(), socket);
             }
         }
         #endregion
@@ -522,23 +419,12 @@ namespace VoiceCraft.Core.Server
             if (participant.Value != null && participant.Value.VoiceEndpoint == null)
             {
                 participant.Value.VoiceEndpoint = endPoint;
-                Voice.SendPacketAsync(new VoicePacket()
-                {
-                    PacketType = VoicePacketTypes.Accept,
-                    PacketData = new Packets.Voice.Accept()
-                }, endPoint);
+                Voice.SendPacketAsync(Packets.Voice.Accept.Create(), endPoint);
                 OnParticipantConnected?.Invoke(participant.Value, participant.Key);
             }
             else
             {
-                Voice.SendPacketAsync(new VoicePacket()
-                {
-                    PacketType = VoicePacketTypes.Deny,
-                    PacketData = new Packets.Voice.Deny()
-                    {
-                        Reason = "Key is invalid or used!"
-                    }
-                }, endPoint);
+                Voice.SendPacketAsync(Packets.Voice.Deny.Create("Key is invalid or used!"), endPoint);
             }
         }
 
@@ -571,20 +457,11 @@ namespace VoiceCraft.Core.Server
                             if (client.Value.VoiceEndpoint != null)
                             {
                                 var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
-                                Voice.SendPacketAsync(new VoicePacket()
-                                {
-                                    PacketType = VoicePacketTypes.ServerAudio,
-                                    PacketData = new Packets.Voice.ServerAudio()
-                                    {
-                                        Audio = packet.Audio,
-                                        LoginKey = participant.Key,
-                                        PacketCount = packet.PacketCount,
-                                        Volume = volume,
-                                        EchoFactor = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f,
-                                        Muffled = ServerProperties.VoiceEffects && (client.Value.InWater || participant.Value.InWater),
-                                        Rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180))
-                                    }
-                                }, client.Value.VoiceEndpoint);
+                                var echo = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f;
+                                var muffled = ServerProperties.VoiceEffects && (client.Value.InWater || participant.Value.InWater);
+                                var rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180));
+
+                                Voice.SendPacketAsync(Packets.Voice.ServerAudio.Create(participant.Key, packet.PacketCount, volume, echo, rotation, muffled, packet.Audio), client.Value.VoiceEndpoint);
                             }
                         }
                     }
@@ -600,20 +477,7 @@ namespace VoiceCraft.Core.Server
 
                             if (client.Value.VoiceEndpoint != null)
                             {
-                                Voice.SendPacketAsync(new VoicePacket()
-                                {
-                                    PacketType = VoicePacketTypes.ServerAudio,
-                                    PacketData = new Packets.Voice.ServerAudio()
-                                    {
-                                        Audio = packet.Audio,
-                                        LoginKey = participant.Key,
-                                        PacketCount = packet.PacketCount,
-                                        Volume = 1.0f,
-                                        EchoFactor = 0.0f,
-                                        Muffled = false,
-                                        Rotation = 1.5f //I should've used Math.Sin();
-                                    }
-                                }, client.Value.VoiceEndpoint);
+                                Voice.SendPacketAsync(Packets.Voice.ServerAudio.Create(participant.Key, packet.PacketCount, 1.0f, 0.0f, 1.5f, false, packet.Audio), client.Value.VoiceEndpoint);
                             }
                         }
                     }
@@ -672,64 +536,37 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
             if (participant.Value == null)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotFound, "Error. Could not find key!");
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!").GetPacketString());
                 return;
             }
             if (participant.Value.Binded)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, "Error. Key has already been binded to a participant.");
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Key has already been binded to a participant!").GetPacketString());
                 return;
             }
             if (Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId).Value != null)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, "Error. PlayerId is already binded to a participant!");
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("PlayerId is already binded to a participant!").GetPacketString());
                 return;
             }
             if (participant.Value.PositioningType == PositioningTypes.ClientSided)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, "Error. Participant is using client sided positioning.");
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is using client sided positioning!").GetPacketString());
                 return;
             }
 
             participant.Value.Name = packet.Gamertag;
             participant.Value.MinecraftId = packet.PlayerId;
             participant.Value.Binded = true;
-            Signalling.SendPacketAsync(new SignallingPacket()
-            {
-                PacketType = SignallingPacketTypes.Binded,
-                PacketData = new Packets.Signalling.Binded()
-                {
-                    Name = participant.Value.Name
-                }
-            }, participant.Value.SignallingSocket);
-            MCComm.SendResponse(ctx, HttpStatusCode.Accepted, "Successfully Binded");
+            Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(participant.Value.Name), participant.Value.SignallingSocket);
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
             var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded);
             for (ushort i = 0; i < list.Count(); i++)
             {
                 var client = list.ElementAt(i);
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Login,
-                    PacketData = new Packets.Signalling.Login()
-                    {
-                        LoginKey = client.Key,
-                        Name = client.Value.Name,
-                        IsDeafened = client.Value.IsDeafened,
-                        IsMuted = client.Value.IsMuted
-                    }
-                }, participant.Value.SignallingSocket);
-
-                Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Login,
-                    PacketData = new Packets.Signalling.Login()
-                    {
-                        LoginKey = participant.Key,
-                        Name = participant.Value.Name,
-                        IsDeafened = participant.Value.IsDeafened,
-                        IsMuted = participant.Value.IsMuted
-                    }
-                }, client.Value.SignallingSocket);
+                Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
+                Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
             }
 
             OnParticipantBinded?.Invoke(participant.Value, participant.Key);
@@ -765,7 +602,7 @@ namespace VoiceCraft.Core.Server
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated");
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
         }
 
         private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
@@ -782,14 +619,14 @@ namespace VoiceCraft.Core.Server
 
             if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, "Error. Proximity distance must be between 1 and 120!");
+                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!").GetPacketString());
                 return;
             }
 
             ServerProperties.ProximityDistance = packet.ProximityDistance;
             ServerProperties.ProximityToggle = packet.ProximityToggle;
             ServerProperties.VoiceEffects = packet.VoiceEffects;
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, "Updated Settings");
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create().GetPacketString());
         }
 
         private void MCCommRemoveParticipant(Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
@@ -804,7 +641,7 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, "Could Not Find Participant");
+            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!").GetPacketString());
         }
 
         private bool ServerLoggedIn(HttpListenerContext ctx)
@@ -851,14 +688,7 @@ namespace VoiceCraft.Core.Server
                 {
                     foreach (var client in Participants)
                     {
-                        Signalling.SendPacketAsync(new SignallingPacket()
-                        {
-                            PacketType = SignallingPacketTypes.Logout,
-                            PacketData = new Packets.Signalling.Logout()
-                            {
-                                LoginKey = participant.Key
-                            }
-                        }, client.Value.SignallingSocket);
+                        Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
                     }
                 }
                 return true;
