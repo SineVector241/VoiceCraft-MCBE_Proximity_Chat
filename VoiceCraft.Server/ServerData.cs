@@ -42,6 +42,8 @@ namespace VoiceCraft.Server
                 throw new Exception("Server MOTD cannot be longer than 30 characters!");
             if (ServerProperties.ProximityDistance > 120 || ServerProperties.ProximityDistance < 1)
                 throw new Exception("Proximity distance can only be between 1 and 120!");
+            if (ServerProperties.Channels.Count >= byte.MaxValue)
+                throw new Exception($"Cannot have more than {byte.MaxValue - 1} channels!"); //Technically we can only have 254 channels since we start the channelId from 1.
             if (ServerProperties.Channels.Exists(x => x.Name.Length > 12))
                 throw new Exception("Channel name cannot be longer than 12 characters!");
             if (ServerProperties.Channels.Exists(x => string.IsNullOrWhiteSpace(x.Name)))
