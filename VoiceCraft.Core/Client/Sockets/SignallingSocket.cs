@@ -28,7 +28,9 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void UndeafenPacket(Undeafen packet);
         public delegate void MutePacket(Mute packet);
         public delegate void UnmutePacket(Unmute packet);
-        public delegate void AddChannel(AddChannel packet);
+        public delegate void AddChannelPacket(AddChannel packet);
+        public delegate void JoinChannelPacket(JoinChannel packet);
+        public delegate void LeaveChannelPacket(LeaveChannel packet);
         public delegate void ErrorPacket(Error packet);
         public delegate void PingPacket(Ping packet);
         public delegate void NullPacket(Null packet);
@@ -46,7 +48,9 @@ namespace VoiceCraft.Core.Client.Sockets
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
         public event UnmutePacket? OnUnmutePacketReceived;
-        public event AddChannel? OnAddChannelReceived;
+        public event AddChannelPacket? OnAddChannelReceived;
+        public event JoinChannelPacket? OnJoinChannelReceived;
+        public event LeaveChannelPacket? OnLeaveChannelReceived;
         public event ErrorPacket? OnErrorPacketReceived;
         public event PingPacket? OnPingPacketReceived;
         public event NullPacket? OnNullPacketReceived;
@@ -247,6 +251,18 @@ namespace VoiceCraft.Core.Client.Sockets
                 case SignallingPacketTypes.Unmute:
                     if (IsConnected)
                         OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.AddChannel:
+                    if (IsConnected)
+                        OnAddChannelReceived?.Invoke((AddChannel)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.JoinChannel:
+                    if (IsConnected)
+                        OnJoinChannelReceived?.Invoke((JoinChannel)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.LeaveChannel:
+                    if (IsConnected)
+                        OnLeaveChannelReceived?.Invoke((LeaveChannel)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Error:
                     if (IsConnected)

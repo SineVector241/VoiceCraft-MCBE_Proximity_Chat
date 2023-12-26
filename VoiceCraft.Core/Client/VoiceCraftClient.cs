@@ -47,6 +47,7 @@ namespace VoiceCraft.Core.Client
         //Server Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
         public List<VoiceCraftChannel> Channels { get; private set; } = new List<VoiceCraftChannel>();
+        public VoiceCraftChannel? JoinedChannel { get; private set; }
         public uint PacketCount { get; private set; }
 
         //Audio Variables
@@ -125,6 +126,9 @@ namespace VoiceCraft.Core.Client
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
+            Signalling.OnAddChannelReceived += SignallingAddChannel;
+            Signalling.OnJoinChannelReceived += SignallingJoinChannel;
+            Signalling.OnLeaveChannelReceived += SignallingLeaveChannel;
 
             //Voice
             Voice.OnAcceptPacketReceived += VoiceAccept;
@@ -248,6 +252,38 @@ namespace VoiceCraft.Core.Client
                 OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
+
+        private void SignallingAddChannel(Packets.Signalling.AddChannel packet)
+        {
+            var channel = new VoiceCraftChannel()
+            {
+                Name = packet.Name,
+                RequiresPassword = packet.RequiresPassword,
+                ChannelId = packet.ChannelId
+            };
+            Channels.Add(channel);
+            OnChannelAdded?.Invoke(channel);
+        }
+
+        private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet)
+        {
+            var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
+            if(channel != null)
+            {
+                JoinedChannel = channel;
+                OnChannelJoined?.Invoke(channel);
+            }
+        }
+
+        private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet)
+        {
+            var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
+            if (channel != null && channel == JoinedChannel)
+            {
+                JoinedChannel = null;
+                OnChannelLeft?.Invoke(channel);
+            }
+        }
         #endregion
         //Voice Event Methods
         #region Voice
@@ -342,6 +378,7 @@ namespace VoiceCraft.Core.Client
                     IsConnected = false;
                     IsMuted = false;
                     IsDeafened = false;
+                    JoinedChannel = null;
                 }
             }
             catch(Exception ex)
@@ -483,10 +520,13 @@ namespace VoiceCraft.Core.Client
 
         protected virtual void Dispose(bool disposing)
         {
-            if(!IsDisposed)
+            if (!IsDisposed)
             {
-                if(disposing)
+                if (disposing)
                 {
+                    if (IsConnected)
+                        Disconnect(); //Disconnect before disposing.
+
                     ActivityChecker.Dispose();
                     CTS.Dispose();
                     Signalling.Dispose();
@@ -495,6 +535,7 @@ namespace VoiceCraft.Core.Client
                     Participants.Clear();
                     Channels.Clear();
                     IsConnected = false;
+                    JoinedChannel = null;
 
                     //Deregister Events
                     Signalling.OnAcceptPacketReceived -= SignallingAccept;
