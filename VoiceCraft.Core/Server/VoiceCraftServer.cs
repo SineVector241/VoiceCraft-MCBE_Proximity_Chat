@@ -259,6 +259,14 @@ namespace VoiceCraft.Core.Server
 
                     Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
                 }
+
+                var channelList = ServerProperties.Channels;
+                for (int i = 0; i < channelList.Count; i++)
+                {
+                    var channel = ServerProperties.Channels[i];
+                    Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
+                }
+
                 OnParticipantBinded?.Invoke(participant.Value, participant.Key);
             }
         }
