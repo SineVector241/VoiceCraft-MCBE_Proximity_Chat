@@ -489,6 +489,8 @@ namespace VoiceCraft.Core.Client
                     }
                     else
                         message = $"Unexpected packet received\nPing Time: {Math.Floor(pingTimeMS)}ms";
+
+                    stream.Dispose();
                 }
                 else
                 {
