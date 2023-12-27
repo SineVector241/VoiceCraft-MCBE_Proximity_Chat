@@ -125,6 +125,11 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Success, $"Voice started - Port:{server.ServerProperties.VoicePortUDP} UDP", "Socket");
             if (server.ServerProperties.ConnectionType == ConnectionTypes.Client)
             {
+                foreach(var channel in server.ServerProperties.Channels)
+                {
+                    Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+                }
+
                 Logger.LogToConsole(LogType.Success, "Server started!", "Server");
                 Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
             }
@@ -133,6 +138,12 @@ namespace VoiceCraft.Server
         private void WebserverStarted()
         {
             Logger.LogToConsole(LogType.Success, $"MCComm started - Port:{server.ServerProperties.MCCommPortTCP} TCP", "Socket");
+
+            foreach (var channel in server.ServerProperties.Channels)
+            {
+                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+            }
+
             Logger.LogToConsole(LogType.Success, "Server started!", "Server");
             Logger.LogToConsole(LogType.Info, $"Server key: {server.ServerProperties.PermanentServerKey}", "Server");
 

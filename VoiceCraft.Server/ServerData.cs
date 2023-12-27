@@ -48,6 +48,8 @@ namespace VoiceCraft.Server
                 throw new Exception("Channel name cannot be longer than 12 characters!");
             if (ServerProperties.Channels.Exists(x => string.IsNullOrWhiteSpace(x.Name)))
                 throw new Exception("Channel name cannot be empty!");
+            if (ServerProperties.Channels.Exists(x => x.Password.Length > 12))
+                throw new Exception("Channel password cannot be longer than 12 characters!");
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))
             {
