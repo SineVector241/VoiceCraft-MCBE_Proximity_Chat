@@ -598,13 +598,13 @@ namespace VoiceCraft.Core.Server
             if(packet.LoginKey != MCComm.ServerKey)
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Invalid Key!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
                 return;
             }
             if(ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Conflict, denyPacket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
                 return;
             }
 
@@ -616,7 +616,7 @@ namespace VoiceCraft.Core.Server
             OnExternalServerConnected?.Invoke(server);
 
             var acceptPacket = Packets.MCComm.Accept.Create();
-            MCComm.SendResponse(ctx, HttpStatusCode.Conflict, acceptPacket);
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, acceptPacket);
         }
 
         private void MCCommBinded(Packets.MCComm.Bind packet, HttpListenerContext ctx)

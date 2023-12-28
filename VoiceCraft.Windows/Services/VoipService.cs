@@ -154,18 +154,20 @@ namespace VoiceCraft.Windows.Services
                             var newTalkingParticipants = Network.Participants.Where(x => DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalSeconds < 1 && !talkingParticipants.Contains(x.Value));
                             foreach (var participant in newTalkingParticipants)
                             {
+                                talkingParticipants.Add(participant.Value);
                                 App.Current?.Dispatcher.Invoke(() =>
                                 {
                                     OnParticipantSpeakingStatusChanged?.Invoke(participant.Value, true);
                                 });
                             }
 
-                            var oldTalkingParticipants = talkingParticipants.Where(x => DateTime.UtcNow.Subtract(x.LastSpoke).TotalSeconds >= 1);
-                            foreach (var participant in newTalkingParticipants)
+                            var oldTalkingParticipants = talkingParticipants.Where(x => DateTime.UtcNow.Subtract(x.LastSpoke).TotalMilliseconds >= 500).ToArray();
+                            foreach (var participant in oldTalkingParticipants)
                             {
+                                talkingParticipants.Remove(participant);
                                 App.Current?.Dispatcher.Invoke(() =>
                                 {
-                                    OnParticipantSpeakingStatusChanged?.Invoke(participant.Value, false);
+                                    OnParticipantSpeakingStatusChanged?.Invoke(participant, false);
                                 });
                             }
 

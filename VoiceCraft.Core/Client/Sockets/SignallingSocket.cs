@@ -207,7 +207,6 @@ namespace VoiceCraft.Core.Client.Sockets
 
         private void HandlePacket(SignallingPacket packet)
         {
-            LastActive = DateTime.UtcNow;
             switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login:
@@ -219,6 +218,7 @@ namespace VoiceCraft.Core.Client.Sockets
                         OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Accept:
+                    LastActive = DateTime.UtcNow;
                     IsConnected = true;
                     OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData);
                     break;
@@ -271,6 +271,10 @@ namespace VoiceCraft.Core.Client.Sockets
                 case SignallingPacketTypes.Ping:
                     if (IsConnected)
                         OnPingPacketReceived?.Invoke((Ping)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.PingCheck:
+                    if(IsConnected)
+                        LastActive = DateTime.UtcNow;
                     break;
                 case SignallingPacketTypes.Null:
                     if (IsConnected)

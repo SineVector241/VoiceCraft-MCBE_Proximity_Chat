@@ -58,6 +58,7 @@ namespace VoiceCraft.Core.Client
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
             AudioBuffer.AddSamples(Audio, PacketCount);
+            LastSpoke = DateTime.UtcNow;
         }
 
         //Private Methods

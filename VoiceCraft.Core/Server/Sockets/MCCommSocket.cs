@@ -174,7 +174,7 @@ namespace VoiceCraft.Core.Server.Sockets
 
             var content = Encoding.UTF8.GetBytes(packet.GetPacketString());
             ctx.Response.StatusCode = (int)code;
-            ctx.Response.ContentType = "application/json";
+            ctx.Response.ContentType = "text/plain";
             ctx.Response.OutputStream.Write(content, 0, content.Length);
             ctx.Response.OutputStream.Close();
         }
