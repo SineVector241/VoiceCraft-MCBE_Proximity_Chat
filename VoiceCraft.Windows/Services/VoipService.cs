@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Client;
+using VoiceCraft.Core.Audio;
 using VoiceCraft.Windows.Audio;
 using VoiceCraft.Windows.Models;
 using VoiceCraft.Windows.Storage;

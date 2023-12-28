@@ -2,7 +2,7 @@
 
 namespace VoiceCraft.Core.Audio
 {
-    class SoftLimiter : Effect
+    public class SoftLimiter : Effect
     {
         public override string Name => "Soft Clipper/ Limiter";
 

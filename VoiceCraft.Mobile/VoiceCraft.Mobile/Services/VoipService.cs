@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Client;
-using VoiceCraft.Mobile.Audio;
+using VoiceCraft.Core.Audio;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Storage;
 using Xamarin.Forms;

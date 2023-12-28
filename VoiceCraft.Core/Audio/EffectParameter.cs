@@ -2,7 +2,7 @@
 
 namespace VoiceCraft.Core.Audio
 {
-    class EffectParameter
+    public class EffectParameter
     {
         public float Min { get; }
         public float Max { get; }

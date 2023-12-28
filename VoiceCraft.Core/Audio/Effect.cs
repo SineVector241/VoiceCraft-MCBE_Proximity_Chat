@@ -3,7 +3,7 @@ using System;
 
 namespace VoiceCraft.Core.Audio
 {
-    abstract class Effect : ISampleProvider
+    public abstract class Effect : ISampleProvider
     {
         private ISampleProvider source;
         private bool paramsChanged;
