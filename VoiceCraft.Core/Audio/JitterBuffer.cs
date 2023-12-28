@@ -118,18 +118,89 @@ namespace VoiceCraft.Core.Audio
         private int DecodeBufferSize { get; }
         public WaveFormat WaveFormat { get; }
 
+        private JitterBufferPacket outPacket = new JitterBufferPacket();
+        private JitterBufferPacket inPacket = new JitterBufferPacket();
+        private byte[]? NextDecodedBuffer;
 
-        public VoiceCraftJitterBuffer(OpusDecoder decoder, int decodeBufferSize, WaveFormat format)
+
+        public VoiceCraftJitterBuffer(OpusDecoder decoder, WaveFormat format, int decodeRecordLengthMS)
         {
             Decoder = decoder;
             Buffer = new JitterBuffer(100, 80);
             WaveFormat = format;
-            DecodeBufferSize = decodeBufferSize;
+
+            DecodeBufferSize = decodeRecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
+            if (DecodeBufferSize % WaveFormat.BlockAlign != 0)
+            {
+                DecodeBufferSize -= DecodeBufferSize % WaveFormat.BlockAlign;
+            }
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            throw new System.NotImplementedException();
+            if (count != DecodeBufferSize)
+                throw new ArgumentException(nameof(count), "Bytes to read must be the same as the decode buffer size!");
+
+            if(NextDecodedBuffer != null) //We've already got a decoded packet so we just return that.
+            {
+                Array.Copy(NextDecodedBuffer, offset, buffer, 0, count);
+                NextDecodedBuffer = null;
+                return count;
+            }
+
+            var read = 0;
+            var lost = Buffer.Get(ref outPacket);
+
+            if(lost < 0 || outPacket.Data == null) //Empty packet
+            {
+                Array.Clear(buffer, offset + read, count - read);
+                return count;
+            }
+
+            try
+            {
+                short[] decoded = new short[DecodeBufferSize / 2];
+                if (lost == 0) //Got packet properly.
+                {
+                    Decoder.Decode(outPacket.Data, 0, outPacket.Data.Length, decoded, 0, decoded.Length);
+                }
+                else //Lost packets so we use FEC.
+                {
+                    //Decode with FEC on.
+                    read = Decoder.Decode(outPacket.Data, 0, outPacket.Data.Length, decoded, 0, decoded.Length, true);
+                    Array.Copy(ShortsToBytes(decoded, 0, decoded.Length), offset, buffer, 0, read);
+
+                    //Decode with FEC off.
+                    Decoder.Decode(outPacket.Data, 0, outPacket.Data.Length, decoded, 0, decoded.Length, false);
+                    NextDecodedBuffer = ShortsToBytes(decoded, 0, decoded.Length); //Insert into the next buffer to return on next read.
+                    return read;
+                }
+            }
+            catch
+            { } //Do nothing, Next code below handles the catched situation.
+            Array.Clear(buffer, offset + read, count - read);
+            return count;
+        }
+
+        public void AddSamples(byte[] data, uint sequence)
+        {
+            inPacket.Data = data;
+            inPacket.Sequence = sequence;
+            inPacket.Length = data.Length;
+
+            Buffer.PutPacket(inPacket);
+        }
+
+        private static byte[] ShortsToBytes(short[] input, int offset, int length)
+        {
+            byte[] processedValues = new byte[length * 2];
+            for (int c = 0; c < length; c++)
+            {
+                processedValues[c * 2] = (byte)(input[c + offset] & 0xFF);
+                processedValues[c * 2 + 1] = (byte)(input[c + offset] >> 8 & 0xFF);
+            }
+
+            return processedValues;
         }
     }
 
