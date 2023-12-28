@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Server.Sockets;
-using static VoiceCraft.Core.Client.VoiceCraftClient;
 
 namespace VoiceCraft.Core.Server
 {
@@ -366,6 +365,7 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.Binded)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
                 if(participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
                 {
@@ -377,14 +377,17 @@ namespace VoiceCraft.Core.Server
                     {
                         var client = channelList.ElementAt(i);
                         Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                        Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                     }
 
                     participant.Value.Channel = packet.ChannelId;
+
                     channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
                     {
                         var client = channelList.ElementAt(i);
                         Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                        Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
                     }
 
                     Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
@@ -405,11 +408,13 @@ namespace VoiceCraft.Core.Server
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
             {
+                participant.Value.LastActive = DateTime.UtcNow;
                 var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < channelList.Count(); i++)
                 {
                     var client = channelList.ElementAt(i);
                     Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                 }
 
                 participant.Value.Channel = 0;
@@ -418,6 +423,7 @@ namespace VoiceCraft.Core.Server
                 {
                     var client = channelList.ElementAt(i);
                     Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
                 }
 
                 Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(packet.ChannelId), socket);

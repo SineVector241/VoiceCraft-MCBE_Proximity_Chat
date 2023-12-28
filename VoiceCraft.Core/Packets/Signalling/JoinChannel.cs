@@ -23,7 +23,7 @@ namespace VoiceCraft.Core.Packets.Signalling
             int passwordLength = BitConverter.ToInt32(dataStream, readOffset + 1); //read name length - 4 bytes.
 
             if (passwordLength > 0)
-                Password = Encoding.UTF8.GetString(dataStream, readOffset + 2, passwordLength);
+                Password = Encoding.UTF8.GetString(dataStream, readOffset + 5, passwordLength);
             else
                 Password = string.Empty;
         }

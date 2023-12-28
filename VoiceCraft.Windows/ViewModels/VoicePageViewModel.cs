@@ -10,7 +10,8 @@ using VoiceCraft.Windows.Models;
 using System.Linq;
 using Gma.System.MouseKeyHook;
 using System.Collections.Generic;
-using System.Diagnostics;
+using VoiceCraft.Core.Client;
+using System.Drawing;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -24,6 +25,9 @@ namespace VoiceCraft.Windows.ViewModels
         string statusText = "Connecting...";
 
         [ObservableProperty]
+        string passwordInput = string.Empty;
+
+        [ObservableProperty]
         bool isMuted = false;
 
         [ObservableProperty]
@@ -33,7 +37,10 @@ namespace VoiceCraft.Windows.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
+        VoiceCraftParticipant? selectedParticipant;
+
+        [ObservableProperty]
+        VoiceCraftChannel? selectedChannel;
 
         [ObservableProperty]
         bool showSlider = false;
@@ -42,12 +49,13 @@ namespace VoiceCraft.Windows.ViewModels
         bool showChannels = false;
 
         [ObservableProperty]
+        bool showPasswordInput = false;
+
+        [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
         [ObservableProperty]
-        ObservableCollection<ChannelDisplayModel> channels = new ObservableCollection<ChannelDisplayModel>()
-        {
-        };
+        ObservableCollection<ChannelDisplayModel> channels = new ObservableCollection<ChannelDisplayModel>();
 
         private List<System.Windows.Forms.Keys> PressedKeys = new List<System.Windows.Forms.Keys>();
         private string MuteKeybind = "Undefined";
@@ -55,14 +63,26 @@ namespace VoiceCraft.Windows.ViewModels
 
         public VoicePageViewModel()
         {
-            voipService.OnServiceDisconnect += OnServiceDisconnect;
-            voipService.OnUpdateStatus += OnUpdateStatus;
-            voipService.OnUpdate += Update;
+            voipService.OnStatusUpdated += StatusUpdated;
+            voipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
+            voipService.OnMutedStatusChanged += MutedStatusChanged;
+            voipService.OnDeafenedStatusChanged += DeafenedStatusChanged;
+            voipService.OnParticipantAdded += ParticipantAdded;
+            voipService.OnParticipantRemoved += ParticipantRemoved;
+            voipService.OnParticipantSpeakingStatusChanged += ParticipantSpeakingStatusChanged;
+            voipService.OnParticipantChanged += ParticipantChanged;
+            voipService.OnChannelCreated += ChannelCreated;
+            voipService.OnChannelEntered += ChannelEntered;
+            voipService.OnChannelLeave += ChannelLeave;
+            voipService.OnServiceDisconnected += OnServiceDisconnected;
+
+            voipService.Network.Signalling.OnDenyPacketReceived += SignallingDeny;
 
             Events.KeyDown += KeyDown;
             Events.KeyUp += KeyUp;
         }
 
+        #region Event Handlers
         private void KeyUp(object? sender, System.Windows.Forms.KeyEventArgs e)
         {
             PressedKeys.Remove(e.KeyCode);
@@ -74,74 +94,119 @@ namespace VoiceCraft.Windows.ViewModels
             {
                 PressedKeys.Add(e.KeyCode);
                 var combinedKeys = string.Empty;
-                for(int i = 0; i < PressedKeys.Count; i++)
+                for (int i = 0; i < PressedKeys.Count; i++)
                 {
-                    combinedKeys += string.IsNullOrWhiteSpace(combinedKeys)? PressedKeys[i].ToString() : $"+{PressedKeys[i].ToString()}";
+                    combinedKeys += string.IsNullOrWhiteSpace(combinedKeys) ? PressedKeys[i].ToString() : $"+{PressedKeys[i].ToString()}";
                 }
-                if(combinedKeys == MuteKeybind)
+                if (combinedKeys == MuteKeybind)
                 {
-                    IsMuted = !IsMuted;
-                    voipService.Network.SetMute(IsMuted);
+                    MuteUnmute();
                 }
-                if(combinedKeys == DeafenKeybind)
+                if (combinedKeys == DeafenKeybind)
                 {
-                    IsDeafened = !IsDeafened;
-                    voipService.Network.SetDeafen(IsDeafened);
+                    DeafenUndeafen();
                 }
             }
         }
-
-        private void Update(UpdateMessage message)
+        private void StatusUpdated(string status)
         {
-            for (int i = 0; i < message.Participants.Count; i++)
+            StatusText = status;
+        }
+
+        private void ChannelCreated(VoiceCraftChannel channel)
+        {
+            if (Channels.FirstOrDefault(x => x.Channel == channel) == null)
             {
-                var participant = message.Participants[i];
-                var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
-                if (displayParticipant != null)
-                {
-                    displayParticipant.IsDeafened = participant.IsDeafened;
-                    displayParticipant.IsMuted = participant.IsMuted;
-                    displayParticipant.IsSpeaking = participant.IsSpeaking;
-                }
-                else
-                {
-                    Participants.Add(participant);
-                }
+                Channels.Add(new ChannelDisplayModel(channel));
             }
+        }
 
-            for (int i = 0; i < Participants.Count; i++)
+        private void ChannelEntered(VoiceCraftChannel channel)
+        {
+            var displayChannel = Channels.FirstOrDefault(x => x.Channel == channel);
+            if (displayChannel != null)
             {
-                var participant = message.Participants.FirstOrDefault(x => x.Key == Participants[i].Key);
-                if(participant == null)
-                {
-                    Participants.Remove(Participants[i]);
-                }
+                displayChannel.Joined = true;
             }
-
-            IsSpeaking = message.IsSpeaking;
-            IsDeafened = message.IsDeafened;
-            IsMuted = message.IsMuted;
         }
 
-        private void OnUpdateStatus(UpdateStatusMessage message)
+        private void ChannelLeave(VoiceCraftChannel channel)
         {
-            StatusText = message.StatusMessage;
+            var displayChannel = Channels.FirstOrDefault(x => x.Channel == channel);
+            if (displayChannel != null)
+            {
+                displayChannel.Joined = false;
+            }
         }
 
-        private void OnServiceDisconnect(string? Reason)
+        private void SpeakingStatusChanged(bool status)
         {
-            cts.Cancel();
-            Events.Dispose();
-            Events.KeyDown -= KeyDown;
-            Events.KeyUp -= KeyUp;
-            voipService.OnServiceDisconnect -= OnServiceDisconnect;
-            voipService.OnUpdate -= Update;
-            voipService.OnUpdateStatus -= OnUpdateStatus;
+            IsSpeaking = status;
+        }
+
+        private void MutedStatusChanged(bool status)
+        {
+            IsMuted = status;
+        }
+
+        private void DeafenedStatusChanged(bool status)
+        {
+            IsDeafened = status;
+        }
+
+        private void ParticipantAdded(VoiceCraftParticipant participant)
+        {
+            if (Participants.FirstOrDefault(x => x.Participant == participant) == null)
+            {
+                Participants.Add(new ParticipantDisplayModel(participant));
+            }
+        }
+
+        private void ParticipantRemoved(VoiceCraftParticipant participant)
+        {
+            var displayParticipant = Participants.FirstOrDefault(x => x.Participant == participant);
+            if (displayParticipant != null)
+            {
+                Participants.Remove(displayParticipant);
+            }
+        }
+
+        private void ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status)
+        {
+            var displayParticipant = Participants.FirstOrDefault(x => x.Participant == participant);
+            if (displayParticipant != null)
+            {
+                displayParticipant.IsSpeaking = status;
+            }
+        }
+
+        private void ParticipantChanged(VoiceCraftParticipant participant)
+        {
+            var displayParticipant = Participants.FirstOrDefault(x => x.Participant == participant);
+            if (displayParticipant != null)
+            {
+                displayParticipant.IsMuted = participant.Muted;
+                displayParticipant.IsDeafened = participant.Deafened;
+            }
+        }
+
+        private void SignallingDeny(Core.Packets.Signalling.Deny packet)
+        {
+            if(!packet.Disconnect)
+            {
+                MessageBox.Show(packet.Reason, "Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void OnServiceDisconnected(string? Reason)
+        {
             if (!string.IsNullOrWhiteSpace(Reason))
                 MessageBox.Show(Reason, "Disconnect", MessageBoxButton.OK, MessageBoxImage.Warning);
-            Navigator.GoToPreviousPage();
+            Disconnect();
         }
+        #endregion
 
+        #region Relay Commands
         [RelayCommand]
         public void StartConnection()
         {
@@ -166,37 +231,40 @@ namespace VoiceCraft.Windows.ViewModels
         {
             cts.Cancel();
             Events.Dispose();
+
+            voipService.OnStatusUpdated -= StatusUpdated;
+            voipService.OnSpeakingStatusChanged -= SpeakingStatusChanged;
+            voipService.OnMutedStatusChanged -= MutedStatusChanged;
+            voipService.OnDeafenedStatusChanged -= DeafenedStatusChanged;
+            voipService.OnParticipantAdded -= ParticipantAdded;
+            voipService.OnParticipantRemoved -= ParticipantRemoved;
+            voipService.OnParticipantSpeakingStatusChanged -= ParticipantSpeakingStatusChanged;
+            voipService.OnParticipantChanged -= ParticipantChanged;
+            voipService.OnChannelCreated -= ChannelCreated;
+            voipService.OnServiceDisconnected -= OnServiceDisconnected;
+
             Events.KeyDown -= KeyDown;
             Events.KeyUp -= KeyUp;
-            voipService.OnServiceDisconnect -= OnServiceDisconnect;
-            voipService.OnUpdate -= Update;
-            voipService.OnUpdateStatus -= OnUpdateStatus;
             Navigator.GoToPreviousPage();
         }
 
         [RelayCommand]
         public void MuteUnmute()
         {
-            IsMuted = !IsMuted;
-            voipService.Network.SetMute(IsMuted);
+            voipService.Network.SetMute();
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
-            IsDeafened = !IsDeafened;
-            voipService.Network.SetDeafen(IsDeafened);
+            voipService.Network.SetDeafen();
         }
 
         [RelayCommand]
-        public void ShowParticipantVolume(ushort key)
+        public void ShowParticipantVolume(VoiceCraftParticipant participant)
         {
-            var participant = Participants.FirstOrDefault(x => x.Key == key);
-            if(participant != null)
-            {
-                SelectedParticipant = participant;
-                ShowSlider = true;
-            }
+            SelectedParticipant = participant;
+            ShowSlider = true;
         }
 
         [RelayCommand]
@@ -210,5 +278,49 @@ namespace VoiceCraft.Windows.ViewModels
         {
             ShowChannels = !ShowChannels;
         }
+
+        [RelayCommand]
+        public void JoinLeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                voipService.Network.LeaveChannel(channel);
+            }
+            else
+            {
+                if (channel.RequiresPassword)
+                {
+                    PasswordInput = string.Empty;
+                    SelectedChannel = channel;
+                    ShowPasswordInput = true;
+                }
+                else
+                {
+                    voipService.Network.JoinChannel(channel);
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void JoinChannel()
+        {
+            if (string.IsNullOrWhiteSpace(PasswordInput))
+            {
+                MessageBox.Show("Password cannot be empty or whitespace!", "Password Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if(SelectedChannel != null)
+            {
+                ShowPasswordInput = false;
+                voipService.Network.JoinChannel(SelectedChannel, PasswordInput);
+            }
+        }
+
+        [RelayCommand]
+        public void HidePasswordInput()
+        {
+            ShowPasswordInput = false;
+        }
+        #endregion
     }
 }

@@ -148,7 +148,7 @@
                                                         Grid.Column="2"
                                                         HorizontalAlignment="Right"
                                                         Command="{Binding Source={x:Reference Voice}, Path=DataContext.ShowParticipantVolumeCommand}"
-                                                        CommandParameter="{Binding Key}"
+                                                        CommandParameter="{Binding Participant}"
                                                         Margin="5,0">
                                                     <Image Source="{StaticResource volume_medium}"
                                                            Width="35"
@@ -176,8 +176,8 @@
                     </ListView>
 
                     <Border Grid.Row="2"
-                    Margin="10"
-                    Padding="10">
+                            Margin="10"
+                            Padding="10">
                         <Border.RenderTransform>
                             <TranslateTransform Y="0" />
                         </Border.RenderTransform>
@@ -345,22 +345,53 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition />
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-
-                                            <TextBlock Text="{Binding Channel.Name}"
+                                            <TextBlock Text="{Binding Name}"
                                                        FontWeight="Bold"
                                                        FontSize="18"
                                                        VerticalAlignment="Center"
                                                        Grid.Column="0"
                                                        Margin="0,0,10,0"/>
+                                            <Image Width="35"
+                                                   Height="35"
+                                                   Source="{StaticResource lock}"
+                                                   Grid.Column="1">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RequiresPassword}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding RequiresPassword}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
 
                                             <Button Style="{StaticResource ButtonStyle}"
                                                     Grid.Column="2"
                                                     HorizontalAlignment="Right"
+                                                    Command="{Binding Source={x:Reference Voice}, Path=DataContext.JoinLeaveChannelCommand}"
+                                                    CommandParameter="{Binding Channel}"
                                                     Margin="5,0">
-                                                <Image Source="{StaticResource arrow_right_thick}"
-                                                       Width="35"
-                                                       Height="35"/>
+                                                <Image Width="35"
+                                                       Height="35">
+                                                    <Image.Style>
+                                                        <Style TargetType="Image">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Joined}" Value="True">
+                                                                    <Setter Property="Source" Value="{StaticResource exit}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Joined}" Value="False">
+                                                                    <Setter Property="Source" Value="{StaticResource arrow_right_thick}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
                                             </Button>
                                         </Grid>
                                     </DataTemplate>
@@ -437,6 +468,77 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+
+        <Border Padding="10"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+            <Grid Width="300">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <TextBlock FontWeight="Bold"
+                               FontSize="18"
+                               Text="Password"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center">
+                    </TextBlock>
+                    <Button VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            Style="{StaticResource ButtonStyle}"
+                            Command="{Binding HidePasswordInputCommand}"
+                            Width="35"
+                            Height="35"
+                            Margin="5">
+                        <TextBlock Text="X"
+                                   Padding="2"
+                                   TextAlignment="Center"
+                                   FontSize="20"/>
+                    </Button>
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox FontWeight="Medium"
+                             FontSize="18"
+                             MaxLength="12"
+                             Foreground="White"
+                             Background="Transparent"
+                             CaretBrush="LightGray"
+                             BorderThickness="0,0,0,2"
+                             Height="28"
+                             Margin="5,2,5,0"
+                             Text="{Binding PasswordInput}"/>
+                    <Button Style="{StaticResource ButtonStyle}"
+                            Grid.Column="1"
+                            Width="35"
+                            Height="35"
+                            Command="{Binding JoinChannelCommand}"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,5,0">
+                        <Image Source="{StaticResource arrow_right_thick}" />
+                    </Button>
+                </Grid>
+            </Grid>
+
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowPasswordInput}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ShowPasswordInput}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

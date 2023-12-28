@@ -407,11 +407,11 @@ namespace VoiceCraft.Core.Client
             _ = Voice.SendPacketAsync(Packets.Voice.ClientAudio.Create(PacketCount, audioTrimmed));
         }
 
-        public void SetMute(bool Muted)
+        public void SetMute()
         {
             if(!IsConnected) return;
 
-            IsMuted = Muted;
+            IsMuted = !IsMuted;
             if(IsMuted)
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(0));
@@ -422,11 +422,11 @@ namespace VoiceCraft.Core.Client
             }
         }
 
-        public void SetDeafen(bool Deafened)
+        public void SetDeafen()
         {
             if (!IsConnected) return;
 
-            IsDeafened = Deafened;
+            IsDeafened = !IsDeafened;
             if (IsDeafened)
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(0));
@@ -434,6 +434,22 @@ namespace VoiceCraft.Core.Client
             else
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(0));
+            }
+        }
+
+        public void JoinChannel(VoiceCraftChannel channel, string password = "")
+        {
+            if(!channel.Joined)
+            {
+                _ = Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(channel.ChannelId, password));
+            }
+        }
+
+        public void LeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                _ = Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(channel.ChannelId));
             }
         }
 

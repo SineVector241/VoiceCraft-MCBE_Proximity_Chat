@@ -6,6 +6,20 @@ namespace VoiceCraft.Windows.Models
     public partial class ChannelDisplayModel : ObservableObject
     {
         [ObservableProperty]
-        public VoiceCraftChannel? channel;
+        public string name = string.Empty;
+        [ObservableProperty]
+        public bool requiresPassword;
+        [ObservableProperty]
+        public bool joined;
+        [ObservableProperty]
+        public VoiceCraftChannel channel;
+
+        public ChannelDisplayModel(VoiceCraftChannel channel)
+        {
+            this.channel = channel;
+            name = channel.Name;
+            requiresPassword = channel.RequiresPassword;
+            joined = channel.Joined;
+        }
     }
 }

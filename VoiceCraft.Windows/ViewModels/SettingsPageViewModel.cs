@@ -15,7 +15,7 @@ namespace VoiceCraft.Windows.ViewModels
     public partial class SettingsPageViewModel : ObservableObject
     {
         [ObservableProperty]
-        public SettingsModel settings = Database.GetSettings();
+        public SettingsModel settings;
 
         [ObservableProperty]
         private ObservableCollection<string> inputDevices = new ObservableCollection<string>();
@@ -39,6 +39,24 @@ namespace VoiceCraft.Windows.ViewModels
         private IKeyboardMouseEvents? Events;
         public SettingsPageViewModel()
         {
+            var settings = Database.GetSettings();
+            //Copy the model
+            this.settings = new SettingsModel()
+            {
+                ClientSidedPositioning = settings.ClientSidedPositioning,
+                DeafenKeybind = settings.DeafenKeybind,
+                DirectionalAudioEnabled = settings.DirectionalAudioEnabled,
+                HideAddress = settings.HideAddress,
+                InputDevice = settings.InputDevice,
+                LinearVolume = settings.LinearVolume,
+                MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage,
+                MuteKeybind = settings.MuteKeybind,
+                OutputDevice = settings.OutputDevice,
+                SoftLimiterEnabled = settings.SoftLimiterEnabled,
+                SoftLimiterGain = settings.SoftLimiterGain,
+                WebsocketPort = settings.WebsocketPort
+            };
+
             InputDevices.Add("Default");
             OutputDevices.Add("Default");
 
