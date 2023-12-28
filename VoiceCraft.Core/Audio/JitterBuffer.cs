@@ -121,6 +121,7 @@ namespace VoiceCraft.Core.Audio
         private JitterBufferPacket outPacket = new JitterBufferPacket();
         private JitterBufferPacket inPacket = new JitterBufferPacket();
         private byte[]? NextDecodedBuffer;
+        private int NextDecodedBufferRead;
 
 
         public VoiceCraftJitterBuffer(OpusDecoder decoder, WaveFormat format, int decodeRecordLengthMS)
@@ -143,8 +144,9 @@ namespace VoiceCraft.Core.Audio
 
             if(NextDecodedBuffer != null) //We've already got a decoded packet so we just return that.
             {
-                Array.Copy(NextDecodedBuffer, offset, buffer, 0, count);
+                Array.Copy(NextDecodedBuffer, offset, buffer, 0, NextDecodedBufferRead);
                 NextDecodedBuffer = null;
+                NextDecodedBufferRead = 0;
                 return count;
             }
 
@@ -171,7 +173,7 @@ namespace VoiceCraft.Core.Audio
                     Array.Copy(ShortsToBytes(decoded, 0, decoded.Length), offset, buffer, 0, read);
 
                     //Decode with FEC off.
-                    Decoder.Decode(outPacket.Data, 0, outPacket.Data.Length, decoded, 0, decoded.Length, false);
+                    NextDecodedBufferRead = Decoder.Decode(outPacket.Data, 0, outPacket.Data.Length, decoded, 0, decoded.Length, false);
                     NextDecodedBuffer = ShortsToBytes(decoded, 0, decoded.Length); //Insert into the next buffer to return on next read.
                     return read;
                 }
