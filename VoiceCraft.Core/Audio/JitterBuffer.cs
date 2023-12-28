@@ -1,23 +1,26 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
+using System;
 
 namespace VoiceCraft.Core.Audio
 {
     public class JitterBuffer
     {
-        public OpusDecoder Decoder { get; }
         public int MaxBufferSize { get; }
         JitterBufferPacket[] BufferedPackets { get; }
-        public WaveFormat WaveFormat { get; }
 
         private uint CurrentReadSequenceNumber;
+        private DateTime LatestPacketInserted;
+        private int BufferedDelay;
 
-        public JitterBuffer(OpusDecoder decoder, int maxBufferSize, WaveFormat format)
+        public JitterBuffer(int maxBufferSize, int bufferDelayMS)
         {
+            if(bufferDelayMS <= 0)
+                throw new ArgumentOutOfRangeException(nameof(bufferDelayMS), "Cannot be lower than 1!");
+
             MaxBufferSize = maxBufferSize;
-            Decoder = decoder;
             BufferedPackets = new JitterBufferPacket[MaxBufferSize];
-            WaveFormat = format;
+            BufferedDelay = bufferDelayMS;
         }
 
         public void PutPacket(JitterBufferPacket packet)
@@ -60,6 +63,7 @@ namespace VoiceCraft.Core.Audio
                 BufferedPackets[i].Data = packet.Data;
                 BufferedPackets[i].Sequence = packet.Sequence;
                 BufferedPackets[i].Length = packet.Length;
+                LatestPacketInserted = DateTime.UtcNow;
             }
         }
 
@@ -70,6 +74,11 @@ namespace VoiceCraft.Core.Audio
         /// <returns>Number of packets missing between the returned packet and the last returned packet. If no packet is retrieved then -1 is returned.</returns>
         public int Get(ref JitterBufferPacket packet)
         {
+            if(DateTime.UtcNow.Subtract(LatestPacketInserted).TotalMilliseconds < BufferedDelay) //Don't want to instantly return packets as they were inserted.
+            {
+                return -1;
+            }
+
             int i;
             uint oldest = 0;
             var found = false;
@@ -99,6 +108,28 @@ namespace VoiceCraft.Core.Audio
             packet.Length = BufferedPackets[i].Length;
 
             return lost; //Return number of lost packets.
+        }
+    }
+
+    public class VoiceCraftJitterBuffer : IWaveProvider
+    {
+        private JitterBuffer Buffer { get; }
+        private OpusDecoder Decoder { get; }
+        private int DecodeBufferSize { get; }
+        public WaveFormat WaveFormat { get; }
+
+
+        public VoiceCraftJitterBuffer(OpusDecoder decoder, int decodeBufferSize, WaveFormat format)
+        {
+            Decoder = decoder;
+            Buffer = new JitterBuffer(100, 80);
+            WaveFormat = format;
+            DecodeBufferSize = decodeBufferSize;
+        }
+
+        public int Read(byte[] buffer, int offset, int count)
+        {
+            throw new System.NotImplementedException();
         }
     }
 
