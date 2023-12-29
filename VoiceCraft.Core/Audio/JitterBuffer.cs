@@ -1,116 +1,119 @@
 ﻿using Concentus.Structs;
+using NAudio.Utils;
 using NAudio.Wave;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace VoiceCraft.Core.Audio
 {
     public class JitterBuffer
     {
-        public int MaxBufferSize { get; }
-        JitterBufferPacket[] BufferedPackets { get; }
+        public int MaxBufferSize { get; set; }
+        public int JitterDelay { get; set; }
+        public uint CurrentPacketReadCount { get; set; }
 
-        private uint CurrentReadSequenceNumber;
-        private DateTime LatestPacketInserted;
-        private int BufferedDelay;
+        private JitterBufferPacket[] BufferedPackets { get; set; }
+        private long FirstPacketTick { get; set; }
 
-        public JitterBuffer(int maxBufferSize, int bufferDelayMS)
+        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 80)
         {
-            if(bufferDelayMS <= 0)
-                throw new ArgumentOutOfRangeException(nameof(bufferDelayMS), "Cannot be lower than 1!");
-
             MaxBufferSize = maxBufferSize;
-            BufferedPackets = new JitterBufferPacket[MaxBufferSize];
-            BufferedDelay = bufferDelayMS;
+            JitterDelay = jitterDelayMS;
+            BufferedPackets = new JitterBufferPacket[maxBufferSize];
         }
 
-        public void PutPacket(JitterBufferPacket packet)
+        /// <summary>
+        /// Inputs a packet into the buffer.
+        /// </summary>
+        /// <param name="inPacket"></param>
+        public void Put(JitterBufferPacket inPacket)
         {
-            if(BufferedPackets.Count(x => x.Data != null) == 0)
-                LatestPacketInserted = DateTime.UtcNow;
+            //If the buffer is empty. We know it's the first packet.
+            if (BufferedPackets.Count(x => x.Data != null) == 0)
+                FirstPacketTick = DateTime.UtcNow.Ticks;
 
-            int i, j;
-
-            //Cleanup Old Packets
-            for (i = 0; i < MaxBufferSize; i++)
+            //Remove Old Packets
+            for (int i = 0; i < MaxBufferSize; i++)
             {
-                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence <= CurrentReadSequenceNumber)
+                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence <= CurrentPacketReadCount)
                 {
                     BufferedPackets[i].Data = null;
                 }
             }
 
-            if (packet.Sequence > CurrentReadSequenceNumber)
+            //Only insert the packet if its not later than the reader.
+            if(inPacket.Sequence > CurrentPacketReadCount)
             {
-                //Find an empty slot.
-                for (i = 0; i < MaxBufferSize; i++)
+                //Find an empty slot and insert it.
+                for(int i = 0; i < MaxBufferSize; i++)
                 {
                     if (BufferedPackets[i].Data == null)
-                        break;
-                }
-
-                //No room so we discard the earliest packet and insert.
-                if (i == MaxBufferSize)
-                {
-                    var earliest = BufferedPackets[0].Sequence;
-                    i = 0;
-                    for (j = 1; j < MaxBufferSize; j++)
                     {
-                        if (BufferedPackets[i].Data == null || BufferedPackets[j].Sequence < earliest)
-                        {
-                            earliest = BufferedPackets[j].Sequence;
-                            i = j;
-                        }
+                        BufferedPackets[i].Sequence = inPacket.Sequence;
+                        BufferedPackets[i].Data = inPacket.Data;
+                        BufferedPackets[i].Length = inPacket.Length;
+                        return;
                     }
                 }
 
-                BufferedPackets[i].Data = packet.Data;
-                BufferedPackets[i].Sequence = packet.Sequence;
-                BufferedPackets[i].Length = packet.Length;
+                //We haven't found an empty slot so we discard the oldest/highest packet sequence.
+                uint oldest = BufferedPackets[0].Sequence;
+                int index = 0;
+                for(int i = 1; i < MaxBufferSize; i++)
+                {
+                    if (BufferedPackets[i].Sequence > oldest)
+                    {
+                        oldest = BufferedPackets[i].Sequence;
+                        index = i;
+                    }
+                }
+
+                //Replace the old packet with the new packet.
+                BufferedPackets[index].Data = inPacket.Data;
+                BufferedPackets[index].Sequence = inPacket.Sequence;
+                BufferedPackets[index].Length = inPacket.Length;
             }
         }
 
         /// <summary>
-        /// Gets a jitter buffered packet.
+        /// Gets a packet and removes it from the buffer.
         /// </summary>
-        /// <param name="packet"></param>
-        /// <returns>Number of packets missing between the returned packet and the last returned packet. If no packet is retrieved then -1 is returned.</returns>
-        public int Get(ref JitterBufferPacket packet)
+        /// <param name="outPacket"></param>
+        /// <returns>The number of lost packets between the last and current Get calls.</returns>
+        public int Get(ref JitterBufferPacket outPacket)
         {
-            if(DateTime.UtcNow.Subtract(LatestPacketInserted).TotalMilliseconds < BufferedDelay) //Don't want to instantly return packets as they were inserted.
+            //Buffer ain't filled yet.
+            if((DateTime.UtcNow.Ticks - FirstPacketTick) < JitterDelay)
             {
                 return -1;
             }
 
-            int i;
-            uint oldest = 0;
-            var found = false;
-            var lost = 0;
-            for (i = 0; i < MaxBufferSize - 1; i++)
+            //Find the earliest inserted packet.
+            uint earliest = BufferedPackets[0].Sequence;
+            int index = 0;
+            for(int i = 1; i < MaxBufferSize; i++)
             {
-                if (BufferedPackets[i].Data != null && (!found || BufferedPackets[i].Sequence < oldest))
+                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence < earliest)
                 {
-                    oldest = BufferedPackets[i].Sequence;
-                    found = true;
+                    earliest = BufferedPackets[i].Sequence;
+                    index = i;
                 }
             }
 
-            if (found)
-            {
-                lost = (int)(oldest - CurrentReadSequenceNumber) - 1;
-                CurrentReadSequenceNumber = oldest;
-            }
-            else
+            if (BufferedPackets[index].Data == null) //We can assume the buffer is empty so we return -1;
             {
                 return -1;
             }
 
-            packet.Data = BufferedPackets[i].Data;
-            BufferedPackets[i].Data = null; //Remove the packet
-            packet.Sequence = BufferedPackets[i].Sequence;
-            packet.Length = BufferedPackets[i].Length;
+            //Else we can fill the packet and return the amount lost between the last and current sequences.
+            outPacket.Length = BufferedPackets[index].Length;
+            outPacket.Data = BufferedPackets[index].Data;
+            BufferedPackets[index].Data = null;
+            var lost = (int)(earliest - CurrentPacketReadCount - 1); //We want to get the packets lost. not the difference.
+            CurrentPacketReadCount = earliest;
 
-            return lost; //Return number of lost packets.
+            return lost;
         }
     }
 
@@ -123,13 +126,13 @@ namespace VoiceCraft.Core.Audio
 
         private JitterBufferPacket outPacket = new JitterBufferPacket();
         private JitterBufferPacket inPacket = new JitterBufferPacket();
-        private byte[] LeftoverBuffer;
 
+        private CircularBuffer DecodedBuffer;
 
         public VoiceCraftJitterBuffer(OpusDecoder decoder, WaveFormat format, int decodeRecordLengthMS)
         {
             Decoder = decoder;
-            Buffer = new JitterBuffer(100, 80);
+            Buffer = new JitterBuffer();
             WaveFormat = format;
 
             DecodeBufferSize = decodeRecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
@@ -137,11 +140,66 @@ namespace VoiceCraft.Core.Audio
             {
                 DecodeBufferSize -= DecodeBufferSize % WaveFormat.BlockAlign;
             }
+            DecodedBuffer = new CircularBuffer(DecodeBufferSize * 2); //Should hold onto at least double.
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            return count;
+            var st = new Stopwatch();
+            st.Start();
+            try
+            {
+                int bytesRead = 0;
+                if (DecodedBuffer.Count != 0)
+                {
+                    bytesRead += DecodedBuffer.Read(buffer, offset, count);
+                    if (DecodedBuffer.Count == 0) return bytesRead; //Return if we have fully filled the required amount.
+                }
+
+                var lost = Buffer.Get(ref outPacket);
+                if (lost == -1 && bytesRead < count) //Empty Packet or Buffer is empty.
+                {
+                    Array.Clear(buffer, offset + bytesRead, count - bytesRead);
+                    bytesRead = count;
+                    return count;
+                }
+                else if (lost == 0)
+                {
+                    short[] decoded = new short[DecodeBufferSize / 2];
+                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, false);
+                    byte[] decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead); //offset should be able to be divided by 2. If not, IDFK WHY!
+                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //We use decodedBytes.Length because the count is converted for us in the function.
+                }
+                else //AHHH MISSING PACKETS! We have to decode twice.
+                {
+                    short[] decoded = new short[DecodeBufferSize / 2];
+                    //FEC ON
+                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
+                    byte[] decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead); //offset should be able to be divided by 2. If not, IDFK WHY!
+                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //Write into buffer
+
+                    //FEC OFF
+                    shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
+                    decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead);
+                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //Write into buffer
+                }
+
+                bytesRead += DecodedBuffer.Read(buffer, offset + bytesRead, count - bytesRead);
+
+                if (bytesRead < count) //Yup.
+                {
+                    Array.Clear(buffer, offset + bytesRead, count - bytesRead);
+                    bytesRead = count;
+                    st.Stop();
+                    return count;
+                }
+                return bytesRead;
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return count;
+            }
         }
 
         public void AddSamples(byte[] data, uint sequence)
@@ -150,7 +208,7 @@ namespace VoiceCraft.Core.Audio
             inPacket.Sequence = sequence;
             inPacket.Length = data.Length;
 
-            Buffer.PutPacket(inPacket);
+            Buffer.Put(inPacket);
         }
 
         private static byte[] ShortsToBytes(short[] input, int offset, int length)

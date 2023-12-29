@@ -101,7 +101,7 @@ namespace VoiceCraft.Core.Client
                 Complexity = 5,
                 UseVBR = true,
                 PacketLossPercent = 50,
-                UseInbandFEC = false
+                UseInbandFEC = true
             };
 
             Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
