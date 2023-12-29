@@ -14,7 +14,7 @@ namespace VoiceCraft.Core.Audio
         private JitterBufferPacket[] BufferedPackets { get; set; }
         private long FirstPacketTick { get; set; }
 
-        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 80)
+        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 100)
         {
             MaxBufferSize = maxBufferSize;
             JitterDelay = jitterDelayMS;
