@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using VoiceCraft.Core.Client;
+using VoiceCraft.Mobile.Models;
 
 namespace VoiceCraft.Mobile.Services
 {
@@ -77,7 +78,8 @@ namespace VoiceCraft.Mobile.Services
 
     public class ResponseData
     {
-        public List<VoiceCraftParticipant> Participants { get; set; } = new List<VoiceCraftParticipant>();
+        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
+        public List<ChannelDisplayModel> Channels { get; set; } = new List<ChannelDisplayModel>();
         public bool IsSpeaking { get; set; }
         public bool IsMuted { get; set; }
         public bool IsDeafened { get; set; }
@@ -92,5 +94,7 @@ namespace VoiceCraft.Mobile.Services
     { }
 
     public class DisconnectMSG
-    { }
+    {
+        public string Reason { get; set; } = string.Empty;
+    }
 }

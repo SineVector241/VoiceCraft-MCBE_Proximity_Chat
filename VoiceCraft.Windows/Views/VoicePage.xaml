@@ -442,7 +442,7 @@
             </Grid>
 
             <Border.RenderTransform>
-                <TranslateTransform Y="300" />
+                <TranslateTransform Y="100" />
             </Border.RenderTransform>
             <Border.Style>
                 <Style TargetType="Border" BasedOn="{StaticResource DefaultBorder}">
@@ -463,7 +463,7 @@
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="-5"/>
                                             <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="-5"/>
-                                            <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="300"/>
+                                            <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="100"/>
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
