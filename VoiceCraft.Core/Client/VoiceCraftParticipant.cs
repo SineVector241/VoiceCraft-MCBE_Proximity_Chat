@@ -2,7 +2,6 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
-using System.Diagnostics;
 using VoiceCraft.Core.Audio;
 
 namespace VoiceCraft.Core.Client
@@ -49,7 +48,7 @@ namespace VoiceCraft.Core.Client
         public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
         {
             this.Name = Name;
-            DecodeInterval = new System.Timers.Timer(RecordLengthMS / 2);
+            DecodeInterval = new System.Timers.Timer(RecordLengthMS / 4);
             DecodeInterval.Elapsed += DecodeAudio;
 
             //Setup and wire everything up.

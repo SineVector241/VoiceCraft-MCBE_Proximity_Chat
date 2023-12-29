@@ -97,11 +97,12 @@ namespace VoiceCraft.Core.Client
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
-                Bitrate = 64000,
-                Complexity = 5,
+                Bitrate = 32000,
+                Complexity = 0,
                 UseVBR = true,
                 PacketLossPercent = 50,
-                UseInbandFEC = true
+                UseInbandFEC = true,
+                UseDTX = true
             };
 
             Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
