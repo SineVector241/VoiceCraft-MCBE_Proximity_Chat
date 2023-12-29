@@ -97,7 +97,7 @@ namespace VoiceCraft.Core.Client
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
-                Bitrate = 32000,
+                Bitrate = 64000,
                 Complexity = 0,
                 UseVBR = true,
                 PacketLossPercent = 50,
@@ -547,6 +547,11 @@ namespace VoiceCraft.Core.Client
                 {
                     if (IsConnected)
                         Disconnect(); //Disconnect before disposing.
+
+                    foreach (var participant in Participants)
+                    {
+                        participant.Value.Dispose();
+                    }
 
                     ActivityChecker.Dispose();
                     CTS.Dispose();

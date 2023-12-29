@@ -417,14 +417,14 @@
                            VerticalAlignment="Center">
                     <TextBlock.Text>
                         <MultiBinding StringFormat="{}{0} : {1:F2}">
-                            <Binding Path="SelectedParticipant.Participant.Name"/>
-                            <Binding Path="SelectedParticipant.Participant.Volume"/>
+                            <Binding Path="SelectedParticipant.Name"/>
+                            <Binding Path="SelectedParticipant.Volume"/>
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
                 <Slider Grid.Column="1"
                         VerticalAlignment="Center"
-                        Value="{Binding SelectedParticipant.Participant.Volume}"
+                        Value="{Binding SelectedParticipant.Volume}"
                         Maximum="2">
                 </Slider>
                 <Button Grid.Column="2"

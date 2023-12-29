@@ -1,13 +1,14 @@
 ﻿using NAudio.Wave;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Client;
 using VoiceCraft.Core.Audio;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Storage;
+using System.Collections.Generic;
+using System.Linq;
 using Xamarin.Forms;
 using VoiceCraft.Mobile.Interfaces;
 
@@ -32,13 +33,31 @@ namespace VoiceCraft.Mobile.Services
         private SoftLimiter? Normalizer;
 
         //Events
-        public delegate void UpdateStatus(UpdateStatusMessage message);
-        public delegate void ParticipantsUpdate(UpdateMessage message);
-        public delegate void Disconnect(string? Reason);
+        public delegate void StatusMessageUpdated(string status);
+        public delegate void SpeakingStatusChanged(bool status);
+        public delegate void MutedStatusChanged(bool status);
+        public delegate void DeafenedStatusChanged(bool status);
+        public delegate void ParticipantAdded(VoiceCraftParticipant participant);
+        public delegate void ParticipantRemoved(VoiceCraftParticipant participant);
+        public delegate void ParticipantChanged(VoiceCraftParticipant participant);
+        public delegate void ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status);
+        public delegate void ChannelCreated(VoiceCraftChannel channel);
+        public delegate void ChannelEntered(VoiceCraftChannel channel);
+        public delegate void ChannelLeave(VoiceCraftChannel channel);
+        public delegate void Disconnected(string? Reason);
 
-        public event UpdateStatus? OnUpdateStatus;
-        public event ParticipantsUpdate? OnUpdate;
-        public event Disconnect? OnServiceDisconnect;
+        public event StatusMessageUpdated? OnStatusUpdated;
+        public event SpeakingStatusChanged? OnSpeakingStatusChanged;
+        public event MutedStatusChanged? OnMutedStatusChanged;
+        public event DeafenedStatusChanged? OnDeafenedStatusChanged;
+        public event ParticipantAdded? OnParticipantAdded;
+        public event ParticipantRemoved? OnParticipantRemoved;
+        public event ParticipantChanged? OnParticipantChanged;
+        public event ParticipantSpeakingStatusChanged? OnParticipantSpeakingStatusChanged;
+        public event ChannelCreated? OnChannelCreated;
+        public event ChannelEntered? OnChannelEntered;
+        public event ChannelLeave? OnChannelLeave;
+        public event Disconnected? OnServiceDisconnected;
 
         public VoipService()
         {
@@ -78,6 +97,12 @@ namespace VoiceCraft.Mobile.Services
                 Network.OnConnected += OnConnected;
                 Network.OnBinded += Binded;
                 Network.OnUnbinded += Unbinded;
+                Network.OnParticipantJoined += ParticipantJoined;
+                Network.OnParticipantLeft += ParticipantLeft;
+                Network.OnParticipantUpdated += ParticipantUpdated;
+                Network.OnChannelAdded += ChannelAdded;
+                Network.OnChannelJoined += ChannelJoined;
+                Network.OnChannelLeft += ChannelLeft;
                 Network.OnDisconnected += OnDisconnected;
 
                 AudioRecorder.DataAvailable += DataAvailable;
@@ -86,35 +111,68 @@ namespace VoiceCraft.Mobile.Services
                 try
                 {
                     Network.Connect(IP, Port);
+
+                    //Setup state variables for this instance.
+                    List<VoiceCraftParticipant> talkingParticipants = new List<VoiceCraftParticipant>();
+                    bool previousSpeakingState = false;
+                    bool previousMuteState = false;
+                    bool previousDeafenedState = false;
+
                     while (true)
                     {
                         CT.ThrowIfCancellationRequested();
                         try
                         {
                             await Task.Delay(200);
-                            var message = new UpdateMessage()
+                            var currentSpeakingState = DateTime.UtcNow.Subtract(RecordDetection).TotalMilliseconds < 500;
+                            if (previousSpeakingState != currentSpeakingState)
                             {
-                                IsDeafened = Network.IsDeafened,
-                                IsMuted = Network.IsMuted,
-                                IsSpeaking = DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1,
-                                StatusMessage = StatusMessage
-                            };
-                            for (int i = 0; i < Network.Participants.Count; i++)
-                            {
-                                message.Participants = Network.Participants.Select(x => new ParticipantDisplayModel()
+                                Device.BeginInvokeOnMainThread(() =>
                                 {
-                                    IsDeafened = x.Value.Deafened,
-                                    IsMuted = x.Value.Muted,
-                                    IsSpeaking = DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalSeconds < 1,
-                                    Key = x.Key,
-                                    Participant = x.Value
-                                }).ToList();
+                                    OnSpeakingStatusChanged?.Invoke(currentSpeakingState);
+                                });
+                                previousSpeakingState = currentSpeakingState;
                             }
 
-                            Device.BeginInvokeOnMainThread(() =>
+                            if (previousMuteState != Network.IsMuted)
                             {
-                                OnUpdate?.Invoke(message);
-                            });
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    OnMutedStatusChanged?.Invoke(Network.IsMuted);
+                                });
+                                previousMuteState = Network.IsMuted;
+                            }
+
+                            if (previousDeafenedState != Network.IsDeafened)
+                            {
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    OnDeafenedStatusChanged?.Invoke(Network.IsDeafened);
+                                });
+                                previousDeafenedState = Network.IsDeafened;
+                            }
+
+                            var newTalkingParticipants = Network.Participants.Where(x => DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalSeconds < 1 && !talkingParticipants.Contains(x.Value));
+                            foreach (var participant in newTalkingParticipants)
+                            {
+                                talkingParticipants.Add(participant.Value);
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    OnParticipantSpeakingStatusChanged?.Invoke(participant.Value, true);
+                                });
+                            }
+
+                            var oldTalkingParticipants = talkingParticipants.Where(x => DateTime.UtcNow.Subtract(x.LastSpoke).TotalMilliseconds >= 500).ToArray();
+                            foreach (var participant in oldTalkingParticipants)
+                            {
+                                talkingParticipants.Remove(participant);
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    OnParticipantSpeakingStatusChanged?.Invoke(participant, false);
+                                });
+                            }
+
+                            if (AudioPlayer.PlaybackState != PlaybackState.Playing) AudioPlayer.Play();
                         }
                         catch (Exception ex)
                         {
@@ -123,8 +181,7 @@ namespace VoiceCraft.Mobile.Services
 #endif
                             Device.BeginInvokeOnMainThread(() =>
                             {
-                                var message = new ServiceErrorMessage() { Exception = ex };
-                                OnServiceDisconnect?.Invoke(ex.Message);
+                                OnServiceDisconnected?.Invoke(ex.Message);
                             });
                         }
                     }
@@ -136,6 +193,12 @@ namespace VoiceCraft.Mobile.Services
                     Network.OnConnected -= OnConnected;
                     Network.OnBinded -= Binded;
                     Network.OnUnbinded -= Unbinded;
+                    Network.OnParticipantJoined -= ParticipantJoined;
+                    Network.OnParticipantLeft -= ParticipantLeft;
+                    Network.OnParticipantUpdated -= ParticipantUpdated;
+                    Network.OnChannelAdded -= ChannelAdded;
+                    Network.OnChannelJoined -= ChannelJoined;
+                    Network.OnChannelLeft -= ChannelLeft;
                     Network.OnDisconnected -= OnDisconnected;
 
                     AudioRecorder.DataAvailable -= DataAvailable;
@@ -196,8 +259,7 @@ namespace VoiceCraft.Mobile.Services
 
             Device.BeginInvokeOnMainThread(() =>
             {
-                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
-                OnUpdateStatus?.Invoke(message);
+                OnStatusUpdated?.Invoke(StatusMessage);
             });
         }
 
@@ -216,8 +278,55 @@ namespace VoiceCraft.Mobile.Services
 
             Device.BeginInvokeOnMainThread(() =>
             {
-                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
-                OnUpdateStatus?.Invoke(message);
+                OnStatusUpdated?.Invoke(StatusMessage);
+            });
+        }
+
+        private void ChannelAdded(VoiceCraftChannel channel)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnChannelCreated?.Invoke(channel);
+            });
+        }
+
+        private void ChannelJoined(VoiceCraftChannel channel)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnChannelEntered?.Invoke(channel);
+            });
+        }
+
+        private void ChannelLeft(VoiceCraftChannel channel)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnChannelLeave?.Invoke(channel);
+            });
+        }
+
+        private void ParticipantJoined(VoiceCraftParticipant participant, ushort key)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnParticipantAdded?.Invoke(participant);
+            });
+        }
+
+        private void ParticipantLeft(VoiceCraftParticipant participant, ushort key)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnParticipantRemoved?.Invoke(participant);
+            });
+        }
+
+        private void ParticipantUpdated(VoiceCraftParticipant participant, ushort key)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                OnParticipantChanged?.Invoke(participant);
             });
         }
 
@@ -227,8 +336,7 @@ namespace VoiceCraft.Mobile.Services
 
             Device.BeginInvokeOnMainThread(() =>
             {
-                var message = new UpdateStatusMessage() { StatusMessage = StatusMessage };
-                OnUpdateStatus?.Invoke(message);
+                OnStatusUpdated?.Invoke(StatusMessage);
             });
         }
 
@@ -236,7 +344,7 @@ namespace VoiceCraft.Mobile.Services
         {
             Device.BeginInvokeOnMainThread(() =>
             {
-                OnServiceDisconnect?.Invoke(Reason);
+                OnServiceDisconnected?.Invoke(Reason);
             });
         }
     }

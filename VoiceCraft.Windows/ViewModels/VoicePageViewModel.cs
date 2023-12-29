@@ -11,7 +11,6 @@ using System.Linq;
 using Gma.System.MouseKeyHook;
 using System.Collections.Generic;
 using VoiceCraft.Core.Client;
-using System.Drawing;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -37,12 +36,6 @@ namespace VoiceCraft.Windows.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        VoiceCraftParticipant? selectedParticipant;
-
-        [ObservableProperty]
-        VoiceCraftChannel? selectedChannel;
-
-        [ObservableProperty]
         bool showSlider = false;
 
         [ObservableProperty]
@@ -50,6 +43,12 @@ namespace VoiceCraft.Windows.ViewModels
 
         [ObservableProperty]
         bool showPasswordInput = false;
+
+        [ObservableProperty]
+        VoiceCraftParticipant? selectedParticipant;
+
+        [ObservableProperty]
+        VoiceCraftChannel? selectedChannel;
 
         [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
