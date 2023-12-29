@@ -203,12 +203,7 @@ namespace VoiceCraft.Core.Client
             }
             else
             {
-                Participants.TryRemove(packet.LoginKey, out var participant);
-                if (participant != null)
-                {
-                    Mixer.RemoveMixerInput(participant.AudioProvider);
-                    OnParticipantLeft?.Invoke(participant, packet.LoginKey);
-                }
+                RemoveParticipant(packet.LoginKey);
             }
         }
 
@@ -450,6 +445,17 @@ namespace VoiceCraft.Core.Client
             if (channel.Joined)
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(channel.ChannelId));
+            }
+        }
+
+        public void RemoveParticipant(ushort Key)
+        {
+            Participants.TryRemove(Key, out var participant);
+            if (participant != null)
+            {
+                Mixer.RemoveMixerInput(participant.AudioProvider);
+                participant.Dispose();
+                OnParticipantLeft?.Invoke(participant, Key);
             }
         }
 

@@ -1,8 +1,6 @@
 ﻿using Concentus.Structs;
-using NAudio.Utils;
 using NAudio.Wave;
 using System;
-using System.Diagnostics;
 using System.Linq;
 
 namespace VoiceCraft.Core.Audio
@@ -117,22 +115,22 @@ namespace VoiceCraft.Core.Audio
         }
     }
 
-    public class VoiceCraftJitterBuffer : IWaveProvider
+    public class VoiceCraftJitterBuffer
     {
+        public int DecodeBufferSize { get; }
+        public WaveFormat WaveFormat { get; }
         private JitterBuffer Buffer { get; }
         private OpusDecoder Decoder { get; }
-        private int DecodeBufferSize { get; }
-        public WaveFormat WaveFormat { get; }
 
         private JitterBufferPacket outPacket = new JitterBufferPacket();
         private JitterBufferPacket inPacket = new JitterBufferPacket();
 
-        private CircularBuffer DecodedBuffer;
+        private byte[]? NextDecodedPacket;
 
         public VoiceCraftJitterBuffer(OpusDecoder decoder, WaveFormat format, int decodeRecordLengthMS)
         {
             Decoder = decoder;
-            Buffer = new JitterBuffer();
+            Buffer = new JitterBuffer(20);
             WaveFormat = format;
 
             DecodeBufferSize = decodeRecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
@@ -140,69 +138,57 @@ namespace VoiceCraft.Core.Audio
             {
                 DecodeBufferSize -= DecodeBufferSize % WaveFormat.BlockAlign;
             }
-            DecodedBuffer = new CircularBuffer(DecodeBufferSize * 2); //Should hold onto at least double.
         }
 
-        public int Read(byte[] buffer, int offset, int count)
+        public int Get(byte[] decodedBytes)
         {
-            var st = new Stopwatch();
-            st.Start();
+            if(decodedBytes.Length != DecodeBufferSize)
+                throw new ArgumentException(nameof(decodedBytes), "Must be the same as the DecodeBufferSize!");
+
+            if(NextDecodedPacket != null)
+            {
+                decodedBytes = NextDecodedPacket;
+                NextDecodedPacket = null;
+                return decodedBytes.Length;
+            }
+
+            short[] decoded = new short[DecodeBufferSize / 2];
+            var lost = Buffer.Get(ref outPacket);
+
             try
             {
-                int bytesRead = 0;
-                if (DecodedBuffer.Count != 0)
+                if (lost == -1) //Empty Packet or Buffer is empty.
                 {
-                    bytesRead += DecodedBuffer.Read(buffer, offset, count);
-                    if (DecodedBuffer.Count == 0) return bytesRead; //Return if we have fully filled the required amount.
-                }
-
-                var lost = Buffer.Get(ref outPacket);
-                if (lost == -1 && bytesRead < count) //Empty Packet or Buffer is empty.
-                {
-                    Array.Clear(buffer, offset + bytesRead, count - bytesRead);
-                    bytesRead = count;
-                    return count;
+                    return -1;
                 }
                 else if (lost == 0)
                 {
-                    short[] decoded = new short[DecodeBufferSize / 2];
+                    decoded = new short[DecodeBufferSize / 2];
                     int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, false);
-                    byte[] decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead); //offset should be able to be divided by 2. If not, IDFK WHY!
-                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //We use decodedBytes.Length because the count is converted for us in the function.
+                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
+                    System.Buffer.BlockCopy(decBytes, 0, decodedBytes, 0, decBytes.Length); //WAY FASTER TO USE THIS THAN ARRAY.COPY();
+                    return decodedBytes.Length;
                 }
                 else //AHHH MISSING PACKETS! We have to decode twice.
                 {
-                    short[] decoded = new short[DecodeBufferSize / 2];
                     //FEC ON
                     int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
-                    byte[] decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead); //offset should be able to be divided by 2. If not, IDFK WHY!
-                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //Write into buffer
+                    NextDecodedPacket = ShortsToBytes(decoded, 0, shortsRead);
 
                     //FEC OFF
                     shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
-                    decodedBytes = ShortsToBytes(decoded, offset / 2, shortsRead);
-                    DecodedBuffer.Write(decodedBytes, 0, decodedBytes.Length); //Write into buffer
+                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
+                    System.Buffer.BlockCopy(decBytes, 0, decodedBytes, 0, decBytes.Length); //WAY FASTER TO USE THIS THAN ARRAY.COPY();
+                    return decodedBytes.Length;
                 }
-
-                bytesRead += DecodedBuffer.Read(buffer, offset + bytesRead, count - bytesRead);
-
-                if (bytesRead < count) //Yup.
-                {
-                    Array.Clear(buffer, offset + bytesRead, count - bytesRead);
-                    bytesRead = count;
-                    st.Stop();
-                    return count;
-                }
-                return bytesRead;
             }
-            catch(Exception ex)
+            catch
             {
-                Debug.WriteLine(ex);
-                return count;
+                return -1;
             }
         }
 
-        public void AddSamples(byte[] data, uint sequence)
+        public void Put(byte[] data, uint sequence)
         {
             inPacket.Data = data;
             inPacket.Sequence = sequence;
