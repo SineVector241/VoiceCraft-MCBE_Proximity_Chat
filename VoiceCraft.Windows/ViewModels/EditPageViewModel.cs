@@ -15,7 +15,7 @@ namespace VoiceCraft.Windows.ViewModels
         public EditPageViewModel()
         {
             var server = Database.GetPassableObject<ServerModel>();
-            Server = new ServerModel()
+            this.server = new ServerModel()
             {
                 IP = server.IP,
                 Port = server.Port,

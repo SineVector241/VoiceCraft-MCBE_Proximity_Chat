@@ -14,7 +14,14 @@ namespace VoiceCraft.Mobile.ViewModels
 
         public EditPageViewModel()
         {
-            Server = Database.GetPassableObject<ServerModel>();
+            var server = Database.GetPassableObject<ServerModel>();
+            this.server = new ServerModel()
+            {
+                IP = server.IP,
+                Port = server.Port,
+                Key = server.Key,
+                Name = server.Name
+            };
         }
 
         [RelayCommand]

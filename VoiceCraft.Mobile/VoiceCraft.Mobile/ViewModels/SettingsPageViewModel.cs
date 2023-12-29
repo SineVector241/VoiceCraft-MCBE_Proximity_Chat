@@ -13,7 +13,7 @@ namespace VoiceCraft.Mobile.ViewModels
     public partial class SettingsPageViewModel : ObservableObject
     {
         [ObservableProperty]
-        public SettingsModel settings = Database.GetSettings();
+        public SettingsModel settings;
 
         [ObservableProperty]
         private float micDetection = 0.0f;
@@ -27,6 +27,24 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             var audioManager = DependencyService.Get<IAudioManager>();
             AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
+
+            var settings = Database.GetSettings();
+            //Copy the model
+            this.settings = new SettingsModel()
+            {
+                ClientSidedPositioning = settings.ClientSidedPositioning,
+                DeafenKeybind = settings.DeafenKeybind,
+                DirectionalAudioEnabled = settings.DirectionalAudioEnabled,
+                HideAddress = settings.HideAddress,
+                InputDevice = settings.InputDevice,
+                LinearVolume = settings.LinearVolume,
+                MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage,
+                MuteKeybind = settings.MuteKeybind,
+                OutputDevice = settings.OutputDevice,
+                SoftLimiterEnabled = settings.SoftLimiterEnabled,
+                SoftLimiterGain = settings.SoftLimiterGain,
+                WebsocketPort = settings.WebsocketPort
+            };
         }
 
         private void RecorderStopped(object? sender, StoppedEventArgs e)
