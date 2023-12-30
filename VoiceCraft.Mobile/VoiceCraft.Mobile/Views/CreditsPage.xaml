@@ -1,45 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage x:Class="VoiceCraft.Mobile.Views.CreditsPage"
+             xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:app="clr-namespace:VoiceCraft.Mobile"
-             xmlns:vc="clr-namespace:VoiceCraft.Core.Client;assembly=VoiceCraft.Core"
-             x:Class="VoiceCraft.Mobile.Views.CreditsPage">
+             xmlns:vc="clr-namespace:VoiceCraft.Core.Client;assembly=VoiceCraft.Core">
     <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Dark=bgdark, Light=bglight}" />
 
         <Grid RowDefinitions="auto">
             <Frame>
-                <Label Text="Credits" 
+                <Label FontAttributes="Bold"
                        FontSize="25"
-                       FontAttributes="Bold"/>
+                       Text="Credits" />
             </Frame>
 
             <Frame Grid.Row="1">
                 <Grid>
-                    <Label Text="Author: SineVector241"
+                    <Label FontAttributes="Bold"
                            FontSize="20"
-                           FontAttributes="Bold" />
+                           Text="Author: SineVector241" />
 
                     <Label Grid.Row="1"
-                           Text="Contributors: N.A."
+                           FontAttributes="Bold"
                            FontSize="20"
-                           FontAttributes="Bold" />
+                           Text="Contributors: N.A." />
 
                     <Label Grid.Row="2"
-                           Text="{Binding Source={Static app:App.Version}, StringFormat='App Version: {0}' }"
+                           FontAttributes="Bold"
                            FontSize="20"
-                           FontAttributes="Bold" />
+                           Text="{Binding Source={Static app:App.Version}, StringFormat='App Version: {0}'}" />
 
                     <Label Grid.Row="3"
-                           Text="{Binding Source={Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}' }"
+                           FontAttributes="Bold"
                            FontSize="20"
-                           FontAttributes="Bold" />
+                           Text="{Binding Source={Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}'}" />
 
                     <Label Grid.Row="4"
-                           Text="Codec: Opus - Concentus"
+                           FontAttributes="Bold"
                            FontSize="20"
-                           FontAttributes="Bold" />
+                           Text="Codec: Opus - Concentus" />
                 </Grid>
             </Frame>
         </Grid>

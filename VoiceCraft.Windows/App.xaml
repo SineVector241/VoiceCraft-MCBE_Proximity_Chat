@@ -3,16 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!--Templates-->
-        <Style x:Key="ButtonStyle"
-               TargetType="Button">
-            <Setter Property="Background" Value="#8666"/>
+        <!--  Templates  -->
+        <Style x:Key="ButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#8666" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -22,24 +20,24 @@
                     <Trigger.EnterActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
+                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)"
                                                 To="#8CCC"
-                                                Duration="0:0:0.2"/>
+                                                Duration="0:0:0.2" />
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.EnterActions>
                     <Trigger.ExitActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)" 
+                                <ColorAnimation Storyboard.TargetProperty="Background.(SolidColorBrush.Color)"
                                                 To="{x:Null}"
-                                                Duration="0:0:0.2"/>
+                                                Duration="0:0:0.2" />
                             </Storyboard>
                         </BeginStoryboard>
                     </Trigger.ExitActions>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#8AAA"/>
+                    <Setter Property="Background" Value="#8AAA" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -56,7 +54,7 @@
             <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
-        <!--Icons-->
+        <!--  Icons  -->
         <DrawingImage x:Key="help_box">
             <DrawingImage.Drawing>
                 <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
@@ -64,7 +62,7 @@
                 </DrawingGroup>
             </DrawingImage.Drawing>
         </DrawingImage>
-        
+
         <DrawingImage x:Key="delete">
             <DrawingImage.Drawing>
                 <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">

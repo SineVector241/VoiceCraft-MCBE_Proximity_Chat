@@ -1,18 +1,17 @@
 ﻿<Page x:Class="VoiceCraft.Windows.Views.SettingsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
-      mc:Ignorable="d" 
-      Title="SettingsPage">
+      Title="SettingsPage"
+      mc:Ignorable="d">
 
     <Page.DataContext>
         <vm:SettingsPageViewModel />
     </Page.DataContext>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -21,8 +20,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Background="#5111"
-                  Margin="0,0,0,10">
+            <Grid Margin="0,0,0,10" Background="#5111">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -30,36 +28,35 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Text="VoiceCraft Windows"
-                           FontSize="20"
-                           VerticalAlignment="Center"
-                           Margin="10,0"/>
-
-                <TextBlock Text="Settings"
-                           Grid.Column="1"
+                           Margin="10,0"
                            VerticalAlignment="Center"
                            FontSize="20"
-                           HorizontalAlignment="Center"/>
+                           Text="VoiceCraft Windows" />
 
-                <Button Style="{StaticResource ButtonStyle}"
-                        Grid.Column="2"
+                <TextBlock Grid.Column="1"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="20"
+                           Text="Settings" />
+
+                <Button Grid.Column="2"
                         Width="40"
                         Height="40"
-                        Command="{Binding GoBackCommand}"
+                        Margin="0,0,5,0"
                         HorizontalAlignment="Right"
-                        Margin="0,0,5,0">
+                        Command="{Binding GoBackCommand}"
+                        Style="{StaticResource ButtonStyle}">
                     <Image Source="{StaticResource arrow_left_thick}" />
                 </Button>
             </Grid>
             <Border Grid.Row="1"
-                    Style="{StaticResource DefaultBorder}"
                     Margin="10"
                     Padding="10"
-                    Opacity="0">
-                
+                    Opacity="0"
+                    Style="{StaticResource DefaultBorder}">
+
                 <Border.RenderTransform>
-                    <TranslateTransform Y="20">
-                    </TranslateTransform>
+                    <TranslateTransform Y="20" />
                 </Border.RenderTransform>
                 <Grid>
                     <Grid.RowDefinitions>
@@ -80,16 +77,15 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Grid Grid.Row="0"
-                          Margin="0,5">
+                    <Grid Grid.Row="0" Margin="0,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Input Device: "
-                                   FontSize="20"
-                                   FontWeight="Bold"/>
+                        <TextBlock FontSize="20"
+                                   FontWeight="Bold"
+                                   Text="Input Device: " />
 
                         <ComboBox Grid.Column="1"
                                   HorizontalAlignment="Stretch"
@@ -100,22 +96,20 @@
 
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}"
-                                               Foreground="Black"/>
+                                    <TextBlock Foreground="Black" Text="{Binding}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </Grid>
-                    <Grid Grid.Row="1"
-                          Margin="0,5">
+                    <Grid Grid.Row="1" Margin="0,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Output Device: "
-                                   FontSize="20"
-                                   FontWeight="Bold"/>
+                        <TextBlock FontSize="20"
+                                   FontWeight="Bold"
+                                   Text="Output Device: " />
 
                         <ComboBox Grid.Column="1"
                                   HorizontalAlignment="Stretch"
@@ -125,168 +119,160 @@
                                   SelectedIndex="{Binding Settings.OutputDevice}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}"
-                                               Foreground="Black"/>
+                                    <TextBlock Foreground="Black" Text="{Binding}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </Grid>
-                    <CheckBox Content="Directional Hearing"
+                    <CheckBox Grid.Row="3"
+                              Margin="0,5"
+                              Content="Directional Hearing"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"
-                              Margin="0,5"
-                              IsChecked="{Binding Settings.DirectionalAudioEnabled}"
-                              Grid.Row="3">
+                              IsChecked="{Binding Settings.DirectionalAudioEnabled}">
                         <CheckBox.LayoutTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <CheckBox Content="SoftLimiter Enabled"
+                    <CheckBox Grid.Row="4"
+                              Margin="0,5"
+                              Content="SoftLimiter Enabled"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"
-                              Margin="0,5"
-                              IsChecked="{Binding Settings.SoftLimiterEnabled}"
-                              Grid.Row="4">
+                              IsChecked="{Binding Settings.SoftLimiterEnabled}">
                         <CheckBox.LayoutTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <CheckBox Content="Client Sided Positioning"
+                    <CheckBox Grid.Row="5"
+                              Margin="0,5"
+                              Content="Client Sided Positioning"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"
-                              Margin="0,5"
-                              IsChecked="{Binding Settings.ClientSidedPositioning}"
-                              Grid.Row="5">
+                              IsChecked="{Binding Settings.ClientSidedPositioning}">
                         <CheckBox.LayoutTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <CheckBox Content="Linear Proximity Volume"
+                    <CheckBox Grid.Row="6"
+                              Margin="0,5"
+                              Content="Linear Proximity Volume"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"
-                              Margin="0,5"
-                              IsChecked="{Binding Settings.LinearVolume}"
-                              Grid.Row="6">
+                              IsChecked="{Binding Settings.LinearVolume}">
                         <CheckBox.LayoutTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <CheckBox Content="Hide Address"
+                    <CheckBox Grid.Row="7"
+                              Margin="0,5"
+                              Content="Hide Address"
                               FontSize="13"
                               FontWeight="Bold"
                               Foreground="White"
-                              Margin="0,5"
-                              IsChecked="{Binding Settings.HideAddress}"
-                              Grid.Row="7">
+                              IsChecked="{Binding Settings.HideAddress}">
                         <CheckBox.LayoutTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.LayoutTransform>
                     </CheckBox>
 
-                    <Grid Grid.Row="8"
-                          Margin="0,5">
+                    <Grid Grid.Row="8" Margin="0,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Text="Websocket Port: "
-                                   FontSize="20"
-                                   FontWeight="Bold"/>
-
-                        <TextBox FontWeight="Medium"
-                                 PreviewTextInput="NumbersOnlyTextInput"
-                                 FontSize="18"
-                                 Foreground="White"
-                                 Background="Transparent"
-                                 CaretBrush="LightGray"
-                                 BorderBrush="DarkGray"
-                                 BorderThickness="0,0,0,2"
-                                 Height="28"
-                                 Margin="0,2,0,0"
-                                 Text="{Binding Settings.WebsocketPort}"
-                                 Grid.Column="1"/>
-                    </Grid>
-
-                    <Grid Grid.Row="9"
-                          Margin="0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-
-                        <Slider Grid.Column="1"
-                                Value="{Binding Settings.SoftLimiterGain}"
-                                Minimum="1.0"
-                                Maximum="20.0"
-                                Margin="5"
-                                VerticalAlignment="Center">
-                        </Slider>
-                    </Grid>
-
-                    <Grid Grid.Row="10"
-                          Margin="0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:F2}'}"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-
-                        <ProgressBar Grid.Column="1"
-                                     Margin="3"
-                                     Minimum="0"
-                                     Maximum="1"
-                                     Value="{Binding MicDetection}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="#8B94">
-                        </ProgressBar>
-
-                        <Slider Grid.Column="1"
-                                Value="{Binding Settings.MicrophoneDetectionPercentage}"
-                                Minimum="0.01"
-                                Maximum="1.0"
-                                Margin="5"
-                                VerticalAlignment="Center">
-                        </Slider>
-                    </Grid>
-
-                    <Grid Grid.Row="11"
-                          Margin="0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="{Binding Settings.MuteKeybind, StringFormat='Mute Keybind: {0}'}"
+                        <TextBlock FontSize="20"
+                                   FontWeight="Bold"
+                                   Text="Websocket Port: " />
+
+                        <TextBox Grid.Column="1"
+                                 Height="28"
+                                 Margin="0,2,0,0"
+                                 Background="Transparent"
+                                 BorderBrush="DarkGray"
+                                 BorderThickness="0,0,0,2"
+                                 CaretBrush="LightGray"
+                                 FontSize="18"
+                                 FontWeight="Medium"
+                                 Foreground="White"
+                                 PreviewTextInput="NumbersOnlyTextInput"
+                                 Text="{Binding Settings.WebsocketPort}" />
+                    </Grid>
+
+                    <Grid Grid.Row="9" Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center"
                                    FontSize="20"
                                    FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
+                                   Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}" />
 
-                        <Button FontSize="15"
-                                Command="{Binding SetMuteKeybindCommand}"
+                        <Slider Grid.Column="1"
+                                Margin="5"
+                                VerticalAlignment="Center"
+                                Maximum="20.0"
+                                Minimum="1.0"
+                                Value="{Binding Settings.SoftLimiterGain}" />
+                    </Grid>
+
+                    <Grid Grid.Row="10" Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:F2}'}" />
+
+                        <ProgressBar Grid.Column="1"
+                                     Margin="3"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="#8B94"
+                                     Maximum="1"
+                                     Minimum="0"
+                                     Value="{Binding MicDetection}" />
+
+                        <Slider Grid.Column="1"
+                                Margin="5"
+                                VerticalAlignment="Center"
+                                Maximum="1.0"
+                                Minimum="0.01"
+                                Value="{Binding Settings.MicrophoneDetectionPercentage}" />
+                    </Grid>
+
+                    <Grid Grid.Row="11" Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Text="{Binding Settings.MuteKeybind, StringFormat='Mute Keybind: {0}'}" />
+
+                        <Button Grid.Column="1"
                                 Height="40"
                                 Margin="10,0,0,0"
-                                Grid.Column="1">
+                                Command="{Binding SetMuteKeybindCommand}"
+                                FontSize="15">
                             <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                <Style BasedOn="{StaticResource ButtonStyle}" TargetType="Button">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SettingMute}" Value="True">
                                             <Setter Property="Content" Value="Cancel" />
@@ -300,25 +286,24 @@
                         </Button>
                     </Grid>
 
-                    <Grid Grid.Row="12"
-                          Margin="0,5">
+                    <Grid Grid.Row="12" Margin="0,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="{Binding Settings.DeafenKeybind, StringFormat='Deafen Keybind: {0}'}"
+                        <TextBlock VerticalAlignment="Center"
                                    FontSize="20"
                                    FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
+                                   Text="{Binding Settings.DeafenKeybind, StringFormat='Deafen Keybind: {0}'}" />
 
-                        <Button FontSize="15"
-                                Command="{Binding SetDeafenKeybindCommand}"
+                        <Button Grid.Column="1"
                                 Height="40"
                                 Margin="10,0,0,0"
-                                Grid.Column="1">
+                                Command="{Binding SetDeafenKeybindCommand}"
+                                FontSize="15">
                             <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                <Style BasedOn="{StaticResource ButtonStyle}" TargetType="Button">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SettingDeafen}" Value="True">
                                             <Setter Property="Content" Value="Cancel" />
@@ -332,21 +317,21 @@
                         </Button>
                     </Grid>
 
-                    <Button Content="Save Settings"
-                            FontSize="15"
+                    <Button Grid.Row="13"
+                            Height="40"
+                            Margin="0,5"
                             Command="{Binding SaveCommand}"
-                            Style="{StaticResource ButtonStyle}"
-                            Height="40"
-                            Margin="0,5"
-                            Grid.Row="13"/>
+                            Content="Save Settings"
+                            FontSize="15"
+                            Style="{StaticResource ButtonStyle}" />
 
-                    <Button FontSize="15"
-                            Command="{Binding OpenCloseMicrophoneCommand}"
+                    <Button Grid.Row="14"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="14">
+                            Command="{Binding OpenCloseMicrophoneCommand}"
+                            FontSize="15">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                            <Style BasedOn="{StaticResource ButtonStyle}" TargetType="Button">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding MicOpen}" Value="True">
                                         <Setter Property="Content" Value="Close Microphone" />
@@ -359,13 +344,13 @@
                         </Button.Style>
                     </Button>
 
-                    <Button Content="Reset Settings"
-                            FontSize="15"
-                            Command="{Binding ResetCommand}"
-                            Style="{StaticResource ButtonStyle}"
+                    <Button Grid.Row="15"
                             Height="40"
                             Margin="0,5"
-                            Grid.Row="15"/>
+                            Command="{Binding ResetCommand}"
+                            Content="Reset Settings"
+                            FontSize="15"
+                            Style="{StaticResource ButtonStyle}" />
                 </Grid>
 
                 <Border.Triggers>
@@ -373,10 +358,10 @@
                         <BeginStoryboard>
                             <Storyboard>
                                 <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
-                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="1" />
                                 </DoubleAnimationUsingKeyFrames>
                                 <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
-                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                    <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0" />
                                 </DoubleAnimationUsingKeyFrames>
                             </Storyboard>
                         </BeginStoryboard>

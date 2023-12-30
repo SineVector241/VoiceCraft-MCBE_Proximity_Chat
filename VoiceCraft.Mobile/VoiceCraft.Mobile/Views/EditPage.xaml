@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage x:Class="VoiceCraft.Mobile.Views.EditPage"
+             xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
-             x:Class="VoiceCraft.Mobile.Views.EditPage"
              Shell.TabBarIsVisible="False">
 
     <ContentPage.BindingContext>
@@ -10,65 +10,63 @@
     </ContentPage.BindingContext>
 
     <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Dark=bgdark, Light=bglight}" />
         <ScrollView>
             <Grid Grid.RowDefinitions="auto">
                 <Frame>
-                    <Label Text="Edit Server" 
+                    <Label FontAttributes="Bold"
                            FontSize="25"
-                           FontAttributes="Bold"/>
+                           Text="Edit Server" />
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid VerticalOptions="StartAndExpand"
-                          RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto">
-                        <Label Text="{Binding Server.Name}"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto" VerticalOptions="StartAndExpand">
+                        <Label FontAttributes="Bold"
                                FontSize="25"
-                               FontAttributes="Bold"
-                               HorizontalTextAlignment="Center"/>
+                               HorizontalTextAlignment="Center"
+                               Text="{Binding Server.Name}" />
 
-                        <Label Margin="0,20,0,0"
-                               Grid.Row="1"
-                               Text="Server IP"
+                        <Label Grid.Row="1"
+                               Margin="0,20,0,0"
+                               FontAttributes="Bold"
                                FontSize="15"
-                               FontAttributes="Bold"/>
+                               Text="Server IP" />
 
                         <Entry Grid.Row="2"
                                Keyboard="Text"
-                               Text="{Binding Server.IP}"
+                               MaxLength="40"
                                Placeholder="127.0.0.1"
-                               MaxLength="40"/>
+                               Text="{Binding Server.IP}" />
 
-                        <Label Margin="0,20,0,0"
-                               Grid.Row="3"
-                               Text="Server Port"
+                        <Label Grid.Row="3"
+                               Margin="0,20,0,0"
+                               FontAttributes="Bold"
                                FontSize="15"
-                               FontAttributes="Bold"/>
+                               Text="Server Port" />
 
                         <Entry Grid.Row="4"
                                Keyboard="Numeric"
-                               Text="{Binding Server.Port}"
-                               Placeholder="9050" />
+                               Placeholder="9050"
+                               Text="{Binding Server.Port}" />
 
-                        <Label Margin="0,20,0,0"
-                               Grid.Row="5"
-                               Text="Key"
+                        <Label Grid.Row="5"
+                               Margin="0,20,0,0"
+                               FontAttributes="Bold"
                                FontSize="15"
-                               FontAttributes="Bold"/>
+                               Text="Key" />
 
                         <Entry Grid.Row="6"
                                Keyboard="Numeric"
-                               Text="{Binding Server.Key}"
-                               Placeholder="9050" />
+                               Placeholder="9050"
+                               Text="{Binding Server.Key}" />
 
                         <Button Grid.Row="7"
-                                Text="Save Edits"
-                                Command="{Binding EditServerCommand}"/>
+                                Command="{Binding EditServerCommand}"
+                                Text="Save Edits" />
 
                         <Button Grid.Row="8"
-                                Text="Cancel"
-                                Command="{Binding CancelCommand}"/>
+                                Command="{Binding CancelCommand}"
+                                Text="Cancel" />
                     </Grid>
                 </Frame>
             </Grid>

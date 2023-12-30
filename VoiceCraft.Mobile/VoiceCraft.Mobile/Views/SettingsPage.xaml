@@ -75,7 +75,7 @@
                             <CheckBox IsChecked="{Binding Settings.HideAddress}"
                                       Scale="1.3"/>
 
-                            <Label Text="HideAddress"
+                            <Label Text="Hide Address"
                                    FontSize="15"
                                    FontAttributes="Bold"
                                    VerticalOptions="CenterAndExpand"/>

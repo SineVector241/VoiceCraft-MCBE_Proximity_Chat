@@ -1,22 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="VoiceCraft.Mobile.Views.HelpPage">
+<ContentPage x:Class="VoiceCraft.Mobile.Views.HelpPage"
+             xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
     <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Dark=bgdark, Light=bglight}" />
 
         <Grid Grid.RowDefinitions="auto">
             <Frame>
-                <Label Text="Help" 
+                <Label FontAttributes="Bold"
                        FontSize="25"
-                       FontAttributes="Bold"/>
+                       Text="Help" />
             </Frame>
 
             <Frame Grid.Row="1">
-                <Label Text="In Progress... Please refer to the wiki instead."
+                <Label FontAttributes="Bold"
                        FontSize="20"
-                       FontAttributes="Bold"/>
+                       Text="In Progress... Please refer to the wiki instead." />
             </Frame>
         </Grid>
     </Grid>
