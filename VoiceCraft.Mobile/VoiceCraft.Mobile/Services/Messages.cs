@@ -98,6 +98,25 @@ namespace VoiceCraft.Mobile.Services
     public class DeafenUndeafenMSG
     { }
 
+    public class JoinChannelMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public string Password { get; set; } = string.Empty;
+        public JoinChannelMSG(VoiceCraftChannel channel)
+        {
+            Channel = channel;
+        }
+    }
+
+    public class LeaveChannelMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public LeaveChannelMSG(VoiceCraftChannel channel)
+        {
+            Channel = channel;
+        }
+    }
+
     public class DisconnectMSG
     { }
 

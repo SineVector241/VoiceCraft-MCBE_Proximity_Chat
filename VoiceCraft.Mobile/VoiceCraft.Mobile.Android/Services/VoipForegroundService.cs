@@ -77,6 +77,16 @@ namespace VoiceCraft.Mobile.Droid.Services
                         cts.Cancel();
                     });
 
+                    MessagingCenter.Subscribe<JoinChannelMSG>(this, "JoinChannel", message =>
+                    {
+                        voipService.Network.JoinChannel(message.Channel, message.Password);
+                    });
+
+                    MessagingCenter.Subscribe<LeaveChannelMSG>(this, "LeaveChannel", message =>
+                    {
+                        voipService.Network.LeaveChannel(message.Channel);
+                    });
+
                     voipService.Start(cts.Token).Wait();
                 }
                 catch (System.OperationCanceledException)
@@ -100,6 +110,8 @@ namespace VoiceCraft.Mobile.Droid.Services
 
                     MessagingCenter.Unsubscribe<RequestData>(this, "RequestData");
                     MessagingCenter.Unsubscribe<MuteUnmuteMSG>(this, "MuteUnmute");
+                    MessagingCenter.Unsubscribe<JoinChannelMSG>(this, "JoinChannel");
+                    MessagingCenter.Unsubscribe<LeaveChannelMSG>(this, "LeaveChannel");
                     MessagingCenter.Unsubscribe<DeafenUndeafenMSG>(this, "DeafenUndeafen");
                     MessagingCenter.Unsubscribe<DisconnectMSG>(this, "Disconnect");
                     MessagingCenter.Send(new StopServiceMSG(), "StopService");

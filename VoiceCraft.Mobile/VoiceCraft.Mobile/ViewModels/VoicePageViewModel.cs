@@ -219,5 +219,56 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             ShowSlider = false;
         }
+
+        [RelayCommand]
+        public void ToggleChannelVisibility()
+        {
+            ShowChannels = !ShowChannels;
+            if(ShowChannels == false)
+                ShowPasswordInput = false;
+        }
+
+        [RelayCommand]
+        public void JoinLeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                MessagingCenter.Send(new LeaveChannelMSG(channel), "LeaveChannel");
+            }
+            else
+            {
+                if (channel.RequiresPassword)
+                {
+                    PasswordInput = string.Empty;
+                    SelectedChannel = channel;
+                    ShowPasswordInput = true;
+                }
+                else
+                {
+                    MessagingCenter.Send(new JoinChannelMSG(channel), "JoinChannel");
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void JoinChannel()
+        {
+            if (string.IsNullOrWhiteSpace(PasswordInput))
+            {
+                Shell.Current.DisplayAlert("Password Error!", "Password cannot be empty or whitespace!", "OK");
+                return;
+            }
+            if (SelectedChannel != null)
+            {
+                ShowPasswordInput = false;
+                MessagingCenter.Send(new JoinChannelMSG(SelectedChannel) { Password = PasswordInput }, "JoinChannel");
+            }
+        }
+
+        [RelayCommand]
+        public void HidePasswordInput()
+        {
+            ShowPasswordInput = false;
+        }
     }
 }

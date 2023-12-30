@@ -72,8 +72,6 @@ namespace NAudio.Wave
             //Determine the buffer size
             int minBufferSize = AudioRecord.GetMinBufferSize(WaveFormat.SampleRate, channelMask, encoding);
             int bufferSize = WaveFormat.ConvertLatencyToByteSize(BufferMilliseconds);
-
-            if (WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat) bufferSize = bufferSize / 4;
             if (bufferSize < minBufferSize)
             {
                 bufferSize = minBufferSize;
