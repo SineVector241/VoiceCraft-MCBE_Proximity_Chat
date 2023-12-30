@@ -133,7 +133,6 @@ namespace VoiceCraft.Mobile.ViewModels
                 AudioRecorder.StopRecording();
             AudioRecorder.DataAvailable -= AudioDataAvailable;
             AudioRecorder.RecordingStopped -= RecorderStopped;
-            Settings = Database.GetSettings();
             MicDetection = 0;
         }
 
@@ -142,6 +141,24 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             AudioRecorder.DataAvailable += AudioDataAvailable;
             AudioRecorder.RecordingStopped += RecorderStopped;
+
+            var settings = Database.GetSettings();
+            //Copy the model
+            Settings = new SettingsModel()
+            {
+                ClientSidedPositioning = settings.ClientSidedPositioning,
+                DeafenKeybind = settings.DeafenKeybind,
+                DirectionalAudioEnabled = settings.DirectionalAudioEnabled,
+                HideAddress = settings.HideAddress,
+                InputDevice = settings.InputDevice,
+                LinearVolume = settings.LinearVolume,
+                MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage,
+                MuteKeybind = settings.MuteKeybind,
+                OutputDevice = settings.OutputDevice,
+                SoftLimiterEnabled = settings.SoftLimiterEnabled,
+                SoftLimiterGain = settings.SoftLimiterGain,
+                WebsocketPort = settings.WebsocketPort
+            };
         }
     }
 }
