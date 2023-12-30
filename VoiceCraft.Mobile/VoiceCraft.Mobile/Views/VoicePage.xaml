@@ -290,7 +290,7 @@
             </Frame>
 
             <!--  Channels  -->
-            <Frame>
+            <Frame IsVisible="False">
                 <Grid RowDefinitions="auto, *">
                     <Label FontAttributes="Bold"
                            FontSize="20"
@@ -319,11 +319,15 @@
                                         <Image.Style>
                                             <Style TargetType="Image">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding RequiresPassword}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    <DataTrigger Binding="{Binding RequiresPassword}"
+                                                                 TargetType="Image"
+                                                                 Value="False">
+                                                        <Setter Property="IsVisible" Value="False" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding RequiresPassword}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    <DataTrigger Binding="{Binding RequiresPassword}"
+                                                                 TargetType="Image"
+                                                                 Value="True">
+                                                        <Setter Property="IsVisible" Value="True" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

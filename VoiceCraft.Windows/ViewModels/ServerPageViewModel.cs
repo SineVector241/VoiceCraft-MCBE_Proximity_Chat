@@ -33,7 +33,7 @@ namespace VoiceCraft.Windows.ViewModels
 
         private void ServerUpdated(ServerModel Server)
         {
-            OnPropertyChanged(nameof(Server));
+            this.Server = Server;
         }
 
         [RelayCommand]

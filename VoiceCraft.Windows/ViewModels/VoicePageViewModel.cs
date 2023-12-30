@@ -74,7 +74,6 @@ namespace VoiceCraft.Windows.ViewModels
             voipService.OnChannelEntered += ChannelEntered;
             voipService.OnChannelLeave += ChannelLeave;
             voipService.OnServiceDisconnected += OnServiceDisconnected;
-
             voipService.Network.Signalling.OnDenyPacketReceived += SignallingDeny;
 
             Events.KeyDown += KeyDown;

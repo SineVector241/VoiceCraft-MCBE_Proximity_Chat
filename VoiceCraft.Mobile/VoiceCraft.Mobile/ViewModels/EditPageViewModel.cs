@@ -30,6 +30,7 @@ namespace VoiceCraft.Mobile.ViewModels
             try
             {
                 Database.UpdateServer(Server);
+                Database.SetPassableObject(Server);
                 await Shell.Current.Navigation.PopAsync();
             }
             catch(Exception ex)

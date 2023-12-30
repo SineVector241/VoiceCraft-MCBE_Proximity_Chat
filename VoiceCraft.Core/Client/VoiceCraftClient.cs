@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 using System;
 using System.Linq;
 using VoiceCraft.Core.Client.Sockets;
-using VoiceCraft.Windows.Network.Sockets;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;

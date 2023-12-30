@@ -30,6 +30,7 @@ namespace VoiceCraft.Windows.ViewModels
             try
             {
                 Database.UpdateServer(Server);
+                Database.SetPassableObject(Server);
                 Navigator.GoToPreviousPage();
             }
             catch(Exception ex)

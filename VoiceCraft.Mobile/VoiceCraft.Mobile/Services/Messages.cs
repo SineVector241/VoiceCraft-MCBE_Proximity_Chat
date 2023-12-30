@@ -67,9 +67,14 @@ namespace VoiceCraft.Mobile.Services
         public ChannelLeftMSG(VoiceCraftChannel channel) => Channel = channel;
     }
 
-    public class Disconnected
+    public class DisconnectedMSG
     {
-        string Reason { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public class DenyMSG
+    {
+        public string Reason = string.Empty;
     }
 
     //UI Request Updates
@@ -94,7 +99,11 @@ namespace VoiceCraft.Mobile.Services
     { }
 
     public class DisconnectMSG
-    {
-        public string Reason { get; set; } = string.Empty;
-    }
+    { }
+
+    public class StartServiceMSG
+    { }
+
+    public class StopServiceMSG
+    { }
 }

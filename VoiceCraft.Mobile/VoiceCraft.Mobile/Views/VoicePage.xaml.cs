@@ -37,8 +37,8 @@ namespace VoiceCraft.Mobile.Views
         private void VolumeValue_Updated(object sender, ValueChangedEventArgs e)
         {
             var viewModel = (VoicePageViewModel)BindingContext;
-            var volume = viewModel.SelectedParticipant.Participant?.Volume;
-            VolumeDisplay.Text = $"{viewModel.SelectedParticipant.Participant?.Name} : {MathF.Round(volume ?? 0.0f, 2)}";
+            var volume = viewModel.SelectedParticipant?.Volume;
+            VolumeDisplay.Text = $"{viewModel.SelectedParticipant?.Name} : {MathF.Round(volume ?? 0.0f, 2)}";
         }
     }
 }

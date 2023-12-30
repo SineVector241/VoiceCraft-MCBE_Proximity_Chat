@@ -22,7 +22,7 @@ namespace VoiceCraft.Mobile.Services
         private string IP = string.Empty;
         private int Port = 9050;
 
-        private string StatusMessage = "Connecting...";
+        public string StatusMessage { get; private set; } = "Connecting...";
         private string Username = "";
 
         //VOIP and Audio handler variables
@@ -342,6 +342,7 @@ namespace VoiceCraft.Mobile.Services
 
         private void OnDisconnected(string? Reason = null)
         {
+            Debug.WriteLine("a");
             Device.BeginInvokeOnMainThread(() =>
             {
                 OnServiceDisconnected?.Invoke(Reason);

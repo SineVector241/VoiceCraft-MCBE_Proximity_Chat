@@ -35,7 +35,7 @@ namespace VoiceCraft.Mobile.ViewModels
 
         private void ServerUpdated(ServerModel Server)
         {
-            OnPropertyChanged(nameof(Server));
+            this.Server = Server;
         }
 
         [RelayCommand]
@@ -44,7 +44,7 @@ namespace VoiceCraft.Mobile.ViewModels
             var granted = await Utils.CheckAndRequestPermissions();
             if(granted)
             {
-                MessagingCenter.Send(new StartServiceMessage(), "ServiceStarted");
+                MessagingCenter.Send(new StartServiceMSG(), "StartService");
                 await Shell.Current.GoToAsync(nameof(VoicePage));
             }
         }

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Models;
@@ -142,13 +143,20 @@ namespace VoiceCraft.Mobile.ViewModels
                 }
             });
 
-            MessagingCenter.Subscribe<DisconnectMSG>(this, "Disconnect", message =>
+            MessagingCenter.Subscribe<DisconnectedMSG>(this, "Disconnected", message =>
             {
                 if (!string.IsNullOrWhiteSpace(message.Reason))
                     Shell.Current.DisplayAlert("Disconnected!", message.Reason, "OK");
+                Shell.Current.Navigation.PopAsync();
             });
 
-            MessagingCenter.Subscribe<ResponseData>(this, "Response", message =>
+            MessagingCenter.Subscribe<DenyMSG>(this, "Deny", message =>
+            {
+                if (!string.IsNullOrWhiteSpace(message.Reason))
+                    Shell.Current.DisplayAlert("Denied", message.Reason, "OK");
+            });
+
+            MessagingCenter.Subscribe<ResponseData>(this, "ResponseData", message =>
             {
                 StatusText = message.StatusMessage;
                 IsMuted = message.IsMuted;
@@ -175,7 +183,8 @@ namespace VoiceCraft.Mobile.ViewModels
             MessagingCenter.Unsubscribe<ChannelCreatedMSG>(this, "ChannelCreated");
             MessagingCenter.Unsubscribe<ChannelEnteredMSG>(this, "ChannelEntered");
             MessagingCenter.Unsubscribe<ChannelLeftMSG>(this, "ChannelLeft");
-            MessagingCenter.Unsubscribe<DisconnectMSG>(this, "Disconnect");
+            MessagingCenter.Unsubscribe<DisconnectedMSG>(this, "Disconnected");
+            MessagingCenter.Unsubscribe<DenyMSG>(this, "Deny");
             MessagingCenter.Unsubscribe<ResponseData>(this, "Response");
         }
 
@@ -194,7 +203,8 @@ namespace VoiceCraft.Mobile.ViewModels
         [RelayCommand]
         public void Disconnect()
         {
-            MessagingCenter.Send(new DisconnectMSG(), "DisconnectRequest"); //Different Message.
+            MessagingCenter.Send(new DisconnectMSG(), "Disconnect");
+            Shell.Current.Navigation.PopAsync();
         }
 
         [RelayCommand]
