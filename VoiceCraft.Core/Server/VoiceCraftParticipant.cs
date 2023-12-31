@@ -31,15 +31,10 @@ namespace VoiceCraft.Core.Server
         public Socket SignallingSocket { get; }
         public EndPoint? VoiceEndpoint { get; set; }
 
-        //EndPoint Stream
-        public NetworkStream NetworkStream { get; }
-
-        public VoiceCraftParticipant(Socket SignallingSocket, NetworkStream NetworkStream, PositioningTypes PositioningType)
+        public VoiceCraftParticipant(Socket SignallingSocket, PositioningTypes PositioningType)
         {
             this.PositioningType = PositioningType;
             this.SignallingSocket = SignallingSocket;
-            this.NetworkStream = NetworkStream;
-
         }
     }
 }

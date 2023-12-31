@@ -93,5 +93,21 @@ namespace VoiceCraft.Server
 
             return BanlistData;
         }
+
+        public static void SaveBanlist(Banlist banlist)
+        {
+            if (!File.Exists(BanlistDirectory))
+            {
+                Logger.LogToConsole(LogType.Warn, $"{BanlistDirectory} file does not exist. Creating file...", "Banlist");
+                string jsonString = JsonConvert.SerializeObject(banlist, Formatting.Indented);
+                File.WriteAllText(BanlistDirectory, jsonString);
+                Logger.LogToConsole(LogType.Success, $"Successfully created file {BanlistDirectory}.", "Banlist");
+            }
+            else
+            {
+                string jsonString = JsonConvert.SerializeObject(banlist, Formatting.Indented);
+                File.WriteAllText(BanlistDirectory, jsonString);
+            }
+        }
     }
 }

@@ -224,7 +224,7 @@ namespace VoiceCraft.Core.Server
 
             var key = packet.LoginKey;
             Signalling.ConnectedSockets.TryGetValue(socket, out var stream);
-            var participant = new VoiceCraftParticipant(socket, stream, packet.PositioningType);
+            var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
 
             if (Participants.ContainsKey(packet.LoginKey))
             {
@@ -778,6 +778,7 @@ namespace VoiceCraft.Core.Server
 
                 if (broadcast)
                 {
+                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), participant.Value.SignallingSocket);
                     foreach (var client in Participants)
                     {
                         if(client.Value.Channel == participant.Value.Channel)
