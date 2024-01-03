@@ -42,6 +42,7 @@ namespace VoiceCraft.Core.Server
         public delegate void ParticipantBinded(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantUnbinded(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantDisconnected(string reason, VoiceCraftParticipant participant, ushort key);
+        public delegate void ExceptionError(Exception exception);
         public delegate void Error(Exception exception);
 
         //Events
@@ -54,6 +55,7 @@ namespace VoiceCraft.Core.Server
         public event ParticipantBinded? OnParticipantBinded;
         public event ParticipantUnbinded? OnParticipantUnbinded;
         public event ParticipantDisconnected? OnParticipantDisconnected;
+        public event ExceptionError? OnExceptionError;
         public event Error? OnError;
 
         public VoiceCraftServer()
@@ -194,184 +196,303 @@ namespace VoiceCraft.Core.Server
 
         private void SignallingLogin(Packets.Signalling.Login packet, Socket socket)
         {
-            if (Version != packet.Version)
+            try
             {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Versions do not match!", true), socket);
-                return;
-            }
-            if (Banlist.IPBans.Exists(x => x == socket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault()))
-            {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("You have been banned from the server!", true), socket);
-                return;
-            }
-            if (packet.PositioningType != PositioningTypes.ClientSided &&
-                (ServerProperties.ConnectionType == ConnectionTypes.Client || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
-            {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts client sided positioning!", true), socket);
-                return;
-            }
-            else if (packet.PositioningType != PositioningTypes.ServerSided &&
-                (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
-            {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts server sided positioning!", true), socket);
-                return;
-            }
-            if (Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket).Value != null)
-            {
-                Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Already logged in!", true), socket);
-                return;
-            }
-
-            var key = packet.LoginKey;
-            Signalling.ConnectedSockets.TryGetValue(socket, out var stream);
-            var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
-
-            if (Participants.ContainsKey(packet.LoginKey))
-            {
-                for (ushort i = 0; i < ushort.MaxValue; i++)
+                if (Version != packet.Version)
                 {
-                    if (!Participants.ContainsKey(i))
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Versions do not match!", true), socket);
+                    return;
+                }
+                if (Banlist.IPBans.Exists(x => x == socket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault()))
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("You have been banned from the server!", true), socket);
+                    return;
+                }
+                if (packet.PositioningType != PositioningTypes.ClientSided &&
+                    (ServerProperties.ConnectionType == ConnectionTypes.Client || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts client sided positioning!", true), socket);
+                    return;
+                }
+                else if (packet.PositioningType != PositioningTypes.ServerSided &&
+                    (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Server only accepts server sided positioning!", true), socket);
+                    return;
+                }
+                if (Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket).Value != null)
+                {
+                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Already logged in!", true), socket);
+                    return;
+                }
+
+                var key = packet.LoginKey;
+                Signalling.ConnectedSockets.TryGetValue(socket, out var stream);
+                var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
+
+                if (Participants.ContainsKey(packet.LoginKey))
+                {
+                    for (ushort i = 0; i < ushort.MaxValue; i++)
                     {
-                        key = i;
-                        break;
+                        if (!Participants.ContainsKey(i))
+                        {
+                            key = i;
+                            break;
+                        }
                     }
                 }
-            }
 
-            Participants.TryAdd(key, participant);
-            Signalling.SendPacketAsync(Packets.Signalling.Accept.Create(key, ServerProperties.VoicePortUDP), socket);
+                Participants.TryAdd(key, participant);
+                Signalling.SendPacketAsync(Packets.Signalling.Accept.Create(key, ServerProperties.VoicePortUDP), socket);
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private void SignallingBinded(Packets.Signalling.Binded packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && !participant.Value.Binded)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.Binded = true;
-                participant.Value.Name = packet.Name;
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && !participant.Value.Binded)
                 {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.Binded = true;
+                    participant.Value.Name = packet.Name;
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
 
-                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                        Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                    }
+
+                    var channelList = ServerProperties.Channels;
+                    for (int i = 0; i < channelList.Count; i++)
+                    {
+                        var channel = ServerProperties.Channels[i];
+                        Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
+                    }
+
+                    OnParticipantBinded?.Invoke(participant.Value, participant.Key);
                 }
-
-                var channelList = ServerProperties.Channels;
-                for (int i = 0; i < channelList.Count; i++)
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
                 {
-                    var channel = ServerProperties.Channels[i];
-                    Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
+                    OnExceptionError?.Invoke(ex);
                 }
-
-                OnParticipantBinded?.Invoke(participant.Value, participant.Key);
             }
         }
 
         private void SignallingUnbinded(Packets.Signalling.Unbinded packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && participant.Value.Binded)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.Binded = false;
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.PositioningType == PositioningTypes.ClientSided && participant.Value.Binded)
                 {
-                    var client = list.ElementAt(i);
-                    //Logout the unbinded participant from all other clients.
-                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.Binded = false;
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        //Logout the unbinded participant from all other clients.
+                        Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+                    OnParticipantUnbinded?.Invoke(participant.Value, participant.Key);
                 }
-                OnParticipantUnbinded?.Invoke(participant.Value, participant.Key);
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
 
         private void SignallingMute(Packets.Signalling.Mute packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && !participant.Value.IsMuted)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.IsMuted = true;
-                if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
-
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && !participant.Value.IsMuted)
                 {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(participant.Key), client.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.IsMuted = true;
+                    if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
+
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
                 }
             }
         }
 
         private void SignallingUnmute(Packets.Signalling.Unmute packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.IsMuted)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.IsMuted = false;
-                if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
-
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.IsMuted)
                 {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Unmute.Create(participant.Key), client.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.IsMuted = false;
+                    if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
+
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Unmute.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
                 }
             }
         }
 
         private void SignallingDeafen(Packets.Signalling.Deafen packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && !participant.Value.IsDeafened)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.IsDeafened = true;
-                if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
-
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && !participant.Value.IsDeafened)
                 {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(participant.Key), client.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.IsDeafened = true;
+                    if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
+
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
                 }
             }
         }
 
         private void SignallingUndeafen(Packets.Signalling.Undeafen packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.IsDeafened)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                participant.Value.IsDeafened = false;
-                if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
-
-                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < list.Count(); i++)
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.IsDeafened)
                 {
-                    var client = list.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(participant.Key), client.Value.SignallingSocket);
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    participant.Value.IsDeafened = false;
+                    if (!participant.Value.Binded) return; //Return if not binded because the participants is not on other clients.
+
+                    var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                    for (ushort i = 0; i < list.Count(); i++)
+                    {
+                        var client = list.ElementAt(i);
+                        Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(participant.Key), client.Value.SignallingSocket);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
                 }
             }
         }
 
         private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.Binded)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
-                if(participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.Binded)
                 {
-                    if(participant.Value.Channel != 0)
-                        Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
+                    participant.Value.LastActive = DateTime.UtcNow;
+                    var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
+                    if (participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
+                    {
+                        if (participant.Value.Channel != 0)
+                            Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
 
+                        var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                        for (ushort i = 0; i < channelList.Count(); i++)
+                        {
+                            var client = channelList.ElementAt(i);
+                            Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                            Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
+                        }
+
+                        participant.Value.Channel = packet.ChannelId;
+
+                        channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                        for (ushort i = 0; i < channelList.Count(); i++)
+                        {
+                            var client = channelList.ElementAt(i);
+                            Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                            Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
+                        }
+
+                        Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
+                    }
+                    else if (channel.Password != packet.Password || string.IsNullOrWhiteSpace(channel.Password))
+                    {
+                        Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
+                    }
+                    else
+                    {
+                        Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Channel does not exist!", false), socket);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
+        }
+
+        private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
+        {
+            try
+            {
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
+                {
+                    participant.Value.LastActive = DateTime.UtcNow;
                     var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
                     {
@@ -380,8 +501,7 @@ namespace VoiceCraft.Core.Server
                         Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                     }
 
-                    participant.Value.Channel = packet.ChannelId;
-
+                    participant.Value.Channel = 0;
                     channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
                     {
@@ -390,43 +510,15 @@ namespace VoiceCraft.Core.Server
                         Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
                     }
 
-                    Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
-                }
-                else if(channel.Password != packet.Password || string.IsNullOrWhiteSpace(channel.Password))
-                {
-                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
-                }
-                else
-                {
-                    Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Channel does not exist!", false), socket);
+                    Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(packet.ChannelId), socket);
                 }
             }
-        }
-
-        private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
-        {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
+            catch (Exception ex)
             {
-                participant.Value.LastActive = DateTime.UtcNow;
-                var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < channelList.Count(); i++)
+                if (ServerProperties.Debugger.LogExceptions)
                 {
-                    var client = channelList.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
-                    Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
+                    OnExceptionError?.Invoke(ex);
                 }
-
-                participant.Value.Channel = 0;
-                channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                for (ushort i = 0; i < channelList.Count(); i++)
-                {
-                    var client = channelList.ElementAt(i);
-                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
-                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
-                }
-
-                Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(packet.ChannelId), socket);
             }
         }
 
@@ -454,18 +546,38 @@ namespace VoiceCraft.Core.Server
 
         private void SignallingSocketDisconnected(Socket socket, string reason)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            RemoveParticipant(participant, true, reason);
+            try
+            {
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                RemoveParticipant(participant, true, reason);
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private void SignallingPingCheck(Packets.Signalling.PingCheck packet, Socket socket)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null)
+            try
             {
-                participant.Value.LastActive = DateTime.UtcNow;
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
+                if (participant.Value != null)
+                {
+                    participant.Value.LastActive = DateTime.UtcNow;
 
-                Signalling.SendPacketAsync(Packets.Signalling.PingCheck.Create(), socket);
+                    Signalling.SendPacketAsync(Packets.Signalling.PingCheck.Create(), socket);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
         #endregion
@@ -503,16 +615,26 @@ namespace VoiceCraft.Core.Server
 
         private void OnVoiceLogin(Packets.Voice.Login packet, EndPoint endPoint)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault() == endPoint.ToString()?.Split(':').FirstOrDefault() && x.Key == packet.LoginKey);
-            if (participant.Value != null && participant.Value.VoiceEndpoint == null)
+            try
             {
-                participant.Value.VoiceEndpoint = endPoint;
-                Voice.SendPacketAsync(Packets.Voice.Accept.Create(), endPoint);
-                OnParticipantConnected?.Invoke(participant.Value, participant.Key);
+                var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault() == endPoint.ToString()?.Split(':').FirstOrDefault() && x.Key == packet.LoginKey);
+                if (participant.Value != null && participant.Value.VoiceEndpoint == null)
+                {
+                    participant.Value.VoiceEndpoint = endPoint;
+                    Voice.SendPacketAsync(Packets.Voice.Accept.Create(), endPoint);
+                    OnParticipantConnected?.Invoke(participant.Value, participant.Key);
+                }
+                else
+                {
+                    Voice.SendPacketAsync(Packets.Voice.Deny.Create("Key is invalid or used!"), endPoint);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                Voice.SendPacketAsync(Packets.Voice.Deny.Create("Key is invalid or used!"), endPoint);
+                if(ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
 
@@ -572,16 +694,32 @@ namespace VoiceCraft.Core.Server
                         }
                     }
                 }
+            }).ContinueWith(x =>
+            {
+                if(ServerProperties.Debugger.LogExceptions && x.Exception != null)
+                {
+                    OnExceptionError?.Invoke(x.Exception);
+                }
             });
         }
 
         private void VoiceUpdatePosition(Packets.Voice.UpdatePosition packet, EndPoint endPoint)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
-            if(participant.Value != null && participant.Value.Binded && participant.Value.PositioningType == PositioningTypes.ClientSided)
+            try
             {
-                participant.Value.EnvironmentId = packet.EnvironmentId;
-                participant.Value.Position = packet.Position;
+                var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
+                if (participant.Value != null && participant.Value.Binded && participant.Value.PositioningType == PositioningTypes.ClientSided)
+                {
+                    participant.Value.EnvironmentId = packet.EnvironmentId;
+                    participant.Value.Position = packet.Position;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
         #endregion
@@ -595,166 +733,237 @@ namespace VoiceCraft.Core.Server
 
         private void MCCommLogin(Packets.MCComm.Login packet, HttpListenerContext ctx)
         {
-            if(packet.LoginKey != MCComm.ServerKey)
+            try
             {
-                var denyPacket = Packets.MCComm.Deny.Create("Invalid Key!");
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
-                return;
-            }
-            if(ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
-            {
-                var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
-                return;
-            }
+                if (packet.LoginKey != MCComm.ServerKey)
+                {
+                    var denyPacket = Packets.MCComm.Deny.Create("Invalid Key!");
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
+                    return;
+                }
+                if (ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
+                {
+                    var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
+                    return;
+                }
 
-            var server = new ExternalServer()
-            {
-                IP = ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault() ?? string.Empty
-            };
-            ExternalServers.Add(server);
-            OnExternalServerConnected?.Invoke(server);
+                var server = new ExternalServer()
+                {
+                    IP = ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault() ?? string.Empty
+                };
+                ExternalServers.Add(server);
+                OnExternalServerConnected?.Invoke(server);
 
-            var acceptPacket = Packets.MCComm.Accept.Create();
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, acceptPacket);
+                var acceptPacket = Packets.MCComm.Accept.Create();
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, acceptPacket);
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private void MCCommBinded(Packets.MCComm.Bind packet, HttpListenerContext ctx)
         {
-            if (!ServerLoggedIn(ctx)) return;
+            try
+            {
+                if (!ServerLoggedIn(ctx)) return;
 
-            var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
-            if (participant.Value == null)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!"));
-                return;
-            }
-            if (participant.Value.Binded)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Key has already been binded to a participant!"));
-                return;
-            }
-            if (Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId).Value != null)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("PlayerId is already binded to a participant!"));
-                return;
-            }
-            if (participant.Value.PositioningType == PositioningTypes.ClientSided)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is using client sided positioning!"));
-                return;
-            }
+                var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
+                if (participant.Value == null)
+                {
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!"));
+                    return;
+                }
+                if (participant.Value.Binded)
+                {
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Key has already been binded to a participant!"));
+                    return;
+                }
+                if (Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId).Value != null)
+                {
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("PlayerId is already binded to a participant!"));
+                    return;
+                }
+                if (participant.Value.PositioningType == PositioningTypes.ClientSided)
+                {
+                    MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is using client sided positioning!"));
+                    return;
+                }
 
-            participant.Value.Name = packet.Gamertag;
-            participant.Value.MinecraftId = packet.PlayerId;
-            participant.Value.Binded = true;
-            Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(participant.Value.Name), participant.Value.SignallingSocket);
+                participant.Value.Name = packet.Gamertag;
+                participant.Value.MinecraftId = packet.PlayerId;
+                participant.Value.Binded = true;
+                Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(participant.Value.Name), participant.Value.SignallingSocket);
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
-            var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-            for (ushort i = 0; i < list.Count(); i++)
-            {
-                var client = list.ElementAt(i);
-                Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
-                Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+                var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
+                for (ushort i = 0; i < list.Count(); i++)
+                {
+                    var client = list.ElementAt(i);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), participant.Value.SignallingSocket);
+                    Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, participant.Key, participant.Value.IsDeafened, participant.Value.IsMuted, participant.Value.Name, string.Empty), client.Value.SignallingSocket);
+                }
+
+                var channelList = ServerProperties.Channels;
+                for (int i = 0; i < channelList.Count; i++)
+                {
+                    var channel = ServerProperties.Channels[i];
+                    Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
+                }
+
+                OnParticipantBinded?.Invoke(participant.Value, participant.Key);
             }
-
-            var channelList = ServerProperties.Channels;
-            for(int i = 0; i < channelList.Count; i++)
+            catch (Exception ex)
             {
-                var channel = ServerProperties.Channels[i];
-                Signalling.SendPacketAsync(Packets.Signalling.AddChannel.Create(channel.Name, (byte)(i + 1), !string.IsNullOrWhiteSpace(channel.Password)), participant.Value.SignallingSocket);
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
-
-            OnParticipantBinded?.Invoke(participant.Value, participant.Key);
         }
 
         private void MCCommUpdate(Packets.MCComm.Update packet, HttpListenerContext ctx)
         {
-            if (!ServerLoggedIn(ctx)) return;
-
-            for (int i = 0; i < packet.Players.Count; i++)
+            try
             {
-                var player = packet.Players[i];
-                var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == player.PlayerId && x.Value.PositioningType == PositioningTypes.ServerSided);
-                if(participant.Value != null)
+                if (!ServerLoggedIn(ctx)) return;
+
+                for (int i = 0; i < packet.Players.Count; i++)
                 {
-                    if (!participant.Value.Position.Equals(player.Location))
-                        participant.Value.Position = player.Location;
+                    var player = packet.Players[i];
+                    var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == player.PlayerId && x.Value.PositioningType == PositioningTypes.ServerSided);
+                    if (participant.Value != null)
+                    {
+                        if (!participant.Value.Position.Equals(player.Location))
+                            participant.Value.Position = player.Location;
 
-                    if (participant.Value.EnvironmentId != player.DimensionId)
-                        participant.Value.EnvironmentId = player.DimensionId;
+                        if (participant.Value.EnvironmentId != player.DimensionId)
+                            participant.Value.EnvironmentId = player.DimensionId;
 
-                    if (participant.Value.Rotation != player.Rotation)
-                        participant.Value.Rotation = player.Rotation;
+                        if (participant.Value.Rotation != player.Rotation)
+                            participant.Value.Rotation = player.Rotation;
 
-                    if (participant.Value.CaveDensity != player.CaveDensity)
-                        participant.Value.CaveDensity = player.CaveDensity;
+                        if (participant.Value.CaveDensity != player.CaveDensity)
+                            participant.Value.CaveDensity = player.CaveDensity;
 
-                    if (participant.Value.IsDead != player.IsDead)
-                        participant.Value.IsDead = player.IsDead;
+                        if (participant.Value.IsDead != player.IsDead)
+                            participant.Value.IsDead = player.IsDead;
 
-                    if(participant.Value.InWater != player.InWater)
-                        participant.Value.InWater = player.InWater;
+                        if (participant.Value.InWater != player.InWater)
+                            participant.Value.InWater = player.InWater;
+                    }
+                }
+
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
                 }
             }
-
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
         }
 
         private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
         {
-            if (!ServerLoggedIn(ctx)) return;
+            try
+            {
+                if (!ServerLoggedIn(ctx)) return;
 
-            var settingsPacket = Packets.MCComm.UpdateSettings.Create(ServerProperties.ProximityDistance, ServerProperties.ProximityToggle, ServerProperties.VoiceEffects);
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket);
+                var settingsPacket = Packets.MCComm.UpdateSettings.Create(ServerProperties.ProximityDistance, ServerProperties.ProximityToggle, ServerProperties.VoiceEffects);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, settingsPacket);
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private void MCCommUpdateSettings(Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
         {
-            if (!ServerLoggedIn(ctx)) return;
-
-            if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
+            try
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!"));
-                return;
-            }
+                if (!ServerLoggedIn(ctx)) return;
 
-            ServerProperties.ProximityDistance = packet.ProximityDistance;
-            ServerProperties.ProximityToggle = packet.ProximityToggle;
-            ServerProperties.VoiceEffects = packet.VoiceEffects;
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+                if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
+                {
+                    MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!"));
+                    return;
+                }
+
+                ServerProperties.ProximityDistance = packet.ProximityDistance;
+                ServerProperties.ProximityToggle = packet.ProximityToggle;
+                ServerProperties.VoiceEffects = packet.VoiceEffects;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private void MCCommRemoveParticipant(Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
         {
-            if (!ServerLoggedIn(ctx)) return;
-
-            var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
-            if (participant.Value != null)
+            try
             {
-                RemoveParticipant(participant, true, "MCComm server kicked.");
-                OnParticipantDisconnected?.Invoke("MCComm server kicked.", participant.Value, participant.Key);
-                return;
-            }
+                if (!ServerLoggedIn(ctx)) return;
 
-            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!"));
+                var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+                if (participant.Value != null)
+                {
+                    RemoveParticipant(participant, true, "MCComm server kicked.");
+                    OnParticipantDisconnected?.Invoke("MCComm server kicked.", participant.Value, participant.Key);
+                    return;
+                }
+
+                MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!"));
+            }
+            catch (Exception ex)
+            {
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
+            }
         }
 
         private bool ServerLoggedIn(HttpListenerContext ctx)
         {
-            var server = ExternalServers.FirstOrDefault(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault());
-            if (server == null)
+            try
             {
-                var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
-                return false;
+                var server = ExternalServers.FirstOrDefault(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault());
+                if (server == null)
+                {
+                    var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
+                    MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
+                    return false;
+                }
+                else
+                {
+                    server.LastActive = DateTime.UtcNow;
+                    return true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                server.LastActive = DateTime.UtcNow;
-                return true;
+                if (ServerProperties.Debugger.LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
+            return false;
         }
         #endregion
 

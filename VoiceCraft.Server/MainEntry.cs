@@ -23,6 +23,7 @@ namespace VoiceCraft.Server
             server.OnParticipantDisconnected += ParticipantDisconnected;
             server.OnExternalServerConnected += ExternalServerConnected;
             server.OnExternalServerDisconnected += ExternalServerDisconnected;
+            server.OnExceptionError += ExceptionError;
 
             server.Signalling.OnOutboundPacket += SignallingOutbound;
             server.Signalling.OnInboundPacket += SignallingInbound;
