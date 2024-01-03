@@ -1,7 +1,6 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using System;
-using System.Diagnostics;
 using System.Linq;
 
 namespace VoiceCraft.Core.Audio
@@ -16,7 +15,7 @@ namespace VoiceCraft.Core.Audio
         private DateTime FirstPacketTime { get; set; }
         private bool ResetSequence { get; set; }
 
-        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 100)
+        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 80)
         {
             MaxBufferSize = maxBufferSize;
             JitterDelay = jitterDelayMS;
@@ -47,10 +46,10 @@ namespace VoiceCraft.Core.Audio
             }
 
             //Only insert the packet if its not later than the reader.
-            if(inPacket.Sequence > CurrentPacketReadCount || ResetSequence)
+            if (inPacket.Sequence > CurrentPacketReadCount || ResetSequence)
             {
                 //Find an empty slot and insert it.
-                for(int i = 0; i < MaxBufferSize; i++)
+                for (int i = 0; i < MaxBufferSize; i++)
                 {
                     if (BufferedPackets[i].Data == null)
                     {
@@ -64,7 +63,7 @@ namespace VoiceCraft.Core.Audio
                 //We haven't found an empty slot so we discard the oldest/highest packet sequence.
                 uint oldest = BufferedPackets[0].Sequence;
                 int index = 0;
-                for(int i = 1; i < MaxBufferSize; i++)
+                for (int i = 1; i < MaxBufferSize; i++)
                 {
                     if (BufferedPackets[i].Sequence > oldest)
                     {
@@ -88,7 +87,7 @@ namespace VoiceCraft.Core.Audio
         public long Get(ref JitterBufferPacket outPacket)
         {
             //Buffer ain't filled yet.
-            if(DateTime.UtcNow.Subtract(FirstPacketTime).TotalMilliseconds < JitterDelay)
+            if (DateTime.UtcNow.Subtract(FirstPacketTime).TotalMilliseconds < JitterDelay)
             {
                 return -1;
             }
@@ -96,7 +95,7 @@ namespace VoiceCraft.Core.Audio
             //Find the earliest inserted packet.
             uint earliest = BufferedPackets[0].Sequence;
             int index = 0;
-            for(int i = 1; i < MaxBufferSize; i++)
+            for (int i = 1; i < MaxBufferSize; i++)
             {
                 if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence < earliest)
                 {
@@ -110,87 +109,64 @@ namespace VoiceCraft.Core.Audio
                 return -1;
             }
 
-            //Else we can fill the packet and return the amount lost between the last and current sequences.
+            var lost = ResetSequence ? uint.MaxValue - (long)CurrentPacketReadCount + (earliest - 1) : earliest - (long)CurrentPacketReadCount - 1; //We want to get the packets lost. not the difference.
+            if (lost > 0 && DateTime.UtcNow.Subtract(BufferedPackets[index].Timestamp).TotalMilliseconds >= JitterDelay) //If its not the next sequence and the inserted packet has exceeded the jitter delay then we return it.
+            {
+                //Fill the packet and return the amount lost between the last and current sequences.
+                outPacket.Length = BufferedPackets[index].Length;
+                outPacket.Data = BufferedPackets[index].Data;
+                BufferedPackets[index].Data = null;
+
+                CurrentPacketReadCount = earliest;
+                return lost;
+            }
+
+            //Else we just return the packet if its in the next sequence.
+            //Fill the packet and return the amount lost between the last and current sequences.
             outPacket.Length = BufferedPackets[index].Length;
             outPacket.Data = BufferedPackets[index].Data;
             BufferedPackets[index].Data = null;
-            var lost = ResetSequence ? uint.MaxValue - (long)CurrentPacketReadCount + (earliest - 1) : earliest - (long)CurrentPacketReadCount - 1; //We want to get the packets lost. not the difference.
+
             CurrentPacketReadCount = earliest;
             return lost;
         }
     }
 
-    public class VoiceCraftJitterBuffer
+    public class VoiceCraftJitterBuffer : IWaveProvider, IDisposable
     {
         public int DecodeBufferSize { get; }
         public WaveFormat WaveFormat { get; }
         private JitterBuffer Buffer { get; }
         private OpusDecoder Decoder { get; }
+        private System.Timers.Timer DecodeTimer { get; }
+        private bool IsDisposed;
 
         private JitterBufferPacket outPacket = new JitterBufferPacket();
         private JitterBufferPacket inPacket = new JitterBufferPacket();
 
-        private byte[]? NextDecodedPacket;
+        private BufferedWaveProvider DecodedBuffer;
 
         public VoiceCraftJitterBuffer(OpusDecoder decoder, WaveFormat format, int decodeRecordLengthMS)
         {
             Decoder = decoder;
             Buffer = new JitterBuffer(20);
             WaveFormat = format;
+            DecodedBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true, ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2)};
 
             DecodeBufferSize = decodeRecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
             if (DecodeBufferSize % WaveFormat.BlockAlign != 0)
             {
                 DecodeBufferSize -= DecodeBufferSize % WaveFormat.BlockAlign;
             }
+
+            DecodeTimer = new System.Timers.Timer(1); //1ms
+            DecodeTimer.Elapsed += DecodeNextPacket;
+            DecodeTimer.Start();
         }
 
-        public int Get(byte[] decodedBytes)
+        public int Read(byte[] buffer, int offset, int count)
         {
-            if(decodedBytes.Length != DecodeBufferSize)
-                throw new ArgumentException(nameof(decodedBytes), "Must be the same as the DecodeBufferSize!");
-
-            if(NextDecodedPacket != null)
-            {
-                decodedBytes = NextDecodedPacket;
-                NextDecodedPacket = null;
-                return decodedBytes.Length;
-            }
-
-            short[] decoded = new short[DecodeBufferSize / 2];
-            var lost = Buffer.Get(ref outPacket);
-
-            try
-            {
-                if (lost == -1) //Empty Packet or Buffer is empty.
-                {
-                    return -1;
-                }
-                else if (lost == 0)
-                {
-                    decoded = new short[DecodeBufferSize / 2];
-                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, false);
-                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
-                    System.Buffer.BlockCopy(decBytes, 0, decodedBytes, 0, decBytes.Length); //WAY FASTER TO USE THIS THAN ARRAY.COPY();
-                    return decodedBytes.Length;
-                }
-                else //AHHH MISSING PACKETS! We have to decode twice.
-                {
-                    //FEC ON
-                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
-                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
-                    System.Buffer.BlockCopy(decBytes, 0, decodedBytes, 0, decBytes.Length); //WAY FASTER TO USE THIS THAN ARRAY.COPY();
-
-                    //FEC OFF
-                    shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
-                    NextDecodedPacket = ShortsToBytes(decoded, 0, shortsRead);
-                    return decodedBytes.Length;
-                }
-            }
-            catch
-            {
-                return -1;
-            }
+            return DecodedBuffer.Read(buffer, offset, count);
         }
 
         public void Put(byte[] data, uint sequence)
@@ -198,6 +174,7 @@ namespace VoiceCraft.Core.Audio
             inPacket.Data = data;
             inPacket.Sequence = sequence;
             inPacket.Length = data.Length;
+            inPacket.Timestamp = DateTime.UtcNow;
 
             Buffer.Put(inPacket);
         }
@@ -213,6 +190,64 @@ namespace VoiceCraft.Core.Audio
 
             return processedValues;
         }
+
+        private void DecodeNextPacket(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                short[] decoded = new short[DecodeBufferSize / 2];
+                long lost = Buffer.Get(ref outPacket);
+
+                if (lost == -1) //Empty Packet or Buffer is empty.
+                {
+                    return;
+                }
+                else if (lost == 0)
+                {
+                    decoded = new short[DecodeBufferSize / 2];
+                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, false);
+                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
+                    DecodedBuffer.AddSamples(decBytes, 0, decBytes.Length);
+                }
+                else //AHHH MISSING PACKETS! We have to decode twice.
+                {
+                    //FEC ON
+                    int shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
+                    var decBytes = ShortsToBytes(decoded, 0, shortsRead);
+                    DecodedBuffer.AddSamples(decBytes, 0, decBytes.Length);
+
+                    //FEC OFF
+                    shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, decoded, 0, decoded.Length, true);
+                    decBytes = ShortsToBytes(decoded, 0, shortsRead);
+                    DecodedBuffer.AddSamples(decBytes, 0, decBytes.Length);
+                }
+            }
+            catch { }
+        }
+
+        ~VoiceCraftJitterBuffer()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    DecodeTimer.Stop();
+                    DecodeTimer.Dispose();
+                    IsDisposed = true;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 
     public struct JitterBufferPacket
@@ -220,5 +255,6 @@ namespace VoiceCraft.Core.Audio
         public uint Sequence;
         public int Length;
         public byte[]? Data;
+        public DateTime Timestamp;
     }
 }

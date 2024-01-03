@@ -36,31 +36,25 @@ namespace VoiceCraft.Core.Client
             }
         }
 
-        public BufferedWaveProvider AudioBuffer { get; }
+        //public BufferedWaveProvider AudioBuffer { get; }
         public Wave16ToFloatProvider FloatProvider { get; }
         public EchoSampleProvider EchoProvider { get; }
         public LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
         private VoiceCraftJitterBuffer NetworkJitterBuffer;
-        private System.Timers.Timer DecodeInterval;
 
         public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
         {
             this.Name = Name;
-            DecodeInterval = new System.Timers.Timer(RecordLengthMS / 4);
-            DecodeInterval.Elapsed += DecodeAudio;
 
             //Setup and wire everything up.
             OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
             NetworkJitterBuffer = new VoiceCraftJitterBuffer(OpusDecoder, WaveFormat, RecordLengthMS);
-            AudioBuffer = new BufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2)};
-            FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
+            FloatProvider = new Wave16ToFloatProvider(NetworkJitterBuffer);
             EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
             LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
             AudioProvider = new MonoToStereoSampleProvider(LowpassProvider);
-
-            DecodeInterval.Start();
         }
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
@@ -75,16 +69,6 @@ namespace VoiceCraft.Core.Client
             FloatProvider.Volume = proximityVolume * volume;
         }
 
-        private void DecodeAudio(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            var decodedBytes = new byte[NetworkJitterBuffer.DecodeBufferSize];
-            var decoded = NetworkJitterBuffer.Get(decodedBytes);
-            if(decoded != -1)
-            {
-                AudioBuffer.AddSamples(decodedBytes, 0, decoded);
-            }
-        }
-
         ~VoiceCraftParticipant()
         {
             Dispose(false);
@@ -96,8 +80,7 @@ namespace VoiceCraft.Core.Client
             {
                 if (disposing)
                 {
-                    DecodeInterval.Stop();
-                    DecodeInterval.Dispose();
+                    NetworkJitterBuffer.Dispose();
                     IsDisposed = true;
                 }
             }
