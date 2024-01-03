@@ -105,65 +105,75 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private void HandlePacket(MCCommPacket packet, HttpListenerContext ctx)
         {
-            if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
-                OnInboundPacket?.Invoke(packet);
-
-            switch(packet.PacketType)
+            try
             {
-                case MCCommPacketTypes.Login:
-                    var loginData = (Login)packet.PacketData;
-                    if(loginData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                    OnInboundPacket?.Invoke(packet);
+
+                switch (packet.PacketType)
+                {
+                    case MCCommPacketTypes.Login:
+                        var loginData = (Login)packet.PacketData;
+                        if (loginData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnLoginPacketReceived?.Invoke(loginData, ctx);
                         break;
-                    }
-                    OnLoginPacketReceived?.Invoke(loginData, ctx);
-                    break;
-                case MCCommPacketTypes.Bind:
-                    var bindData = (Bind)packet.PacketData;
-                    if (bindData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                    case MCCommPacketTypes.Bind:
+                        var bindData = (Bind)packet.PacketData;
+                        if (bindData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnBindedPacketReceived?.Invoke(bindData, ctx);
                         break;
-                    }
-                    OnBindedPacketReceived?.Invoke(bindData, ctx);
-                    break;
-                case MCCommPacketTypes.Update:
-                    var updateData = (Update)packet.PacketData;
-                    if (updateData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                    case MCCommPacketTypes.Update:
+                        var updateData = (Update)packet.PacketData;
+                        if (updateData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnUpdatePacketReceived?.Invoke(updateData, ctx);
                         break;
-                    }
-                    OnUpdatePacketReceived?.Invoke(updateData, ctx);
-                    break;
-                case MCCommPacketTypes.UpdateSettings:
-                    var updateSettingsData = (UpdateSettings)packet.PacketData;
-                    if (updateSettingsData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                    case MCCommPacketTypes.UpdateSettings:
+                        var updateSettingsData = (UpdateSettings)packet.PacketData;
+                        if (updateSettingsData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnUpdateSettingsPacketReceived?.Invoke(updateSettingsData, ctx);
                         break;
-                    }
-                    OnUpdateSettingsPacketReceived?.Invoke(updateSettingsData, ctx);
-                    break;
-                case MCCommPacketTypes.GetSettings:
-                    var getSettingsData = (GetSettings)packet.PacketData;
-                    if (getSettingsData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                    case MCCommPacketTypes.GetSettings:
+                        var getSettingsData = (GetSettings)packet.PacketData;
+                        if (getSettingsData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnGetSettingsPacketReceived?.Invoke(getSettingsData, ctx);
                         break;
-                    }
-                    OnGetSettingsPacketReceived?.Invoke(getSettingsData, ctx);
-                    break;
-                case MCCommPacketTypes.RemoveParticipant:
-                    var removeParticipantData = (RemoveParticipant)packet.PacketData;
-                    if (removeParticipantData == null)
-                    {
-                        SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                    case MCCommPacketTypes.RemoveParticipant:
+                        var removeParticipantData = (RemoveParticipant)packet.PacketData;
+                        if (removeParticipantData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnRemoveParticipantPacketReceived?.Invoke(removeParticipantData, ctx);
                         break;
-                    }
-                    OnRemoveParticipantPacketReceived?.Invoke(removeParticipantData, ctx);
-                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
 

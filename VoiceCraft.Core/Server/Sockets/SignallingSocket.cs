@@ -231,59 +231,69 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private void HandlePacket(SignallingPacket packet, Socket socket)
         {
-            switch (packet.PacketType)
+            try
             {
-                case SignallingPacketTypes.Login:
-                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Logout:
-                    OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Accept:
-                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Binded:
-                    OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Unbinded:
-                    OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Deafen:
-                    OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Undeafen:
-                    OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Mute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Unmute:
-                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.AddChannel:
-                    OnAddChannelPacketReceived?.Invoke((AddChannel)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.JoinChannel:
-                    OnJoinChannelPacketReceived?.Invoke((JoinChannel)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.LeaveChannel:
-                    OnLeaveChannelPacketReceived?.Invoke((LeaveChannel)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Error:
-                    OnErrorPacketReceived?.Invoke((Error)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Ping:
-                    OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.PingCheck:
-                    OnPingCheckPacketReceived?.Invoke((PingCheck)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Null:
-                    OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);
-                    break;
+                switch (packet.PacketType)
+                {
+                    case SignallingPacketTypes.Login:
+                        OnLoginPacketReceived?.Invoke((Login)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Logout:
+                        OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Accept:
+                        OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Deny:
+                        OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Binded:
+                        OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Unbinded:
+                        OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Deafen:
+                        OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Undeafen:
+                        OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Mute:
+                        OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Unmute:
+                        OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.AddChannel:
+                        OnAddChannelPacketReceived?.Invoke((AddChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.JoinChannel:
+                        OnJoinChannelPacketReceived?.Invoke((JoinChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.LeaveChannel:
+                        OnLeaveChannelPacketReceived?.Invoke((LeaveChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Error:
+                        OnErrorPacketReceived?.Invoke((Error)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Ping:
+                        OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.PingCheck:
+                        OnPingCheckPacketReceived?.Invoke((PingCheck)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Null:
+                        OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
     }

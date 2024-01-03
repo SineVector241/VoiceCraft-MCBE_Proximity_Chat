@@ -128,29 +128,39 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private void HandlePacket(VoicePacket packet, EndPoint EP)
         {
-            switch (packet.PacketType)
+            try
             {
-                case VoicePacketTypes.Login:
-                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.Accept:
-                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.ClientAudio:
-                    OnClientAudioPacketReceived?.Invoke((ClientAudio)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.ServerAudio:
-                    OnServerAudioPacketReceived?.Invoke((ServerAudio)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.UpdatePosition:
-                    OnUpdatePositionPacketReceived?.Invoke((UpdatePosition)packet.PacketData, EP);
-                    break;
-                case VoicePacketTypes.Null:
-                    OnNullPacketReceived?.Invoke((Null)packet.PacketData, EP);
-                    break;
+                switch (packet.PacketType)
+                {
+                    case VoicePacketTypes.Login:
+                        OnLoginPacketReceived?.Invoke((Login)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.Accept:
+                        OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.Deny:
+                        OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.ClientAudio:
+                        OnClientAudioPacketReceived?.Invoke((ClientAudio)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.ServerAudio:
+                        OnServerAudioPacketReceived?.Invoke((ServerAudio)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.UpdatePosition:
+                        OnUpdatePositionPacketReceived?.Invoke((UpdatePosition)packet.PacketData, EP);
+                        break;
+                    case VoicePacketTypes.Null:
+                        OnNullPacketReceived?.Invoke((Null)packet.PacketData, EP);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
     }
