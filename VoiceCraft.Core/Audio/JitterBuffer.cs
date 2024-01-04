@@ -13,7 +13,6 @@ namespace VoiceCraft.Core.Audio
 
         private JitterBufferPacket[] BufferedPackets { get; set; }
         private DateTime FirstPacketTime { get; set; }
-        private bool ResetSequence { get; set; }
 
         public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 80)
         {
@@ -34,19 +33,18 @@ namespace VoiceCraft.Core.Audio
                 FirstPacketTime = DateTime.UtcNow;
                 CurrentPacketReadCount = inPacket.Sequence - 1;
             }
-            ResetSequence = CurrentPacketReadCount - (long)inPacket.Sequence >= uint.MaxValue / 2;
 
             //Remove Old Packets
             for (int i = 0; i < MaxBufferSize; i++)
             {
-                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence <= CurrentPacketReadCount && !ResetSequence)
+                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence <= CurrentPacketReadCount)
                 {
                     BufferedPackets[i].Data = null;
                 }
             }
 
             //Only insert the packet if its not later than the reader.
-            if (inPacket.Sequence > CurrentPacketReadCount || ResetSequence)
+            if (inPacket.Sequence > CurrentPacketReadCount)
             {
                 //Find an empty slot and insert it.
                 for (int i = 0; i < MaxBufferSize; i++)
@@ -109,7 +107,10 @@ namespace VoiceCraft.Core.Audio
                 return -1;
             }
 
-            var lost = ResetSequence ? uint.MaxValue - (long)CurrentPacketReadCount + (earliest - 1) : earliest - (long)CurrentPacketReadCount - 1; //We want to get the packets lost. not the difference.
+            var lost = earliest - CurrentPacketReadCount;
+            if (lost > 0) lost -= 1; //Get the amount lost.
+
+
             if (lost > 0 && DateTime.UtcNow.Subtract(BufferedPackets[index].Timestamp).TotalMilliseconds >= JitterDelay) //If its not the next sequence and the inserted packet has exceeded the jitter delay then we return it.
             {
                 //Fill the packet and return the amount lost between the last and current sequences.
