@@ -2,9 +2,12 @@
 using Android.Content;
 using Android.OS;
 using Android.Runtime;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Services;
+using VoiceCraft.Mobile.Models;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -33,23 +36,55 @@ namespace VoiceCraft.Mobile.Droid.Services
                 try
                 {
                     voipService = new VoipService();
-                    voipService.OnUpdate += OnUpdate;
-                    voipService.OnUpdateStatus += UpdateStatus;
-                    voipService.OnServiceDisconnect += ServiceDisconnect;
+                    voipService.OnStatusUpdated += StatusUpdated;
+                    voipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
+                    voipService.OnMutedStatusChanged += MutedStatusChanged;
+                    voipService.OnDeafenedStatusChanged += DeafenedStatusChanged;
+                    voipService.OnParticipantAdded += ParticipantAdded;
+                    voipService.OnParticipantRemoved += ParticipantRemoved;
+                    voipService.OnParticipantSpeakingStatusChanged += ParticipantSpeakingStatusChanged;
+                    voipService.OnParticipantChanged += ParticipantChanged;
+                    voipService.OnChannelCreated += ChannelCreated;
+                    voipService.OnChannelEntered += ChannelEntered;
+                    voipService.OnChannelLeave += ChannelLeave;
+                    voipService.OnServiceDisconnected += OnServiceDisconnected;
+                    voipService.Network.Signalling.OnDenyPacketReceived += SignallingDeny;
 
-                    MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnect", message =>
+                    MessagingCenter.Subscribe<RequestData>(this, "RequestData", message =>
+                    {
+                        MessagingCenter.Send(new ResponseData()
+                        {
+                            Channels = voipService.Network.Channels.Select(x => new ChannelDisplayModel(x)).ToList(),
+                            Participants = voipService.Network.Participants.Select(x => new ParticipantDisplayModel(x.Value)).ToList(),
+                            StatusMessage = voipService.StatusMessage,
+                            IsDeafened = voipService.Network.IsDeafened,
+                            IsMuted = voipService.Network.IsMuted
+                        }, "ResponseData");
+                    });
+
+                    MessagingCenter.Subscribe<MuteUnmuteMSG>(this, "MuteUnmute", message =>
+                    {
+                        voipService.Network.SetMute();
+                    });
+
+                    MessagingCenter.Subscribe<DeafenUndeafenMSG>(this, "DeafenUndeafen", message =>
+                    {
+                        voipService.Network.SetDeafen();
+                    });
+
+                    MessagingCenter.Subscribe<DisconnectMSG>(this, "Disconnect", message =>
                     {
                         cts.Cancel();
                     });
 
-                    MessagingCenter.Subscribe<MuteUnmuteMessage>(this, "MuteUnmute", message =>
+                    MessagingCenter.Subscribe<JoinChannelMSG>(this, "JoinChannel", message =>
                     {
-                        voipService.Network.SetMute(message.Value);
+                        voipService.Network.JoinChannel(message.Channel, message.Password);
                     });
 
-                    MessagingCenter.Subscribe<DeafenUndeafen>(this, "DeafenUndeafen", message => 
+                    MessagingCenter.Subscribe<LeaveChannelMSG>(this, "LeaveChannel", message =>
                     {
-                        voipService.Network.SetDeafen(message.Value);
+                        voipService.Network.LeaveChannel(message.Channel);
                     });
 
                     voipService.Start(cts.Token).Wait();
@@ -59,19 +94,28 @@ namespace VoiceCraft.Mobile.Droid.Services
                 }
                 finally
                 {
-                    MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnect");
-                    MessagingCenter.Unsubscribe<MuteUnmuteMessage>(this, "MuteUnmute");
-                    MessagingCenter.Unsubscribe<DeafenUndeafen>(this, "DeafenUndeafen");
+                    voipService.OnStatusUpdated -= StatusUpdated;
+                    voipService.OnSpeakingStatusChanged -= SpeakingStatusChanged;
+                    voipService.OnMutedStatusChanged -= MutedStatusChanged;
+                    voipService.OnDeafenedStatusChanged -= DeafenedStatusChanged;
+                    voipService.OnParticipantAdded -= ParticipantAdded;
+                    voipService.OnParticipantRemoved -= ParticipantRemoved;
+                    voipService.OnParticipantSpeakingStatusChanged -= ParticipantSpeakingStatusChanged;
+                    voipService.OnParticipantChanged -= ParticipantChanged;
+                    voipService.OnChannelCreated -= ChannelCreated;
+                    voipService.OnChannelEntered -= ChannelEntered;
+                    voipService.OnChannelLeave -= ChannelLeave;
+                    voipService.OnServiceDisconnected -= OnServiceDisconnected;
+                    voipService.Network.Signalling.OnDenyPacketReceived -= SignallingDeny;
 
-                    var message = new StopServiceMessage();
-                    Device.BeginInvokeOnMainThread(() => {
-                        MessagingCenter.Send(message, "ServiceStopped");
-                        Preferences.Set("VoipServiceRunning", false);
-                    });
-
-                    voipService.OnUpdate -= OnUpdate;
-                    voipService.OnUpdateStatus -= UpdateStatus;
-                    voipService.OnServiceDisconnect -= ServiceDisconnect;
+                    MessagingCenter.Unsubscribe<RequestData>(this, "RequestData");
+                    MessagingCenter.Unsubscribe<MuteUnmuteMSG>(this, "MuteUnmute");
+                    MessagingCenter.Unsubscribe<JoinChannelMSG>(this, "JoinChannel");
+                    MessagingCenter.Unsubscribe<LeaveChannelMSG>(this, "LeaveChannel");
+                    MessagingCenter.Unsubscribe<DeafenUndeafenMSG>(this, "DeafenUndeafen");
+                    MessagingCenter.Unsubscribe<DisconnectMSG>(this, "Disconnect");
+                    MessagingCenter.Send(new StopServiceMSG(), "StopService");
+                    cts.Dispose();
                 }
             }, cts.Token);
             return StartCommandResult.Sticky;
@@ -81,9 +125,8 @@ namespace VoiceCraft.Mobile.Droid.Services
         {
             try
             {
-                if (cts != null)
+                if (!cts.IsCancellationRequested)
                 {
-                    cts.Token.ThrowIfCancellationRequested();
                     cts.Cancel();
                     Preferences.Set("VoipServiceRunning", false);
                 }
@@ -95,32 +138,66 @@ namespace VoiceCraft.Mobile.Droid.Services
             base.OnDestroy();
         }
 
-        private void ServiceDisconnect(string Reason)
+        private void StatusUpdated(string status)
         {
-            Device.BeginInvokeOnMainThread(() => {
-                var message = new DisconnectMessage()
-                {
-                    Reason = Reason
-                };
-
-                MessagingCenter.Send(message, "Disconnected");
-
-                cts.Cancel();
-            });
+            MessagingCenter.Send(new StatusMessageUpdatedMSG() { Status = status }, "StatusMessageUpdated");
         }
 
-        private void UpdateStatus(UpdateStatusMessage Data)
+        private void SpeakingStatusChanged(bool status)
         {
-            Device.BeginInvokeOnMainThread(() => {
-                MessagingCenter.Send(Data, "UpdateStatus");
-            });
+            MessagingCenter.Send(new SpeakingStatusChangedMSG() { Status = status }, "SpeakingStatusChanged");
         }
 
-        private void OnUpdate(UpdateMessage Data)
+        private void MutedStatusChanged(bool status)
         {
-            Device.BeginInvokeOnMainThread(() => {
-                MessagingCenter.Send(Data, "Update");
-            });
+            MessagingCenter.Send(new MutedStatusChangedMSG() { Status = status }, "MutedStatusChanged");
+        }
+
+        private void DeafenedStatusChanged(bool status)
+        {
+            MessagingCenter.Send(new DeafenedStatusChangedMSG() { Status = status }, "DeafenedStatusChanged");
+        }
+
+        private void ParticipantAdded(VoiceCraftParticipant participant)
+        {
+            MessagingCenter.Send(new ParticipantAddedMSG(participant), "ParticipantAdded");
+        }
+
+        private void ParticipantRemoved(VoiceCraftParticipant participant)
+        {
+            MessagingCenter.Send(new ParticipantRemovedMSG(participant), "ParticipantRemoved");
+        }
+        private void ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status)
+        {
+            MessagingCenter.Send(new ParticipantSpeakingStatusChangedMSG(participant) { Status = status }, "ParticipantSpeakingStatusChanged");
+        }
+        private void ParticipantChanged(VoiceCraftParticipant participant)
+        {
+            MessagingCenter.Send(new ParticipantChangedMSG(participant), "ParticipantChanged");
+        }
+        private void ChannelCreated(VoiceCraftChannel channel)
+        {
+            MessagingCenter.Send(new ChannelCreatedMSG(channel), "ChannelCreated");
+        }
+        private void ChannelEntered(VoiceCraftChannel channel)
+        {
+            MessagingCenter.Send(new ChannelEnteredMSG(channel), "ChannelEntered");
+        }
+        private void ChannelLeave(VoiceCraftChannel channel)
+        {
+            MessagingCenter.Send(new ChannelLeftMSG(channel), "ChannelLeft");
+        }
+        private void OnServiceDisconnected(string reason)
+        {
+            MessagingCenter.Send(new DisconnectedMSG() { Reason = reason }, "Disconnected");
+            cts.Cancel();
+        }
+        private void SignallingDeny(Core.Packets.Signalling.Deny packet)
+        {
+            if(!packet.Disconnect)
+            {
+                MessagingCenter.Send(new DenyMSG() { Reason = packet.Reason }, "Deny");
+            }
         }
     }
 }

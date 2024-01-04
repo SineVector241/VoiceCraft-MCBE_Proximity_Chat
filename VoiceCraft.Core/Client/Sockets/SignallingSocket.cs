@@ -15,6 +15,7 @@ namespace VoiceCraft.Core.Client.Sockets
         public CancellationTokenSource CTS { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
+        public DateTime LastActive { get; private set; }
 
         //Delegates
         public delegate void LoginPacket(Login packet);
@@ -27,6 +28,9 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void UndeafenPacket(Undeafen packet);
         public delegate void MutePacket(Mute packet);
         public delegate void UnmutePacket(Unmute packet);
+        public delegate void AddChannelPacket(AddChannel packet);
+        public delegate void JoinChannelPacket(JoinChannel packet);
+        public delegate void LeaveChannelPacket(LeaveChannel packet);
         public delegate void ErrorPacket(Error packet);
         public delegate void PingPacket(Ping packet);
         public delegate void NullPacket(Null packet);
@@ -44,6 +48,9 @@ namespace VoiceCraft.Core.Client.Sockets
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
         public event UnmutePacket? OnUnmutePacketReceived;
+        public event AddChannelPacket? OnAddChannelReceived;
+        public event JoinChannelPacket? OnJoinChannelReceived;
+        public event LeaveChannelPacket? OnLeaveChannelReceived;
         public event ErrorPacket? OnErrorPacketReceived;
         public event PingPacket? OnPingPacketReceived;
         public event NullPacket? OnNullPacketReceived;
@@ -70,18 +77,9 @@ namespace VoiceCraft.Core.Client.Sockets
                 if(cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
 
                 _ = ListenAsync();
-                await SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Login,
-                    PacketData = new Login()
-                    {
-                        LoginKey = LoginKey,
-                        PositioningType = PositioningType,
-                        Version = Version
-                    }
-                });
+                await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version));
 
-                await Task.Delay(3000);
+                await Task.Delay(5000);
                 if (!IsConnected) throw new Exception("Signalling timed out");
             }
             catch(Exception ex)
@@ -220,13 +218,15 @@ namespace VoiceCraft.Core.Client.Sockets
                         OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Accept:
+                    LastActive = DateTime.UtcNow;
                     IsConnected = true;
                     OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Deny:
                     var packetData = (Deny)packet.PacketData;
                     OnDenyPacketReceived?.Invoke(packetData);
-                    Disconnect(packetData.Reason);
+                    if(packetData.Disconnect)
+                        Disconnect(packetData.Reason);
                     break;
                 case SignallingPacketTypes.Binded:
                     if (IsConnected)
@@ -252,6 +252,18 @@ namespace VoiceCraft.Core.Client.Sockets
                     if (IsConnected)
                         OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData);
                     break;
+                case SignallingPacketTypes.AddChannel:
+                    if (IsConnected)
+                        OnAddChannelReceived?.Invoke((AddChannel)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.JoinChannel:
+                    if (IsConnected)
+                        OnJoinChannelReceived?.Invoke((JoinChannel)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.LeaveChannel:
+                    if (IsConnected)
+                        OnLeaveChannelReceived?.Invoke((LeaveChannel)packet.PacketData);
+                    break;
                 case SignallingPacketTypes.Error:
                     if (IsConnected)
                         OnErrorPacketReceived?.Invoke((Error)packet.PacketData);
@@ -259,6 +271,10 @@ namespace VoiceCraft.Core.Client.Sockets
                 case SignallingPacketTypes.Ping:
                     if (IsConnected)
                         OnPingPacketReceived?.Invoke((Ping)packet.PacketData);
+                    break;
+                case SignallingPacketTypes.PingCheck:
+                    if(IsConnected)
+                        LastActive = DateTime.UtcNow;
                     break;
                 case SignallingPacketTypes.Null:
                     if (IsConnected)

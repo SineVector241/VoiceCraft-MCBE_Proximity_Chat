@@ -42,6 +42,14 @@ namespace VoiceCraft.Server
                 throw new Exception("Server MOTD cannot be longer than 30 characters!");
             if (ServerProperties.ProximityDistance > 120 || ServerProperties.ProximityDistance < 1)
                 throw new Exception("Proximity distance can only be between 1 and 120!");
+            if (ServerProperties.Channels.Count >= byte.MaxValue)
+                throw new Exception($"Cannot have more than {byte.MaxValue - 1} channels!"); //Technically we can only have 254 channels since we start the channelId from 1.
+            if (ServerProperties.Channels.Exists(x => x.Name.Length > 12))
+                throw new Exception("Channel name cannot be longer than 12 characters!");
+            if (ServerProperties.Channels.Exists(x => string.IsNullOrWhiteSpace(x.Name)))
+                throw new Exception("Channel name cannot be empty!");
+            if (ServerProperties.Channels.Exists(x => x.Password.Length > 12))
+                throw new Exception("Channel password cannot be longer than 12 characters!");
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))
             {
@@ -84,6 +92,22 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Success, "Loaded banlist successfully!", "Banlist");
 
             return BanlistData;
+        }
+
+        public static void SaveBanlist(Banlist banlist)
+        {
+            if (!File.Exists(BanlistDirectory))
+            {
+                Logger.LogToConsole(LogType.Warn, $"{BanlistDirectory} file does not exist. Creating file...", "Banlist");
+                string jsonString = JsonConvert.SerializeObject(banlist, Formatting.Indented);
+                File.WriteAllText(BanlistDirectory, jsonString);
+                Logger.LogToConsole(LogType.Success, $"Successfully created file {BanlistDirectory}.", "Banlist");
+            }
+            else
+            {
+                string jsonString = JsonConvert.SerializeObject(banlist, Formatting.Indented);
+                File.WriteAllText(BanlistDirectory, jsonString);
+            }
         }
     }
 }

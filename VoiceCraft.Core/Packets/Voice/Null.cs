@@ -8,5 +8,14 @@ namespace VoiceCraft.Core.Packets.Voice
         {
             return new byte[0];
         }
+
+        public static VoicePacket Create()
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.Null,
+                PacketData = new Null()
+            };
+        }
     }
 }

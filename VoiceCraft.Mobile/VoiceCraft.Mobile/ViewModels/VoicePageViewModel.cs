@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Models;
 using VoiceCraft.Mobile.Services;
 using Xamarin.Essentials;
@@ -12,47 +14,40 @@ namespace VoiceCraft.Mobile.ViewModels
     public partial class VoicePageViewModel : ObservableObject
     {
         [ObservableProperty]
+        string statusText = "Connecting...";
+
+        [ObservableProperty]
+        string passwordInput = string.Empty;
+
+        [ObservableProperty]
         bool isMuted = false;
 
         [ObservableProperty]
         bool isDeafened = false;
 
         [ObservableProperty]
-        string statusText = "Connecting...";
-
-        [ObservableProperty]
         bool isSpeaking = false;
-
-        [ObservableProperty]
-        ParticipantDisplayModel selectedParticipant = new ParticipantDisplayModel();
 
         [ObservableProperty]
         bool showSlider = false;
 
         [ObservableProperty]
+        bool showChannels = false;
+
+        [ObservableProperty]
+        bool showPasswordInput = false;
+
+        [ObservableProperty]
+        VoiceCraftParticipant? selectedParticipant;
+
+        [ObservableProperty]
+        VoiceCraftChannel? selectedChannel;
+
+        [ObservableProperty]
         ObservableCollection<ParticipantDisplayModel> participants = new ObservableCollection<ParticipantDisplayModel>();
 
-        [RelayCommand]
-        public void MuteUnmute()
-        {
-            IsMuted = !IsMuted;
-            var message = new MuteUnmuteMessage() { Value = IsMuted };
-            MessagingCenter.Send(message, "MuteUnmute");
-        }
-
-        [RelayCommand]
-        public void DeafenUndeafen()
-        {
-            IsDeafened = !IsDeafened;
-            var message = new DeafenUndeafen() { Value = IsDeafened };
-            MessagingCenter.Send(message, "DeafenUndeafen");
-        }
-
-        [RelayCommand]
-        public void Disconnect()
-        {
-            MessagingCenter.Send(new DisconnectMessage(), "Disconnect");
-        }
+        [ObservableProperty]
+        ObservableCollection<ChannelDisplayModel> channels = new ObservableCollection<ChannelDisplayModel>();
 
         //Page codebehind to viewmodel.
         [RelayCommand]
@@ -66,85 +61,214 @@ namespace VoiceCraft.Mobile.ViewModels
                 return;
             }
 
-            MessagingCenter.Subscribe<StopServiceMessage>(this, "ServiceStopped", message =>
+            MessagingCenter.Subscribe<StatusMessageUpdatedMSG>(this, "StatusMessageUpdated", message =>
             {
-                Device.BeginInvokeOnMainThread(() => {
-                    Shell.Current.Navigation.PopAsync();
-                });
+                StatusText = message.Status;
             });
 
-            MessagingCenter.Subscribe<UpdateMessage>(this, "Update", message =>
+            MessagingCenter.Subscribe<SpeakingStatusChangedMSG>(this, "SpeakingStatusChanged", message =>
             {
-                for (int i = 0; i < message.Participants.Count; i++)
-                {
-                    var participant = message.Participants[i];
-                    var displayParticipant = Participants.FirstOrDefault(x => x.Key == participant.Key);
-                    if (displayParticipant != null)
-                    {
-                        displayParticipant.IsDeafened = participant.IsDeafened;
-                        displayParticipant.IsMuted = participant.IsMuted;
-                        displayParticipant.IsSpeaking = participant.IsSpeaking;
-                    }
-                    else
-                    {
-                        Participants.Add(participant);
-                    }
-                }
+                IsSpeaking = message.Status;
+            });
 
-                for (int i = 0; i < Participants.Count; i++)
-                {
-                    var participant = message.Participants.FirstOrDefault(x => x.Key == Participants[i].Key);
-                    if (participant == null)
-                    {
-                        Participants.Remove(Participants[i]);
-                    }
-                }
+            MessagingCenter.Subscribe<MutedStatusChangedMSG>(this, "MutedStatusChanged", message =>
+            {
+                IsMuted = message.Status;
+            });
 
-                IsSpeaking = message.IsSpeaking;
-                IsDeafened = message.IsDeafened;
+            MessagingCenter.Subscribe<DeafenedStatusChangedMSG>(this, "DeafenedStatusChanged", message =>
+            {
+                IsDeafened = message.Status;
+            });
+
+            MessagingCenter.Subscribe<ParticipantAddedMSG>(this, "ParticipantAdded", message =>
+            {
+                if (Participants.FirstOrDefault(x => x.Participant == message.Participant) == null)
+                {
+                    Participants.Add(new ParticipantDisplayModel(message.Participant));
+                }
+            });
+
+            MessagingCenter.Subscribe<ParticipantRemovedMSG>(this, "ParticipantRemoved", message =>
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Participant);
+                if (displayParticipant != null)
+                {
+                    Participants.Remove(displayParticipant);
+                }
+            });
+            
+            MessagingCenter.Subscribe<ParticipantChangedMSG>(this, "ParticipantChanged", message =>
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Participant);
+                if (displayParticipant != null)
+                {
+                    displayParticipant.IsMuted = message.Participant.Muted;
+                    displayParticipant.IsDeafened = message.Participant.Deafened;
+                }
+            });
+
+            MessagingCenter.Subscribe<ParticipantSpeakingStatusChangedMSG>(this, "ParticipantSpeakingStatusChanged", message =>
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Participant);
+                if (displayParticipant != null)
+                {
+                    displayParticipant.IsSpeaking = message.Status;
+                }
+            });
+
+            MessagingCenter.Subscribe<ChannelCreatedMSG>(this, "ChannelCreated", message =>
+            {
+                if (Channels.FirstOrDefault(x => x.Channel == message.Channel) == null)
+                {
+                    Channels.Add(new ChannelDisplayModel(message.Channel));
+                }
+            });
+
+            MessagingCenter.Subscribe<ChannelEnteredMSG>(this, "ChannelEntered", message =>
+            {
+                var displayChannel = Channels.FirstOrDefault(x => x.Channel == message.Channel);
+                if (displayChannel != null)
+                {
+                    displayChannel.Joined = true;
+                }
+            });
+
+            MessagingCenter.Subscribe<ChannelLeftMSG>(this, "ChannelLeft", message =>
+            {
+                var displayChannel = Channels.FirstOrDefault(x => x.Channel == message.Channel);
+                if (displayChannel != null)
+                {
+                    displayChannel.Joined = false;
+                }
+            });
+
+            MessagingCenter.Subscribe<DisconnectedMSG>(this, "Disconnected", message =>
+            {
+                if (!string.IsNullOrWhiteSpace(message.Reason))
+                    Shell.Current.DisplayAlert("Disconnected!", message.Reason, "OK");
+                Shell.Current.Navigation.PopAsync();
+            });
+
+            MessagingCenter.Subscribe<DenyMSG>(this, "Deny", message =>
+            {
+                if (!string.IsNullOrWhiteSpace(message.Reason))
+                    Shell.Current.DisplayAlert("Denied", message.Reason, "OK");
+            });
+
+            MessagingCenter.Subscribe<ResponseData>(this, "ResponseData", message =>
+            {
+                StatusText = message.StatusMessage;
                 IsMuted = message.IsMuted;
-                StatusText = message.StatusMessage;
+                IsDeafened = message.IsDeafened;
+                IsSpeaking = message.IsSpeaking;
+                Participants = new ObservableCollection<ParticipantDisplayModel>(message.Participants);
+                Channels = new ObservableCollection<ChannelDisplayModel>(message.Channels);
             });
 
-            MessagingCenter.Subscribe<UpdateStatusMessage>(this, "UpdateStatus", message =>
-            {
-                StatusText = message.StatusMessage;
-            });
-
-            MessagingCenter.Subscribe<DisconnectMessage>(this, "Disconnected", message =>
-            {
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    if (!string.IsNullOrWhiteSpace(message.Reason))
-                        Shell.Current.DisplayAlert("Disconnected!", message.Reason, "OK");
-                });
-            });
+            MessagingCenter.Send(new RequestData(), "RequestData");
         }
 
         [RelayCommand]
         public void OnDisappearing()
         {
-            MessagingCenter.Unsubscribe<StopServiceMessage>(this, "ServiceStopped");
-            MessagingCenter.Unsubscribe<UpdateMessage>(this, "Update");
-            MessagingCenter.Unsubscribe<UpdateStatusMessage>(this, "UpdateStatus");
-            MessagingCenter.Unsubscribe<DisconnectMessage>(this, "Disconnected");
+            MessagingCenter.Unsubscribe<StatusMessageUpdatedMSG>(this, "StatusMessageUpdated");
+            MessagingCenter.Unsubscribe<SpeakingStatusChangedMSG>(this, "SpeakingStatusChanged");
+            MessagingCenter.Unsubscribe<MutedStatusChangedMSG>(this, "MutedStatusChanged");
+            MessagingCenter.Unsubscribe<DeafenedStatusChangedMSG>(this, "DeafenedStatusChanged");
+            MessagingCenter.Unsubscribe<ParticipantAddedMSG>(this, "ParticipantAdded");
+            MessagingCenter.Unsubscribe<ParticipantRemovedMSG>(this, "ParticipantRemoved");
+            MessagingCenter.Unsubscribe<ParticipantChangedMSG>(this, "ParticipantChanged");
+            MessagingCenter.Unsubscribe<ParticipantSpeakingStatusChangedMSG>(this, "ParticipantSpeakingStatusChanged");
+            MessagingCenter.Unsubscribe<ChannelCreatedMSG>(this, "ChannelCreated");
+            MessagingCenter.Unsubscribe<ChannelEnteredMSG>(this, "ChannelEntered");
+            MessagingCenter.Unsubscribe<ChannelLeftMSG>(this, "ChannelLeft");
+            MessagingCenter.Unsubscribe<DisconnectedMSG>(this, "Disconnected");
+            MessagingCenter.Unsubscribe<DenyMSG>(this, "Deny");
+            MessagingCenter.Unsubscribe<ResponseData>(this, "Response");
         }
 
         [RelayCommand]
-        public void ShowParticipantVolume(ushort key)
+        public void MuteUnmute()
         {
-            var participant = Participants.FirstOrDefault(x => x.Key == key);
-            if (participant != null)
-            {
-                SelectedParticipant = participant;
-                ShowSlider = true;
-            }
+            MessagingCenter.Send(new MuteUnmuteMSG(), "MuteUnmute");
+        }
+
+        [RelayCommand]
+        public void DeafenUndeafen()
+        {
+            MessagingCenter.Send(new DeafenUndeafenMSG(), "DeafenUndeafen");
+        }
+
+        [RelayCommand]
+        public void Disconnect()
+        {
+            MessagingCenter.Send(new DisconnectMSG(), "Disconnect");
+            Shell.Current.Navigation.PopAsync();
+        }
+
+        [RelayCommand]
+        public void ShowParticipantVolume(VoiceCraftParticipant participant)
+        {
+            SelectedParticipant = participant;
+            ShowSlider = true;
         }
 
         [RelayCommand]
         public void HideParticipantVolume()
         {
             ShowSlider = false;
+        }
+
+        [RelayCommand]
+        public void ToggleChannelVisibility()
+        {
+            ShowChannels = !ShowChannels;
+            if(ShowChannels == false)
+                ShowPasswordInput = false;
+        }
+
+        [RelayCommand]
+        public void JoinLeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                MessagingCenter.Send(new LeaveChannelMSG(channel), "LeaveChannel");
+            }
+            else
+            {
+                if (channel.RequiresPassword)
+                {
+                    PasswordInput = string.Empty;
+                    SelectedChannel = channel;
+                    ShowPasswordInput = true;
+                }
+                else
+                {
+                    MessagingCenter.Send(new JoinChannelMSG(channel), "JoinChannel");
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void JoinChannel()
+        {
+            if (string.IsNullOrWhiteSpace(PasswordInput))
+            {
+                Shell.Current.DisplayAlert("Password Error!", "Password cannot be empty or whitespace!", "OK");
+                return;
+            }
+            if (SelectedChannel != null)
+            {
+                ShowPasswordInput = false;
+                MessagingCenter.Send(new JoinChannelMSG(SelectedChannel) { Password = PasswordInput }, "JoinChannel");
+            }
+        }
+
+        [RelayCommand]
+        public void HidePasswordInput()
+        {
+            ShowPasswordInput = false;
         }
     }
 }

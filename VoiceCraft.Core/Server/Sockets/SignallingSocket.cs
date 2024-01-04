@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -14,6 +15,14 @@ namespace VoiceCraft.Core.Server.Sockets
         public Socket TCPSocket { get; }
         public CancellationToken CT { get; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
+        
+        //Debug Settings
+        public bool LogExceptions { get; set; } = false;
+        public bool LogInbound { get; set; } = false;
+        public bool LogOutbound { get; set; } = false;
+        public List<SignallingPacketTypes> InboundFilter { get; set; } = new List<SignallingPacketTypes>();
+        public List<SignallingPacketTypes> OutboundFilter { get; set; } = new List<SignallingPacketTypes>();
+        public Dictionary<Socket, NetworkStream> ConnectedSockets { get; set; } = new Dictionary<Socket, NetworkStream>();
 
         //Delegates
         public delegate void Started();
@@ -27,11 +36,19 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void UndeafenPacket(Undeafen packet, Socket socket);
         public delegate void MutePacket(Mute packet, Socket socket);
         public delegate void UnmutePacket(Unmute packet, Socket socket);
+        public delegate void AddChannelPacket(AddChannel packet, Socket socket);
+        public delegate void JoinChannelPacket(JoinChannel packet, Socket socket);
+        public delegate void LeaveChannelPacket(LeaveChannel packet, Socket socket);
         public delegate void ErrorPacket(Error packet, Socket socket);
         public delegate void PingPacket(Ping packet, Socket socket);
+        public delegate void PingCheckPacket(PingCheck packet, Socket socket);
         public delegate void NullPacket(Null packet, Socket socket);
 
+        public delegate void SocketConnected(Socket socket, NetworkStream stream);
         public delegate void SocketDisconnected(Socket socket, string reason);
+        public delegate void OutboundPacket(ISignallingPacket packet, Socket socket);
+        public delegate void InboundPacket(ISignallingPacket packet, Socket socket);
+        public delegate void ExceptionError(Exception error);
 
         //Events
         public event Started? OnStarted;
@@ -45,11 +62,19 @@ namespace VoiceCraft.Core.Server.Sockets
         public event UndeafenPacket? OnUndeafenPacketReceived;
         public event MutePacket? OnMutePacketReceived;
         public event UnmutePacket? OnUnmutePacketReceived;
+        public event AddChannelPacket? OnAddChannelPacketReceived;
+        public event JoinChannelPacket? OnJoinChannelPacketReceived;
+        public event LeaveChannelPacket? OnLeaveChannelPacketReceived;
         public event ErrorPacket? OnErrorPacketReceived;
         public event PingPacket? OnPingPacketReceived;
+        public event PingCheckPacket? OnPingCheckPacketReceived;
         public event NullPacket? OnNullPacketReceived;
 
+        public event SocketConnected? OnSocketConnected;
         public event SocketDisconnected? OnSocketDisconnected;
+        public event OutboundPacket? OnOutboundPacket;
+        public event InboundPacket? OnInboundPacket;
+        public event ExceptionError? OnExceptionError;
 
 
         public SignallingSocket(CancellationToken CT)
@@ -75,10 +100,16 @@ namespace VoiceCraft.Core.Server.Sockets
                     var packetStream = packet.GetPacketStream();
                     await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     await socket.SendAsync(packetStream, SocketFlags.None);
+
+                    if(LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                        OnOutboundPacket?.Invoke(packet, socket);
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void SendPacket(ISignallingPacket packet, Socket socket)
@@ -90,9 +121,16 @@ namespace VoiceCraft.Core.Server.Sockets
                     var packetStream = packet.GetPacketStream();
                     socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     socket.Send(packetStream, SocketFlags.None);
+
+                    if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                        OnOutboundPacket?.Invoke(packet, socket);
                 }
             }
-            catch { }
+            catch(Exception ex)
+            {
+                if (LogExceptions)
+                    OnExceptionError?.Invoke(ex);
+            }
         }
 
         public void Stop()
@@ -101,11 +139,10 @@ namespace VoiceCraft.Core.Server.Sockets
             TCPSocket.Dispose();
         }
 
-        private async void ListenAsync(Socket socket)
+        private async void ListenAsync(Socket socket, NetworkStream stream)
         {
             byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
-            var stream = new NetworkStream(socket);
             while (!CT.IsCancellationRequested)
             {
                 try
@@ -134,10 +171,16 @@ namespace VoiceCraft.Core.Server.Sockets
                         offset += bytesRead;
                     }
                     var packet = new SignallingPacket(packetBuffer);
+
+                    if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                        OnInboundPacket?.Invoke(packet, socket);
                     HandlePacket(packet, socket);
                 }
-                catch(IOException)
+                catch(IOException ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, "Lost connection.");
@@ -146,6 +189,9 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
                 catch (Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CT.IsCancellationRequested)
                     {
                         OnSocketDisconnected?.Invoke(socket, ex.Message);
@@ -154,9 +200,9 @@ namespace VoiceCraft.Core.Server.Sockets
                 }
             }
 
-            socket.Close();
             await stream.DisposeAsync();
-            socket.Dispose();
+            socket.Close();
+            ConnectedSockets.Remove(socket);
             OnSocketDisconnected?.Invoke(socket, "Client logged out");
         }
 
@@ -166,11 +212,17 @@ namespace VoiceCraft.Core.Server.Sockets
             {
                 try
                 {
-                    var handle = await TCPSocket.AcceptAsync();
-                    ListenAsync(handle);
+                    var socket = await TCPSocket.AcceptAsync();
+                    var stream = new NetworkStream(socket);
+                    ConnectedSockets.Add(socket, stream);
+                    OnSocketConnected?.Invoke(socket, stream);
+                    ListenAsync(socket, stream);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (CT.IsCancellationRequested)
                         break;
                 }
@@ -179,47 +231,69 @@ namespace VoiceCraft.Core.Server.Sockets
 
         private void HandlePacket(SignallingPacket packet, Socket socket)
         {
-            switch (packet.PacketType)
+            try
             {
-                case SignallingPacketTypes.Login:
-                    OnLoginPacketReceived?.Invoke((Login)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Logout:
-                    OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Accept:
-                    OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Deny:
-                    OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Binded:
-                    OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Unbinded:
-                    OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Deafen:
-                    OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Undeafen:
-                    OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Mute:
-                    OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Unmute:
-                    OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Error:
-                    OnErrorPacketReceived?.Invoke((Error)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Ping:
-                    OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
-                    break;
-                case SignallingPacketTypes.Null:
-                    OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);
-                    break;
+                switch (packet.PacketType)
+                {
+                    case SignallingPacketTypes.Login:
+                        OnLoginPacketReceived?.Invoke((Login)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Logout:
+                        OnLogoutPacketReceived?.Invoke((Logout)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Accept:
+                        OnAcceptPacketReceived?.Invoke((Accept)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Deny:
+                        OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Binded:
+                        OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Unbinded:
+                        OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Deafen:
+                        OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Undeafen:
+                        OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Mute:
+                        OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Unmute:
+                        OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.AddChannel:
+                        OnAddChannelPacketReceived?.Invoke((AddChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.JoinChannel:
+                        OnJoinChannelPacketReceived?.Invoke((JoinChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.LeaveChannel:
+                        OnLeaveChannelPacketReceived?.Invoke((LeaveChannel)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Error:
+                        OnErrorPacketReceived?.Invoke((Error)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Ping:
+                        OnPingPacketReceived?.Invoke((Ping)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.PingCheck:
+                        OnPingCheckPacketReceived?.Invoke((PingCheck)packet.PacketData, socket);
+                        break;
+                    case SignallingPacketTypes.Null:
+                        OnNullPacketReceived?.Invoke((Null)packet.PacketData, socket);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
     }

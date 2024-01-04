@@ -1,80 +1,97 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage x:Class="VoiceCraft.Mobile.Views.ServersPage"
+             xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
-             x:Class="VoiceCraft.Mobile.Views.ServersPage"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              x:Name="Servers">
     <ContentPage.BindingContext>
         <vm:ServersPageViewModel />
     </ContentPage.BindingContext>
 
     <Grid>
-        <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Dark=bgdark, Light=bglight}" />
 
         <Grid Grid.RowDefinitions="auto, auto">
             <Grid ColumnDefinitions="*, auto">
                 <Frame>
-                    <Label Text="Servers" 
+                    <Label FontAttributes="Bold"
                            FontSize="25"
-                           FontAttributes="Bold"/>
+                           Text="Servers" />
                 </Frame>
                 <Button Grid.Column="1"
-                        HorizontalOptions="CenterAndExpand"
                         Margin="0,10,10,10"
-                        Text="+"
-                        FontSize="30"
                         BackgroundColor="#9227"
-                        Command="{Binding GoToAddServerCommand}"/>
+                        Command="{Binding GoToAddServerCommand}"
+                        FontSize="30"
+                        HorizontalOptions="CenterAndExpand"
+                        Text="+" />
             </Grid>
             <CollectionView Grid.Row="1"
-                            ItemsSource="{Binding Servers}"
-                            Margin="10,0">
+                            Margin="10,0"
+                            ItemsSource="{Binding Servers}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid>
                             <Frame Margin="0,10"
                                    Padding="10"
-                                   VerticalOptions="StartAndExpand"
-                                   BorderColor="Transparent">
+                                   BorderColor="Transparent"
+                                   VerticalOptions="StartAndExpand">
                                 <Grid RowDefinitions="auto,auto,auto,auto">
                                     <StackLayout Orientation="Horizontal">
-                                        <Label Text="{Binding Name, StringFormat='Name: {0}'}"
-                                               FontAttributes="Bold"
-                                               FontSize="22">
-                                        </Label>
+                                        <Label FontAttributes="Bold"
+                                               FontSize="22"
+                                               Text="{Binding Name, StringFormat='Name: {0}'}" />
 
-                                        <ImageButton Source="delete"
-                                                     BackgroundColor="{AppThemeBinding Dark=#8666, Light=#8FFF}"
-                                                     Scale="1.3"
-                                                     TranslationY="5"
-                                                     HorizontalOptions="EndAndExpand"
+                                        <ImageButton xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White,
+                                                                                                         Light=Black}"
+                                                     BackgroundColor="{AppThemeBinding Dark=#8666,
+                                                                                       Light=#8FFF}"
                                                      Command="{Binding Source={x:Reference Servers}, Path=BindingContext.DeleteServerCommand}"
                                                      CommandParameter="{Binding}"
-                                                     xct:IconTintColorEffect.TintColor="{AppThemeBinding Dark=White, Light=Black}"/>
+                                                     HorizontalOptions="EndAndExpand"
+                                                     Scale="1.3"
+                                                     Source="delete"
+                                                     TranslationY="5" />
                                     </StackLayout>
 
                                     <Label Grid.Row="1"
                                            FontAttributes="Bold"
                                            FontSize="18">
-                                        <Label.Text>
-                                            <MultiBinding StringFormat="Address: {0}:{1}">
-                                                <Binding Path="IP"/>
-                                                <Binding Path="Port"/>
-                                            </MultiBinding>
-                                        </Label.Text>
+                                        <Label.Style>
+                                            <Style TargetType="Label">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=BindingContext.Settings.HideAddress}"
+                                                                 TargetType="Label"
+                                                                 Value="False">
+                                                        <Setter Property="Text">
+                                                            <Setter.Value>
+                                                                <MultiBinding StringFormat="Address: {0}:{1}">
+                                                                    <Binding Path="IP" />
+                                                                    <Binding Path="Port" />
+                                                                </MultiBinding>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Source={x:Reference Servers}, Path=BindingContext.Settings.HideAddress}"
+                                                                 TargetType="Label"
+                                                                 Value="True">
+                                                        <Setter Property="Text" Value="Address: ****:****" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Label.Style>
                                     </Label>
 
                                     <Label Grid.Row="2"
-                                           Text="{Binding Key, StringFormat='Key: {0}'}"
                                            FontAttributes="Bold"
-                                           FontSize="18"/>
+                                           FontSize="18"
+                                           Text="{Binding Key, StringFormat='Key: {0}'}" />
 
                                     <Button Grid.Row="3"
-                                            Text="View"
                                             Command="{Binding Source={x:Reference Servers}, Path=BindingContext.GoToServerCommand}"
-                                            CommandParameter="{Binding}"/>
+                                            CommandParameter="{Binding}"
+                                            Text="View" />
                                 </Grid>
                             </Frame>
                         </Grid>

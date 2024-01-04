@@ -12,8 +12,13 @@ namespace VoiceCraft.Mobile.Models
         [ObservableProperty]
         public bool isDeafened;
         [ObservableProperty]
-        public ushort key;
-        [ObservableProperty]
-        public VoiceCraftParticipant? participant;
+        public VoiceCraftParticipant participant;
+
+        public ParticipantDisplayModel(VoiceCraftParticipant participant)
+        {
+            this.participant = participant;
+            isMuted = participant.Muted;
+            isDeafened = participant.Deafened;
+        }
     }
 }

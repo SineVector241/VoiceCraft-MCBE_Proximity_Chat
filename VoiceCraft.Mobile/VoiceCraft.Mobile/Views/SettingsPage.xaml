@@ -19,7 +19,7 @@
                 </Frame>
 
                 <Frame Grid.Row="1">
-                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto"
+                    <Grid RowDefinitions="auto, auto, auto, auto, auto, auto, auto, auto, auto, auto, auto"
                           RowSpacing="0">
                         <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
@@ -69,9 +69,21 @@
                                    VerticalOptions="CenterAndExpand"/>
                         </StackLayout>
 
-                        <StackLayout Orientation="Vertical"
+                        <StackLayout Orientation="Horizontal"
                                      Margin="0,10"
                                      Grid.Row="4">
+                            <CheckBox IsChecked="{Binding Settings.HideAddress}"
+                                      Scale="1.3"/>
+
+                            <Label Text="Hide Address"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="CenterAndExpand"/>
+                        </StackLayout>
+
+                        <StackLayout Orientation="Vertical"
+                                     Margin="0,10"
+                                     Grid.Row="5">
 
                             <Label Text="Websocket Port"
                                    FontSize="15"
@@ -85,7 +97,7 @@
 
                         <StackLayout Orientation="Vertical"
                                      Margin="0,10"
-                                     Grid.Row="5">
+                                     Grid.Row="6">
 
                             <Label Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}' }"
                                    FontSize="15"
@@ -100,7 +112,7 @@
                         </StackLayout>
 
                         <Grid Margin="0,10"
-                              Grid.Row="6">
+                              Grid.Row="7">
 
                             <Label Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:F2}' }"
                                    FontSize="15"
@@ -123,11 +135,11 @@
                         </Grid>
 
                         <Button Text="Save"
-                                Grid.Row="7"
+                                Grid.Row="8"
                                 Command="{Binding SaveSettingsCommand}"
                                 Margin="0,0,0,10"/>
 
-                        <Button Grid.Row="8"
+                        <Button Grid.Row="9"
                                 Command="{Binding OpenCloseMicrophoneCommand}"
                                 Margin="0,0,0,10">
                             <Button.Style>
@@ -145,7 +157,7 @@
                         </Button>
 
                         <Button Text="Reset Settings"
-                                Grid.Row="9"
+                                Grid.Row="10"
                                 Command="{Binding ResetSettingsCommand}"/>
                     </Grid>
                 </Frame>

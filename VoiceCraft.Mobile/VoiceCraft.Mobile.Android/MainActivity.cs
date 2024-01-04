@@ -53,7 +53,7 @@ namespace VoiceCraft.Mobile.Droid
         {
             Preferences.Set("VoipServiceRunning", IsServiceRunning(typeof(VoipForegroundService)));
 
-            MessagingCenter.Subscribe<StartServiceMessage>(this, "ServiceStarted", message =>
+            MessagingCenter.Subscribe<StartServiceMSG>(this, "StartService", message =>
             {
                 if (!IsServiceRunning(typeof(VoipForegroundService)))
                 {
@@ -62,7 +62,7 @@ namespace VoiceCraft.Mobile.Droid
                 }
             });
 
-            MessagingCenter.Subscribe<StopServiceMessage>(this, "ServiceStopped", message =>
+            MessagingCenter.Subscribe<StopServiceMSG>(this, "StopService", message =>
             {
                 if (IsServiceRunning(typeof(VoipForegroundService)))
                 {

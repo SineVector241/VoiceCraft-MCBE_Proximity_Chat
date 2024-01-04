@@ -14,7 +14,14 @@ namespace VoiceCraft.Windows.ViewModels
 
         public EditPageViewModel()
         {
-            Server = Database.GetPassableObject<ServerModel>();
+            var server = Database.GetPassableObject<ServerModel>();
+            this.server = new ServerModel()
+            {
+                IP = server.IP,
+                Port = server.Port,
+                Key = server.Key,
+                Name = server.Name
+            };
         }
 
         [RelayCommand]
@@ -23,6 +30,7 @@ namespace VoiceCraft.Windows.ViewModels
             try
             {
                 Database.UpdateServer(Server);
+                Database.SetPassableObject(Server);
                 Navigator.GoToPreviousPage();
             }
             catch(Exception ex)

@@ -38,5 +38,17 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(string serverData)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Ping,
+                PacketData = new Ping()
+                {
+                    ServerData = serverData
+                }
+            };
+        }
     }
 }

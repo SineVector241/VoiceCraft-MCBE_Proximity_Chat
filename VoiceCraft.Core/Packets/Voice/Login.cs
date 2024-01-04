@@ -27,5 +27,17 @@ namespace VoiceCraft.Core.Packets.Voice
 
             return dataStream.ToArray();
         }
+
+        public static VoicePacket Create(ushort loginKey)
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.Login,
+                PacketData = new Login()
+                {
+                    LoginKey = loginKey
+                }
+            };
+        }
     }
 }

@@ -1,39 +1,54 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage x:Class="VoiceCraft.Mobile.Views.ServerPage"
+             xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VoiceCraft.Mobile.ViewModels"
-             x:Class="VoiceCraft.Mobile.Views.ServerPage"
              Shell.TabBarIsVisible="False">
     <ContentPage.BindingContext>
         <vm:ServerPageViewModel />
     </ContentPage.BindingContext>
     <Grid>
-            <Image Source="{AppThemeBinding Dark=bgdark, Light=bglight}"
-               Aspect="AspectFill"/>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Dark=bgdark, Light=bglight}" />
 
         <ScrollView>
             <Grid Grid.RowDefinitions="auto, auto, auto">
                 <Frame>
-                    <Label Text="{Binding Server.Name}" 
+                    <Label FontAttributes="Bold"
                            FontSize="25"
-                           FontAttributes="Bold"/>
+                           Text="{Binding Server.Name}" />
                 </Frame>
 
                 <Frame Grid.Row="1">
                     <Grid RowDefinitions="auto, auto, auto">
-                        <Label FontAttributes="Bold"
-                               FontSize="18">
-                            <Label.Text>
-                                <MultiBinding StringFormat="Address: {0}:{1}">
-                                    <Binding Path="Server.IP"/>
-                                    <Binding Path="Server.Port"/>
-                                </MultiBinding>
-                            </Label.Text>
+                        <Label FontAttributes="Bold" FontSize="18">
+                            <Label.Style>
+                                <Style TargetType="Label">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Settings.HideAddress}"
+                                                     TargetType="Label"
+                                                     Value="False">
+                                            <Setter Property="Text">
+                                                <Setter.Value>
+                                                    <MultiBinding StringFormat="Address: {0}:{1}">
+                                                        <Binding Path="Server.IP" />
+                                                        <Binding Path="Server.Port" />
+                                                    </MultiBinding>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Settings.HideAddress}"
+                                                     TargetType="Label"
+                                                     Value="True">
+                                            <Setter Property="Text" Value="Address: ****:****" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Label.Style>
                         </Label>
 
-                        <Label FontAttributes="Bold"
+                        <Label Grid.Row="1"
+                               FontAttributes="Bold"
                                FontSize="18"
-                               Grid.Row="1"
                                Text="{Binding Server.Key, StringFormat='Key: {0}'}" />
                     </Grid>
                 </Frame>
@@ -42,25 +57,25 @@
                     <Grid RowDefinitions="auto, auto, auto, auto, auto">
                         <Label FontAttributes="Bold"
                                FontSize="18"
-                               Text="External Server Information"/>
+                               Text="External Server Information" />
 
                         <Label Grid.Row="1"
                                FontAttributes="Bold"
                                FontSize="18"
-                               Text="{Binding ExternalServerInformation}"/>
+                               Text="{Binding ExternalServerInformation}" />
 
-                        <Button Margin="0,20,0,0"
-                                Grid.Row="2"
-                                Text="Connect"
-                                Command="{Binding ConnectCommand}" />
+                        <Button Grid.Row="2"
+                                Margin="0,20,0,0"
+                                Command="{Binding ConnectCommand}"
+                                Text="Connect" />
 
                         <Button Grid.Row="3"
-                                Text="Edit"
-                                Command="{Binding EditCommand}" />
+                                Command="{Binding EditCommand}"
+                                Text="Edit" />
 
                         <Button Grid.Row="4"
-                                Text="Back"
-                                Command="{Binding BackCommand}" />
+                                Command="{Binding BackCommand}"
+                                Text="Back" />
                     </Grid>
                 </Frame>
             </Grid>

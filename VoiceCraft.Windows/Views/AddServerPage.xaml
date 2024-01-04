@@ -1,25 +1,23 @@
 ﻿<Page x:Class="VoiceCraft.Windows.Views.AddServerPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:vm="clr-namespace:VoiceCraft.Windows.ViewModels"
-      mc:Ignorable="d" 
-      Title="AddServerPage">
+      Title="AddServerPage"
+      mc:Ignorable="d">
 
     <Page.DataContext>
         <vm:AddServerPageViewModel />
     </Page.DataContext>
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="60px" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Background="#5111"
-              Margin="0,0,0,10">
+            <Grid Margin="0,0,0,10" Background="#5111">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -27,43 +25,41 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                       Text="VoiceCraft Windows"
-                       FontSize="20"
-                       VerticalAlignment="Center"
-                       Margin="10,0"/>
-
-                <TextBlock Text="Add Server"
-                           Grid.Column="1"
+                           Margin="10,0"
                            VerticalAlignment="Center"
                            FontSize="20"
-                           HorizontalAlignment="Center"/>
-                </Grid>
+                           Text="VoiceCraft Windows" />
+
+                <TextBlock Grid.Column="1"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="20"
+                           Text="Add Server" />
+            </Grid>
 
             <Border Grid.Row="1"
-                    Style="{StaticResource DefaultBorder}"
                     Margin="10"
-                    Padding="10">
-                <StackPanel Width="300"
-                        VerticalAlignment="Center">
+                    Padding="10"
+                    Style="{StaticResource DefaultBorder}">
+                <StackPanel Width="300" VerticalAlignment="Center">
 
-                    <TextBlock Text="Name"
-                               Foreground="Transparent"
+                    <TextBlock Margin="0,10,0,0"
                                FontSize="20"
-                               Margin="0,10,0,0">
+                               Foreground="Transparent"
+                               Text="Name">
                         <TextBlock.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBlock.RenderTransform>
                         <TextBlock.Triggers>
                             <EventTrigger RoutedEvent="TextBlock.Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.0" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.3" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.0" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.3" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.3" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -71,20 +67,19 @@
                         </TextBlock.Triggers>
                     </TextBlock>
 
-                    <TextBox FontWeight="Medium"
-                             MaxLength="30"
-                             FontSize="18"
-                             Foreground="White"
+                    <TextBox Height="28"
+                             Margin="0,2,0,0"
                              Background="Transparent"
-                             CaretBrush="LightGray"
                              BorderBrush="Transparent"
                              BorderThickness="0,0,0,2"
-                             Height="28"
-                             Margin="0,2,0,0"
+                             CaretBrush="LightGray"
+                             FontSize="18"
+                             FontWeight="Medium"
+                             Foreground="White"
+                             MaxLength="30"
                              Text="{Binding Server.Name}">
                         <TextBox.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBox.RenderTransform>
 
                         <TextBox.Triggers>
@@ -92,16 +87,16 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.1" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.4" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.1" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.4" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush.Color">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.1" />
-                                            <LinearColorKeyFrame Value="DarkGray" KeyTime="0:0:0.4" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.1" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.4" Value="DarkGray" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.1" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -109,25 +104,24 @@
                         </TextBox.Triggers>
                     </TextBox>
 
-                    <TextBlock Text="Server IP"
-                               Foreground="Transparent"
+                    <TextBlock Margin="0,15,0,0"
                                FontSize="20"
-                               Margin="0,15,0,0">
+                               Foreground="Transparent"
+                               Text="Server IP">
                         <TextBlock.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBlock.RenderTransform>
                         <TextBlock.Triggers>
                             <EventTrigger RoutedEvent="TextBlock.Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.2" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.5" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.2" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.5" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.2" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.5" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -135,20 +129,19 @@
                         </TextBlock.Triggers>
                     </TextBlock>
 
-                    <TextBox FontWeight="Medium"
-                             MaxLength="40"
-                             FontSize="18"
-                             Foreground="White"
+                    <TextBox Height="28"
+                             Margin="0,2,0,0"
                              Background="Transparent"
-                             CaretBrush="LightGray"
                              BorderBrush="Transparent"
                              BorderThickness="0,0,0,2"
-                             Height="28"
-                             Margin="0,2,0,0"
+                             CaretBrush="LightGray"
+                             FontSize="18"
+                             FontWeight="Medium"
+                             Foreground="White"
+                             MaxLength="40"
                              Text="{Binding Server.IP}">
                         <TextBox.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBox.RenderTransform>
 
                         <TextBox.Triggers>
@@ -156,16 +149,16 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.3" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.6" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.3" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.6" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush.Color">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.3" />
-                                            <LinearColorKeyFrame Value="DarkGray" KeyTime="0:0:0.6" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.3" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.6" Value="DarkGray" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.3" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.6" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.6" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -173,25 +166,24 @@
                         </TextBox.Triggers>
                     </TextBox>
 
-                    <TextBlock Text="Port"
-                               Foreground="Transparent"
+                    <TextBlock Margin="0,10,0,0"
                                FontSize="20"
-                               Margin="0,10,0,0">
+                               Foreground="Transparent"
+                               Text="Port">
                         <TextBlock.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBlock.RenderTransform>
                         <TextBlock.Triggers>
                             <EventTrigger RoutedEvent="TextBlock.Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.4" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.7" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.4" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.7" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.7" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.7" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -199,20 +191,19 @@
                         </TextBlock.Triggers>
                     </TextBlock>
 
-                    <TextBox FontWeight="Medium"
-                             PreviewTextInput="NumbersOnlyTextInput"
-                             FontSize="18"
-                             Foreground="Transparent"
+                    <TextBox Height="28"
+                             Margin="0,2,0,0"
                              Background="Transparent"
-                             CaretBrush="LightGray"
                              BorderBrush="Transparent"
                              BorderThickness="0,0,0,2"
-                             Height="28"
-                             Margin="0,2,0,0"
+                             CaretBrush="LightGray"
+                             FontSize="18"
+                             FontWeight="Medium"
+                             Foreground="Transparent"
+                             PreviewTextInput="NumbersOnlyTextInput"
                              Text="{Binding Server.Port}">
                         <TextBox.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBox.RenderTransform>
 
                         <TextBox.Triggers>
@@ -220,16 +211,16 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.5" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.8" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.5" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.8" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush.Color">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.5" />
-                                            <LinearColorKeyFrame Value="DarkGray" KeyTime="0:0:0.8" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.5" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.8" Value="DarkGray" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -237,25 +228,24 @@
                         </TextBox.Triggers>
                     </TextBox>
 
-                    <TextBlock Text="Key"
-                               Foreground="Transparent"
+                    <TextBlock Margin="0,10,0,0"
                                FontSize="20"
-                               Margin="0,10,0,0">
+                               Foreground="Transparent"
+                               Text="Key">
                         <TextBlock.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBlock.RenderTransform>
                         <TextBlock.Triggers>
                             <EventTrigger RoutedEvent="TextBlock.Loaded">
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.6" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:0.9" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.6" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:0.9" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.6" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:0.9" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:0.9" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -263,20 +253,19 @@
                         </TextBlock.Triggers>
                     </TextBlock>
 
-                    <TextBox FontWeight="Medium"
-                             PreviewTextInput="NumbersOnlyTextInput"
-                             FontSize="18"
-                             Foreground="Transparent"
+                    <TextBox Height="28"
+                             Margin="0,2,0,0"
                              Background="Transparent"
-                             CaretBrush="LightGray"
                              BorderBrush="Transparent"
                              BorderThickness="0,0,0,2"
-                             Height="28"
-                             Margin="0,2,0,0"
+                             CaretBrush="LightGray"
+                             FontSize="18"
+                             FontWeight="Medium"
+                             Foreground="Transparent"
+                             PreviewTextInput="NumbersOnlyTextInput"
                              Text="{Binding Server.Key}">
                         <TextBox.RenderTransform>
-                            <TranslateTransform Y="20">
-                            </TranslateTransform>
+                            <TranslateTransform Y="20" />
                         </TextBox.RenderTransform>
 
                         <TextBox.Triggers>
@@ -284,16 +273,16 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="Foreground.(SolidColorBrush.Color)">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.7" />
-                                            <LinearColorKeyFrame Value="White" KeyTime="0:0:1" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.7" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:1" Value="White" />
                                         </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="BorderBrush.Color">
-                                            <DiscreteColorKeyFrame Value="Transparent" KeyTime="0:0:0.7" />
-                                            <LinearColorKeyFrame Value="DarkGray" KeyTime="0:0:1" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.7" Value="Transparent" />
+                                            <LinearColorKeyFrame KeyTime="0:0:1" Value="DarkGray" />
                                         </ColorAnimationUsingKeyFrames>
                                         <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)">
                                             <DiscreteDoubleKeyFrame KeyTime="0:0:0.7" Value="20" />
-                                            <LinearDoubleKeyFrame KeyTime="0:0:1" Value="0"/>
+                                            <LinearDoubleKeyFrame KeyTime="0:0:1" Value="0" />
                                         </DoubleAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -301,18 +290,18 @@
                         </TextBox.Triggers>
                     </TextBox>
 
-                    <Button Content="Add Server"
-                            FontSize="15"
+                    <Button Height="40"
+                            Margin="0,5"
                             Command="{Binding AddServerCommand}"
-                            Style="{StaticResource ButtonStyle}"
-                            Height="40"
-                            Margin="0,5"/>
-                    <Button Content="Cancel"
+                            Content="Add Server"
                             FontSize="15"
+                            Style="{StaticResource ButtonStyle}" />
+                    <Button Height="40"
+                            Margin="0,5"
                             Command="{Binding CancelCommand}"
-                            Style="{StaticResource ButtonStyle}"
-                            Height="40"
-                            Margin="0,5"/>
+                            Content="Cancel"
+                            FontSize="15"
+                            Style="{StaticResource ButtonStyle}" />
                 </StackPanel>
             </Border>
         </Grid>

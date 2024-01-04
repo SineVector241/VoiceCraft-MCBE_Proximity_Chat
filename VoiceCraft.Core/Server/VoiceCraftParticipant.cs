@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using VoiceCraft.Core.Packets;
@@ -11,9 +12,11 @@ namespace VoiceCraft.Core.Server
         public string Name { get; set; } = string.Empty;
         public PositioningTypes PositioningType { get; }
         public bool Binded { get; set; }
+        public byte Channel { get; set; } //Channel 0 is main.
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public bool IsServerMuted { get; set; }
+        public DateTime LastActive { get; set; } = DateTime.UtcNow;
 
         //Minecraft Data
         public Vector3 Position { get; set; }

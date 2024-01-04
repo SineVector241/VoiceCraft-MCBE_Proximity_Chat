@@ -38,5 +38,17 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(string reason)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Error,
+                PacketData = new Error()
+                {
+                    Reason = reason
+                }
+            };
+        }
     }
 }

@@ -30,5 +30,18 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(ushort loginKey, ushort voicePort)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Accept,
+                PacketData = new Accept()
+                {
+                    LoginKey = loginKey,
+                    VoicePort = voicePort
+                }
+            };
+        }
     }
 }

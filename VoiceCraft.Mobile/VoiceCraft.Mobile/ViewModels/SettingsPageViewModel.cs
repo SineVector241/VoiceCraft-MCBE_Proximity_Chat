@@ -13,7 +13,7 @@ namespace VoiceCraft.Mobile.ViewModels
     public partial class SettingsPageViewModel : ObservableObject
     {
         [ObservableProperty]
-        public SettingsModel settings = Database.GetSettings();
+        public SettingsModel settings;
 
         [ObservableProperty]
         private float micDetection = 0.0f;
@@ -27,6 +27,24 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             var audioManager = DependencyService.Get<IAudioManager>();
             AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
+
+            var settings = Database.GetSettings();
+            //Copy the model
+            this.settings = new SettingsModel()
+            {
+                ClientSidedPositioning = settings.ClientSidedPositioning,
+                DeafenKeybind = settings.DeafenKeybind,
+                DirectionalAudioEnabled = settings.DirectionalAudioEnabled,
+                HideAddress = settings.HideAddress,
+                InputDevice = settings.InputDevice,
+                LinearVolume = settings.LinearVolume,
+                MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage,
+                MuteKeybind = settings.MuteKeybind,
+                OutputDevice = settings.OutputDevice,
+                SoftLimiterEnabled = settings.SoftLimiterEnabled,
+                SoftLimiterGain = settings.SoftLimiterGain,
+                WebsocketPort = settings.WebsocketPort
+            };
         }
 
         private void RecorderStopped(object? sender, StoppedEventArgs e)
@@ -67,7 +85,7 @@ namespace VoiceCraft.Mobile.ViewModels
         }
 
         [RelayCommand]
-        public void OpenCloseMicrophone()
+        public async void OpenCloseMicrophone()
         {
             try
             {
@@ -79,13 +97,17 @@ namespace VoiceCraft.Mobile.ViewModels
                 }
                 else
                 {
-                    AudioRecorder.StartRecording();
-                    MicOpen = true;
+                    var granted = await Utils.CheckAndRequestPermissions();
+                    if (granted)
+                    {
+                        AudioRecorder.StartRecording();
+                        MicOpen = true;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
+                _ = Shell.Current.DisplayAlert("Error", $"An error occured!\n{ex.Message}", "OK");
             }
         }
 
@@ -111,7 +133,6 @@ namespace VoiceCraft.Mobile.ViewModels
                 AudioRecorder.StopRecording();
             AudioRecorder.DataAvailable -= AudioDataAvailable;
             AudioRecorder.RecordingStopped -= RecorderStopped;
-            Settings = Database.GetSettings();
             MicDetection = 0;
         }
 
@@ -120,6 +141,24 @@ namespace VoiceCraft.Mobile.ViewModels
         {
             AudioRecorder.DataAvailable += AudioDataAvailable;
             AudioRecorder.RecordingStopped += RecorderStopped;
+
+            var settings = Database.GetSettings();
+            //Copy the model
+            Settings = new SettingsModel()
+            {
+                ClientSidedPositioning = settings.ClientSidedPositioning,
+                DeafenKeybind = settings.DeafenKeybind,
+                DirectionalAudioEnabled = settings.DirectionalAudioEnabled,
+                HideAddress = settings.HideAddress,
+                InputDevice = settings.InputDevice,
+                LinearVolume = settings.LinearVolume,
+                MicrophoneDetectionPercentage = settings.MicrophoneDetectionPercentage,
+                MuteKeybind = settings.MuteKeybind,
+                OutputDevice = settings.OutputDevice,
+                SoftLimiterEnabled = settings.SoftLimiterEnabled,
+                SoftLimiterGain = settings.SoftLimiterGain,
+                WebsocketPort = settings.WebsocketPort
+            };
         }
     }
 }

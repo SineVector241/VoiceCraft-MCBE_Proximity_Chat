@@ -64,5 +64,23 @@ namespace VoiceCraft.Core.Packets.Voice
 
             return dataStream.ToArray();
         }
+
+        public static VoicePacket Create(ushort loginKey, uint packetCount, float volume, float echoFactor, float rotation, bool muffled, byte[] audio)
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.ServerAudio,
+                PacketData = new ServerAudio()
+                {
+                    LoginKey = loginKey,
+                    PacketCount = packetCount,
+                    Volume = volume,
+                    EchoFactor = echoFactor,
+                    Rotation = rotation,
+                    Muffled = muffled,
+                    Audio = audio
+                }
+            };
+        }
     }
 }

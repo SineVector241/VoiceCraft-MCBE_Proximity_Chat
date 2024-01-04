@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Numerics;
 using VoiceCraft.Core.Client.Builders;
 
-namespace VoiceCraft.Windows.Network.Sockets
+namespace VoiceCraft.Core.Client.Sockets
 {
     public class MCWSSSocket : IDisposable
     {

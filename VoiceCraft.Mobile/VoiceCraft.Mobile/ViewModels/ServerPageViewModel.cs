@@ -16,11 +16,15 @@ namespace VoiceCraft.Mobile.ViewModels
         string externalServerInformation = "Pinging...";
 
         [ObservableProperty]
-        ServerModel server;
+        ServerModel? server;
+
+        [ObservableProperty]
+        SettingsModel? settings;
 
         public ServerPageViewModel()
         {
             Server = Database.GetPassableObject<ServerModel>();
+            Settings = Database.GetSettings();
             _ = Task.Run(async () => {
                 var res = await VoiceCraftClient.PingAsync(Server.IP, Server.Port);
                 ExternalServerInformation = res;
@@ -31,7 +35,7 @@ namespace VoiceCraft.Mobile.ViewModels
 
         private void ServerUpdated(ServerModel Server)
         {
-            OnPropertyChanged(nameof(Server));
+            this.Server = Server;
         }
 
         [RelayCommand]
@@ -40,7 +44,7 @@ namespace VoiceCraft.Mobile.ViewModels
             var granted = await Utils.CheckAndRequestPermissions();
             if(granted)
             {
-                MessagingCenter.Send(new StartServiceMessage(), "ServiceStarted");
+                MessagingCenter.Send(new StartServiceMSG(), "StartService");
                 await Shell.Current.GoToAsync(nameof(VoicePage));
             }
         }

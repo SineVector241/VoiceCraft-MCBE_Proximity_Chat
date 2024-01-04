@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-using VoiceCraft.Core.Packets;
+﻿using Newtonsoft.Json;
+using System.Net.Sockets;
 using VoiceCraft.Core.Packets.Signalling;
 using VoiceCraft.Core.Server;
 
@@ -21,6 +21,19 @@ namespace VoiceCraft.Server
             server.OnParticipantBinded += ParticipantBinded;
             server.OnParticipantUnbinded += ParticipantUnbinded;
             server.OnParticipantDisconnected += ParticipantDisconnected;
+            server.OnExternalServerConnected += ExternalServerConnected;
+            server.OnExternalServerDisconnected += ExternalServerDisconnected;
+            server.OnExceptionError += ExceptionError;
+
+            server.Signalling.OnOutboundPacket += SignallingOutbound;
+            server.Signalling.OnInboundPacket += SignallingInbound;
+            server.Signalling.OnExceptionError += ExceptionError;
+            server.Voice.OnOutboundPacket += VoiceOutbound;
+            server.Voice.OnInboundPacket += VoiceInbound;
+            server.Voice.OnExceptionError += ExceptionError;
+            server.MCComm.OnInboundPacket += MCCommInbound;
+            server.MCComm.OnOutboundPacket += MCCommOutbound;
+            server.MCComm.OnExceptionError += ExceptionError;
         }
 
         public async Task Start()
@@ -32,7 +45,11 @@ namespace VoiceCraft.Server
             Console.WriteLine(@" \ \ / / _ \| |/ __/ _ \ |   | '__/ _` | |_| __|");
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
-            Console.WriteLine("[v1.0.0]========================================\n");
+#if DEBUG
+            Console.WriteLine("[v1.0.1]=================================[DEBUG]\n");
+#else
+            Console.WriteLine("[v1.0.1]===============================[RELEASE]\n");
+#endif
 
             //Register Commands
             CommandHandler.RegisterCommand("help", HelpCommand);
@@ -46,8 +63,9 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("banlist", BanlistCommand);
             CommandHandler.RegisterCommand("setproximity", SetProximityCommand);
             CommandHandler.RegisterCommand("toggleproximity", ToggleProximityCommand);
-            CommandHandler.RegisterCommand("setmotds", SetMotdCommand);
+            CommandHandler.RegisterCommand("setmotd", SetMotdCommand);
             CommandHandler.RegisterCommand("toggleeffects", ToggleEffectsCommand);
+            CommandHandler.RegisterCommand("debug", DebugCommand);
 
             try
             {
@@ -108,6 +126,11 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Success, $"Voice started - Port:{server.ServerProperties.VoicePortUDP} UDP", "Socket");
             if (server.ServerProperties.ConnectionType == ConnectionTypes.Client)
             {
+                foreach(var channel in server.ServerProperties.Channels)
+                {
+                    Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+                }
+
                 Logger.LogToConsole(LogType.Success, "Server started!", "Server");
                 Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
             }
@@ -116,10 +139,26 @@ namespace VoiceCraft.Server
         private void WebserverStarted()
         {
             Logger.LogToConsole(LogType.Success, $"MCComm started - Port:{server.ServerProperties.MCCommPortTCP} TCP", "Socket");
+
+            foreach (var channel in server.ServerProperties.Channels)
+            {
+                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+            }
+
             Logger.LogToConsole(LogType.Success, "Server started!", "Server");
             Logger.LogToConsole(LogType.Info, $"Server key: {server.ServerProperties.PermanentServerKey}", "Server");
 
             Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Running.";
+        }
+
+        private void ExternalServerConnected(ExternalServer server)
+        {
+            Logger.LogToConsole(LogType.Success, $"External Server Connected: IP - {server.IP}", "Server");
+        }
+
+        private void ExternalServerDisconnected(ExternalServer server, string reason)
+        {
+            Logger.LogToConsole(LogType.Warn, $"External Server Disconnected: IP - {server.IP}, Reason - {reason}", "Server");
         }
 
         private void ParticipantConnected(VoiceCraftParticipant participant, ushort key)
@@ -142,7 +181,46 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Warn, $"Participant disconnected: Key - {key}, Reason - {reason}", "Server");
         }
 
-        #endregion
+        //Debug Events
+        private void SignallingOutbound(Core.Packets.Interfaces.ISignallingPacket packet, Socket socket)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-SO");
+        }
+
+        private void SignallingInbound(Core.Packets.Interfaces.ISignallingPacket packet, Socket socket)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-SI");
+        }
+
+        private void VoiceOutbound(Core.Packets.Interfaces.IVoicePacket packet, System.Net.EndPoint endPoint)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-VO");
+        }
+
+        private void VoiceInbound(Core.Packets.Interfaces.IVoicePacket packet, System.Net.EndPoint endPoint)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-VI");
+        }
+
+        private void MCCommInbound(Core.Packets.MCCommPacket packet)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-MCI");
+        }
+
+        private void MCCommOutbound(Core.Packets.MCCommPacket packet)
+        {
+            Logger.LogToConsole(LogType.Info, JsonConvert.SerializeObject(packet), "DEBUG-MCO");
+        }
+
+        private void ExceptionError(Exception error)
+        {
+#if DEBUG
+            Logger.LogToConsole(LogType.Warn, error.ToString(), "DEBUG_EXCEPTION");
+#else
+            Logger.LogToConsole(LogType.Warn, error.Message.ToString(), "DEBUG_EXCEPTION");
+#endif
+        }
+#endregion
 
         #region Commands
         void HelpCommand(string[] args)
@@ -160,6 +238,7 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");
             Logger.LogToConsole(LogType.Info, "SetMotd [Message: string] - Sets the server MOTD.", "Commands");
             Logger.LogToConsole(LogType.Info, "ToggleEffects [Toggle: boolean] - Toggles the voice effect on or off.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - SignallingInbound, 1 - SignallingOutbound, 2 - VoiceInbound, 3 - VoiceOutbound, 4 - MCCommInbound, 5 - MCCommOutbound", "Commands");
         }
 
         void ExitCommand(string[] args)
@@ -240,9 +319,9 @@ namespace VoiceCraft.Server
             {
                 if (server.Participants.TryGetValue(value, out var participant))
                 {
-                    var packet = new SignallingPacket()
+                    var packet = new Core.Packets.SignallingPacket()
                     {
-                        PacketType = SignallingPacketTypes.Logout,
+                        PacketType = Core.Packets.SignallingPacketTypes.Logout,
                         PacketData = new Login() { LoginKey = value }
                     };
                     server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
@@ -276,13 +355,14 @@ namespace VoiceCraft.Server
                     if (!string.IsNullOrWhiteSpace(ip))
                     {
                         server.Banlist.IPBans.Add(ip);
-                        var packet = new SignallingPacket()
+                        ServerData.SaveBanlist(server.Banlist);
+                        var packet = new Core.Packets.SignallingPacket()
                         {
-                            PacketType = SignallingPacketTypes.Logout,
+                            PacketType = Core.Packets.SignallingPacketTypes.Logout,
                             PacketData = new Login() { LoginKey = value }
                         };
                         server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
-                        participant.SignallingSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
+                        participant.SignallingSocket.Shutdown(SocketShutdown.Both);
                         participant.SignallingSocket.Close();
                         Logger.LogToConsole(LogType.Success, $"Banned participant: {(string.IsNullOrWhiteSpace(participant.Name) ? value : participant.Name)}", "Commands");
                     }
@@ -392,6 +472,51 @@ namespace VoiceCraft.Server
             {
                 server.ServerProperties.VoiceEffects = value;
                 Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void DebugCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: debug <type: int>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                switch(value)
+                {
+                    case 0:
+                        server.Signalling.LogInbound = !server.Signalling.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set signalling inbound debug: {server.Signalling.LogInbound}", "Commands");
+                        break;
+                    case 1:
+                        server.Signalling.LogOutbound = !server.Signalling.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set signalling outbound debug: {server.Signalling.LogOutbound}", "Commands");
+                        break;
+                    case 2:
+                        server.Voice.LogInbound = !server.Voice.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voice inbound debug: {server.Voice.LogInbound}", "Commands");
+                        break;
+                    case 3:
+                        server.Voice.LogOutbound = !server.Voice.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voice outbound debug: {server.Voice.LogOutbound}", "Commands");
+                        break;
+                    case 4:
+                        server.MCComm.LogInbound = !server.MCComm.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set mccomm inbound debug: {server.MCComm.LogInbound}", "Commands");
+                        break;
+                    case 5:
+                        server.MCComm.LogOutbound = !server.MCComm.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set mccomm outbound debug: {server.MCComm.LogOutbound}", "Commands");
+                        break;
+                    default:
+                        throw new Exception("Invalid type specified!");
+                }
             }
             else
             {

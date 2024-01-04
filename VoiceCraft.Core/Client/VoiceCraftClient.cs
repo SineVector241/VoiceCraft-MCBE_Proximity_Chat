@@ -7,10 +7,10 @@ using System.Collections.Concurrent;
 using System;
 using System.Linq;
 using VoiceCraft.Core.Client.Sockets;
-using VoiceCraft.Windows.Network.Sockets;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace VoiceCraft.Core.Client
 {
@@ -19,10 +19,13 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
-        public const string Version = "v1.0.0";
+        public const int ActivityInterval = 1000;
+        public const int ActivityTimeout = 5000;
+        public const string Version = "v1.0.1";
 
         //Variables
         private CancellationTokenSource CTS;
+        private System.Timers.Timer ActivityChecker { get; set; }
         public string IP { get; private set; } = string.Empty;
         public int Port { get; private set; }
         public int MCWSSPort { get; private set; }
@@ -42,6 +45,7 @@ namespace VoiceCraft.Core.Client
 
         //Server Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; private set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
+        public List<VoiceCraftChannel> Channels { get; private set; } = new List<VoiceCraftChannel>();
         public uint PacketCount { get; private set; }
 
         //Audio Variables
@@ -65,6 +69,9 @@ namespace VoiceCraft.Core.Client
         public delegate void ParticipantJoined(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantUpdated(VoiceCraftParticipant participant, ushort key);
+        public delegate void ChannelAdded(VoiceCraftChannel channel);
+        public delegate void ChannelJoined(VoiceCraftChannel channel);
+        public delegate void ChannelLeft(VoiceCraftChannel channel);
         public delegate void Disconnected(string? reason);
 
         //Events
@@ -74,6 +81,9 @@ namespace VoiceCraft.Core.Client
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
         public event ParticipantUpdated? OnParticipantUpdated;
+        public event ChannelAdded? OnChannelAdded;
+        public event ChannelJoined? OnChannelJoined;
+        public event ChannelLeft? OnChannelLeft;
         public event Disconnected? OnDisconnected;
         #endregion
         public VoiceCraftClient(ushort LoginKey, PositioningTypes PositioningType, int RecordLengthMS = 40, int MCWSSPort = 8080)
@@ -87,10 +97,11 @@ namespace VoiceCraft.Core.Client
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
             {
                 Bitrate = 64000,
-                Complexity = 5,
+                Complexity = 0,
                 UseVBR = true,
                 PacketLossPercent = 50,
-                UseInbandFEC = true
+                UseInbandFEC = true,
+                UseDTX = true
             };
 
             Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
@@ -100,6 +111,9 @@ namespace VoiceCraft.Core.Client
             Signalling = new SignallingSocket();
             Voice = new VoiceSocket();
             MCWSS = new MCWSSSocket(MCWSSPort);
+
+            ActivityChecker = new System.Timers.Timer(ActivityInterval);
+            ActivityChecker.Elapsed += DoActivityChecks;
 
             //Event Registration in login order.
             //Signalling
@@ -111,6 +125,9 @@ namespace VoiceCraft.Core.Client
             Signalling.OnUndeafenPacketReceived += SignallingUndeafen;
             Signalling.OnMutePacketReceived += SignallingMute;
             Signalling.OnUnmutePacketReceived += SignallingUnmute;
+            Signalling.OnAddChannelReceived += SignallingAddChannel;
+            Signalling.OnJoinChannelReceived += SignallingJoinChannel;
+            Signalling.OnLeaveChannelReceived += SignallingLeaveChannel;
 
             //Voice
             Voice.OnAcceptPacketReceived += VoiceAccept;
@@ -131,10 +148,27 @@ namespace VoiceCraft.Core.Client
             Disconnect(reason);
         }
 
+        private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 2)
+            {
+                if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
+                {
+                    Disconnect("Signalling Server Timeout");
+                    return;
+                }
+
+                Signalling.SendPacket(Packets.Signalling.PingCheck.Create());
+            }
+            else if (!Signalling.IsConnected)
+                ActivityChecker.Stop();
+        }
+
         //Signalling Event Methods
         #region Signalling
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
+            ActivityChecker.Start();
             LoginKey = packet.LoginKey;
             _ = Voice.ConnectAsync(IP, packet.VoicePort, LoginKey);
         }
@@ -169,12 +203,7 @@ namespace VoiceCraft.Core.Client
             }
             else
             {
-                Participants.TryRemove(packet.LoginKey, out var participant);
-                if (participant != null)
-                {
-                    Mixer.RemoveMixerInput(participant.AudioProvider);
-                    OnParticipantLeft?.Invoke(participant, packet.LoginKey);
-                }
+                RemoveParticipant(packet.LoginKey);
             }
         }
 
@@ -217,6 +246,38 @@ namespace VoiceCraft.Core.Client
                 OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
             }
         }
+
+        private void SignallingAddChannel(Packets.Signalling.AddChannel packet)
+        {
+            var channel = new VoiceCraftChannel()
+            {
+                Name = packet.Name,
+                RequiresPassword = packet.RequiresPassword,
+                ChannelId = packet.ChannelId
+            };
+            Channels.Add(channel);
+            OnChannelAdded?.Invoke(channel);
+        }
+
+        private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet)
+        {
+            var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
+            if(channel != null)
+            {
+                channel.Joined = true;
+                OnChannelJoined?.Invoke(channel);
+            }
+        }
+
+        private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet)
+        {
+            var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
+            if (channel != null && channel.Joined)
+            {
+                channel.Joined = false;
+                OnChannelLeft?.Invoke(channel);
+            }
+        }
         #endregion
         //Voice Event Methods
         #region Voice
@@ -252,14 +313,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!IsConnected) return;
 
-            _ = Signalling.SendPacketAsync(new SignallingPacket()
-            {
-                PacketType = SignallingPacketTypes.Binded,
-                PacketData = new Packets.Signalling.Binded()
-                {
-                    Name = Username
-                }
-            });
+            _ = Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(Username));
             OnBinded?.Invoke(Username);
         }
 
@@ -267,15 +321,7 @@ namespace VoiceCraft.Core.Client
         {
             if(!IsConnected) return;
 
-            _ = Voice.SendPacketAsync(new VoicePacket()
-            {
-                PacketType = VoicePacketTypes.UpdatePosition,
-                PacketData = new Packets.Voice.UpdatePosition()
-                {
-                    EnvironmentId = Dimension,
-                    Position = position
-                }
-            });
+            _ = Voice.SendPacketAsync(Packets.Voice.UpdatePosition.Create(position, Dimension));
         }
 
         private void WebsocketDisconnected()
@@ -315,10 +361,13 @@ namespace VoiceCraft.Core.Client
             {
                 if(!CTS.IsCancellationRequested)
                 {
+                    ActivityChecker.Stop();
                     CTS.Cancel();
                     Signalling.Disconnect();
                     Voice.Disconnect();
                     MCWSS.Stop();
+                    Participants.Clear();
+                    Channels.Clear();
                     if (!string.IsNullOrWhiteSpace(Reason)) OnDisconnected?.Invoke(Reason);
                     IsConnected = false;
                     IsMuted = false;
@@ -349,62 +398,64 @@ namespace VoiceCraft.Core.Client
             var encodedBytes = Encoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
-            //Packet creation.
-            VoicePacket packet = new VoicePacket()
-            {
-                PacketType = VoicePacketTypes.ClientAudio,
-                PacketData = new Packets.Voice.ClientAudio()
-                {
-                    Audio = audioTrimmed,
-                    PacketCount = PacketCount
-                }
-            }; //Audio packet stuff here.
-            _ = Voice.SendPacketAsync(packet);
+            //Send the audio
+            _ = Voice.SendPacketAsync(Packets.Voice.ClientAudio.Create(PacketCount, audioTrimmed));
         }
 
-        public void SetMute(bool Muted)
+        public void SetMute()
         {
             if(!IsConnected) return;
 
-            IsMuted = Muted;
+            IsMuted = !IsMuted;
             if(IsMuted)
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Mute,
-                    PacketData = new Packets.Signalling.Mute()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(0));
             }
             else
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Unmute,
-                    PacketData = new Packets.Signalling.Unmute()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Unmute.Create(0));
             }
         }
 
-        public void SetDeafen(bool Deafened)
+        public void SetDeafen()
         {
             if (!IsConnected) return;
 
-            IsDeafened = Deafened;
+            IsDeafened = !IsDeafened;
             if (IsDeafened)
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Deafen,
-                    PacketData = new Packets.Signalling.Deafen()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(0));
             }
             else
             {
-                _ = Signalling.SendPacketAsync(new SignallingPacket()
-                {
-                    PacketType = SignallingPacketTypes.Undeafen,
-                    PacketData = new Packets.Signalling.Undeafen()
-                });
+                _ = Signalling.SendPacketAsync(Packets.Signalling.Undeafen.Create(0));
+            }
+        }
+
+        public void JoinChannel(VoiceCraftChannel channel, string password = "")
+        {
+            if(!channel.Joined)
+            {
+                _ = Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(channel.ChannelId, password));
+            }
+        }
+
+        public void LeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                _ = Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(channel.ChannelId));
+            }
+        }
+
+        public void RemoveParticipant(ushort Key)
+        {
+            Participants.TryRemove(Key, out var participant);
+            if (participant != null)
+            {
+                Mixer.RemoveMixerInput(participant.AudioProvider);
+                participant.Dispose();
+                OnParticipantLeft?.Invoke(participant, Key);
             }
         }
 
@@ -421,7 +472,7 @@ namespace VoiceCraft.Core.Client
                 if (socket.ConnectAsync(IP, Port).Wait(5000))
                 {
                     var stream = new NetworkStream(socket);
-                    var pingPacket = new SignallingPacket() { PacketType = SignallingPacketTypes.Ping, PacketData = new Packets.Signalling.Ping() { } }.GetPacketStream();
+                    var pingPacket = Packets.Signalling.Ping.Create(string.Empty).GetPacketStream();
                     await socket.SendAsync(BitConverter.GetBytes((ushort)pingPacket.Length), SocketFlags.None);
                     await socket.SendAsync(pingPacket, SocketFlags.None);
                     //TCP Is Annoying
@@ -460,12 +511,17 @@ namespace VoiceCraft.Core.Client
                     }
                     else
                         message = $"Unexpected packet received\nPing Time: {Math.Floor(pingTimeMS)}ms";
+
+                    stream.Dispose();
                 }
                 else
                 {
                     var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
                     message = $"Timed out\nPing Time: {Math.Floor(pingTimeMS)}ms";
                 }
+
+                socket.Disconnect(false);
+                socket.Close();
             }
             catch(Exception ex)
             {
@@ -484,15 +540,25 @@ namespace VoiceCraft.Core.Client
 
         protected virtual void Dispose(bool disposing)
         {
-            if(!IsDisposed)
+            if (!IsDisposed)
             {
-                if(disposing)
+                if (disposing)
                 {
+                    if (IsConnected)
+                        Disconnect(); //Disconnect before disposing.
+
+                    foreach (var participant in Participants)
+                    {
+                        participant.Value.Dispose();
+                    }
+
+                    ActivityChecker.Dispose();
                     CTS.Dispose();
                     Signalling.Dispose();
                     MCWSS.Dispose();
                     Voice.Dispose();
                     Participants.Clear();
+                    Channels.Clear();
                     IsConnected = false;
 
                     //Deregister Events

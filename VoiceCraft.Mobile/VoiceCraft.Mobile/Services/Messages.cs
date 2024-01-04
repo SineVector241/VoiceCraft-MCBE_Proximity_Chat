@@ -1,53 +1,128 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Models;
 
 namespace VoiceCraft.Mobile.Services
 {
-    public class ServiceFailedMessage
+    public class StatusMessageUpdatedMSG
     {
-        public string? Message { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
 
-    public class ServiceErrorMessage
+    public class SpeakingStatusChangedMSG
     {
-        public Exception? Exception { get; set; }
+        public bool Status { get; set; }
     }
 
-    //Control Messages
-    public class MuteUnmuteMessage
+    public class MutedStatusChangedMSG
     {
-        public bool Value { get; set; }
+        public bool Status { get; set; }
     }
 
-    public class DeafenUndeafen
+    public class DeafenedStatusChangedMSG
     {
-        public bool Value { get; set; }
+        public bool Status { get; set; }
     }
 
-    public class StopServiceMessage
-    { }
+    public class ParticipantAddedMSG
+    {
+        public VoiceCraftParticipant Participant { get; set; }
+        public ParticipantAddedMSG(VoiceCraftParticipant participant) => Participant = participant;
+    }
 
-    public class StartServiceMessage
-    { }
+    public class ParticipantRemovedMSG
+    {
+        public VoiceCraftParticipant Participant { get; set; }
+        public ParticipantRemovedMSG(VoiceCraftParticipant participant) => Participant = participant;
+    }
 
-    public class DisconnectMessage
+    public class ParticipantChangedMSG
+    {
+        public VoiceCraftParticipant Participant { get; set; }
+        public ParticipantChangedMSG(VoiceCraftParticipant participant) => Participant = participant;
+    }
+
+    public class ParticipantSpeakingStatusChangedMSG
+    {
+        public VoiceCraftParticipant Participant { get; set; }
+        public bool Status { get; set; }
+        public ParticipantSpeakingStatusChangedMSG(VoiceCraftParticipant participant) => Participant = participant;
+    }
+
+    public class ChannelCreatedMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public ChannelCreatedMSG(VoiceCraftChannel channel) => Channel = channel;
+    }
+
+    public class ChannelEnteredMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public ChannelEnteredMSG(VoiceCraftChannel channel) => Channel = channel;
+    }
+
+    public class ChannelLeftMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public ChannelLeftMSG(VoiceCraftChannel channel) => Channel = channel;
+    }
+
+    public class DisconnectedMSG
     {
         public string Reason { get; set; } = string.Empty;
     }
 
-    //UI Updates
-    public class UpdateStatusMessage
+    public class DenyMSG
     {
+        public string Reason = string.Empty;
+    }
+
+    //UI Request Updates
+    public class RequestData
+    { }
+
+    public class ResponseData
+    {
+        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
+        public List<ChannelDisplayModel> Channels { get; set; } = new List<ChannelDisplayModel>();
+        public bool IsSpeaking { get; set; }
+        public bool IsMuted { get; set; }
+        public bool IsDeafened { get; set; }
         public string StatusMessage { get; set; } = string.Empty;
     }
 
-    public class UpdateMessage
+    //UI Control Updates
+    public class MuteUnmuteMSG
+    { }
+
+    public class DeafenUndeafenMSG
+    { }
+
+    public class JoinChannelMSG
     {
-        public string StatusMessage { get; set; } = string.Empty;
-        public bool IsMuted { get; set; }
-        public bool IsDeafened { get; set; }
-        public bool IsSpeaking { get; set; }
-        public List<ParticipantDisplayModel> Participants { get; set; } = new List<ParticipantDisplayModel>();
+        public VoiceCraftChannel Channel { get; set; }
+        public string Password { get; set; } = string.Empty;
+        public JoinChannelMSG(VoiceCraftChannel channel)
+        {
+            Channel = channel;
+        }
     }
+
+    public class LeaveChannelMSG
+    {
+        public VoiceCraftChannel Channel { get; set; }
+        public LeaveChannelMSG(VoiceCraftChannel channel)
+        {
+            Channel = channel;
+        }
+    }
+
+    public class DisconnectMSG
+    { }
+
+    public class StartServiceMSG
+    { }
+
+    public class StopServiceMSG
+    { }
 }

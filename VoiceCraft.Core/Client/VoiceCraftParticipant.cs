@@ -6,18 +6,17 @@ using VoiceCraft.Core.Audio;
 
 namespace VoiceCraft.Core.Client
 {
-    public class VoiceCraftParticipant
+    public class VoiceCraftParticipant : IDisposable
     {
-        private readonly int BufferSize;
-        public DateTime LastSpoke { get; private set; }
-
         private float volume = 1.0f;
         private float proximityVolume = 0.0f;
 
         public bool Muted = false;
         public bool Deafened = false;
-
+        public bool IsDisposed { get; private set; } = false;
+        public DateTime LastSpoke { get; private set; }
         public string Name { get; }
+
         public float Volume
         {
             get { return volume; }
@@ -36,66 +35,32 @@ namespace VoiceCraft.Core.Client
                 UpdateVolume();
             }
         }
-        public uint PacketCount { get; private set; }
-        public BufferedWaveProvider AudioBuffer;
-        public Wave16ToFloatProvider FloatProvider;
-        public EchoSampleProvider EchoProvider;
-        public LowpassSampleProvider LowpassProvider;
+
+        //public BufferedWaveProvider AudioBuffer { get; }
+        public Wave16ToFloatProvider FloatProvider { get; }
+        public EchoSampleProvider EchoProvider { get; }
+        public LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioProvider { get; }
         public OpusDecoder OpusDecoder { get; }
+        private VoiceCraftJitterBuffer NetworkJitterBuffer;
 
         public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
         {
             this.Name = Name;
 
-            BufferSize = RecordLengthMS * WaveFormat.AverageBytesPerSecond / 1000;
-            if (BufferSize % WaveFormat.BlockAlign != 0)
-            {
-                BufferSize -= BufferSize % WaveFormat.BlockAlign;
-            }
-
             //Setup and wire everything up.
-            AudioBuffer = new BufferedWaveProvider(WaveFormat) { DiscardOnBufferOverflow = true };
-            FloatProvider = new Wave16ToFloatProvider(AudioBuffer);
+            OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
+            NetworkJitterBuffer = new VoiceCraftJitterBuffer(OpusDecoder, WaveFormat, RecordLengthMS);
+            FloatProvider = new Wave16ToFloatProvider(NetworkJitterBuffer);
             EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
             LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
             AudioProvider = new MonoToStereoSampleProvider(LowpassProvider);
-            OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
         }
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
-            uint packetsLost = PacketCount - (this.PacketCount + 1);
-            short[] decoded = new short[BufferSize / 2];
-            try
-            {
-                byte[] audioFrame = new byte[BufferSize];
-
-                if (packetsLost == 0)
-                {
-                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length);
-                }
-                else if (packetsLost < 0) //Packet lost.
-                {
-                    //Decode packet with FEC ON
-                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, true);
-                    audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
-                    AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
-
-                    //Decode packet with FEC OFF
-                    OpusDecoder.Decode(Audio, 0, Audio.Length, decoded, 0, decoded.Length, false);
-                }
-
-                audioFrame = ShortsToBytes(decoded, 0, decoded.Length);
-                AudioBuffer.AddSamples(audioFrame, 0, audioFrame.Length);
-                this.PacketCount = PacketCount;
-                LastSpoke = DateTime.UtcNow;
-            }
-            //Declare as lost/corrupted frame. We'll just drop the packet and do nothing by returning.
-            catch
-            {
-                return;
-            }
+            NetworkJitterBuffer.Put(Audio, PacketCount);
+            LastSpoke = DateTime.UtcNow;
         }
 
         //Private Methods
@@ -104,16 +69,27 @@ namespace VoiceCraft.Core.Client
             FloatProvider.Volume = proximityVolume * volume;
         }
 
-        private static byte[] ShortsToBytes(short[] input, int offset, int length)
+        ~VoiceCraftParticipant()
         {
-            byte[] processedValues = new byte[length * 2];
-            for (int c = 0; c < length; c++)
-            {
-                processedValues[c * 2] = (byte)(input[c + offset] & 0xFF);
-                processedValues[c * 2 + 1] = (byte)(input[c + offset] >> 8 & 0xFF);
-            }
+            Dispose(false);
+        }
 
-            return processedValues;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    NetworkJitterBuffer.Dispose();
+                    IsDisposed = true;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

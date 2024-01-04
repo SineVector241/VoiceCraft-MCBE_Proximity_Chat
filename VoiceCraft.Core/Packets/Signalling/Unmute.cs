@@ -26,5 +26,17 @@ namespace VoiceCraft.Core.Packets.Signalling
 
             return dataStream.ToArray();
         }
+
+        public static SignallingPacket Create(ushort loginKey)
+        {
+            return new SignallingPacket()
+            {
+                PacketType = SignallingPacketTypes.Unmute,
+                PacketData = new Unmute()
+                {
+                    LoginKey = loginKey
+                }
+            };
+        }
     }
 }

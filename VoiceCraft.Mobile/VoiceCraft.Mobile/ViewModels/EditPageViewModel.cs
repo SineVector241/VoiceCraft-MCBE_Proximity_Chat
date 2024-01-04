@@ -14,7 +14,14 @@ namespace VoiceCraft.Mobile.ViewModels
 
         public EditPageViewModel()
         {
-            Server = Database.GetPassableObject<ServerModel>();
+            var server = Database.GetPassableObject<ServerModel>();
+            this.server = new ServerModel()
+            {
+                IP = server.IP,
+                Port = server.Port,
+                Key = server.Key,
+                Name = server.Name
+            };
         }
 
         [RelayCommand]
@@ -23,6 +30,7 @@ namespace VoiceCraft.Mobile.ViewModels
             try
             {
                 Database.UpdateServer(Server);
+                Database.SetPassableObject(Server);
                 await Shell.Current.Navigation.PopAsync();
             }
             catch(Exception ex)

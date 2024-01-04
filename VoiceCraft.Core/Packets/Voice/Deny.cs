@@ -37,5 +37,17 @@ namespace VoiceCraft.Core.Packets.Voice
 
             return dataStream.ToArray();
         }
+
+        public static VoicePacket Create(string reason)
+        {
+            return new VoicePacket()
+            {
+                PacketType = VoicePacketTypes.Deny,
+                PacketData = new Deny()
+                {
+                    Reason = reason
+                }
+            };
+        }
     }
 }
