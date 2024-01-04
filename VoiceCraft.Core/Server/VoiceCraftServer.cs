@@ -96,6 +96,7 @@ namespace VoiceCraft.Core.Server
             MCComm.OnGetSettingsPacketReceived += MCCommGetSettings;
             MCComm.OnUpdateSettingsPacketReceived += MCCommUpdateSettings;
             MCComm.OnRemoveParticipantPacketReceived += MCCommRemoveParticipant;
+            MCComm.OnChannelMovePacketReceived += MCCommChannelMove;
 
             //Ping Packet
             Signalling.OnPingPacketReceived += PingReceived;
@@ -724,7 +725,7 @@ namespace VoiceCraft.Core.Server
 
             if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
-                MCComm.SendResponse(ctx, HttpStatusCode.NotAcceptable, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!"));
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Proximity distance must be between 1 and 120!"));
                 return;
             }
 
@@ -746,7 +747,40 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.NotFound, Packets.MCComm.Deny.Create("Could not find participant!"));
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find participant!"));
+        }
+
+        private void MCCommChannelMove(Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
+        {
+            if (!ServerLoggedIn(ctx)) return;
+            var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
+
+            if(participant.Value == null)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find participant!"));
+                return;
+            }
+
+            if(channel == null && packet.ChannelId > 0)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Channel does not exist!"));
+                return;
+            }
+
+            if(packet.ChannelId == 0)
+            {
+                SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = participant.Value.Channel }, participant.Value.SignallingSocket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+                return;
+            }
+
+            if (channel != null)
+            {
+                SignallingJoinChannel(new Packets.Signalling.JoinChannel() { ChannelId = packet.ChannelId, Password = channel.Password }, participant.Value.SignallingSocket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+                return;
+            }
         }
 
         private bool ServerLoggedIn(HttpListenerContext ctx)

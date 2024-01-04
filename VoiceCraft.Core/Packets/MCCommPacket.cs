@@ -85,6 +85,13 @@ namespace VoiceCraft.Core.Packets
                         else
                             throw new JsonReaderException("Invalid data!");
                         break;
+                    case MCCommPacketTypes.ChannelMove:
+                        var channelMoveData = jsonData["PacketData"]?.ToObject<ChannelMove>();
+                        if (channelMoveData != null)
+                            PacketData = channelMoveData;
+                        else
+                            throw new JsonReaderException("Invalid Data!");
+                        break;
                 }
             }
             else
@@ -107,6 +114,7 @@ namespace VoiceCraft.Core.Packets
         UpdateSettings,
         GetSettings,
         RemoveParticipant,
+        ChannelMove,
         Null
     }
 }

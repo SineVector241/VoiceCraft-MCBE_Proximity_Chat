@@ -30,6 +30,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void UpdateSettingsPacket(UpdateSettings packet, HttpListenerContext ctx);
         public delegate void GetSettingsPacket(GetSettings packet, HttpListenerContext ctx);
         public delegate void RemoveParticipantPacket(RemoveParticipant packet, HttpListenerContext ctx);
+        public delegate void ChannelMovePacket(ChannelMove packet, HttpListenerContext ctx);
 
         public delegate void InboundPacket(MCCommPacket packet);
         public delegate void OutboundPacket(MCCommPacket packet);
@@ -43,6 +44,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public event UpdateSettingsPacket? OnUpdateSettingsPacketReceived;
         public event GetSettingsPacket? OnGetSettingsPacketReceived;
         public event RemoveParticipantPacket? OnRemoveParticipantPacketReceived;
+        public event ChannelMovePacket? OnChannelMovePacketReceived;
 
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
@@ -165,6 +167,15 @@ namespace VoiceCraft.Core.Server.Sockets
                             break;
                         }
                         OnRemoveParticipantPacketReceived?.Invoke(removeParticipantData, ctx);
+                        break;
+                    case MCCommPacketTypes.ChannelMove:
+                        var channelMoveData = (ChannelMove)packet.PacketData;
+                        if(channelMoveData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnChannelMovePacketReceived?.Invoke(channelMoveData, ctx);
                         break;
                 }
             }
