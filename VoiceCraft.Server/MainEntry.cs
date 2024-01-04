@@ -63,7 +63,7 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("banlist", BanlistCommand);
             CommandHandler.RegisterCommand("setproximity", SetProximityCommand);
             CommandHandler.RegisterCommand("toggleproximity", ToggleProximityCommand);
-            CommandHandler.RegisterCommand("setmotds", SetMotdCommand);
+            CommandHandler.RegisterCommand("setmotd", SetMotdCommand);
             CommandHandler.RegisterCommand("toggleeffects", ToggleEffectsCommand);
             CommandHandler.RegisterCommand("debug", DebugCommand);
 
