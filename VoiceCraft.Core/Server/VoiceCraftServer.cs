@@ -395,7 +395,7 @@ namespace VoiceCraft.Core.Server
 
                     Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
                 }
-                else if(channel.Password != packet.Password || string.IsNullOrWhiteSpace(channel.Password))
+                else if(channel.Password != packet.Password && !string.IsNullOrWhiteSpace(channel.Password))
                 {
                     Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
                 }
@@ -765,6 +765,12 @@ namespace VoiceCraft.Core.Server
             if(channel == null && packet.ChannelId > 0)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Channel does not exist!"));
+                return;
+            }
+
+            if(packet.ChannelId == participant.Value.Channel)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is already in the channel!"));
                 return;
             }
 
