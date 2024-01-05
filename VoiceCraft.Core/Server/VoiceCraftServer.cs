@@ -795,7 +795,7 @@ namespace VoiceCraft.Core.Server
             if (server == null)
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
                 return false;
             }
             else
