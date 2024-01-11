@@ -370,10 +370,10 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = DateTime.UtcNow;
                 var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
-                if(participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
+                if(participant.Value.Channel != channel && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
                 {
-                    if(participant.Value.Channel != 0)
-                        Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
+                    if (participant.Value.Channel != null)
+                        SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = (byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1) }, socket); //Tell the client to leave the previous channel
 
                     var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
@@ -383,7 +383,7 @@ namespace VoiceCraft.Core.Server
                         Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                     }
 
-                    participant.Value.Channel = packet.ChannelId;
+                    participant.Value.Channel = channel;
 
                     channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
@@ -395,7 +395,7 @@ namespace VoiceCraft.Core.Server
 
                     Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
                 }
-                else if(channel.Password != packet.Password || string.IsNullOrWhiteSpace(channel.Password))
+                else if(channel.Password != packet.Password && !string.IsNullOrWhiteSpace(channel.Password))
                 {
                     Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!", false), socket);
                 }
@@ -409,7 +409,8 @@ namespace VoiceCraft.Core.Server
         private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
+            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
+            if (participant.Value != null && participant.Value.Binded && channel == participant.Value.Channel)
             {
                 participant.Value.LastActive = DateTime.UtcNow;
                 var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
@@ -420,7 +421,7 @@ namespace VoiceCraft.Core.Server
                     Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                 }
 
-                participant.Value.Channel = 0;
+                participant.Value.Channel = null;
                 channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < channelList.Count(); i++)
                 {
@@ -528,9 +529,12 @@ namespace VoiceCraft.Core.Server
                     !participant.Value.IsMuted && !participant.Value.IsDeafened &&
                     !participant.Value.IsServerMuted && participant.Value.Binded)
                 {
-                    if (ServerProperties.ProximityToggle)
+                    var proximityToggle = participant.Value.Channel?.OverrideSettings?.ProximityToggle ?? ServerProperties.ProximityToggle;
+                    if (proximityToggle)
                     {
                         if (participant.Value.IsDead || string.IsNullOrWhiteSpace(participant.Value.EnvironmentId)) return;
+                        var proximityDistance = participant.Value.Channel?.OverrideSettings?.ProximityDistance ?? ServerProperties.ProximityDistance;
+                        var voiceEffects = participant.Value.Channel?.OverrideSettings?.VoiceEffects ?? ServerProperties.VoiceEffects;
 
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
@@ -540,7 +544,7 @@ namespace VoiceCraft.Core.Server
                         x.Value.Channel == participant.Value.Channel &&
                         !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
                         x.Value.EnvironmentId == participant.Value.EnvironmentId &&
-                        Vector3.Distance(x.Value.Position, participant.Value.Position) <= ServerProperties.ProximityDistance);
+                        Vector3.Distance(x.Value.Position, participant.Value.Position) <= proximityDistance);
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
@@ -548,9 +552,9 @@ namespace VoiceCraft.Core.Server
 
                             if (client.Value.VoiceEndpoint != null)
                             {
-                                var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
-                                var echo = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f;
-                                var muffled = ServerProperties.VoiceEffects && (client.Value.InWater || participant.Value.InWater);
+                                var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / proximityDistance, 0.0f, 1.0f);
+                                var echo = voiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f;
+                                var muffled = voiceEffects && (client.Value.InWater || participant.Value.InWater);
                                 var rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180));
 
                                 Voice.SendPacketAsync(Packets.Voice.ServerAudio.Create(participant.Key, packet.PacketCount, volume, echo, rotation, muffled, packet.Audio), client.Value.VoiceEndpoint);
@@ -768,9 +772,15 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            if(packet.ChannelId == 0)
+            if(channel == participant.Value.Channel)
             {
-                SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = participant.Value.Channel }, participant.Value.SignallingSocket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is already in the channel!"));
+                return;
+            }
+
+            if(packet.ChannelId == 0 && participant.Value.Channel != null)
+            {
+                SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = (byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel)) }, participant.Value.SignallingSocket);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
@@ -789,7 +799,7 @@ namespace VoiceCraft.Core.Server
             if (server == null)
             {
                 var denyPacket = Packets.MCComm.Deny.Create("Not Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.Forbidden, denyPacket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
                 return false;
             }
             else

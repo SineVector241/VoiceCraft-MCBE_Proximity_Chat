@@ -50,6 +50,8 @@ namespace VoiceCraft.Server
                 throw new Exception("Channel name cannot be empty!");
             if (ServerProperties.Channels.Exists(x => x.Password.Length > 12))
                 throw new Exception("Channel password cannot be longer than 12 characters!");
+            if (ServerProperties.Channels.Exists(x => x.OverrideSettings?.ProximityDistance > 120 || x.OverrideSettings?.ProximityDistance < 1))
+                throw new Exception("Channel proximity distance can only be between 1 and 120!");
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))
             {
