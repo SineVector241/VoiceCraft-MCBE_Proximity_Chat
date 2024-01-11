@@ -12,7 +12,7 @@ namespace VoiceCraft.Core.Server
         public string Name { get; set; } = string.Empty;
         public PositioningTypes PositioningType { get; }
         public bool Binded { get; set; }
-        public byte Channel { get; set; } //Channel 0 is main.
+        public VoiceCraftChannel? Channel { get; set; } //Null channel is no channel
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public bool IsServerMuted { get; set; }

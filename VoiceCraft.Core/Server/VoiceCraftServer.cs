@@ -370,10 +370,10 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = DateTime.UtcNow;
                 var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
-                if(participant.Value.Channel != packet.ChannelId && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
+                if(participant.Value.Channel != channel && (channel.Password == packet.Password || string.IsNullOrWhiteSpace(channel.Password)))
                 {
-                    if(participant.Value.Channel != 0)
-                        Signalling.SendPacketAsync(Packets.Signalling.LeaveChannel.Create(participant.Value.Channel), socket); //Tell the client to leave the previous channel.
+                    if (participant.Value.Channel != null)
+                        SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = (byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1) }, socket); //Tell the client to leave the previous channel
 
                     var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
@@ -383,7 +383,7 @@ namespace VoiceCraft.Core.Server
                         Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                     }
 
-                    participant.Value.Channel = packet.ChannelId;
+                    participant.Value.Channel = channel;
 
                     channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                     for (ushort i = 0; i < channelList.Count(); i++)
@@ -409,7 +409,8 @@ namespace VoiceCraft.Core.Server
         private void SignallingLeaveChannel(Packets.Signalling.LeaveChannel packet, Socket socket)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
-            if (participant.Value != null && participant.Value.Binded && packet.ChannelId == participant.Value.Channel)
+            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId - 1);
+            if (participant.Value != null && participant.Value.Binded && channel == participant.Value.Channel)
             {
                 participant.Value.LastActive = DateTime.UtcNow;
                 var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
@@ -420,7 +421,7 @@ namespace VoiceCraft.Core.Server
                     Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), socket);
                 }
 
-                participant.Value.Channel = 0;
+                participant.Value.Channel = null;
                 channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
                 for (ushort i = 0; i < channelList.Count(); i++)
                 {
@@ -768,15 +769,15 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            if(packet.ChannelId == participant.Value.Channel)
+            if(channel == participant.Value.Channel)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Participant is already in the channel!"));
                 return;
             }
 
-            if(packet.ChannelId == 0)
+            if(packet.ChannelId == 0 && participant.Value.Channel != null)
             {
-                SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = participant.Value.Channel }, participant.Value.SignallingSocket);
+                SignallingLeaveChannel(new Packets.Signalling.LeaveChannel() { ChannelId = (byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel)) }, participant.Value.SignallingSocket);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
