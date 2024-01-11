@@ -529,9 +529,12 @@ namespace VoiceCraft.Core.Server
                     !participant.Value.IsMuted && !participant.Value.IsDeafened &&
                     !participant.Value.IsServerMuted && participant.Value.Binded)
                 {
-                    if (ServerProperties.ProximityToggle)
+                    var proximityToggle = participant.Value.Channel?.OverrideSettings?.ProximityToggle ?? ServerProperties.ProximityToggle;
+                    if (proximityToggle)
                     {
                         if (participant.Value.IsDead || string.IsNullOrWhiteSpace(participant.Value.EnvironmentId)) return;
+                        var proximityDistance = participant.Value.Channel?.OverrideSettings?.ProximityDistance ?? ServerProperties.ProximityDistance;
+                        var voiceEffects = participant.Value.Channel?.OverrideSettings?.VoiceEffects ?? ServerProperties.VoiceEffects;
 
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
@@ -541,7 +544,7 @@ namespace VoiceCraft.Core.Server
                         x.Value.Channel == participant.Value.Channel &&
                         !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
                         x.Value.EnvironmentId == participant.Value.EnvironmentId &&
-                        Vector3.Distance(x.Value.Position, participant.Value.Position) <= ServerProperties.ProximityDistance);
+                        Vector3.Distance(x.Value.Position, participant.Value.Position) <= proximityDistance);
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
@@ -549,9 +552,9 @@ namespace VoiceCraft.Core.Server
 
                             if (client.Value.VoiceEndpoint != null)
                             {
-                                var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / ServerProperties.ProximityDistance, 0.0f, 1.0f);
-                                var echo = ServerProperties.VoiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f;
-                                var muffled = ServerProperties.VoiceEffects && (client.Value.InWater || participant.Value.InWater);
+                                var volume = 1.0f - Math.Clamp(Vector3.Distance(client.Value.Position, participant.Value.Position) / proximityDistance, 0.0f, 1.0f);
+                                var echo = voiceEffects ? Math.Max(participant.Value.CaveDensity, client.Value.CaveDensity) * (1.0f - volume) : 0.0f;
+                                var muffled = voiceEffects && (client.Value.InWater || participant.Value.InWater);
                                 var rotation = (float)(Math.Atan2(client.Value.Position.Z - participant.Value.Position.Z, client.Value.Position.X - participant.Value.Position.X) - (client.Value.Rotation * Math.PI / 180));
 
                                 Voice.SendPacketAsync(Packets.Voice.ServerAudio.Create(participant.Key, packet.PacketCount, volume, echo, rotation, muffled, packet.Audio), client.Value.VoiceEndpoint);
