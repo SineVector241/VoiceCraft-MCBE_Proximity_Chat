@@ -71,7 +71,7 @@ namespace VoiceCraft.Core.Client.Sockets
 
             try
             {
-                var cancelTask = Task.Delay(2000);
+                var cancelTask = Task.Delay(5000);
                 var connectTask = TCPSocket.ConnectAsync(IP, Port);
                 await await Task.WhenAny(connectTask, cancelTask);
                 if(cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
@@ -80,7 +80,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version));
 
                 await Task.Delay(5000);
-                if (!IsConnected) throw new Exception("Signalling timed out");
+                if (!IsConnected) throw new Exception("Signalling timed out.");
             }
             catch(Exception ex)
             {
