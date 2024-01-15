@@ -20,7 +20,7 @@ namespace VoiceCraft.Core.Client
         //Constants
         public const int SampleRate = 48000;
         public const int ActivityInterval = 1000;
-        public const int ActivityTimeout = 5000;
+        public const int ActivityTimeout = 15000;
         public const string Version = "v1.0.1";
 
         //Variables
@@ -150,9 +150,10 @@ namespace VoiceCraft.Core.Client
 
         private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 2)
+            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 4)
             {
-                if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
+                var ttl = DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds;
+                if (ttl > ActivityTimeout)
                 {
                     Disconnect("Signalling Server Timeout");
                     return;
