@@ -15,7 +15,7 @@ namespace VoiceCraft.Core.Server
         public string PermanentServerKey { get; set; } = "";
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
         public int ExternalServerTimeoutMS { get; set; } = 5000;
-        public int ClientTimeoutMS { get; set; } = 15000;
+        public int ClientTimeoutMS { get; set; } = 8000;
         public List<VoiceCraftChannel> Channels { get; set; } = new List<VoiceCraftChannel>();
 
         //Changeable Settings
