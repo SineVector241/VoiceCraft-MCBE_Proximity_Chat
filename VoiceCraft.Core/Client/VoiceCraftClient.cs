@@ -152,9 +152,12 @@ namespace VoiceCraft.Core.Client
         {
             if (Signalling.IsConnected)
             {
+                Debug.WriteLine("Checking Ping");
                 if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
                 {
-                    Disconnect("Signalling Server Timeout");
+                    Debug.WriteLine($"[{DateTime.UtcNow}] Logout");
+                    Disconnect("Signalling Server Timeout", true);
+                    ActivityChecker.Stop();
                     return;
                 }
 
@@ -357,7 +360,7 @@ namespace VoiceCraft.Core.Client
             _ = Signalling.ConnectAsync(IP, Port, LoginKey, PositioningType, Version);
         }
 
-        public void Disconnect(string? Reason = null)
+        public void Disconnect(string? Reason = null, bool forceDisconnect = false)
         {
             try
             {
@@ -370,15 +373,18 @@ namespace VoiceCraft.Core.Client
 
                     ActivityChecker.Stop();
                     CTS.Cancel();
-                    Signalling.Disconnect();
+                    Signalling.Disconnect(forceDisconnect: forceDisconnect);
                     Voice.Disconnect();
                     MCWSS.Stop();
                     Participants.Clear();
                     Channels.Clear();
-                    if (!string.IsNullOrWhiteSpace(Reason)) OnDisconnected?.Invoke(Reason);
+                    if (!string.IsNullOrWhiteSpace(Reason)) 
+                        OnDisconnected?.Invoke(Reason);
                     IsConnected = false;
                     IsMuted = false;
                     IsDeafened = false;
+
+                    Debug.WriteLine($"[{DateTime.UtcNow}] Disconnect function ran");
                 }
             }
             catch(Exception ex)
