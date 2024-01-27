@@ -152,8 +152,7 @@ namespace VoiceCraft.Core.Client
         {
             if (Signalling.IsConnected)
             {
-                var ttl = DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds;
-                if (ttl > ActivityTimeout)
+                if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
                 {
                     Disconnect("Signalling Server Timeout");
                     return;
@@ -364,6 +363,11 @@ namespace VoiceCraft.Core.Client
             {
                 if(!CTS.IsCancellationRequested)
                 {
+                    foreach (var participant in Participants)
+                    {
+                        participant.Value.Dispose(); //MEMORY LEAK FIX!
+                    }
+
                     ActivityChecker.Stop();
                     CTS.Cancel();
                     Signalling.Disconnect();
