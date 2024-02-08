@@ -7,6 +7,6 @@ namespace VoiceCraft.Windows
     /// </summary>
     public partial class App : Application
     {
-        public const string Version = "v1.0.12";
+        public const string Version = "v1.0.2";
     }
 }
