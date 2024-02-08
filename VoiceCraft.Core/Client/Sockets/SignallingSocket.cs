@@ -11,7 +11,7 @@ namespace VoiceCraft.Core.Client.Sockets
 {
     public class SignallingSocket : IDisposable
     {
-        public Socket TCPSocket { get; }
+        public Socket TCPSocket { get; private set; }
         public CancellationTokenSource CTS { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
@@ -71,7 +71,7 @@ namespace VoiceCraft.Core.Client.Sockets
 
             try
             {
-                var cancelTask = Task.Delay(2000);
+                var cancelTask = Task.Delay(5000);
                 var connectTask = TCPSocket.ConnectAsync(IP, Port);
                 await await Task.WhenAny(connectTask, cancelTask);
                 if(cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
@@ -80,7 +80,7 @@ namespace VoiceCraft.Core.Client.Sockets
                 await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version));
 
                 await Task.Delay(5000);
-                if (!IsConnected) throw new Exception("Signalling timed out");
+                if (!IsConnected) throw new Exception("Signalling timed out.");
             }
             catch(Exception ex)
             {
@@ -126,14 +126,20 @@ namespace VoiceCraft.Core.Client.Sockets
             }
         }
 
-        public void Disconnect(string? reason = null)
+        public void Disconnect(string? reason = null, bool forceDisconnect = false)
         {
             try
             {
                 CTS.Cancel();
                 if (TCPSocket.Connected)
                 {
-                    TCPSocket.Disconnect(true);
+                    if (forceDisconnect)
+                    {
+                        TCPSocket.Close();
+                        TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    }
+                    else
+                        TCPSocket.Disconnect(true);
                 }
                 if(!string.IsNullOrWhiteSpace(reason)) OnSocketDisconnected?.Invoke(reason);
                 IsConnected = false;

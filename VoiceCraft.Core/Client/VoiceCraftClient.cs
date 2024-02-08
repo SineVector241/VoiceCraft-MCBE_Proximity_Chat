@@ -20,7 +20,7 @@ namespace VoiceCraft.Core.Client
         //Constants
         public const int SampleRate = 48000;
         public const int ActivityInterval = 1000;
-        public const int ActivityTimeout = 5000;
+        public const int ActivityTimeout = 8000;
         public const string Version = "v1.0.1";
 
         //Variables
@@ -150,18 +150,21 @@ namespace VoiceCraft.Core.Client
 
         private void DoActivityChecks(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Signalling.IsConnected && DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout / 2)
+            if (Signalling.IsConnected)
             {
                 if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
                 {
-                    Disconnect("Signalling Server Timeout");
+                    Disconnect("Signalling Server Timeout", true);
+                    ActivityChecker.Stop();
                     return;
                 }
 
                 Signalling.SendPacket(Packets.Signalling.PingCheck.Create());
             }
-            else if (!Signalling.IsConnected)
+            else
+            {
                 ActivityChecker.Stop();
+            }
         }
 
         //Signalling Event Methods
@@ -355,23 +358,31 @@ namespace VoiceCraft.Core.Client
             _ = Signalling.ConnectAsync(IP, Port, LoginKey, PositioningType, Version);
         }
 
-        public void Disconnect(string? Reason = null)
+        public void Disconnect(string? Reason = null, bool forceDisconnect = false)
         {
             try
             {
                 if(!CTS.IsCancellationRequested)
                 {
+                    foreach (var participant in Participants)
+                    {
+                        participant.Value.Dispose(); //MEMORY LEAK FIX!
+                    }
+
                     ActivityChecker.Stop();
                     CTS.Cancel();
-                    Signalling.Disconnect();
+                    Signalling.Disconnect(forceDisconnect: forceDisconnect);
                     Voice.Disconnect();
                     MCWSS.Stop();
                     Participants.Clear();
                     Channels.Clear();
-                    if (!string.IsNullOrWhiteSpace(Reason)) OnDisconnected?.Invoke(Reason);
+                    if (!string.IsNullOrWhiteSpace(Reason)) 
+                        OnDisconnected?.Invoke(Reason);
                     IsConnected = false;
                     IsMuted = false;
                     IsDeafened = false;
+
+                    Debug.WriteLine($"[{DateTime.UtcNow}] Disconnect function ran");
                 }
             }
             catch(Exception ex)

@@ -4,7 +4,7 @@ namespace VoiceCraft.Mobile
 {
     public partial class App : Application
     {
-        public const string Version = "v1.0.1";
+        public const string Version = "v1.0.2";
 
         public App()
         {
