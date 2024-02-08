@@ -152,10 +152,8 @@ namespace VoiceCraft.Core.Client
         {
             if (Signalling.IsConnected)
             {
-                Debug.WriteLine("Checking Ping");
                 if (DateTime.UtcNow.Subtract(Signalling.LastActive).TotalMilliseconds > ActivityTimeout)
                 {
-                    Debug.WriteLine($"[{DateTime.UtcNow}] Logout");
                     Disconnect("Signalling Server Timeout", true);
                     ActivityChecker.Stop();
                     return;

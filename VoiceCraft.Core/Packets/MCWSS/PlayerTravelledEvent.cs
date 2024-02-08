@@ -17,7 +17,7 @@
         public string name { get; set; } = string.Empty;
         public Position position { get; set; }
         public string type { get; set; } = string.Empty;
-        public int variant { get; set; }
+        public long variant { get; set; }
         public float yRot {  get; set; }
     }
 
