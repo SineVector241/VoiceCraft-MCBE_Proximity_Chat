@@ -46,9 +46,9 @@ namespace VoiceCraft.Server
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
 #if DEBUG
-            Console.WriteLine("[v1.0.11]=================================[DEBUG]\n");
+            Console.WriteLine("[v1.0.12]=================================[DEBUG]\n");
 #else
-            Console.WriteLine("[v1.0.11]===============================[RELEASE]\n");
+            Console.WriteLine("[v1.0.12]===============================[RELEASE]\n");
 #endif
 
             //Register Commands
