@@ -1,9 +1,10 @@
 ﻿using Fleck;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.Numerics;
 using VoiceCraft.Core.Client.Builders;
+using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.MCWSS;
 
 namespace VoiceCraft.Core.Client.Sockets
 {
@@ -63,28 +64,26 @@ namespace VoiceCraft.Core.Client.Sockets
 
                 socket.OnMessage = message =>
                 {
-                    var json = JObject.Parse(message);
-                    if (!json.ContainsKey("header")) return;
+                    var packet = new MCWSSPacket(message);
 
-                    if (json["header"]?["messagePurpose"]?.Value<string>() == "commandResponse")
+                    if (packet.Header.messagePurpose == "commandResponse")
                     {
-                        var playerName = json["body"]?["localplayername"]?.Value<string>();
-                        if (!string.IsNullOrWhiteSpace(playerName))
-                        {
-                            OnConnect?.Invoke(playerName);
-                        }
+                        var data = (LocalPlayerNameResponse)packet.Body;
+                        var name = data.localplayername;
+                        OnConnect?.Invoke(name);
                     }
 
-                    else if (json["header"]?["messagePurpose"]?.Value<string>() == "event" && json["header"]?["eventName"]?.Value<string>() == "PlayerTravelled")
+                    else if (packet.Header.messagePurpose == "event" && packet.Header.eventName == "PlayerTravelled")
                     {
-                        var x = json["body"]?["player"]?["position"]?["x"]?.Value<float>();
-                        var y = json["body"]?["player"]?["position"]?["y"]?.Value<float>();
-                        var z = json["body"]?["player"]?["position"]?["z"]?.Value<float>();
-                        var dimensionInt = json["body"]?["dimension"]?.Value<int>();
+                        var data = (PlayerTravelledEvent)packet.Body;
+                        var x = data.player.position.x;
+                        var y = data.player.position.y;
+                        var z = data.player.position.z;
+                        var dimensionInt = data.player.dimension;
 
-                        OnPlayerTravelled?.Invoke(new Vector3(x ?? 0, y ?? 0, z ?? 0), Dimensions[dimensionInt ?? 0]);
+                        OnPlayerTravelled?.Invoke(new Vector3(x, y, z), Dimensions[dimensionInt]);
 #if DEBUG
-                        Debug.WriteLine($"PlayerTravelled: {x}, {y}, {z}, {Dimensions[dimensionInt ?? 0]}");
+                        Debug.WriteLine($"PlayerTravelled: {x}, {y}, {z}, {Dimensions[dimensionInt]}");
 #endif
                     }
                 };
