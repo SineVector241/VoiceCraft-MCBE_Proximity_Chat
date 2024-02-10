@@ -9,6 +9,7 @@ using System.Windows;
 using VoiceCraft.Windows.Audio;
 using VoiceCraft.Core.Client;
 using Gma.System.MouseKeyHook;
+using NAudio.Wave.SampleProviders;
 
 namespace VoiceCraft.Windows.ViewModels
 {
@@ -30,12 +31,17 @@ namespace VoiceCraft.Windows.ViewModels
         private bool micOpen = false;
 
         [ObservableProperty]
+        private bool audioPlaying = false;
+
+        [ObservableProperty]
         private bool settingMute = false;
 
         [ObservableProperty]
         private bool settingDeafen = false;
 
         private IWaveIn AudioRecorder;
+        private IWavePlayer AudioPlayer;
+        private ISampleProvider SineWaveOut;
         private IKeyboardMouseEvents? Events;
         public SettingsPageViewModel()
         {
@@ -84,15 +90,30 @@ namespace VoiceCraft.Windows.ViewModels
                 Database.SetSettings(Settings);
             }
 
+            SineWaveOut = new SignalGenerator()
+            {
+                Gain = 0.2,
+                Frequency = 500,
+                Type = SignalGeneratorType.Sin
+            };
+
             var audioManager = new AudioManager();
             AudioRecorder = audioManager.CreateRecorder(new WaveFormat(VoiceCraftClient.SampleRate, 1));
             AudioRecorder.DataAvailable += AudioDataAvailable;
             AudioRecorder.RecordingStopped += RecorderStopped;
+            
+            AudioPlayer = audioManager.CreatePlayer(SineWaveOut);
+            AudioPlayer.PlaybackStopped += PlayerStopped;
         }
 
         private void RecorderStopped(object? sender, StoppedEventArgs e)
         {
             MicOpen = false;
+        }
+
+        private void PlayerStopped(object? sender, StoppedEventArgs e)
+        {
+            AudioPlaying = false;
         }
 
         private void AudioDataAvailable(object? sender, WaveInEventArgs e)
@@ -198,6 +219,9 @@ namespace VoiceCraft.Windows.ViewModels
                 AudioRecorder.StopRecording();
             AudioRecorder.DataAvailable -= AudioDataAvailable;
             AudioRecorder.RecordingStopped -= RecorderStopped;
+            AudioPlayer.PlaybackStopped -= PlayerStopped;
+            AudioPlayer.Dispose();
+            AudioRecorder.Dispose();
             Navigator.GoToPreviousPage();
         }
 
@@ -234,6 +258,28 @@ namespace VoiceCraft.Windows.ViewModels
                 }
             }
             catch(Exception ex)
+            {
+                MessageBox.Show($"An error occured!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        [RelayCommand]
+        public void StartStopPlaying()
+        {
+            try
+            {
+                if(AudioPlaying)
+                {
+                    AudioPlayer.Stop();
+                    AudioPlaying = false;
+                }
+                else
+                {
+                    AudioPlayer.Play();
+                    AudioPlaying = true;
+                }
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show($"An error occured!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }

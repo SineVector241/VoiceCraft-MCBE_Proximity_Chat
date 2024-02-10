@@ -22,10 +22,10 @@ namespace VoiceCraft.Windows.Audio
             }
 
             var Player = new WaveOutEvent();
-            Player.Init(waveProvider);
             Player.DesiredLatency = 40;
             Player.NumberOfBuffers = 3;
             Player.DeviceNumber = settings.OutputDevice - 1;
+            Player.Init(waveProvider);
             return Player;
         }
 
