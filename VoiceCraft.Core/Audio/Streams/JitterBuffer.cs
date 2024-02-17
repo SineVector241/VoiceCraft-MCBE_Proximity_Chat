@@ -1,5 +1,4 @@
 ﻿using NAudio.Wave;
-using System;
 using System.Linq;
 using VoiceCraft.Core.Client;
 
@@ -63,17 +62,46 @@ namespace VoiceCraft.Core.Audio.Streams
             }
         }
 
-        public int Get(ref AudioFrame frame)
+        public StatusCode Get(ref AudioFrame outFrame)
         {
             if (!IsPreloaded)
-                return -1;
+                return StatusCode.Failed;
+
+            RemoveOldFrames();
 
             var earliest = FindEarliestSlot();
-            if(earliest != -1)
+            if (earliest != -1)
             {
-                var nextPacket = QueuedFrames[earliest];
+                var distance = QueuedFrames[earliest].Sequence - Sequence;
+
+                if (distance == 1 || IsFirst)
+                {
+                    //This is the frame we expected
+                    Sequence = QueuedFrames[earliest].Sequence;
+                    IsFirst = false;
+                    SilencedFrames = 0;
+
+                    outFrame.Buffer = QueuedFrames[earliest].Buffer;
+                    outFrame.Sequence = QueuedFrames[earliest].Sequence;
+
+                    QueuedFrames[earliest].Buffer = null;
+                    return StatusCode.Success;
+                }
+                else if (distance == 2)
+                {
+                    //Missed this frame, but the next queued one might have FEC info
+                    Sequence++;
+                    outFrame.Buffer = QueuedFrames[earliest].Buffer;
+                    outFrame.Sequence = Sequence;
+                    return StatusCode.Missed;
+                }
+                else
+                {
+                    //Missed this frame and we have no FEC data to work with
+                    return StatusCode.Failed;
+                }
             }
-            else if(!IsFirst)
+            else if (!IsFirst)
             {
                 if (SilencedFrames < 5)
                     SilencedFrames++;
@@ -84,7 +112,7 @@ namespace VoiceCraft.Core.Audio.Streams
                 }
             }
 
-            return -1;
+            return StatusCode.Failed;
         }
 
         private int FindEmptySlot()
@@ -145,7 +173,7 @@ namespace VoiceCraft.Core.Audio.Streams
 
     public struct Frame
     {
-        public byte? Buffer;
+        public byte[]? Buffer;
         public uint Sequence;
     }
 
@@ -154,6 +182,12 @@ namespace VoiceCraft.Core.Audio.Streams
     {
         public byte[]? Buffer;
         public uint Sequence;
-        public bool Missed;
+    }
+
+    public enum StatusCode
+    {
+        Failed = -1,
+        Success = 0,
+        Missed = 1
     }
 }
