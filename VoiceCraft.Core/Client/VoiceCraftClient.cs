@@ -19,6 +19,7 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
+        public static int FrameMilliseconds = 40;
         public const int ActivityInterval = 1000;
         public const int ActivityTimeout = 8000;
         public const string Version = "v1.0.1";
@@ -49,7 +50,6 @@ namespace VoiceCraft.Core.Client
         public uint PacketCount { get; private set; }
 
         //Audio Variables
-        public int RecordLengthMS { get; }
         public WaveFormat RecordFormat { get; } = new WaveFormat(SampleRate, 1);
         public WaveFormat PlaybackFormat { get; } = WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2);
         public MixingSampleProvider Mixer { get; }
@@ -91,7 +91,7 @@ namespace VoiceCraft.Core.Client
             //Setup variables
             this.LoginKey = LoginKey;
             this.PositioningType = PositioningType;
-            this.RecordLengthMS = RecordLengthMS;
+            FrameMilliseconds = RecordLengthMS;
             this.MCWSSPort = MCWSSPort;
 
             Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
@@ -185,7 +185,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!Participants.ContainsKey(packet.LoginKey))
             {
-                var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, RecordLengthMS)
+                var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, FrameMilliseconds)
                 {
                     Muted = packet.IsMuted,
                     Deafened = packet.IsDeafened

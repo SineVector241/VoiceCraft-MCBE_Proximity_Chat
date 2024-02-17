@@ -1,6 +1,7 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using System;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
@@ -14,7 +15,7 @@ namespace VoiceCraft.Core.Audio.Streams
         public OpusStream(WaveFormat WaveFormat)
         {
             this.WaveFormat = WaveFormat;
-            DecodeBuffer = new short[WaveFormat.ConvertLatencyToByteSize(40) / 2];
+            DecodeBuffer = new short[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds) / 2];
             Decoder = new OpusDecoder(WaveFormat.SampleRate, 1);
         }
 

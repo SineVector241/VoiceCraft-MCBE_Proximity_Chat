@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
@@ -11,8 +12,8 @@ namespace VoiceCraft.Core.Audio.Streams
         private BufferedWaveProvider DecodedAudio { get; set; }
         private OpusStream OpusStream { get; set; }
         private Task DecodeThread { get; set; }
-        private readonly CancellationTokenSource TokenSource;
-        private readonly CancellationToken Token;
+        private CancellationTokenSource TokenSource { get; set; }
+        private CancellationToken Token { get; set; }
 
         public VoiceCraftStream(WaveFormat WaveFormat, OpusStream OpusStream)
         {
@@ -35,7 +36,7 @@ namespace VoiceCraft.Core.Audio.Streams
             return Task.Run(() => {
                 while (!Token.IsCancellationRequested)
                 {
-                    var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(40)];
+                    var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
                     var count = OpusStream.Read(buffer, 0, buffer.Length);
                     DecodedAudio.AddSamples(buffer, 0, count);
                 }

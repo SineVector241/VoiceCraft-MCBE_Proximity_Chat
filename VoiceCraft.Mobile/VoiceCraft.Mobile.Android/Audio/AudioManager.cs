@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Mobile.Droid.Audio;
 using VoiceCraft.Mobile.Interfaces;
 using VoiceCraft.Mobile.Storage;
@@ -35,7 +36,7 @@ namespace VoiceCraft.Mobile.Droid.Audio
 
             var Recorder = new AudioRecorder();
             Recorder.WaveFormat = waveFormat;
-            Recorder.BufferMilliseconds = 40;
+            Recorder.BufferMilliseconds = VoiceCraftClient.FrameMilliseconds;
             Recorder.audioSource = Android.Media.AudioSource.VoiceCommunication;
             return Recorder;
         }

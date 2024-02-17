@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Windows.Interfaces;
 using VoiceCraft.Windows.Storage;
 
@@ -23,7 +24,7 @@ namespace VoiceCraft.Windows.Audio
 
             var Player = new WaveOutEvent();
             Player.Init(waveProvider);
-            Player.DesiredLatency = 40;
+            Player.DesiredLatency = VoiceCraftClient.FrameMilliseconds;
             Player.NumberOfBuffers = 3;
             Player.DeviceNumber = settings.OutputDevice - 1;
             return Player;
@@ -46,7 +47,7 @@ namespace VoiceCraft.Windows.Audio
 
             var Recorder = new WaveInEvent();
             Recorder.WaveFormat = waveFormat;
-            Recorder.BufferMilliseconds = 40;
+            Recorder.BufferMilliseconds = VoiceCraftClient.FrameMilliseconds;
             Recorder.DeviceNumber = settings.InputDevice - 1;
             return Recorder;
         }
