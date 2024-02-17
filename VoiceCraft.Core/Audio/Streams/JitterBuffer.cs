@@ -1,8 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
@@ -10,123 +8,147 @@ namespace VoiceCraft.Core.Audio.Streams
     public class JitterBuffer
     {
         public WaveFormat WaveFormat { get; set; }
-        private readonly int QueueLength;
-        private readonly SemaphoreSlim QueueLock;
-
-        private uint Sequence;
-        private uint Timestamp;
+        public int Count => QueuedFrames.Count(x => x.Buffer != null);
         private bool IsFirst;
-        private long NextTick = Environment.TickCount;
-        private int SilencedFrames = 0;
+        private bool IsPreloaded;
+        private Frame[] QueuedFrames;
+        private int QueueLength;
+        private int MaxQueueLength;
+        private uint Sequence;
 
-        private ConcurrentQueue<Frame> QueuedFrames { get; set; }
+        private int SilencedFrames;
 
-        public JitterBuffer(WaveFormat WaveFormat, int bufferMillis = 80)
+        public JitterBuffer(WaveFormat WaveFormat, int bufferMilliseconds = 80, int maxBufferSizeMilliseconds = 1000)
         {
             this.WaveFormat = WaveFormat;
-            QueueLength = (bufferMillis + (VoiceCraftClient.FrameMilliseconds - 1)) / bufferMillis;
-
-            QueuedFrames = new ConcurrentQueue<Frame>();
-            QueueLock = new SemaphoreSlim(QueueLength, QueueLength);
+            QueueLength = bufferMilliseconds / VoiceCraftClient.FrameMilliseconds;
+            MaxQueueLength = maxBufferSizeMilliseconds / VoiceCraftClient.FrameMilliseconds;
+            QueuedFrames = new Frame[MaxQueueLength];
             IsFirst = true;
         }
 
-        public async Task AddFrame()
+        public void Put(Frame frame)
         {
+            if (IsFirst)
+            {
+                QueuedFrames[0] = frame;
+                Sequence = frame.Sequence;
+                SilencedFrames = 0;
+                IsFirst = false;
+                return;
+            }
+            //Remove Old Frames.
+            RemoveOldFrames();
+
+            //Insert the packet if it's not lower than the current sequence.
+            if (frame.Sequence > Sequence)
+            {
+                //Find an empty slot.
+                var empty = FindEmptySlot();
+                if (empty != -1)
+                {
+                    QueuedFrames[empty] = frame;
+                }
+            }
+            else
+            {
+                //We haven't found an empty slot so we replace the oldest/highest packet sequence.
+                var oldest = FindOldestSlot();
+                QueuedFrames[oldest] = frame;
+            }
+
+            if(!IsPreloaded && Count >= QueueLength)
+            {
+                IsPreloaded = true;
+            }
         }
 
-        public int Get(ref AudioFrame outFrame)
+        public int Get(ref AudioFrame frame)
         {
-            //Don't want to give a packet as soon as it comes in.
-            long tick = Environment.TickCount;
-            long dist = NextTick - tick;
-            if (dist > 0)
-            {
-                Task.Delay((int)dist).GetAwaiter().GetResult();
+            if (!IsPreloaded)
                 return -1;
-            }
-            NextTick += VoiceCraftClient.FrameMilliseconds;
 
-
-            if (QueuedFrames.TryPeek(out Frame frame))
+            var earliest = FindEarliestSlot();
+            if(earliest != -1)
             {
-                uint distance = frame.Timestamp - Timestamp;
-                bool restartSeq = IsFirst;
-
-                if (!IsFirst)
-                {
-                    if (distance > uint.MaxValue - WaveFormat.ConvertLatencyToByteSize(5000))
-                    {
-                        QueuedFrames.TryDequeue(out _);
-                        QueueLock.Release();
-                        return -1; //Dropped the frame.
-                    }
-                }
-
-                if (distance == 0 || restartSeq)
-                {
-                    //This is the frame we expected
-                    Sequence = frame.Sequence;
-                    Timestamp = frame.Timestamp;
-                    IsFirst = false;
-                    SilencedFrames = 0;
-
-                    QueuedFrames.TryDequeue(out _);
-                    outFrame.Buffer = frame.Buffer;
-                    outFrame.Sequence = frame.Sequence;
-                    QueueLock.Release();
-                    return 0; //Successful Retreival, Decode Normally.
-                }
-                else if (distance == WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds))
-                {
-                    //Missed this frame, but the next queued one might have FEC info
-                    Sequence++;
-                    outFrame.Buffer = frame.Buffer;
-                    outFrame.Sequence = frame.Sequence;
-                    outFrame.Missed = true;
-                    return 1; //1 = Missed Packet but expect decode.
-                }
-                else
-                {
-                    //Missed this frame and we have no FEC data to work with
-                    outFrame.Sequence = Sequence++;
-                    outFrame.Missed = true;
-                    return 2; //2 = Missed Packet, Decode with PLC?.
-                }
+                var nextPacket = QueuedFrames[earliest];
             }
-            else if (!IsFirst)
+            else if(!IsFirst)
             {
-                //Missed this frame and we have no FEC data to work with
                 if (SilencedFrames < 5)
                     SilencedFrames++;
                 else
                 {
                     IsFirst = true;
-                    //_isPreloaded = false;
+                    IsPreloaded = false;
                 }
-
-                return 2; //2 = Missed Packet, Decode with PLC?.
             }
-            Timestamp += (uint)WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds);
-            return -1; //Failed, Do Nothing.
+
+            return -1;
         }
 
-        private struct Frame
+        private int FindEmptySlot()
         {
-            public readonly byte[] Buffer;
-            public readonly int Bytes;
-            public readonly uint Sequence;
-            public readonly uint Timestamp;
-
-            public Frame(byte[] buffer, int bytes, uint sequence, uint timestamp)
+            for (int i = 0; i < QueuedFrames.Length; i++)
             {
-                Buffer = buffer;
-                Bytes = bytes;
-                Sequence = sequence;
-                Timestamp = timestamp;
+                if (QueuedFrames[i].Buffer == null)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private int FindOldestSlot()
+        {
+            int index = 0;
+            uint oldest = QueuedFrames[index].Sequence;
+            for (int i = 1; i < QueuedFrames.Length; i++)
+            {
+                if (QueuedFrames[i].Sequence > oldest)
+                {
+                    oldest = QueuedFrames[i].Sequence;
+                    index = i;
+                }
+            }
+            return index;
+        }
+
+        private int FindEarliestSlot()
+        {
+            uint earliest = QueuedFrames[0].Sequence;
+            int index = -1;
+            for (int i = 1; i < QueuedFrames.Length; i++)
+            {
+                if (QueuedFrames[i].Buffer != null && QueuedFrames[i].Sequence < earliest)
+                {
+                    earliest = QueuedFrames[i].Sequence;
+                    index = i;
+                }
+            }
+
+            return index;
+        }
+
+        private void RemoveOldFrames()
+        {
+            //Remove Old Packets
+            for (int i = 0; i < QueuedFrames.Length; i++)
+            {
+                if (QueuedFrames[i].Buffer != null && QueuedFrames[i].Sequence < Sequence)
+                {
+                    QueuedFrames[i].Buffer = null;
+                }
             }
         }
     }
+
+    public struct Frame
+    {
+        public byte? Buffer;
+        public uint Sequence;
+    }
+
 
     public struct AudioFrame
     {
