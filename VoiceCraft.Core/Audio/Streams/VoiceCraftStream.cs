@@ -18,7 +18,7 @@ namespace VoiceCraft.Core.Audio.Streams
         public VoiceCraftStream(WaveFormat WaveFormat, OpusStream OpusStream)
         {
             this.WaveFormat = WaveFormat;
-            DecodedAudio = new BufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2) };
+            DecodedAudio = new BufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2), DiscardOnBufferOverflow = true };
             this.OpusStream = OpusStream;
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
@@ -34,11 +34,19 @@ namespace VoiceCraft.Core.Audio.Streams
         private Task Run()
         {
             return Task.Run(() => {
+                var nextTick = Environment.TickCount;
                 while (!Token.IsCancellationRequested)
                 {
-                    var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
-                    var count = OpusStream.Read(buffer, 0, buffer.Length);
-                    DecodedAudio.AddSamples(buffer, 0, count);
+                    try
+                    {
+                        var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
+                        var count = OpusStream.Read(buffer, 0, buffer.Length);
+                        if (count > 0)
+                        {
+                            DecodedAudio.AddSamples(buffer, 0, count);
+                        }
+                    }
+                    catch (Exception ex) { }
                 }
             }, Token);
         }
@@ -46,6 +54,7 @@ namespace VoiceCraft.Core.Audio.Streams
         public void Dispose()
         {
             TokenSource.Cancel();
+            DecodeThread.Wait();
             TokenSource.Dispose();
             DecodeThread.Dispose();
         }

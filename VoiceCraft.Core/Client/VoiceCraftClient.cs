@@ -19,7 +19,7 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
-        public static int FrameMilliseconds = 40;
+        public static int FrameMilliseconds = 20;
         public const int ActivityInterval = 1000;
         public const int ActivityTimeout = 8000;
         public const string Version = "v1.0.1";
