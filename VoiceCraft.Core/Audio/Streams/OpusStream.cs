@@ -1,6 +1,7 @@
 ﻿using Concentus.Structs;
 using NAudio.Wave;
 using System;
+using System.Diagnostics;
 using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
@@ -48,7 +49,7 @@ namespace VoiceCraft.Core.Audio.Streams
 
             //Convert and put into the buffer.
             var decoded = ShortsToBytes(DecodeBuffer, 0, shortsRead);
-            Array.Copy(decoded, buffer, decoded.Length);
+            Buffer.BlockCopy(decoded, 0, buffer, 0, decoded.Length);
             return decoded.Length;
         }
 
