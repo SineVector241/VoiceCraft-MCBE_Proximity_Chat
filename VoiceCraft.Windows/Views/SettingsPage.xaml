@@ -76,6 +76,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="0,5">
                         <Grid.ColumnDefinitions>
@@ -345,6 +346,25 @@
                     </Button>
 
                     <Button Grid.Row="15"
+                            Height="40"
+                            Margin="0,5"
+                            Command="{Binding StartStopPlayingCommand}"
+                            FontSize="15">
+                        <Button.Style>
+                            <Style BasedOn="{StaticResource ButtonStyle}" TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AudioPlaying}" Value="True">
+                                        <Setter Property="Content" Value="Stop Playback" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding AudioPlaying}" Value="False">
+                                        <Setter Property="Content" Value="Start Playback" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Grid.Row="16"
                             Height="40"
                             Margin="0,5"
                             Command="{Binding ResetCommand}"
