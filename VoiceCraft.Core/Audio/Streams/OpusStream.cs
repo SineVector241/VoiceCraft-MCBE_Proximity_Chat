@@ -1,25 +1,24 @@
-﻿using Concentus.Structs;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System;
-using System.Diagnostics;
 using VoiceCraft.Core.Client;
+using VoiceCraft.Core.Opus;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
-    public class OpusStream : IWaveProvider
+    public class OpusStream : IWaveProvider, IDisposable
     {
         public WaveFormat WaveFormat { get; set; }
         private readonly JitterBuffer JitterBuffer;
         private readonly OpusDecoder Decoder;
-        private short[] DecodeBuffer;
+        private byte[] DecodeBuffer;
         private JitterBufferPacket outPacket;
 
         public OpusStream(WaveFormat WaveFormat, JitterBuffer JitterBuffer)
         {
             this.WaveFormat = WaveFormat;
             this.JitterBuffer = JitterBuffer;
-            DecodeBuffer = new short[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds) / 2];
-            Decoder = new OpusDecoder(WaveFormat.SampleRate, 1);
+            DecodeBuffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
+            Decoder = new OpusDecoder(WaveFormat.SampleRate, 1, VoiceCraftClient.FrameMilliseconds);
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -35,7 +34,7 @@ namespace VoiceCraft.Core.Audio.Streams
             var status = JitterBuffer.Get(ref outPacket);
             if (status == 0)
             {
-                shortsRead = Decoder.Decode(outPacket.Data, 0, outPacket.Length, DecodeBuffer, 0, DecodeBuffer.Length, false);
+                shortsRead = Decoder.DecodeFrame(outPacket.Data, 0, outPacket.Length, DecodeBuffer, 0, false);
             }
             else if(status == -1)
             {
@@ -44,13 +43,12 @@ namespace VoiceCraft.Core.Audio.Streams
             else
             {
                 // no packet found
-                shortsRead = Decoder.Decode(null, 0, 0, DecodeBuffer, 0, DecodeBuffer.Length, false);
+                shortsRead = Decoder.DecodeFrame(null, 0, 0, DecodeBuffer, 0, false);
             }
 
             //Convert and put into the buffer.
-            var decoded = ShortsToBytes(DecodeBuffer, 0, shortsRead);
-            Buffer.BlockCopy(decoded, 0, buffer, 0, decoded.Length);
-            return decoded.Length;
+            Buffer.BlockCopy(DecodeBuffer, 0, buffer, 0, DecodeBuffer.Length);
+            return DecodeBuffer.Length;
         }
 
         private static byte[] ShortsToBytes(short[] input, int offset, int length)
@@ -63,6 +61,11 @@ namespace VoiceCraft.Core.Audio.Streams
             }
 
             return processedValues;
+        }
+
+        public void Dispose()
+        {
+            Decoder.Dispose();
         }
     }
 }

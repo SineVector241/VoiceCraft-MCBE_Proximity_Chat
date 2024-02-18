@@ -57,6 +57,7 @@ namespace VoiceCraft.Core.Audio.Streams
             DecodeThread.Wait();
             TokenSource.Dispose();
             DecodeThread.Dispose();
+            OpusStream.Dispose();
         }
     }
 }

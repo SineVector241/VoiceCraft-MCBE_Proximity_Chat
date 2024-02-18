@@ -1,6 +1,4 @@
-﻿using Concentus.Structs;
-using NAudio.Wave;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace VoiceCraft.Core.Audio
