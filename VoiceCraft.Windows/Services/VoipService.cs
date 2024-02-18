@@ -242,7 +242,7 @@ namespace VoiceCraft.Windows.Services
 
             if (DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1)
             {
-                Network.SendAudio(e.Buffer, e.BytesRecorded);
+                _ = Task.Run(() => Network.SendAudio(e.Buffer, e.BytesRecorded));
             }
         }
 

@@ -1,13 +1,14 @@
-﻿using Concentus.Structs;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using VoiceCraft.Core.Audio;
+using VoiceCraft.Core.Audio.Streams;
 
 namespace VoiceCraft.Core.Client
 {
     public class VoiceCraftParticipant : IDisposable
     {
+        private JitterBufferPacket inPacket;
         private float volume = 1.0f;
         private float proximityVolume = 0.0f;
 
@@ -36,22 +37,23 @@ namespace VoiceCraft.Core.Client
             }
         }
 
-        //public BufferedWaveProvider AudioBuffer { get; }
+        public OpusStream OpusDecodeStream { get; }
+        public JitterBuffer JitterBuffer { get; }
+        public VoiceCraftStream VoiceCraftStream { get; }
         public Wave16ToFloatProvider FloatProvider { get; }
         public EchoSampleProvider EchoProvider { get; }
         public LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioProvider { get; }
-        public OpusDecoder OpusDecoder { get; }
-        private VoiceCraftJitterBuffer NetworkJitterBuffer;
 
         public VoiceCraftParticipant(string Name, WaveFormat WaveFormat, int RecordLengthMS)
         {
             this.Name = Name;
 
             //Setup and wire everything up.
-            OpusDecoder = new OpusDecoder(WaveFormat.SampleRate, WaveFormat.Channels);
-            NetworkJitterBuffer = new VoiceCraftJitterBuffer(OpusDecoder, WaveFormat, RecordLengthMS);
-            FloatProvider = new Wave16ToFloatProvider(NetworkJitterBuffer);
+            JitterBuffer = new JitterBuffer(20);
+            OpusDecodeStream = new OpusStream(WaveFormat, JitterBuffer);
+            VoiceCraftStream = new VoiceCraftStream(WaveFormat, OpusDecodeStream);
+            FloatProvider = new Wave16ToFloatProvider(VoiceCraftStream);
             EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());
             LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
             AudioProvider = new MonoToStereoSampleProvider(LowpassProvider);
@@ -59,7 +61,11 @@ namespace VoiceCraft.Core.Client
 
         public void AddAudioSamples(byte[] Audio, uint PacketCount)
         {
-            NetworkJitterBuffer.Put(Audio, PacketCount);
+            inPacket.Data = Audio;
+            inPacket.Sequence = PacketCount;
+            inPacket.Length = Audio.Length;
+            inPacket.Timestamp = DateTime.UtcNow;
+            JitterBuffer.Put(inPacket);
             LastSpoke = DateTime.UtcNow;
         }
 
@@ -80,7 +86,7 @@ namespace VoiceCraft.Core.Client
             {
                 if (disposing)
                 {
-                    NetworkJitterBuffer.Dispose();
+                    VoiceCraftStream.Dispose();
                     IsDisposed = true;
                 }
             }

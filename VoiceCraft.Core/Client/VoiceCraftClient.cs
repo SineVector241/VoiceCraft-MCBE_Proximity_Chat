@@ -1,5 +1,4 @@
-﻿using Concentus.Structs;
-using NAudio.Wave.SampleProviders;
+﻿using NAudio.Wave.SampleProviders;
 using NAudio.Wave;
 using System.Threading;
 using VoiceCraft.Core.Packets;
@@ -11,6 +10,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Collections.Generic;
+using VoiceCraft.Core.Opus;
 
 namespace VoiceCraft.Core.Client
 {
@@ -19,6 +19,7 @@ namespace VoiceCraft.Core.Client
         #region Fields
         //Constants
         public const int SampleRate = 48000;
+        public static int FrameMilliseconds = 20;
         public const int ActivityInterval = 1000;
         public const int ActivityTimeout = 8000;
         public const string Version = "v1.0.1";
@@ -49,7 +50,6 @@ namespace VoiceCraft.Core.Client
         public uint PacketCount { get; private set; }
 
         //Audio Variables
-        public int RecordLengthMS { get; }
         public WaveFormat RecordFormat { get; } = new WaveFormat(SampleRate, 1);
         public WaveFormat PlaybackFormat { get; } = WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2);
         public MixingSampleProvider Mixer { get; }
@@ -91,19 +91,10 @@ namespace VoiceCraft.Core.Client
             //Setup variables
             this.LoginKey = LoginKey;
             this.PositioningType = PositioningType;
-            this.RecordLengthMS = RecordLengthMS;
+            FrameMilliseconds = RecordLengthMS;
             this.MCWSSPort = MCWSSPort;
 
-            Encoder = new OpusEncoder(SampleRate, 1, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP)
-            {
-                Bitrate = 64000,
-                Complexity = 0,
-                UseVBR = true,
-                PacketLossPercent = 50,
-                UseInbandFEC = true,
-                UseDTX = true
-            };
-
+            Encoder = new OpusEncoder(64000, AudioApplication.Voice, 50, SampleRate, 1, FrameMilliseconds);
             Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
 
             //Socket Setup
@@ -185,7 +176,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!Participants.ContainsKey(packet.LoginKey))
             {
-                var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, RecordLengthMS)
+                var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, FrameMilliseconds)
                 {
                     Muted = packet.IsMuted,
                     Deafened = packet.IsDeafened
@@ -405,8 +396,7 @@ namespace VoiceCraft.Core.Client
             PacketCount++;
 
             byte[] audioEncodeBuffer = new byte[1000];
-            short[] pcm = BytesToShorts(Data, 0, BytesRecorded);
-            var encodedBytes = Encoder.Encode(pcm, 0, pcm.Length, audioEncodeBuffer, 0, audioEncodeBuffer.Length);
+            var encodedBytes = Encoder.EncodeFrame(Data, 0, audioEncodeBuffer, 0);
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
             //Send the audio
@@ -570,6 +560,7 @@ namespace VoiceCraft.Core.Client
                     Voice.Dispose();
                     Participants.Clear();
                     Channels.Clear();
+                    Encoder.Dispose();
                     IsConnected = false;
 
                     //Deregister Events
