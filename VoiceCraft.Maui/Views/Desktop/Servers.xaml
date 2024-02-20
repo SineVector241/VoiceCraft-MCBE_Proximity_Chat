@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="VoiceCraft.Maui.Views.Desktop.Servers"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
+             xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
+             Title="Servers">
+
+    <ContentPage.BindingContext>
+        <vm:ServersViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
+        <ScrollView>
+            <Grid RowDefinitions="auto, *">
+                <Frame Grid.Row="0"
+                       BackgroundColor="#6f000000"
+                       BorderColor="Transparent"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="StartAndExpand">
+                    <Grid ColumnDefinitions="Auto, Auto">
+                        <toolkit:Icon Grid.Column="0"
+                                      Margin="3,3,20,3"
+                                      HeightRequest="35"
+                                      Source="server.png"
+                                      TintColor="{AppThemeBinding Dark='White',
+                                                                  Light='Black'}" />
+                        <Label Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="Title"
+                               Text="Servers"
+                               VerticalTextAlignment="Center" />
+                    </Grid>
+                </Frame>
+                <CollectionView Grid.Row="1"
+                                Margin="20"
+                                ItemsSource="{Binding Servers}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="3" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="20">
+                                <Frame BackgroundColor="#9f000000">
+                                    <Grid RowDefinitions="*, *, *">
+                                        <Grid>
+                                            <Label FontSize="Medium" Text="ServerName" />
+                                            <toolkit:ContentButton>
+                                                <Border x:Name="border"
+                                                        Background="{StaticResource Gray100}"
+                                                        HorizontalOptions="CenterAndExpand"
+                                                        VerticalOptions="CenterAndExpand">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="6" />
+                                                    </Border.StrokeShape>
+                                                    <HorizontalStackLayout Padding="12,10" Spacing="10">
+                                                        <toolkit:Icon Source="delete.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
+                                                        <Label FontAttributes="Bold"
+                                                               Text="Star this repo"
+                                                               TextColor="White"
+                                                               VerticalOptions="Center" />
+                                                    </HorizontalStackLayout>
+                                                </Border>
+                                                <VisualStateManager.VisualStateGroups>
+                                                    <VisualStateGroupList>
+                                                        <VisualStateGroup>
+                                                            <VisualState x:Name="Normal" />
+                                                            <VisualState x:Name="Pressed">
+                                                                <VisualState.Setters>
+                                                                    <Setter TargetName="border" Property="Background" Value="#0f000000" />
+                                                                </VisualState.Setters>
+                                                            </VisualState>
+                                                            <VisualState x:Name="PointerOver">
+                                                                <VisualState.Setters>
+                                                                    <Setter TargetName="border" Property="Background" Value="#0f900000" />
+                                                                </VisualState.Setters>
+                                                            </VisualState>
+                                                        </VisualStateGroup>
+                                                    </VisualStateGroupList>
+                                                </VisualStateManager.VisualStateGroups>
+                                            </toolkit:ContentButton>
+                                        </Grid>
+
+                                        <Label Grid.Row="1"
+                                               FontSize="Subtitle"
+                                               Text="Address: example:9050"
+                                               VerticalTextAlignment="Center" />
+
+                                        <Label Grid.Row="2"
+                                               FontSize="Subtitle"
+                                               Text="Key: 0"
+                                               VerticalTextAlignment="Center" />
+                                    </Grid>
+                                </Frame>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

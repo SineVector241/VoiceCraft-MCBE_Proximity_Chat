@@ -1,15 +1,69 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="VoiceCraft.Maui.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:VoiceCraft.Maui.Views"
-    Shell.FlyoutBehavior="Disabled"
-    Title="VoiceCraft.Maui">
+<Shell x:Class="VoiceCraft.Maui.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:desktopViews="clr-namespace:VoiceCraft.Maui.Views.Desktop"
+       xmlns:mobileViews="clr-namespace:VoiceCraft.Maui.Views.Mobile"
+       xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
+       x:Name="shellMain"
+       Title="VoiceCraft"
+       FlyoutBackgroundColor="#00000000"
+       Shell.FlyoutBackdrop="#6f404040"
+       Shell.FlyoutBehavior="{OnIdiom Desktop='Flyout',
+                                      Phone='Disabled'}"
+       Shell.NavBarIsVisible="False"
+       Shell.TabBarIsVisible="{OnIdiom Desktop='False',
+                                       Phone='True'}">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:Servers}"
-        Route="MainPage" />
+    <!--  Shell Styles  -->
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <toolkit:Icon Grid.Column="0"
+                              Margin="10"
+                              HeightRequest="25"
+                              HorizontalOptions="Start"
+                              Source="{Binding Icon}"
+                              TintColor="{AppThemeBinding Dark='White',
+                                                          Light='Black'}" />
+                <Label Grid.Column="1"
+                       FontAttributes="Bold"
+                       FontSize="17"
+                       Text="{Binding Title}"
+                       VerticalTextAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
 
+    <!--  Tab Items  -->
+    <TabBar>
+        <Tab x:Name="mobileDefault"
+             Title="Servers"
+             Icon="server.png">
+            <ShellContent ContentTemplate="{DataTemplate mobileViews:Servers}" />
+        </Tab>
+        <Tab Title="Settings" Icon="cog.png">
+            <ShellContent ContentTemplate="{DataTemplate mobileViews:Settings}" />
+        </Tab>
+        <Tab Title="Credits" Icon="information.png">
+            <ShellContent ContentTemplate="{DataTemplate mobileViews:Credits}" />
+        </Tab>
+    </TabBar>
+
+    <!--  Flyout Items  -->
+    <FlyoutItem x:Name="desktopDefault"
+                Title="Servers"
+                Icon="server.png">
+        <ShellContent ContentTemplate="{DataTemplate desktopViews:Servers}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Settings" Icon="cog.png">
+        <ShellContent ContentTemplate="{DataTemplate desktopViews:Settings}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Credits" Icon="information.png">
+        <ShellContent ContentTemplate="{DataTemplate desktopViews:Credits}" />
+    </FlyoutItem>
 </Shell>
