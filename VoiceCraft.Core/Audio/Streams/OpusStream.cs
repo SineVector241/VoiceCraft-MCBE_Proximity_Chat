@@ -1,7 +1,7 @@
 ﻿using NAudio.Wave;
+using OpusSharp;
 using System;
 using VoiceCraft.Core.Client;
-using VoiceCraft.Core.Opus;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
@@ -18,7 +18,7 @@ namespace VoiceCraft.Core.Audio.Streams
             this.WaveFormat = WaveFormat;
             this.JitterBuffer = JitterBuffer;
             DecodeBuffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
-            Decoder = new OpusDecoder(WaveFormat.SampleRate, 1, VoiceCraftClient.FrameMilliseconds);
+            Decoder = new OpusDecoder(WaveFormat.SampleRate, 1);
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -34,7 +34,7 @@ namespace VoiceCraft.Core.Audio.Streams
             var status = JitterBuffer.Get(ref outPacket);
             if (status == 0)
             {
-                shortsRead = Decoder.DecodeFrame(outPacket.Data, 0, outPacket.Length, DecodeBuffer, 0, false);
+                shortsRead = Decoder.Decode(outPacket.Data, outPacket.Length, DecodeBuffer, DecodeBuffer.Length, false);
             }
             else if(status == -1)
             {
@@ -43,7 +43,7 @@ namespace VoiceCraft.Core.Audio.Streams
             else
             {
                 // no packet found
-                shortsRead = Decoder.DecodeFrame(null, 0, 0, DecodeBuffer, 0, false);
+                shortsRead = Decoder.Decode(null, 0, DecodeBuffer, DecodeBuffer.Length, false);
             }
 
             //Convert and put into the buffer.
