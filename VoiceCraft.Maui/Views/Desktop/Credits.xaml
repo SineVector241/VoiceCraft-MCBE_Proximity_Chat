@@ -8,47 +8,49 @@
              Title="Credits">
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
-        <Grid RowDefinitions="auto, *">
-            <Frame Grid.Row="0"
-                   HorizontalOptions="Fill"
-                   VerticalOptions="StartAndExpand">
-                <Grid ColumnDefinitions="Auto, Auto">
-                    <toolkit:Icon Grid.Column="0"
-                                  Margin="3,3,20,3"
-                                  HeightRequest="35"
-                                  Source="information.png"
-                                  TintColor="{AppThemeBinding Dark='White',
-                                                              Light='Black'}" />
-                    <Label Grid.Column="1"
-                           FontAttributes="Bold"
-                           FontSize="Title"
-                           Text="Credits"
-                           VerticalTextAlignment="Center" />
-                </Grid>
-            </Frame>
-            <Frame Grid.Row="1"
-                   Margin="5"
-                   HorizontalOptions="FillAndExpand"
-                   VerticalOptions="StartAndExpand">
-                <Grid RowDefinitions="Auto, Auto, Auto, Auto">
-                    <Label Grid.Row="0"
-                           FontAttributes="Bold"
-                           FontSize="Small"
-                           Text="Author: SineVector241" />
-                    <Label Grid.Row="1"
-                           FontAttributes="Bold"
-                           FontSize="Small"
-                           Text="Contributors: N.A." />
-                    <Label Grid.Row="2"
-                           FontAttributes="Bold"
-                           FontSize="Small"
-                           Text="{Binding Source={x:Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}'}" />
-                    <Label Grid.Row="3"
-                           FontAttributes="Bold"
-                           FontSize="Small"
-                           Text="{Binding Source={x:Static app:App.Version}, StringFormat='App Version: {0}'}" />
-                </Grid>
-            </Frame>
-        </Grid>
+        <ScrollView>
+            <Grid RowDefinitions="auto, *">
+                <Frame Grid.Row="0"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="StartAndExpand">
+                    <Grid ColumnDefinitions="Auto, Auto">
+                        <toolkit:Icon Grid.Column="0"
+                                      Margin="3,3,20,3"
+                                      HeightRequest="35"
+                                      Source="information.png"
+                                      TintColor="{AppThemeBinding Dark='White',
+                                                                  Light='Black'}" />
+                        <Label Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="Title"
+                               Text="Credits"
+                               VerticalTextAlignment="Center" />
+                    </Grid>
+                </Frame>
+                <Frame Grid.Row="1"
+                       Margin="5"
+                       HorizontalOptions="FillAndExpand"
+                       VerticalOptions="StartAndExpand">
+                    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+                        <Label Grid.Row="0"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="Author: SineVector241" />
+                        <Label Grid.Row="1"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="Contributors: N.A." />
+                        <Label Grid.Row="2"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="{Binding Source={x:Static vc:VoiceCraftClient.Version}, StringFormat='VoiceCraft Version: {0}'}" />
+                        <Label Grid.Row="3"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="{Binding Source={x:Static app:App.Version}, StringFormat='App Version: {0}'}" />
+                    </Grid>
+                </Frame>
+            </Grid>
+        </ScrollView>
     </Grid>
 </ContentPage>

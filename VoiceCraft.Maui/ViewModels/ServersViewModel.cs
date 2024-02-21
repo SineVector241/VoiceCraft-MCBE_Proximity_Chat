@@ -39,6 +39,12 @@ namespace VoiceCraft.Maui.ViewModels
             await Navigator.NavigateTo(nameof(EditServer), server);
         }
 
+        [RelayCommand]
+        public async Task GoToServer(ServerModel server)
+        {
+            await Navigator.NavigateTo(nameof(ServerDetails), server);
+        }
+
         private void ServerAdded(ServerModel server)
         {
             Servers.Add(server);

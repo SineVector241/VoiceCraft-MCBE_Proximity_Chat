@@ -175,6 +175,8 @@
 
                                         <toolkit:ContentButton Grid.Row="3"
                                                                Margin="0,10,0,0"
+                                                               Command="{Binding Source={x:Reference servers}, Path=BindingContext.GoToServerCommand}"
+                                                               CommandParameter="{Binding}"
                                                                HeightRequest="35"
                                                                HorizontalOptions="FillAndExpand">
                                             <Border x:Name="viewBorder"

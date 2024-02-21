@@ -4,7 +4,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
-             Title="AddServer">
+             Title="AddServer"
+             Shell.FlyoutBehavior="Disabled">
 
     <ContentPage.BindingContext>
         <vm:AddServerViewModel />

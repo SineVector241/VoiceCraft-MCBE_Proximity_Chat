@@ -566,6 +566,7 @@ namespace VoiceCraft.Core.Server
                         var list = Participants.Where(x =>
                         x.Key != participant.Key &&
                         x.Value.Binded &&
+                        !x.Value.IsDeafened &&
                         x.Value.Channel == participant.Value.Channel);
 
                         for (ushort i = 0; i < list.Count(); i++)
