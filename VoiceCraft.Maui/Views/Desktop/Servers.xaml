@@ -78,6 +78,8 @@
                                         <Grid ColumnDefinitions="*, auto, auto" ColumnSpacing="5">
                                             <Label FontSize="Medium" Text="{Binding Name}" />
                                             <toolkit:ContentButton Grid.Column="1"
+                                                                   Command="{Binding Source={x:Reference servers}, Path=BindingContext.GoToEditServerCommand}"
+                                                                   CommandParameter="{Binding}"
                                                                    HeightRequest="35"
                                                                    HorizontalOptions="End"
                                                                    WidthRequest="35">
@@ -110,6 +112,8 @@
                                             </toolkit:ContentButton>
 
                                             <toolkit:ContentButton Grid.Column="2"
+                                                                   Command="{Binding Source={x:Reference servers}, Path=BindingContext.DeleteServerCommand}"
+                                                                   CommandParameter="{Binding}"
                                                                    HeightRequest="35"
                                                                    HorizontalOptions="End"
                                                                    WidthRequest="35">
@@ -144,23 +148,16 @@
 
                                         <Label Grid.Row="1"
                                                FontSize="Subtitle"
-                                               Text="{Binding IP}"
                                                VerticalTextAlignment="Center">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="Address: {0}:{1}">
+                                                    <Binding Path="IP" />
+                                                    <Binding Path="Port" />
+                                                </MultiBinding>
+                                            </Label.Text>
                                             <Label.Style>
                                                 <Style TargetType="Label">
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Source={x:Reference servers}, Path=BindingContext.Settings.HideAddress}"
-                                                                     TargetType="Label"
-                                                                     Value="False">
-                                                            <Setter Property="Text">
-                                                                <Setter.Value>
-                                                                    <MultiBinding StringFormat="Address: {0}:{1}">
-                                                                        <Binding Path="IP" />
-                                                                        <Binding Path="Port" />
-                                                                    </MultiBinding>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding Source={x:Reference servers}, Path=BindingContext.Settings.HideAddress}"
                                                                      TargetType="Label"
                                                                      Value="True">

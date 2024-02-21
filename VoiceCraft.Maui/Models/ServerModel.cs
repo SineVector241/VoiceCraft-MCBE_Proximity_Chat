@@ -2,7 +2,7 @@
 
 namespace VoiceCraft.Models
 {
-    public partial class ServerModel : ObservableObject
+    public partial class ServerModel : ObservableObject, ICloneable
     {
         [ObservableProperty]
         string name = string.Empty;
@@ -12,5 +12,10 @@ namespace VoiceCraft.Models
         int port = 9050;
         [ObservableProperty]
         ushort key = 0;
+
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
     }
 }

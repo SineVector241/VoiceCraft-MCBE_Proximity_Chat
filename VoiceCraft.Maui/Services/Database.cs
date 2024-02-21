@@ -57,8 +57,28 @@ namespace VoiceCraft.Maui.Services
             await SaveServers();
         }
 
+        public async Task EditServer(ServerModel server)
+        {
+            var foundServer = Servers.FirstOrDefault(x => x.Name == server.Name);
+            if(foundServer != null)
+            {
+                if (string.IsNullOrWhiteSpace(server.Name)) throw new Exception("Name cannot be empty!");
+                else if (string.IsNullOrEmpty(server.IP)) throw new Exception("IP cannot be empty!");
+                else if (server.Port < 1025) throw new Exception("Port cannot be lower than 1025");
+                else if (server.Port > 65535) throw new Exception("Port cannot be higher than 65535");
+
+                foundServer.IP = server.IP;
+                foundServer.Port = server.Port;
+                foundServer.Key = server.Key;
+                await SaveServers();
+                return; //UI updates automatically as soon as we change a value.
+            }
+            throw new Exception("Server not found!");
+        }
+
         public async Task RemoveServer(ServerModel server)
         {
+            Servers.Remove(server);
             OnServerRemoved?.Invoke(server);
             await SaveServers();
         }
@@ -66,7 +86,7 @@ namespace VoiceCraft.Maui.Services
         public async Task SaveAllAsync()
         {
             await SaveServers();
-            await SaveServers();
+            await SaveSettings();
         }
 
         public async Task SaveServers()

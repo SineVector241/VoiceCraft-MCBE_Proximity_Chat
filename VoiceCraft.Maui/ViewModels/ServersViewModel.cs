@@ -22,15 +22,21 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public void SaveServers()
+        public async Task DeleteServer(ServerModel server)
         {
-            _ = Database.Instance.SaveServers();
+            await Database.Instance.RemoveServer(server);
         }
 
         [RelayCommand]
         public async Task GoToAddServer()
         {
             await Navigator.NavigateTo(nameof(AddServer));
+        }
+
+        [RelayCommand]
+        public async Task GoToEditServer(ServerModel server)
+        {
+            await Navigator.NavigateTo(nameof(EditServer), server);
         }
 
         private void ServerAdded(ServerModel server)

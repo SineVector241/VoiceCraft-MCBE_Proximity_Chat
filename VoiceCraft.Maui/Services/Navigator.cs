@@ -1,13 +1,15 @@
-﻿using System.Diagnostics;
-
-namespace VoiceCraft.Maui.Services
+﻿namespace VoiceCraft.Maui.Services
 {
-    public class Navigator
+    public static class Navigator
     {
-        public static async Task NavigateTo(string pageName)
+        private static object NavigationData = new object();
+        public static async Task NavigateTo(string pageName, object? navigationData = null)
         {
             try
             {
+                if(navigationData != null)
+                    NavigationData = navigationData;
+
                 await Shell.Current.GoToAsync(pageName);
             }
             catch(Exception ex )
@@ -27,5 +29,11 @@ namespace VoiceCraft.Maui.Services
                 await Shell.Current.DisplayAlert("Error", ex.Message, "OK");
             }
         }
+
+        public static T GetNavigationData<T>()
+        {
+            return (T)NavigationData;
+        }
+
     }
 }
