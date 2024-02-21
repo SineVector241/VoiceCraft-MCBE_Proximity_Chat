@@ -7,13 +7,14 @@
        xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
        x:Name="shellMain"
        Title="VoiceCraft"
-       FlyoutBackgroundColor="#00000000"
+       FlyoutBackgroundColor="#22000000"
        Shell.FlyoutBackdrop="#6f404040"
        Shell.FlyoutBehavior="{OnIdiom Desktop='Flyout',
                                       Phone='Disabled'}"
        Shell.NavBarIsVisible="False"
        Shell.TabBarIsVisible="{OnIdiom Desktop='False',
                                        Phone='True'}">
+
 
     <!--  Shell Styles  -->
     <Shell.ItemTemplate>

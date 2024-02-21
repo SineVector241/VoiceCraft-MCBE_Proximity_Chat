@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.Logging;
 using SimpleToolkit.Core;
 
 namespace VoiceCraft.Maui
@@ -11,6 +12,7 @@ namespace VoiceCraft.Maui
             builder
                 .UseMauiApp<App>()
                 .UseSimpleToolkit()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

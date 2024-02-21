@@ -2,10 +2,114 @@
 <ContentPage x:Class="VoiceCraft.Maui.Views.Desktop.AddServer"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
+             xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              Title="AddServer">
-    <VerticalStackLayout>
-        <Label HorizontalOptions="Center"
-               Text="Welcome to .NET MAUI!"
-               VerticalOptions="Center" />
-    </VerticalStackLayout>
+
+    <ContentPage.BindingContext>
+        <vm:AddServerViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
+        <ScrollView>
+            <Grid RowDefinitions="Auto, *">
+                <Frame Grid.Row="0"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="StartAndExpand">
+                    <Grid ColumnDefinitions="Auto, Auto, *">
+                        <toolkit:Icon Grid.Column="0"
+                                      Margin="3,3,20,3"
+                                      HeightRequest="35"
+                                      Source="server_plus.png"
+                                      TintColor="{AppThemeBinding Dark='White',
+                                                                  Light='Black'}" />
+                        <Label Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="Title"
+                               Text="Add Server"
+                               VerticalTextAlignment="Center" />
+
+                    </Grid>
+                </Frame>
+                <Frame Grid.Row="1"
+                       Margin="5"
+                       HorizontalOptions="CenterAndExpand"
+                       VerticalOptions="CenterAndExpand"
+                       WidthRequest="400">
+                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+                        <Label Grid.Row="0"
+                               FontSize="Medium"
+                               HorizontalTextAlignment="Center"
+                               Text="Add Server" />
+                        <Label Grid.Row="1"
+                               Margin="0,10,0,0"
+                               FontSize="Small"
+                               Text="Name" />
+                        <Entry Grid.Row="2"
+                               Margin="0,10,0,0"
+                               Placeholder="Name"
+                               Text="{Binding Server.Name}" />
+                        <Label Grid.Row="3"
+                               Margin="0,10,0,0"
+                               FontSize="Small"
+                               Text="IP" />
+                        <Entry Grid.Row="4"
+                               Margin="0,10,0,0"
+                               Placeholder="127.0.0.1"
+                               Text="{Binding Server.IP}" />
+                        <Label Grid.Row="5"
+                               Margin="0,10,0,0"
+                               FontSize="Small"
+                               Text="Port" />
+                        <Entry Grid.Row="6"
+                               Margin="0,10,0,0"
+                               Placeholder="9050"
+                               Text="{Binding Server.Port}" />
+                        <Label Grid.Row="7"
+                               Margin="0,10,0,0"
+                               FontSize="Small"
+                               Text="Key" />
+                        <Entry Grid.Row="8"
+                               Margin="0,15,0,0"
+                               Placeholder="0"
+                               Text="{Binding Server.Key}" />
+                        <toolkit:ContentButton Grid.Row="9"
+                                               Margin="0,10,0,0"
+                                               Command="{Binding SaveServerCommand}"
+                                               HorizontalOptions="FillAndExpand">
+                            <Border x:Name="addServerBorder"
+                                    Padding="6"
+                                    Background="#2fFFFFFF"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="4" />
+                                </Border.StrokeShape>
+                                <Label FontSize="Small"
+                                       HorizontalTextAlignment="Center"
+                                       Text="Add Server" />
+                            </Border>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup>
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="addServerBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="addServerBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                        </toolkit:ContentButton>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </ScrollView>
+    </Grid>
 </ContentPage>

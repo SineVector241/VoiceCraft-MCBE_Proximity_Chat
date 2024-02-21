@@ -6,5 +6,11 @@ namespace VoiceCraft.Models
     {
         [ObservableProperty]
         string name = string.Empty;
+        [ObservableProperty]
+        string iP = string.Empty;
+        [ObservableProperty]
+        int port = 9050;
+        [ObservableProperty]
+        ushort key = 0;
     }
 }

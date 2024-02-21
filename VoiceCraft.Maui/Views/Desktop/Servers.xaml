@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
+             x:Name="servers"
              Title="Servers">
 
     <ContentPage.BindingContext>
@@ -13,13 +14,11 @@
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
-            <Grid RowDefinitions="auto, *">
+            <Grid RowDefinitions="Auto, *">
                 <Frame Grid.Row="0"
-                       BackgroundColor="#6f000000"
-                       BorderColor="Transparent"
                        HorizontalOptions="Fill"
                        VerticalOptions="StartAndExpand">
-                    <Grid ColumnDefinitions="Auto, Auto">
+                    <Grid ColumnDefinitions="Auto, Auto, *">
                         <toolkit:Icon Grid.Column="0"
                                       Margin="3,3,20,3"
                                       HeightRequest="35"
@@ -31,11 +30,42 @@
                                FontSize="Title"
                                Text="Servers"
                                VerticalTextAlignment="Center" />
+
+                        <toolkit:ContentButton Grid.Column="2"
+                                               Command="{Binding GoToAddServerCommand}"
+                                               HeightRequest="45"
+                                               HorizontalOptions="End"
+                                               WidthRequest="45">
+                            <Border x:Name="addServerBorder"
+                                    Padding="2"
+                                    Background="#2fFFFFFF"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="4" />
+                                </Border.StrokeShape>
+                                <toolkit:Icon Source="server_plus.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
+                            </Border>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup>
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="addServerBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="addServerBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                        </toolkit:ContentButton>
                     </Grid>
                 </Frame>
-                <CollectionView Grid.Row="1"
-                                Margin="20"
-                                ItemsSource="{Binding Servers}">
+                <CollectionView Grid.Row="1" ItemsSource="{Binding Servers}">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical" Span="3" />
                     </CollectionView.ItemsLayout>
@@ -43,25 +73,22 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Grid Padding="20">
-                                <Frame BackgroundColor="#9f000000">
-                                    <Grid RowDefinitions="*, *, *">
-                                        <Grid>
-                                            <Label FontSize="Medium" Text="ServerName" />
-                                            <toolkit:ContentButton>
-                                                <Border x:Name="border"
-                                                        Background="{StaticResource Gray100}"
-                                                        HorizontalOptions="CenterAndExpand"
-                                                        VerticalOptions="CenterAndExpand">
+                                <Frame>
+                                    <Grid RowDefinitions="*, *, *, *">
+                                        <Grid ColumnDefinitions="*, auto, auto" ColumnSpacing="5">
+                                            <Label FontSize="Medium" Text="{Binding Name}" />
+                                            <toolkit:ContentButton Grid.Column="1"
+                                                                   HeightRequest="35"
+                                                                   HorizontalOptions="End"
+                                                                   WidthRequest="35">
+                                                <Border x:Name="editBorder"
+                                                        Padding="2"
+                                                        Background="#2fFFFFFF"
+                                                        StrokeThickness="0">
                                                     <Border.StrokeShape>
-                                                        <RoundRectangle CornerRadius="6" />
+                                                        <RoundRectangle CornerRadius="2" />
                                                     </Border.StrokeShape>
-                                                    <HorizontalStackLayout Padding="12,10" Spacing="10">
-                                                        <toolkit:Icon Source="delete.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
-                                                        <Label FontAttributes="Bold"
-                                                               Text="Star this repo"
-                                                               TextColor="White"
-                                                               VerticalOptions="Center" />
-                                                    </HorizontalStackLayout>
+                                                    <toolkit:Icon Source="pencil.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
                                                 </Border>
                                                 <VisualStateManager.VisualStateGroups>
                                                     <VisualStateGroupList>
@@ -69,12 +96,44 @@
                                                             <VisualState x:Name="Normal" />
                                                             <VisualState x:Name="Pressed">
                                                                 <VisualState.Setters>
-                                                                    <Setter TargetName="border" Property="Background" Value="#0f000000" />
+                                                                    <Setter TargetName="editBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
                                                                 </VisualState.Setters>
                                                             </VisualState>
                                                             <VisualState x:Name="PointerOver">
                                                                 <VisualState.Setters>
-                                                                    <Setter TargetName="border" Property="Background" Value="#0f900000" />
+                                                                    <Setter TargetName="editBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
+                                                                </VisualState.Setters>
+                                                            </VisualState>
+                                                        </VisualStateGroup>
+                                                    </VisualStateGroupList>
+                                                </VisualStateManager.VisualStateGroups>
+                                            </toolkit:ContentButton>
+
+                                            <toolkit:ContentButton Grid.Column="2"
+                                                                   HeightRequest="35"
+                                                                   HorizontalOptions="End"
+                                                                   WidthRequest="35">
+                                                <Border x:Name="deleteBorder"
+                                                        Padding="2"
+                                                        Background="#4fF00000"
+                                                        StrokeThickness="0">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="2" />
+                                                    </Border.StrokeShape>
+                                                    <toolkit:Icon Source="delete.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
+                                                </Border>
+                                                <VisualStateManager.VisualStateGroups>
+                                                    <VisualStateGroupList>
+                                                        <VisualStateGroup>
+                                                            <VisualState x:Name="Normal" />
+                                                            <VisualState x:Name="Pressed">
+                                                                <VisualState.Setters>
+                                                                    <Setter TargetName="deleteBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
+                                                                </VisualState.Setters>
+                                                            </VisualState>
+                                                            <VisualState x:Name="PointerOver">
+                                                                <VisualState.Setters>
+                                                                    <Setter TargetName="deleteBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
                                                                 </VisualState.Setters>
                                                             </VisualState>
                                                         </VisualStateGroup>
@@ -85,13 +144,74 @@
 
                                         <Label Grid.Row="1"
                                                FontSize="Subtitle"
-                                               Text="Address: example:9050"
-                                               VerticalTextAlignment="Center" />
+                                               Text="{Binding IP}"
+                                               VerticalTextAlignment="Center">
+                                            <Label.Style>
+                                                <Style TargetType="Label">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Source={x:Reference servers}, Path=BindingContext.Settings.HideAddress}"
+                                                                     TargetType="Label"
+                                                                     Value="False">
+                                                            <Setter Property="Text">
+                                                                <Setter.Value>
+                                                                    <MultiBinding StringFormat="Address: {0}:{1}">
+                                                                        <Binding Path="IP" />
+                                                                        <Binding Path="Port" />
+                                                                    </MultiBinding>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Source={x:Reference servers}, Path=BindingContext.Settings.HideAddress}"
+                                                                     TargetType="Label"
+                                                                     Value="True">
+                                                            <Setter Property="Text" Value="Address: ****:****" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Label.Style>
+                                        </Label>
 
                                         <Label Grid.Row="2"
                                                FontSize="Subtitle"
-                                               Text="Key: 0"
+                                               Text="{Binding Key, StringFormat='Key: {0}'}"
                                                VerticalTextAlignment="Center" />
+
+                                        <toolkit:ContentButton Grid.Row="3"
+                                                               Margin="0,10,0,0"
+                                                               HeightRequest="35"
+                                                               HorizontalOptions="FillAndExpand">
+                                            <Border x:Name="viewBorder"
+                                                    Padding="2"
+                                                    Background="#4f00F000"
+                                                    HorizontalOptions="FillAndExpand"
+                                                    StrokeThickness="0">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="2" />
+                                                </Border.StrokeShape>
+                                                <Label FontSize="15"
+                                                       HorizontalTextAlignment="Center"
+                                                       Text="View"
+                                                       TextTransform="Uppercase"
+                                                       VerticalTextAlignment="Center" />
+                                            </Border>
+                                            <VisualStateManager.VisualStateGroups>
+                                                <VisualStateGroupList>
+                                                    <VisualStateGroup>
+                                                        <VisualState x:Name="Normal" />
+                                                        <VisualState x:Name="Pressed">
+                                                            <VisualState.Setters>
+                                                                <Setter TargetName="viewBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
+                                                            </VisualState.Setters>
+                                                        </VisualState>
+                                                        <VisualState x:Name="PointerOver">
+                                                            <VisualState.Setters>
+                                                                <Setter TargetName="viewBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
+                                                            </VisualState.Setters>
+                                                        </VisualState>
+                                                    </VisualStateGroup>
+                                                </VisualStateGroupList>
+                                            </VisualStateManager.VisualStateGroups>
+                                        </toolkit:ContentButton>
                                     </Grid>
                                 </Frame>
                             </Grid>
