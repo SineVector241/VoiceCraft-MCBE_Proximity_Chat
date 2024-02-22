@@ -1,7 +1,7 @@
 ﻿using NAudio.Wave;
 using VoiceCraft.Core.Client;
 using VoiceCraft.Core.Audio;
-using VoiceCraft.Models;
+using VoiceCraft.Maui.Models;
 using System.Diagnostics;
 
 namespace VoiceCraft.Maui.Services

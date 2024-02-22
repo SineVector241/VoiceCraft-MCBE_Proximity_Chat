@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VoiceCraft.Maui.Services;
-using VoiceCraft.Models;
+using VoiceCraft.Maui.Models;
 
 namespace VoiceCraft.Maui.ViewModels
 {

@@ -1,66 +1,28 @@
-﻿using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using AndroidX.Core.App;
+﻿using VoiceCraft.Maui.Interfaces;
+using VoiceCraft.Maui.Services;
+using VoiceCraft.Maui.Models;
 using CommunityToolkit.Mvvm.Messaging;
 using VoiceCraft.Core.Client;
-using VoiceCraft.Maui.Interfaces;
-using VoiceCraft.Maui.Models;
-using VoiceCraft.Maui.Services;
 
 namespace VoiceCraft.Maui
 {
-    [Service(ForegroundServiceType = Android.Content.PM.ForegroundService.TypeMicrophone)]
-    public class ServiceManager : Service, IServiceManager
+    public class ServiceManager : IServiceManager
     {
         private CancellationTokenSource Cts;
         private VoipService VoipService;
 
-        private string NOTIFICATION_CHANNEL_ID = "1000";
-        private int NOTIFICATION_ID = 1;
-        private string NOTIFICATION_CHANNEL_NAME = "notification";
+        public ServiceManager()
+        {
+            Cts = new CancellationTokenSource();
+            VoipService = new VoipService(Navigator.GetNavigationData<ServerModel>());
+        }
 
         public void StartService()
         {
-            Intent intent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
-            StartForegroundService(intent);
-        }
-
-        private void StartVoiceCraftService()
-        {
-            var notifcationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
-            {
-                var channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, NotificationImportance.Low);
-                notifcationManager?.CreateNotificationChannel(channel);
-            }
-
-            var nBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .SetContentTitle("VoiceCraft")
-                .SetContentText("Voice Ongoing...")
-                .SetSmallIcon(Resource.Drawable.microphone)
-                .SetOngoing(true);
-
-            StartForeground(NOTIFICATION_ID, nBuilder.Build());
-        }
-
-        public override IBinder? OnBind(Intent? intent)
-        {
-            return null;
-        }
-
-        [return: GeneratedEnum]
-        public override StartCommandResult OnStartCommand(Intent? intent, [GeneratedEnum] StartCommandFlags flags, int startId)
-        {
-            Cts = new CancellationTokenSource();
-            StartVoiceCraftService();
             Task.Run(() =>
             {
                 try
                 {
-                    VoipService = new VoipService(Navigator.GetNavigationData<ServerModel>());
                     VoipService.OnStatusUpdated += StatusUpdated;
                     VoipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
                     VoipService.OnMutedStatusChanged += MutedStatusChanged;
@@ -80,12 +42,12 @@ namespace VoiceCraft.Maui
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             WeakReferenceMessenger.Default.Send(new ResponseDataMSG(new ResponseData(
-                            VoipService.Network.Participants.Select(x => new ParticipantModel(x.Value)).ToList(),
-                            VoipService.Network.Channels.Select(x => new ChannelModel(x)).ToList(),
-                            false,
-                            VoipService.Network.IsMuted,
-                            VoipService.Network.IsDeafened,
-                            VoipService.StatusMessage)));
+                                VoipService.Network.Participants.Select(x => new ParticipantModel(x.Value)).ToList(),
+                                VoipService.Network.Channels.Select(x => new ChannelModel(x)).ToList(),
+                                false,
+                                VoipService.Network.IsMuted,
+                                VoipService.Network.IsDeafened,
+                                VoipService.StatusMessage)));
                         });
                     });
 
@@ -116,7 +78,7 @@ namespace VoiceCraft.Maui
 
                     VoipService.Start(Cts.Token).Wait();
                 }
-                catch (System.OperationCanceledException)
+                catch (OperationCanceledException)
                 {
                 }
                 finally
@@ -139,24 +101,6 @@ namespace VoiceCraft.Maui
                     Cts.Dispose();
                 }
             }, Cts.Token);
-            return StartCommandResult.Sticky;
-        }
-
-        public override void OnDestroy()
-        {
-            try
-            {
-                if (!Cts.IsCancellationRequested)
-                {
-                    Cts.Cancel();
-                    Preferences.Set("VoipServiceRunning", false);
-                }
-            }
-            catch (System.OperationCanceledException)
-            {
-                //Do nothing
-            }
-            base.OnDestroy();
         }
 
         private void StatusUpdated(string status)

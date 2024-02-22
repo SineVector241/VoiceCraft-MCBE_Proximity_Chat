@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace VoiceCraft.Models
+namespace VoiceCraft.Maui.Models
 {
     public partial class ServerModel : ObservableObject, ICloneable
     {

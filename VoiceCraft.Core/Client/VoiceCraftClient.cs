@@ -360,7 +360,7 @@ namespace VoiceCraft.Core.Client
                         participant.Value.Dispose(); //MEMORY LEAK FIX!
                     }
 
-                    ActivityChecker.Stop();
+                    //ActivityChecker.Stop();
                     CTS.Cancel();
                     Signalling.Disconnect(forceDisconnect: forceDisconnect);
                     Voice.Disconnect();

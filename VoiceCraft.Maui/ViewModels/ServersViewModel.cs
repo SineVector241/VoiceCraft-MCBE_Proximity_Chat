@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Views.Desktop;
-using VoiceCraft.Models;
+using VoiceCraft.Maui.Models;
 
 namespace VoiceCraft.Maui.ViewModels
 {

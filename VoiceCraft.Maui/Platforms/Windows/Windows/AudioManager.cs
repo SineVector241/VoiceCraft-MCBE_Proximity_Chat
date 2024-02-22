@@ -22,7 +22,7 @@ public class AudioManager : IAudioManager
             await Database.Instance.SaveSettings();
         }
 
-        var Player = new WaveOut();
+        var Player = new WaveOutEvent();
         Player.DesiredLatency = 400;
         Player.NumberOfBuffers = 3;
         Player.DeviceNumber = settings.OutputDevice - 1;
@@ -39,7 +39,7 @@ public class AudioManager : IAudioManager
             await Database.Instance.SaveSettings();
         }
 
-        var Recorder = new WaveIn();
+        var Recorder = new WaveInEvent();
         Recorder.WaveFormat = waveFormat;
         Recorder.BufferMilliseconds = VoiceCraftClient.FrameMilliseconds;
         Recorder.DeviceNumber = settings.InputDevice - 1;

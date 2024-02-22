@@ -1,127 +1,214 @@
-﻿using VoiceCraft.Core.Client;
+﻿using CommunityToolkit.Mvvm.Messaging.Messages;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Maui.Models;
 
 namespace VoiceCraft.Maui.Services
 {
-    public class StatusMessageUpdatedMSG
+    public class StatusMessageUpdatedMSG : ValueChangedMessage<string>
     {
-        public string Status { get; set; } = string.Empty;
+        public StatusMessageUpdatedMSG(string value) : base(value)
+        {
+        }
     }
 
-    public class SpeakingStatusChangedMSG
+    public class SpeakingStatusChangedMSG : ValueChangedMessage<bool>
     {
-        public bool Status { get; set; }
+        public SpeakingStatusChangedMSG(bool value) : base(value)
+        {
+        }
     }
 
-    public class MutedStatusChangedMSG
+    public class MutedStatusChangedMSG : ValueChangedMessage<bool>
     {
-        public bool Status { get; set; }
+        public MutedStatusChangedMSG(bool value) : base(value)
+        {
+        }
     }
 
-    public class DeafenedStatusChangedMSG
+    public class DeafenedStatusChangedMSG : ValueChangedMessage<bool>
     {
-        public bool Status { get; set; }
+        public DeafenedStatusChangedMSG(bool value) : base(value)
+        {
+        }
     }
 
-    public class ParticipantAddedMSG
+    public class ParticipantAddedMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public VoiceCraftParticipant Participant { get; set; }
-        public ParticipantAddedMSG(VoiceCraftParticipant participant) => Participant = participant;
+        public ParticipantAddedMSG(VoiceCraftParticipant value) : base(value)
+        {
+        }
     }
 
-    public class ParticipantRemovedMSG
+    public class ParticipantRemovedMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public VoiceCraftParticipant Participant { get; set; }
-        public ParticipantRemovedMSG(VoiceCraftParticipant participant) => Participant = participant;
+        public ParticipantRemovedMSG(VoiceCraftParticipant value) : base(value)
+        {
+        }
     }
 
-    public class ParticipantChangedMSG
+    public class ParticipantChangedMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public VoiceCraftParticipant Participant { get; set; }
-        public ParticipantChangedMSG(VoiceCraftParticipant participant) => Participant = participant;
+        public ParticipantChangedMSG(VoiceCraftParticipant value) : base(value)
+        {
+        }
     }
 
-    public class ParticipantSpeakingStatusChangedMSG
+    public class ParticipantSpeakingStatusChangedMSG : ValueChangedMessage<ParticipantSpeakingStatusChanged>
     {
-        public VoiceCraftParticipant Participant { get; set; }
-        public bool Status { get; set; }
-        public ParticipantSpeakingStatusChangedMSG(VoiceCraftParticipant participant) => Participant = participant;
+        public ParticipantSpeakingStatusChangedMSG(ParticipantSpeakingStatusChanged value) : base(value)
+        {
+        }
     }
 
-    public class ChannelCreatedMSG
+    public class ChannelCreatedMSG : ValueChangedMessage<VoiceCraftChannel>
     {
-        public VoiceCraftChannel Channel { get; set; }
-        public ChannelCreatedMSG(VoiceCraftChannel channel) => Channel = channel;
+        public ChannelCreatedMSG(VoiceCraftChannel value) : base(value)
+        {
+        }
     }
 
-    public class ChannelEnteredMSG
+    public class ChannelEnteredMSG : ValueChangedMessage<VoiceCraftChannel>
     {
-        public VoiceCraftChannel Channel { get; set; }
-        public ChannelEnteredMSG(VoiceCraftChannel channel) => Channel = channel;
+        public ChannelEnteredMSG(VoiceCraftChannel value) : base(value)
+        {
+        }
     }
 
-    public class ChannelLeftMSG
+    public class ChannelLeftMSG : ValueChangedMessage<VoiceCraftChannel>
     {
-        public VoiceCraftChannel Channel { get; set; }
-        public ChannelLeftMSG(VoiceCraftChannel channel) => Channel = channel;
+        public ChannelLeftMSG(VoiceCraftChannel value) : base(value)
+        {
+        }
     }
 
-    public class DisconnectedMSG
+    public class DisconnectedMSG : ValueChangedMessage<string>
     {
-        public string Reason { get; set; } = string.Empty;
+        public DisconnectedMSG(string value) : base(value)
+        {
+        }
     }
 
-    public class DenyMSG
+    public class DenyMSG : ValueChangedMessage<string>
     {
-        public string Reason = string.Empty;
+        public DenyMSG(string value) : base(value)
+        {
+        }
     }
 
     //UI Request Updates
-    public class RequestData
-    { }
+    public class RequestDataMSG : ValueChangedMessage<string?>
+    {
+        public RequestDataMSG(string? value = null) : base(value)
+        {
+        }
+    }
 
+    public class ResponseDataMSG : ValueChangedMessage<ResponseData>
+    {
+        public ResponseDataMSG(ResponseData value) : base(value)
+        {
+        }
+    }
+
+    //UI Control Updates
+    public class MuteUnmuteMSG : ValueChangedMessage<string?>
+    {
+        public MuteUnmuteMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class DeafenUndeafenMSG : ValueChangedMessage<string?>
+    {
+        public DeafenUndeafenMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class JoinChannelMSG : ValueChangedMessage<JoinChannel>
+    {
+        public JoinChannelMSG(JoinChannel value) : base(value)
+        {
+        }
+    }
+
+    public class LeaveChannelMSG : ValueChangedMessage<LeaveChannel>
+    {
+        public LeaveChannelMSG(LeaveChannel value) : base(value)
+        {
+        }
+    }
+
+    public class DisconnectMSG : ValueChangedMessage<string?>
+    {
+        public DisconnectMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class StartServiceMSG : ValueChangedMessage<string?>
+    {
+        public StartServiceMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class StopServiceMSG : ValueChangedMessage<string?>
+    {
+        public StopServiceMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    //Message Values
     public class ResponseData
     {
-        public List<ParticipantModel> Participants { get; set; } = new List<ParticipantModel>();
-        public List<ChannelModel> Channels { get; set; } = new List<ChannelModel>();
+        public List<ParticipantModel> Participants { get; set; }
+        public List<ChannelModel> Channels { get; set; }
         public bool IsSpeaking { get; set; }
         public bool IsMuted { get; set; }
         public bool IsDeafened { get; set; }
         public string StatusMessage { get; set; } = string.Empty;
+
+        public ResponseData(List<ParticipantModel> participants, List<ChannelModel> channels, bool isSpeaking, bool isMuted, bool isDeafened, string statusMessage)
+        {
+            Participants = participants;
+            Channels = channels;
+            IsSpeaking = isSpeaking;
+            IsMuted = isMuted;
+            IsDeafened = isDeafened;
+            StatusMessage = statusMessage;
+        }
     }
 
-    //UI Control Updates
-    public class MuteUnmuteMSG
-    { }
-
-    public class DeafenUndeafenMSG
-    { }
-
-    public class JoinChannelMSG
+    public class JoinChannel
     {
         public VoiceCraftChannel Channel { get; set; }
         public string Password { get; set; } = string.Empty;
-        public JoinChannelMSG(VoiceCraftChannel channel)
+        public JoinChannel(VoiceCraftChannel channel)
         {
             Channel = channel;
         }
     }
 
-    public class LeaveChannelMSG
+    public class LeaveChannel
     {
         public VoiceCraftChannel Channel { get; set; }
-        public LeaveChannelMSG(VoiceCraftChannel channel)
+        public LeaveChannel(VoiceCraftChannel channel)
         {
             Channel = channel;
         }
     }
 
-    public class DisconnectMSG
-    { }
+    public class ParticipantSpeakingStatusChanged
+    {
+        public VoiceCraftParticipant Participant { get; set; }
+        public bool Status { get; set; }
 
-    public class StartServiceMSG
-    { }
-
-    public class StopServiceMSG
-    { }
+        public ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status)
+        {
+            Participant = participant;
+            Status = status;
+        }
+    }
 }

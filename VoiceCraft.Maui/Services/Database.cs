@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using VoiceCraft.Models;
+using VoiceCraft.Maui.Models;
 
 namespace VoiceCraft.Maui.Services
 {
