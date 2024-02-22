@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using VoiceCraft.Core.Client;
 using VoiceCraft.Maui.Services;
+using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Models;
 
 namespace VoiceCraft.Maui.ViewModels
@@ -12,9 +15,19 @@ namespace VoiceCraft.Maui.ViewModels
         [ObservableProperty]
         SettingsModel settings = Database.Instance.Settings;
 
+        [ObservableProperty]
+        string pingDetails = "Pinging...";
+
         public ServerDetailsViewModel()
         {
             server = Navigator.GetNavigationData<ServerModel>();
+            _ = Task.Run(async() => PingDetails = await VoiceCraftClient.PingAsync(server.IP, server.Port));
+        }
+
+        [RelayCommand]
+        public async Task Connect()
+        {
+            await Navigator.NavigateTo(nameof(Voice), Server);
         }
     }
 }

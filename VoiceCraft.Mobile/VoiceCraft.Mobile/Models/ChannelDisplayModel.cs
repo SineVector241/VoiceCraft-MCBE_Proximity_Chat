@@ -6,13 +6,13 @@ namespace VoiceCraft.Mobile.Models
     public partial class ChannelDisplayModel : ObservableObject
     {
         [ObservableProperty]
-        public string name = string.Empty;
+        string name = string.Empty;
         [ObservableProperty]
-        public bool requiresPassword;
+        bool requiresPassword;
         [ObservableProperty]
-        public bool joined;
+        bool joined;
         [ObservableProperty]
-        public VoiceCraftChannel channel;
+        VoiceCraftChannel channel;
 
         public ChannelDisplayModel(VoiceCraftChannel channel)
         {

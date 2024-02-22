@@ -37,7 +37,7 @@
                        Margin="20"
                        HorizontalOptions="Fill"
                        VerticalOptions="StartAndExpand">
-                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
                                FontAttributes="Bold"
                                FontSize="Title"
@@ -64,12 +64,17 @@
                                 </Style>
                             </Label.Style>
                         </Label>
-                        <Label Grid.Row="3"
+                        <Label Grid.Row="2"
                                FontSize="Subtitle"
                                Text="{Binding Server.Key, StringFormat='Key: {0}'}"
                                VerticalTextAlignment="Center" />
+                        <Label Grid.Row="3"
+                               FontSize="Subtitle"
+                               Text="{Binding PingDetails}"
+                               VerticalTextAlignment="Center" />
                         <toolkit:ContentButton Grid.Row="4"
                                                Margin="0,10,0,0"
+                                               Command="{Binding ConnectCommand}"
                                                HorizontalOptions="FillAndExpand">
                             <Border x:Name="connectBorder"
                                     Padding="6"

@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using VoiceCraft.Core.Client;
 
-namespace VoiceCraft.Mobile.Models
+namespace VoiceCraft.Maui.Models
 {
-    public partial class ParticipantDisplayModel : ObservableObject
+    public partial class ParticipantModel : ObservableObject
     {
         [ObservableProperty]
         bool isSpeaking;
@@ -14,7 +14,7 @@ namespace VoiceCraft.Mobile.Models
         [ObservableProperty]
         VoiceCraftParticipant participant;
 
-        public ParticipantDisplayModel(VoiceCraftParticipant participant)
+        public ParticipantModel(VoiceCraftParticipant participant)
         {
             this.participant = participant;
             isMuted = participant.Muted;

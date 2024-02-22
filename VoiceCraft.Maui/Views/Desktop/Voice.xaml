@@ -2,9 +2,36 @@
 <ContentPage x:Class="VoiceCraft.Maui.Views.Desktop.Voice"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
+             xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              Title="Voice">
+    <ContentPage.BindingContext>
+        <vm:VoiceViewModel />
+    </ContentPage.BindingContext>
+
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
-        <ScrollView />
+        <ScrollView>
+            <Grid RowDefinitions="Auto, *">
+                <Frame Grid.Row="0"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="StartAndExpand">
+                    <Grid ColumnDefinitions="Auto, Auto, *">
+                        <toolkit:Icon Grid.Column="0"
+                                      Margin="3,3,20,3"
+                                      HeightRequest="35"
+                                      Source="microphone.png"
+                                      TintColor="{AppThemeBinding Dark='White',
+                                                                  Light='Black'}" />
+                        <Label Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="Title"
+                               Text="Voice"
+                               VerticalTextAlignment="Center" />
+
+                    </Grid>
+                </Frame>
+            </Grid>
+        </ScrollView>
     </Grid>
 </ContentPage>
