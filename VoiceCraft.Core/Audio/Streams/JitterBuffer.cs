@@ -1,140 +1,248 @@
-﻿using System;
+﻿using NAudio.Wave;
+using OpusSharp;
+using System;
 using System.Linq;
+using VoiceCraft.Core.Client;
 
-namespace VoiceCraft.Core.Audio
+namespace VoiceCraft.Core.Audio.Streams
 {
     public class JitterBuffer
     {
-        public int MaxBufferSize { get; set; }
-        public int JitterDelay { get; set; }
-        public uint CurrentPacketReadCount { get; set; }
-        private JitterBufferPacket[] BufferedPackets { get; set; }
-        private DateTime FirstPacketTime { get; set; }
+        public WaveFormat WaveFormat { get; set; }
+        public int Count => QueuedFrames.Count(x => x.Buffer != null);
+        private bool IsFirst;
+        private bool IsPreloaded;
+        private Frame[] QueuedFrames;
+        private int QueueLength;
+        private int MaxQueueLength;
+        private uint Sequence;
 
-        public JitterBuffer(int maxBufferSize = 50, int jitterDelayMS = 80)
+        private int SilencedFrames;
+
+        public JitterBuffer(WaveFormat WaveFormat, int bufferMilliseconds = 80, int maxBufferSizeMilliseconds = 1000)
         {
-            MaxBufferSize = maxBufferSize;
-            JitterDelay = jitterDelayMS;
-            BufferedPackets = new JitterBufferPacket[maxBufferSize];
+            this.WaveFormat = WaveFormat;
+            QueueLength = bufferMilliseconds / VoiceCraftClient.FrameMilliseconds;
+            MaxQueueLength = maxBufferSizeMilliseconds / VoiceCraftClient.FrameMilliseconds;
+            QueuedFrames = new Frame[MaxQueueLength];
+            IsFirst = true;
         }
 
-        /// <summary>
-        /// Inputs a packet into the buffer.
-        /// </summary>
-        /// <param name="inPacket"></param>
-        public void Put(JitterBufferPacket inPacket)
+        public void Put(Frame frame)
         {
-            //If the buffer is empty. We know it's the first packet.
-            if (BufferedPackets.Count(x => x.Data != null) == 0)
+            if (IsFirst)
             {
-                FirstPacketTime = DateTime.UtcNow;
-                CurrentPacketReadCount = inPacket.Sequence - 1;
+                QueuedFrames[0] = frame;
+                Sequence = frame.Sequence;
+                SilencedFrames = 0;
+                IsFirst = false;
+                return;
+            }
+            //Remove Old Frames.
+            RemoveOldFrames();
+
+            //Insert the packet if it's not lower than the current sequence.
+            if (frame.Sequence > Sequence)
+            {
+                //Find an empty slot.
+                var empty = FindEmptySlot();
+                if (empty != -1)
+                {
+                    QueuedFrames[empty] = frame;
+                }
+            }
+            else
+            {
+                //We haven't found an empty slot so we replace the oldest/highest packet sequence.
+                var oldest = FindOldestSlot();
+                QueuedFrames[oldest] = frame;
             }
 
-            //Remove Old Packets
-            for (int i = 0; i < MaxBufferSize; i++)
+            if(!IsPreloaded && Count >= QueueLength)
             {
-                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence <= CurrentPacketReadCount)
-                {
-                    BufferedPackets[i].Data = null;
-                }
-            }
-
-            //Only insert the packet if its not later than the reader.
-            if (inPacket.Sequence > CurrentPacketReadCount)
-            {
-                //Find an empty slot and insert it.
-                for (int i = 0; i < MaxBufferSize; i++)
-                {
-                    if (BufferedPackets[i].Data == null)
-                    {
-                        BufferedPackets[i].Sequence = inPacket.Sequence;
-                        BufferedPackets[i].Data = inPacket.Data;
-                        BufferedPackets[i].Length = inPacket.Length;
-                        return;
-                    }
-                }
-
-                //We haven't found an empty slot so we discard the oldest/highest packet sequence.
-                uint oldest = BufferedPackets[0].Sequence;
-                int index = 0;
-                for (int i = 1; i < MaxBufferSize; i++)
-                {
-                    if (BufferedPackets[i].Sequence > oldest)
-                    {
-                        oldest = BufferedPackets[i].Sequence;
-                        index = i;
-                    }
-                }
-
-                //Replace the old packet with the new packet.
-                BufferedPackets[index].Data = inPacket.Data;
-                BufferedPackets[index].Sequence = inPacket.Sequence;
-                BufferedPackets[index].Length = inPacket.Length;
+                IsPreloaded = true;
             }
         }
 
-        /// <summary>
-        /// Gets a packet and removes it from the buffer.
-        /// </summary>
-        /// <param name="outPacket"></param>
-        /// <returns>The number of lost packets between the last and current Get calls.</returns>
-        public long Get(ref JitterBufferPacket outPacket)
+        public StatusCode Get(ref Frame outFrame)
         {
-            //Buffer ain't filled yet.
-            if (DateTime.UtcNow.Subtract(FirstPacketTime).TotalMilliseconds < JitterDelay)
-            {
-                return -1;
-            }
+            var status = StatusCode.Failed;
+            if (!IsPreloaded)
+                return StatusCode.Failed;
+            RemoveOldFrames();
 
-            //Find the earliest inserted packet.
-            uint earliest = BufferedPackets[0].Sequence;
+            var earliest = FindEarliestSlot();
+            if (earliest != -1)
+            {
+                uint earliestSequence = QueuedFrames[earliest].Sequence;
+                uint currentSequence = Sequence;
+                var distance = earliestSequence - currentSequence;
+
+
+                if (distance == 0 || IsFirst)
+                {
+                    //This is the frame we expected
+                    Sequence = QueuedFrames[earliest].Sequence;
+                    IsFirst = false;
+                    SilencedFrames = 0;
+
+                    outFrame.Buffer = QueuedFrames[earliest].Buffer;
+                    outFrame.Length = QueuedFrames[earliest].Length;
+                    outFrame.Sequence = QueuedFrames[earliest].Sequence;
+
+                    QueuedFrames[earliest].Buffer = null;
+                    status = StatusCode.Success;
+                }
+                else if (distance == 1)
+                {
+                    //Missed this frame, but the next queued one might have FEC info
+                    Sequence++;
+                    outFrame.Buffer = QueuedFrames[earliest].Buffer;
+                    outFrame.Length = QueuedFrames[earliest].Length;
+                    outFrame.Sequence = Sequence;
+                    status = StatusCode.Missed;
+                }
+                else
+                {
+                    //Missed this frame and we have no FEC data to work with
+                    Sequence++;
+                    status = StatusCode.Failed;
+                }
+            }
+            else if (!IsFirst)
+            {
+                if (SilencedFrames < 5)
+                    SilencedFrames++;
+                else
+                {
+                    IsFirst = true;
+                    IsPreloaded = false;
+                }
+            }
+            Sequence++;
+            return status;
+        }
+
+        private int FindEmptySlot()
+        {
+            for (int i = 0; i < QueuedFrames.Length; i++)
+            {
+                if (QueuedFrames[i].Buffer == null)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private int FindOldestSlot()
+        {
             int index = 0;
-            for (int i = 1; i < MaxBufferSize; i++)
+            uint oldest = QueuedFrames[index].Sequence;
+            for (int i = 1; i < QueuedFrames.Length; i++)
             {
-                if (BufferedPackets[i].Data != null && BufferedPackets[i].Sequence < earliest)
+                if (QueuedFrames[i].Sequence > oldest)
                 {
-                    earliest = BufferedPackets[i].Sequence;
+                    oldest = QueuedFrames[i].Sequence;
+                    index = i;
+                }
+            }
+            return index;
+        }
+
+        private int FindEarliestSlot()
+        {
+            uint earliest = QueuedFrames[0].Sequence;
+            int index = QueuedFrames[0].Buffer != null ? 0 : -1;
+            for (int i = 1; i < QueuedFrames.Length; i++)
+            {
+                if (QueuedFrames[i].Buffer != null && QueuedFrames[i].Sequence < earliest)
+                {
+                    earliest = QueuedFrames[i].Sequence;
                     index = i;
                 }
             }
 
-            if (BufferedPackets[index].Data == null) //We can assume the buffer is empty so we return -1;
+            return index;
+        }
+
+        private void RemoveOldFrames()
+        {
+            //Remove Old Packets
+            for (int i = 0; i < QueuedFrames.Length; i++)
             {
-                return -1;
+                if (QueuedFrames[i].Buffer != null && QueuedFrames[i].Sequence < Sequence)
+                {
+                    QueuedFrames[i].Buffer = null;
+                }
             }
-
-            var lost = earliest - CurrentPacketReadCount;
-            if (lost > 0) lost -= 1; //Get the amount lost.
-
-
-            if (lost > 0 && DateTime.UtcNow.Subtract(BufferedPackets[index].Timestamp).TotalMilliseconds >= JitterDelay) //If its not the next sequence and the inserted packet has exceeded the jitter delay then we return it.
-            {
-                //Fill the packet and return the amount lost between the last and current sequences.
-                outPacket.Length = BufferedPackets[index].Length;
-                outPacket.Data = BufferedPackets[index].Data;
-                BufferedPackets[index].Data = null;
-
-                CurrentPacketReadCount = earliest;
-                return lost;
-            }
-
-            //Else we just return the packet if its in the next sequence.
-            //Fill the packet and return the amount lost between the last and current sequences.
-            outPacket.Length = BufferedPackets[index].Length;
-            outPacket.Data = BufferedPackets[index].Data;
-            BufferedPackets[index].Data = null;
-
-            CurrentPacketReadCount = earliest;
-            return lost;
         }
     }
 
-    public struct JitterBufferPacket
+    public class VoiceCraftJitterBuffer
     {
-        public uint Sequence;
+        private Frame inFrame;
+        private Frame outFrame;
+        private readonly JitterBuffer JitterBuffer;
+        private readonly OpusDecoder Decoder;
+
+        public VoiceCraftJitterBuffer(WaveFormat waveFormat)
+        {
+            JitterBuffer = new JitterBuffer(waveFormat, 80, 2000);
+            Decoder = new OpusDecoder(waveFormat.SampleRate, waveFormat.Channels);
+        }
+
+        public int Get(byte[] decodedFrame)
+        {
+            if (outFrame.Buffer == null)
+            {
+                outFrame.Buffer = new byte[decodedFrame.Length];
+            }
+            else
+                Array.Clear(outFrame.Buffer, 0, outFrame.Buffer.Length);
+
+            var bytesRead = 0;
+            lock (JitterBuffer)
+            {
+                var status = JitterBuffer.Get(ref outFrame);
+                if (status == StatusCode.Success)
+                {
+                    bytesRead = Decoder.Decode(outFrame.Buffer, outFrame.Length, decodedFrame, decodedFrame.Length); //Opus expects to decode into a short apparently.
+                }
+                else if (status == StatusCode.Failed)
+                {
+                    return 0;
+                }
+                else
+                {
+                    // no packet found
+                    bytesRead = Decoder.Decode(null, 0, decodedFrame, decodedFrame.Length); //Opus expects to decode into a short apparently.
+                }
+            }
+
+            return bytesRead;
+        }
+
+        public void Put(byte[] data, uint packetCount)
+        {
+            inFrame.Buffer = data;
+            inFrame.Length = data.Length;
+            inFrame.Sequence = packetCount;
+            JitterBuffer.Put(inFrame);
+        }
+    }
+
+    public struct Frame
+    {
+        public byte[]? Buffer;
         public int Length;
-        public byte[]? Data;
-        public DateTime Timestamp;
+        public uint Sequence;
+    }
+
+    public enum StatusCode
+    {
+        Failed = -1,
+        Success = 0,
+        Missed = 1
     }
 }

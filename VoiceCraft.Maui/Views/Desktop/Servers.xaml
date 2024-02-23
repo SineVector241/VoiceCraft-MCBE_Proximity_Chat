@@ -15,9 +15,9 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="Auto, *">
-                <Frame Grid.Row="0"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                <Border Grid.Row="0"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto, *">
                         <toolkit:Icon Grid.Column="0"
                                       Margin="3,3,20,3"
@@ -64,7 +64,7 @@
                             </VisualStateManager.VisualStateGroups>
                         </toolkit:ContentButton>
                     </Grid>
-                </Frame>
+                </Border>
                 <CollectionView Grid.Row="1" ItemsSource="{Binding Servers}">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical" Span="3" />
@@ -73,7 +73,7 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Grid Padding="20">
-                                <Frame>
+                                <Border>
                                     <Grid RowDefinitions="*, *, *, *">
                                         <Grid ColumnDefinitions="*, auto, auto" ColumnSpacing="5">
                                             <Label FontSize="Medium" Text="{Binding Name}" />
@@ -212,7 +212,7 @@
                                             </VisualStateManager.VisualStateGroups>
                                         </toolkit:ContentButton>
                                     </Grid>
-                                </Frame>
+                                </Border>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

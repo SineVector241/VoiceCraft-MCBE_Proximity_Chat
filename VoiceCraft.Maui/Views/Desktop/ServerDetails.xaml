@@ -15,9 +15,9 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="Auto, *">
-                <Frame Grid.Row="0"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                <Border Grid.Row="0"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto, *">
                         <toolkit:Icon Grid.Column="0"
                                       Margin="3,3,20,3"
@@ -32,11 +32,11 @@
                                VerticalTextAlignment="Center" />
 
                     </Grid>
-                </Frame>
-                <Frame Grid.Row="1"
-                       Margin="20"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                </Border>
+                <Border Grid.Row="1"
+                        Margin="20"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
                                FontAttributes="Bold"
@@ -106,7 +106,7 @@
                             </VisualStateManager.VisualStateGroups>
                         </toolkit:ContentButton>
                     </Grid>
-                </Frame>
+                </Border>
             </Grid>
         </ScrollView>
     </Grid>

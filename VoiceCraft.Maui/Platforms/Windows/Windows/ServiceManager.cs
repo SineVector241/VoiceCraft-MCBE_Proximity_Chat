@@ -23,6 +23,7 @@ namespace VoiceCraft.Maui
             {
                 try
                 {
+                    Preferences.Set("VoipServiceRunning", true);
                     VoipService.OnStatusUpdated += StatusUpdated;
                     VoipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
                     VoipService.OnMutedStatusChanged += MutedStatusChanged;
@@ -99,6 +100,7 @@ namespace VoiceCraft.Maui
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
                     Cts.Dispose();
+                    Preferences.Set("VoipServiceRunning", false);
                 }
             }, Cts.Token);
         }

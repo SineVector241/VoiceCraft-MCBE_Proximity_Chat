@@ -14,9 +14,15 @@
     </Style>
 
     <Style TargetType="Border">
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}" />
-        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BorderBackgroundLight}, Dark={StaticResource BorderBackgroundDark}}" />
+        <Setter Property="Stroke" Value="Transparent" />
         <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="8" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="BoxView">
@@ -135,7 +141,7 @@
     <Style TargetType="Frame">
         <Setter Property="HasShadow" Value="False" />
         <Setter Property="BorderColor" Value="Transparent" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource FrameBackgroundLight}, Dark={StaticResource FrameBackgroundDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BorderBackgroundLight}, Dark={StaticResource BorderBackgroundDark}}" />
         <Setter Property="CornerRadius" Value="8" />
     </Style>
 

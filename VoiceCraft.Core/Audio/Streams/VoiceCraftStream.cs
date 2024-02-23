@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Client;
@@ -9,17 +10,17 @@ namespace VoiceCraft.Core.Audio.Streams
     public class VoiceCraftStream : IWaveProvider, IDisposable
     {
         public WaveFormat WaveFormat { get; set; }
-        private BufferedWaveProvider DecodedAudio { get; set; }
-        private OpusStream OpusStream { get; set; }
+        private PrefillBufferedWaveProvider DecodedAudio { get; set; }
+        private VoiceCraftJitterBuffer JitterBuffer { get; set; }
         private Task DecodeThread { get; set; }
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationToken Token { get; set; }
 
-        public VoiceCraftStream(WaveFormat WaveFormat, OpusStream OpusStream)
+        public VoiceCraftStream(WaveFormat WaveFormat, VoiceCraftJitterBuffer JitterBuffer)
         {
             this.WaveFormat = WaveFormat;
-            DecodedAudio = new BufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2), DiscardOnBufferOverflow = true };
-            this.OpusStream = OpusStream;
+            DecodedAudio = new PrefillBufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2), DiscardOnBufferOverflow = true, PrefillBytesTarget = WaveFormat.ConvertLatencyToByteSize(80) };
+            this.JitterBuffer = JitterBuffer;
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
 
@@ -33,20 +34,33 @@ namespace VoiceCraft.Core.Audio.Streams
 
         private Task Run()
         {
-            return Task.Run(() => {
-                var nextTick = Environment.TickCount;
+            return Task.Run(async() =>
+            {
+                long startTick = Environment.TickCount;
                 while (!Token.IsCancellationRequested)
                 {
                     try
                     {
+                        long tick = Environment.TickCount;
+                        long dist = startTick - tick;
+                        if (dist > 0)
+                        {
+                            await Task.Delay((int)dist).ConfigureAwait(false);
+                            continue;
+                        }
+                        startTick += VoiceCraftClient.FrameMilliseconds;
+
                         var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
-                        var count = OpusStream.Read(buffer, 0, buffer.Length);
+                        var count = JitterBuffer.Get(buffer);
                         if (count > 0)
                         {
                             DecodedAudio.AddSamples(buffer, 0, count);
                         }
                     }
-                    catch (Exception ex) { }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex);
+                    }
                 }
             }, Token);
         }
@@ -57,7 +71,6 @@ namespace VoiceCraft.Core.Audio.Streams
             DecodeThread.Wait();
             TokenSource.Dispose();
             DecodeThread.Dispose();
-            OpusStream.Dispose();
         }
     }
 }

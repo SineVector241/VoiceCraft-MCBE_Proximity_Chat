@@ -37,6 +37,15 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 		<AssemblyName>VoiceCraft.Maui</AssemblyName>
+		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>F9A00E4CD5BC59C17B7B11AB4DB1CC7617A27A1E</PackageCertificateThumbprint>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+		<AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
+		<GenerateTestArtifacts>True</GenerateTestArtifacts>
+		<AppInstallerUri>C:\Users\Asuka Woods\Documents\MauiApp</AppInstallerUri>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
@@ -105,7 +114,6 @@
 	  <None Remove="Resources\Images\headphones.svg" />
 	  <None Remove="Resources\Images\headphones_off.svg" />
 	  <None Remove="Resources\Images\information.svg" />
-	  <None Remove="Resources\Images\microphone.svg" />
 	  <None Remove="Resources\Images\microphone_off.svg" />
 	  <None Remove="Resources\Images\pencil.svg" />
 	  <None Remove="Resources\Images\server.svg" />

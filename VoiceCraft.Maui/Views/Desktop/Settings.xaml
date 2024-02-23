@@ -19,7 +19,7 @@
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <Grid RowDefinitions="auto, *">
-            <Frame Grid.Row="0"
+            <Border Grid.Row="0"
                    HorizontalOptions="Fill"
                    VerticalOptions="StartAndExpand">
                 <Grid ColumnDefinitions="Auto, Auto">
@@ -35,8 +35,8 @@
                            Text="Settings"
                            VerticalTextAlignment="Center" />
                 </Grid>
-            </Frame>
-            <Frame Grid.Row="1"
+            </Border>
+            <Border Grid.Row="1"
                    Margin="5"
                    HorizontalOptions="Fill"
                    VerticalOptions="StartAndExpand">
@@ -185,7 +185,7 @@
                                 Value="{Binding Settings.MicrophoneDetectionPercentage}" />
                     </Grid>
                 </Grid>
-            </Frame>
+            </Border>
         </Grid>
     </Grid>
 </ContentPage>

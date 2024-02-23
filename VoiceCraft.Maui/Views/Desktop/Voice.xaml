@@ -18,9 +18,9 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="Auto, Auto, *, Auto">
-                <Frame Grid.Row="0"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                <Border Grid.Row="0"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto, *">
                         <toolkit:Icon Grid.Column="0"
                                       Margin="3,3,20,3"
@@ -41,34 +41,61 @@
                                VerticalTextAlignment="Center" />
 
                     </Grid>
-                </Frame>
-                <Frame Grid.Row="1"
-                       Margin="10"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                </Border>
+                <Border Grid.Row="1"
+                        Margin="10"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Label FontSize="Title"
                            HorizontalTextAlignment="Center"
                            Text="{Binding StatusText}" />
-                </Frame>
+                </Border>
                 <CollectionView Grid.Row="2"
                                 Margin="10"
                                 ItemsSource="{Binding Participants}">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="10" Orientation="Vertical" />
+                    </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame HorizontalOptions="Fill" VerticalOptions="StartAndExpand">
-                                <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                            <Border HorizontalOptions="Fill"
+                                    StrokeThickness="2.5"
+                                    VerticalOptions="StartAndExpand">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSpeaking}"
+                                                         TargetType="Border"
+                                                         Value="True">
+                                                <Setter Property="Stroke" Value="#3f11FF11" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid ColumnDefinitions="250, *, 38, 38">
                                     <Label Grid.Column="0"
                                            Margin="5"
                                            FontSize="Title"
                                            Text="{Binding Participant.Name}"
                                            VerticalTextAlignment="Center" />
-                                    <toolkit:Icon Grid.Column="1"
-                                                  HeightRequest="35"
+                                    <Grid Grid.Column="1"
+                                          ColumnDefinitions="*, Auto"
+                                          VerticalOptions="Center">
+                                        <Slider Grid.Column="0"
+                                                Maximum="2"
+                                                Minimum="0"
+                                                Value="{Binding Volume}" />
+                                        <Label Grid.Column="1"
+                                               Margin="5,0,5,0"
+                                               FontSize="Medium"
+                                               Text="{Binding Volume, StringFormat='{0:P0}'}"
+                                               VerticalOptions="Center" />
+                                    </Grid>
+                                    <toolkit:Icon Grid.Column="2"
                                                   HorizontalOptions="End"
                                                   Source="microphone_off.png"
                                                   TintColor="{AppThemeBinding Dark='White',
-                                                                              Light='Black'}"
-                                                  WidthRequest="35">
+                                                                              Light='Black'}">
                                         <toolkit:Icon.Style>
                                             <Style TargetType="toolkit:Icon">
                                                 <Style.Triggers>
@@ -80,19 +107,17 @@
                                                     <DataTrigger Binding="{Binding IsMuted}"
                                                                  TargetType="toolkit:Icon"
                                                                  Value="False">
-                                                        <Setter Property="IsVisible" Value="Collapse" />
+                                                        <Setter Property="IsVisible" Value="False" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </toolkit:Icon.Style>
                                     </toolkit:Icon>
-                                    <toolkit:Icon Grid.Column="2"
-                                                  HeightRequest="35"
+                                    <toolkit:Icon Grid.Column="3"
                                                   HorizontalOptions="End"
                                                   Source="headphones_off.png"
                                                   TintColor="{AppThemeBinding Dark='White',
-                                                                              Light='Black'}"
-                                                  WidthRequest="35">
+                                                                              Light='Black'}">
                                         <toolkit:Icon.Style>
                                             <Style TargetType="toolkit:Icon">
                                                 <Style.Triggers>
@@ -104,21 +129,33 @@
                                                     <DataTrigger Binding="{Binding IsDeafened}"
                                                                  TargetType="toolkit:Icon"
                                                                  Value="False">
-                                                        <Setter Property="IsVisible" Value="Collapse" />
+                                                        <Setter Property="IsVisible" Value="False" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </toolkit:Icon.Style>
                                     </toolkit:Icon>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-                <Frame Grid.Row="3"
-                       Margin="10"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                <Border Grid.Row="3"
+                        Margin="10"
+                        HorizontalOptions="Fill"
+                        StrokeThickness="2.5"
+                        VerticalOptions="StartAndExpand">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSpeaking}"
+                                             TargetType="Border"
+                                             Value="True">
+                                    <Setter Property="Stroke" Value="#3f11FF11" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
                         <toolkit:ContentButton Grid.Column="0" Command="{Binding DisconnectCommand}">
                             <Border x:Name="disconnectBorder"
@@ -281,7 +318,7 @@
                             </VisualStateManager.VisualStateGroups>
                         </toolkit:ContentButton>
                     </Grid>
-                </Frame>
+                </Border>
             </Grid>
         </ScrollView>
     </Grid>

@@ -12,6 +12,8 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         bool isDeafened;
         [ObservableProperty]
+        float volume;
+        [ObservableProperty]
         VoiceCraftParticipant participant;
 
         public ParticipantModel(VoiceCraftParticipant participant)
@@ -19,6 +21,12 @@ namespace VoiceCraft.Maui.Models
             this.participant = participant;
             isMuted = participant.Muted;
             isDeafened = participant.Deafened;
+            volume = participant.Volume;
+        }
+
+        partial void OnVolumeChanged(float value)
+        {
+            Participant.Volume = value;
         }
     }
 }

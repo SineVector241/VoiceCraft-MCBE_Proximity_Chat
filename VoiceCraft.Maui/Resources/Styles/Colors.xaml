@@ -34,9 +34,9 @@
     <!--  Switch Colors  -->
     <Color x:Key="SwitchOn">#3f11FF11</Color>
 
-    <!--  Frame Colors  -->
-    <Color x:Key="FrameBackgroundDark">#6f000000</Color>
-    <Color x:Key="FrameBackgroundLight">#6fFFFFFF</Color>
+    <!--  Border Colors  -->
+    <Color x:Key="BorderBackgroundDark">#6f000000</Color>
+    <Color x:Key="BorderBackgroundLight">#6fFFFFFF</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}" />

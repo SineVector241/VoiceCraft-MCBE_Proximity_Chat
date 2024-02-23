@@ -60,6 +60,7 @@ namespace VoiceCraft.Maui
             {
                 try
                 {
+                    Preferences.Set("VoipServiceRunning", true);
                     VoipService = new VoipService(Navigator.GetNavigationData<ServerModel>());
                     VoipService.OnStatusUpdated += StatusUpdated;
                     VoipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
@@ -136,6 +137,7 @@ namespace VoiceCraft.Maui
                     VoipService.Network.Signalling.OnDenyPacketReceived -= SignallingDeny;
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
+                    Preferences.Set("VoipServiceRunning", false);
                     Cts.Dispose();
                 }
             }, Cts.Token);

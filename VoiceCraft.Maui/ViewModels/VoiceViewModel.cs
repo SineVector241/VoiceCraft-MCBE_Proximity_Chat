@@ -27,16 +27,10 @@ namespace VoiceCraft.Maui.ViewModels
         bool isSpeaking = false;
 
         [ObservableProperty]
-        bool showSlider = false;
-
-        [ObservableProperty]
         bool showChannels = false;
 
         [ObservableProperty]
         bool showPasswordInput = false;
-
-        [ObservableProperty]
-        VoiceCraftParticipant? selectedParticipant;
 
         [ObservableProperty]
         VoiceCraftChannel? selectedChannel;

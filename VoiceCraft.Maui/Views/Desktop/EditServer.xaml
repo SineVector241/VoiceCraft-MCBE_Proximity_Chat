@@ -14,7 +14,7 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="Auto, *">
-                <Frame Grid.Row="0"
+                <Border Grid.Row="0"
                        HorizontalOptions="Fill"
                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto, *">
@@ -31,8 +31,8 @@
                                VerticalTextAlignment="Center" />
 
                     </Grid>
-                </Frame>
-                <Frame Grid.Row="1"
+                </Border>
+                <Border Grid.Row="1"
                        Margin="5"
                        HorizontalOptions="CenterAndExpand"
                        VerticalOptions="CenterAndExpand"
@@ -100,7 +100,7 @@
                             </VisualStateManager.VisualStateGroups>
                         </toolkit:ContentButton>
                     </Grid>
-                </Frame>
+                </Border>
             </Grid>
         </ScrollView>
     </Grid>

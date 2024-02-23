@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Collections.Generic;
-using VoiceCraft.Core.Opus;
+using OpusSharp;
 
 namespace VoiceCraft.Core.Client
 {
@@ -94,7 +94,9 @@ namespace VoiceCraft.Core.Client
             FrameMilliseconds = RecordLengthMS;
             this.MCWSSPort = MCWSSPort;
 
-            Encoder = new OpusEncoder(64000, AudioApplication.Voice, 50, SampleRate, 1, FrameMilliseconds);
+            Encoder = new OpusEncoder(SampleRate, 1, OpusSharp.Enums.Application.VOIP);
+            Encoder.Bitrate = 32000;
+            Encoder.PacketLossPerc = 50;
             Mixer = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
 
             //Socket Setup
@@ -256,7 +258,7 @@ namespace VoiceCraft.Core.Client
         private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet)
         {
             var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
-            if(channel != null)
+            if (channel != null)
             {
                 channel.Joined = true;
                 OnChannelJoined?.Invoke(channel);
@@ -313,7 +315,7 @@ namespace VoiceCraft.Core.Client
 
         private void WebsocketPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
         {
-            if(!IsConnected) return;
+            if (!IsConnected) return;
 
             _ = Voice.SendPacketAsync(Packets.Voice.UpdatePosition.Create(position, Dimension));
         }
@@ -335,7 +337,7 @@ namespace VoiceCraft.Core.Client
         #region Public Methods
         public void Connect(string IP, int Port)
         {
-            if(IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
 
             this.IP = IP;
@@ -353,21 +355,21 @@ namespace VoiceCraft.Core.Client
         {
             try
             {
-                if(!CTS.IsCancellationRequested)
+                if (!CTS.IsCancellationRequested)
                 {
                     foreach (var participant in Participants)
                     {
                         participant.Value.Dispose(); //MEMORY LEAK FIX!
                     }
 
-                    //ActivityChecker.Stop();
+                    ActivityChecker.Stop();
                     CTS.Cancel();
                     Signalling.Disconnect(forceDisconnect: forceDisconnect);
                     Voice.Disconnect();
                     MCWSS.Stop();
                     Participants.Clear();
                     Channels.Clear();
-                    if (!string.IsNullOrWhiteSpace(Reason)) 
+                    if (!string.IsNullOrWhiteSpace(Reason))
                         OnDisconnected?.Invoke(Reason);
                     IsConnected = false;
                     IsMuted = false;
@@ -376,7 +378,7 @@ namespace VoiceCraft.Core.Client
                     Debug.WriteLine($"[{DateTime.UtcNow}] Disconnect function ran");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 #if DEBUG
                 Debug.WriteLine(ex);
@@ -396,7 +398,7 @@ namespace VoiceCraft.Core.Client
             PacketCount++;
 
             byte[] audioEncodeBuffer = new byte[1000];
-            var encodedBytes = Encoder.EncodeFrame(Data, 0, audioEncodeBuffer, 0);
+            var encodedBytes = Encoder.Encode(Data, BytesRecorded, audioEncodeBuffer);
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
             //Send the audio
@@ -405,10 +407,10 @@ namespace VoiceCraft.Core.Client
 
         public void SetMute()
         {
-            if(!IsConnected) return;
+            if (!IsConnected) return;
 
             IsMuted = !IsMuted;
-            if(IsMuted)
+            if (IsMuted)
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(0));
             }
@@ -435,7 +437,7 @@ namespace VoiceCraft.Core.Client
 
         public void JoinChannel(VoiceCraftChannel channel, string password = "")
         {
-            if(!channel.Joined)
+            if (!channel.Joined)
             {
                 _ = Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(channel.ChannelId, password));
             }
@@ -524,7 +526,7 @@ namespace VoiceCraft.Core.Client
                 socket.Disconnect(false);
                 socket.Close();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 message = $"Error: {ex.Message}";
             }

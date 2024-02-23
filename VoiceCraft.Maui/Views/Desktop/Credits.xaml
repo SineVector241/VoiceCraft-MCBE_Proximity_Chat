@@ -10,7 +10,7 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="auto, *">
-                <Frame Grid.Row="0"
+                <Border Grid.Row="0"
                        HorizontalOptions="Fill"
                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto">
@@ -26,8 +26,8 @@
                                Text="Credits"
                                VerticalTextAlignment="Center" />
                     </Grid>
-                </Frame>
-                <Frame Grid.Row="1"
+                </Border>
+                <Border Grid.Row="1"
                        Margin="5"
                        HorizontalOptions="FillAndExpand"
                        VerticalOptions="StartAndExpand">
@@ -49,7 +49,7 @@
                                FontSize="Small"
                                Text="{Binding Source={x:Static app:App.Version}, StringFormat='App Version: {0}'}" />
                     </Grid>
-                </Frame>
+                </Border>
             </Grid>
         </ScrollView>
     </Grid>
