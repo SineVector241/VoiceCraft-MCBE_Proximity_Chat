@@ -207,16 +207,11 @@ namespace VoiceCraft.Core.Audio.Streams
                 var status = JitterBuffer.Get(ref outFrame);
                 if (status == StatusCode.Success)
                 {
-                    bytesRead = Decoder.Decode(outFrame.Buffer, outFrame.Length, decodedFrame, decodedFrame.Length); //Opus expects to decode into a short apparently.
-                }
-                else if (status == StatusCode.Failed)
-                {
-                    return 0;
+                    bytesRead = Decoder.Decode(outFrame.Buffer, outFrame.Length, decodedFrame, decodedFrame.Length);
                 }
                 else
                 {
-                    // no packet found
-                    bytesRead = Decoder.Decode(null, 0, decodedFrame, decodedFrame.Length); //Opus expects to decode into a short apparently.
+                    bytesRead = Decoder.Decode(null, 0, decodedFrame, decodedFrame.Length);
                 }
             }
 

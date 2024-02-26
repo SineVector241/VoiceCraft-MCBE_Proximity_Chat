@@ -10,7 +10,7 @@ namespace VoiceCraft.Core.Audio.Streams
     public class VoiceCraftStream : IWaveProvider, IDisposable
     {
         public WaveFormat WaveFormat { get; set; }
-        private PrefillBufferedWaveProvider DecodedAudio { get; set; }
+        private BufferedWaveProvider DecodedAudio { get; set; }
         private VoiceCraftJitterBuffer JitterBuffer { get; set; }
         private Task DecodeThread { get; set; }
         private CancellationTokenSource TokenSource { get; set; }
@@ -19,7 +19,7 @@ namespace VoiceCraft.Core.Audio.Streams
         public VoiceCraftStream(WaveFormat WaveFormat, VoiceCraftJitterBuffer JitterBuffer)
         {
             this.WaveFormat = WaveFormat;
-            DecodedAudio = new PrefillBufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2), DiscardOnBufferOverflow = true, PrefillBytesTarget = WaveFormat.ConvertLatencyToByteSize(80) };
+            DecodedAudio = new BufferedWaveProvider(WaveFormat) { ReadFully = true, BufferDuration = TimeSpan.FromSeconds(2), DiscardOnBufferOverflow = true };
             this.JitterBuffer = JitterBuffer;
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;

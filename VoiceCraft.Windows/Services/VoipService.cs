@@ -69,7 +69,7 @@ namespace VoiceCraft.Windows.Services
             IP = server.IP;
             Port = server.Port;
 
-            Network = new VoiceCraftClient(server.Key, settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, 40, settings.WebsocketPort)
+            Network = new VoiceCraftClient(server.Key, settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, 20, settings.WebsocketPort)
             {
                 LinearVolume = settings.LinearVolume,
                 DirectionalHearing = settings.DirectionalAudioEnabled

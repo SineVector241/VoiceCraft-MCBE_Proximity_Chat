@@ -40,7 +40,7 @@
 		<AssemblyName>VoiceCraft.Maui</AssemblyName>
 		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateThumbprint>F9A00E4CD5BC59C17B7B11AB4DB1CC7617A27A1E</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>7A44A28FD2A47AF86F134DAC05C9B7433CFBC0BD</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
@@ -129,7 +129,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="OpusSharp" Version="1.0.2" />
+		<PackageReference Include="OpusSharp" Version="1.0.0" />
 		<PackageReference Include="SharpHook" Version="5.2.3" />
 		<PackageReference Include="SimpleToolkit.Core" Version="4.0.0" />
 	</ItemGroup>

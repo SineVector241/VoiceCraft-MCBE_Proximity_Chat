@@ -53,7 +53,7 @@ namespace VoiceCraft.Maui.Services
             Settings = Database.Instance.Settings;
             Server = server;
 
-            Network = new VoiceCraftClient(server.Key, Settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, 40, Settings.WebsocketPort)
+            Network = new VoiceCraftClient(server.Key, Settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, 20, Settings.WebsocketPort)
             {
                 LinearVolume = Settings.LinearVolume,
                 DirectionalHearing = Settings.DirectionalAudioEnabled
