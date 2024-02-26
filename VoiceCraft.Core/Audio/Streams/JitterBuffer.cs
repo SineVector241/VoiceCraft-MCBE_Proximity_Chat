@@ -68,7 +68,8 @@ namespace VoiceCraft.Core.Audio.Streams
         {
             var status = StatusCode.Failed;
             if (!IsPreloaded)
-                return StatusCode.Failed;
+                return StatusCode.NotReady;
+
             RemoveOldFrames();
 
             var earliest = FindEarliestSlot();
@@ -209,6 +210,10 @@ namespace VoiceCraft.Core.Audio.Streams
                 {
                     bytesRead = Decoder.Decode(outFrame.Buffer, outFrame.Length, decodedFrame, decodedFrame.Length);
                 }
+                else if(status == StatusCode.NotReady)
+                {
+                    return 0;
+                }
                 else
                 {
                     bytesRead = Decoder.Decode(null, 0, decodedFrame, decodedFrame.Length);
@@ -236,6 +241,7 @@ namespace VoiceCraft.Core.Audio.Streams
 
     public enum StatusCode
     {
+        NotReady = -2,
         Failed = -1,
         Success = 0,
         Missed = 1
