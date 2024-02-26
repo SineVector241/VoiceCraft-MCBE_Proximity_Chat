@@ -16,6 +16,7 @@ namespace VoiceCraft.Maui
     {
         private CancellationTokenSource Cts;
         private VoipService VoipService;
+        private Intent serviceIntent;
 
         private string NOTIFICATION_CHANNEL_ID = "1000";
         private int NOTIFICATION_ID = 1;
@@ -23,8 +24,8 @@ namespace VoiceCraft.Maui
 
         public void StartService()
         {
-            Intent intent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
-            StartForegroundService(intent);
+            serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
+            StartForegroundService(serviceIntent);
         }
 
         private void StartVoiceCraftService()
@@ -138,6 +139,7 @@ namespace VoiceCraft.Maui
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
                     Preferences.Set("VoipServiceRunning", false);
+                    StopService(serviceIntent);
                     Cts.Dispose();
                 }
             }, Cts.Token);
