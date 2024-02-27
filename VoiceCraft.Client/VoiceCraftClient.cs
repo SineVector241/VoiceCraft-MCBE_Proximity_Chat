@@ -66,7 +66,7 @@ namespace VoiceCraft.Client
         public event Disconnected? OnDisconnected;
         #endregion
 
-        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS, int MCWSSPort = 8080)
+        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20, int MCWSSPort = 8080)
         {
             AudioFormat = audioFormat;
             PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
