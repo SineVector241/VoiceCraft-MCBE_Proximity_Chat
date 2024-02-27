@@ -16,6 +16,7 @@ namespace VoiceCraft.Core.Sockets
         private CancellationTokenSource CTS { get; set; }
         public Socket Socket { get; private set; }
         public bool IsConnected { get; private set; }
+        public bool IsHosting { get; private set; }
         public bool IsDisposed { get; private set; }
         public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
 
@@ -30,6 +31,7 @@ namespace VoiceCraft.Core.Sockets
         #region Delegates
         public delegate void Connected();
         public delegate void Disconnected(string? reason = null);
+        public delegate void PacketData<T>(T data, Socket socket);
 
         public delegate void SocketConnected(Socket socket);
         public delegate void SocketDisconnected(Socket socket);
@@ -69,6 +71,7 @@ namespace VoiceCraft.Core.Sockets
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
+            if (IsHosting) throw new InvalidOperationException("Cannot connect as the socket is in a hosting state!");
 
             await Socket.ConnectAsync(IP, Port);
             try
@@ -96,10 +99,11 @@ namespace VoiceCraft.Core.Sockets
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must stop hosting before starting a host!");
+            if (IsConnected) throw new InvalidOperationException("Cannot start hosting as socket is in a connection state!");
 
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             _ = ListenAsync();
-            IsConnected = true;
+            IsHosting = true;
             OnConnected?.Invoke();
         }
 
@@ -158,6 +162,8 @@ namespace VoiceCraft.Core.Sockets
         {
             try
             {
+                if (IsHosting) throw new InvalidOperationException("Cannot disconnect as connection is in a hosting state.");
+
                 if (Socket.Connected)
                 {
                     CTS.Cancel();
@@ -180,10 +186,12 @@ namespace VoiceCraft.Core.Sockets
         /// </summary>
         public void StopHosting()
         {
+            if (IsConnected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a hosting state.");
+
             CTS.Cancel();
             Socket.Close();
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IsConnected = false;
+            IsHosting = false;
             OnDisconnected?.Invoke();
         }
 
@@ -215,6 +223,31 @@ namespace VoiceCraft.Core.Sockets
         private void HandlePacket(VoicePacket packet, EndPoint endPoint)
         {
 
+        }
+
+        ~Voice()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    Socket.Close();
+                    IsConnected = false;
+                    IsHosting = false;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

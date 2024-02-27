@@ -11,13 +11,15 @@ using VoiceCraft.Core.Packets.Signalling;
 
 namespace VoiceCraft.Core.Sockets
 {
-    public class Signalling
+    public class Signalling : IDisposable
     {
         #region Variables
         private CancellationTokenSource CTS { get; set; }
         public Socket Socket { get; private set; }
         public bool IsConnected { get; private set; }
+        public bool IsHosting { get; private set; }
         public bool IsDisposed { get; private set; }
+        public int LastActive { get; private set; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
@@ -30,6 +32,7 @@ namespace VoiceCraft.Core.Sockets
         #region Delegates
         public delegate void Connected(ushort port = 0, ushort key = 0);
         public delegate void Disconnected(string? reason = null);
+        public delegate void PacketData<T>(T data, Socket socket);
 
         public delegate void SocketConnected(Socket socket);
         public delegate void SocketDisconnected(Socket socket);
@@ -41,6 +44,19 @@ namespace VoiceCraft.Core.Sockets
         #region Events
         public event Connected? OnConnected;
         public event Disconnected? OnDisconnected;
+        public event PacketData<Login>? OnLogin;
+        public event PacketData<Logout>? OnLogout;
+        public event PacketData<Accept>? OnAccept;
+        public event PacketData<Deny>? OnDeny;
+        public event PacketData<BindedUnbinded>? OnBindedUnbinded;
+        public event PacketData<DeafenUndeafen>? OnDeafenUndeafen;
+        public event PacketData<MuteUnmute>? OnMuteUnmute;
+        public event PacketData<AddChannel>? OnAddChannel;
+        public event PacketData<JoinLeaveChannel>? OnJoinLeaveChannel;
+        public event PacketData<Error>? OnError;
+        public event PacketData<Ping>? OnPing;
+        public event PacketData<Null>? OnPingCheck;
+        public event PacketData<Null>? OnNull;
 
         public event SocketConnected? OnSocketConnected;
         public event SocketDisconnected? OnSocketDisconnected;
@@ -71,16 +87,21 @@ namespace VoiceCraft.Core.Sockets
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
+            if (IsHosting) throw new InvalidOperationException("Cannot connect as the socket is in a hosting state!");
 
             var cancelTask = Task.Delay(5000);
             var connectTask = Socket.ConnectAsync(IP, Port);
             await await Task.WhenAny(connectTask, cancelTask).ConfigureAwait(false);
             if (cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
 
+            OnAccept += Accept;
+            OnPingCheck += PingCheck;
+            OnDeny += Deny;
+
             try
             {
                 _ = ListenAsync(Socket);
-                await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version));
+                await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version), Socket);
             }
             catch (Exception ex)
             {
@@ -101,10 +122,14 @@ namespace VoiceCraft.Core.Sockets
         /// <param name="Port">The port to host on.</param>
         public void Host(ushort Port)
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
+            if (IsHosting) throw new InvalidOperationException("You must stop hosting before starting a host!");
+            if (IsConnected) throw new InvalidOperationException("Cannot start hosting as socket is in a connection state!");
+
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             Socket.Listen(100);
+            IsHosting = true;
             _ = AcceptConnectionsAsync();
-            IsConnected = true;
             OnConnected?.Invoke();
         }
 
@@ -113,15 +138,15 @@ namespace VoiceCraft.Core.Sockets
         /// </summary>
         /// <param name="packet">The packet to send.</param>
         /// <returns></returns>
-        public async Task SendPacketAsync(ISignallingPacket packet)
+        public async Task SendPacketAsync(ISignallingPacket packet, Socket socket)
         {
             if (Socket.Connected)
             {
                 try
                 {
                     var packetStream = packet.GetPacketStream();
-                    await Socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
-                    await Socket.SendAsync(packetStream, SocketFlags.None);
+                    await socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                    await socket.SendAsync(packetStream, SocketFlags.None);
                 }
                 catch (Exception ex)
                 {
@@ -136,15 +161,15 @@ namespace VoiceCraft.Core.Sockets
         /// Sends a packet, You can send a packet before the signalling is connected but not before the TCP socket is connected.
         /// </summary>
         /// <param name="packet">The packet to send.</param>
-        public void SendPacket(ISignallingPacket packet)
+        public void SendPacket(ISignallingPacket packet, Socket socket)
         {
             if (Socket.Connected)
             {
                 try
                 {
                     var packetStream = packet.GetPacketStream();
-                    Socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
-                    Socket.Send(packetStream, SocketFlags.None);
+                    socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
+                    socket.Send(packetStream, SocketFlags.None);
                 }
                 catch (Exception ex)
                 {
@@ -164,9 +189,15 @@ namespace VoiceCraft.Core.Sockets
         {
             try
             {
+                if (IsHosting) throw new InvalidOperationException("Cannot disconnect as connection is in a hosting state.");
+
                 if (Socket.Connected)
                 {
                     CTS.Cancel();
+                    OnAccept -= Accept;
+                    OnPingCheck -= PingCheck;
+                    OnDeny -= Deny;
+
                     if (force)
                     {
                         Socket.Close();
@@ -192,13 +223,12 @@ namespace VoiceCraft.Core.Sockets
         /// </summary>
         public void StopHosting()
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
-            if (IsConnected) throw new InvalidOperationException("You must stop hosting before starting a host!");
+            if (IsConnected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a hosting state.");
 
             CTS.Cancel();
             Socket.Close();
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IsConnected = false;
+            IsHosting = false;
             OnDisconnected?.Invoke();
         }
 
@@ -294,7 +324,72 @@ namespace VoiceCraft.Core.Sockets
 
         private void HandlePacket(SignallingPacket packet, Socket socket)
         {
+            switch(packet.PacketType)
+            {
+                case SignallingPacketTypes.Login: OnLogin?.Invoke((Login)packet.PacketData, socket); break;
+                case SignallingPacketTypes.Logout: OnLogout?.Invoke((Logout)packet.PacketData, socket); break;
+                case SignallingPacketTypes.Accept: OnAccept?.Invoke((Accept)packet.PacketData, socket); break;
+                case SignallingPacketTypes.Deny: OnDeny?.Invoke((Deny)packet.PacketData, socket); break;
+                case SignallingPacketTypes.BindedUnbinded: OnBindedUnbinded?.Invoke((BindedUnbinded)packet.PacketData, socket); break;
+                case SignallingPacketTypes.DeafenUndeafen: OnDeafenUndeafen?.Invoke((DeafenUndeafen)packet.PacketData, socket); break;
+                case SignallingPacketTypes.MuteUnmute: OnMuteUnmute?.Invoke((MuteUnmute)packet.PacketData, socket); break;
+                case SignallingPacketTypes.AddChannel: OnAddChannel?.Invoke((AddChannel)packet.PacketData, socket); break;
+                case SignallingPacketTypes.JoinLeaveChannel: OnJoinLeaveChannel?.Invoke((JoinLeaveChannel)packet.PacketData, socket); break;
+                case SignallingPacketTypes.Error: OnError?.Invoke((Error)packet.PacketData, socket); break;
+                case SignallingPacketTypes.Ping: OnPing?.Invoke((Ping)packet.PacketData, socket); break;
+                case SignallingPacketTypes.PingCheck: OnPingCheck?.Invoke((Null)packet.PacketData, socket); break;
+                default: OnNull?.Invoke(new Null(), socket); break;
+            };
+        }
 
+        ~Signalling()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    Socket.Close();
+                    IsConnected = false;
+                    IsHosting = false;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion
+
+        #region Event Methods
+        private void Accept(Accept data, Socket socket)
+        {
+            if(!IsConnected)
+            {
+                IsConnected = true;
+                LastActive = Environment.TickCount;
+                OnConnected?.Invoke(data.VoicePort, data.LoginKey);
+            }
+        }
+
+        private void Deny(Deny data, Socket socket)
+        {
+            if (!IsConnected)
+            {
+                Disconnect(data.Reason, true);
+            }
+        }
+
+        private void PingCheck(Null data, Socket socket)
+        {
+            LastActive = Environment.TickCount;
         }
         #endregion
     }

@@ -34,6 +34,8 @@ namespace VoiceCraft.Client
 
             //Event Registry
             Signalling.OnConnected += Signalling_Connected;
+
+            Voice.OnConnected += Voice_Connected;
         }
 
         public async Task Connect(string IP, int Port, ushort PreferredKey, PositioningTypes positioningType)
@@ -65,6 +67,11 @@ namespace VoiceCraft.Client
             {
                 Disconnect("IP WAS SOMEHOW EMPTY!");
             }
+        }
+
+        private void Voice_Connected()
+        {
+            OnVoiceConnected?.Invoke();
         }
         #endregion
     }
