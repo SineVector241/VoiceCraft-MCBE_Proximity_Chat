@@ -5,26 +5,31 @@ using System.Text;
 
 namespace VoiceCraft.Core.Packets.Signalling
 {
-    public class Binded : IPacketData
+    public class BindedUnbinded : IPacketData
     {
         public string Name { get; set; } = string.Empty;
+        public bool Value { get; set; }
 
-        public Binded()
+        public BindedUnbinded()
         {
             Name = string.Empty;
+            Value = false;
         }
 
-        public Binded(byte[] dataStream, int readOffset = 0)
+        public BindedUnbinded(byte[] dataStream, int readOffset = 0)
         {
-            var nameLength = BitConverter.ToInt32(dataStream, readOffset); //read name length - 4 bytes.
+            Value = BitConverter.ToBoolean(dataStream, readOffset); //Read value - 1 byte.
+            var nameLength = BitConverter.ToInt32(dataStream, readOffset + 1); //read name length - 4 bytes.
 
             if(nameLength > 0)
-                Name = Encoding.UTF8.GetString(dataStream, readOffset + 4, nameLength); //read name variable.
+                Name = Encoding.UTF8.GetString(dataStream, readOffset + 5, nameLength); //read name variable.
         }
 
         public byte[] GetPacketStream()
         {
             var dataStream = new List<byte>();
+
+            dataStream.AddRange(BitConverter.GetBytes(Value));
 
             if (!string.IsNullOrWhiteSpace(Name))
                 dataStream.AddRange(BitConverter.GetBytes(Name.Length));
@@ -37,14 +42,15 @@ namespace VoiceCraft.Core.Packets.Signalling
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(string name)
+        public static SignallingPacket Create(string name, bool value)
         {
             return new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Binded,
-                PacketData = new Binded()
+                PacketData = new BindedUnbinded()
                 {
                     Name = name,
+                    Value = value
                 }
             };
         }

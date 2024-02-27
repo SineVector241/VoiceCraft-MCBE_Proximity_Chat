@@ -169,7 +169,7 @@ namespace VoiceCraft.Core.Client
             _ = Voice.ConnectAsync(IP, packet.VoicePort, LoginKey);
         }
 
-        private void SignallingBinded(Packets.Signalling.Binded packet)
+        private void SignallingBinded(Packets.Signalling.BindedUnbinded packet)
         {
             OnBinded?.Invoke(packet.Name);
         }
@@ -203,7 +203,7 @@ namespace VoiceCraft.Core.Client
             }
         }
 
-        private void SignallingDeafen(Packets.Signalling.Deafen packet)
+        private void SignallingDeafen(Packets.Signalling.DeafenUndeafen packet)
         {
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
@@ -223,7 +223,7 @@ namespace VoiceCraft.Core.Client
             }
         }
 
-        private void SignallingMute(Packets.Signalling.Mute packet)
+        private void SignallingMute(Packets.Signalling.MuteUnmute packet)
         {
             Participants.TryGetValue(packet.LoginKey, out var participant);
             if (participant != null)
@@ -309,7 +309,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!IsConnected) return;
 
-            _ = Signalling.SendPacketAsync(Packets.Signalling.Binded.Create(Username));
+            _ = Signalling.SendPacketAsync(Packets.Signalling.BindedUnbinded.Create(Username));
             OnBinded?.Invoke(Username);
         }
 
@@ -412,7 +412,7 @@ namespace VoiceCraft.Core.Client
             IsMuted = !IsMuted;
             if (IsMuted)
             {
-                _ = Signalling.SendPacketAsync(Packets.Signalling.Mute.Create(0));
+                _ = Signalling.SendPacketAsync(Packets.Signalling.MuteUnmute.Create(0));
             }
             else
             {
@@ -427,7 +427,7 @@ namespace VoiceCraft.Core.Client
             IsDeafened = !IsDeafened;
             if (IsDeafened)
             {
-                _ = Signalling.SendPacketAsync(Packets.Signalling.Deafen.Create(0));
+                _ = Signalling.SendPacketAsync(Packets.Signalling.DeafenUndeafen.Create(0));
             }
             else
             {

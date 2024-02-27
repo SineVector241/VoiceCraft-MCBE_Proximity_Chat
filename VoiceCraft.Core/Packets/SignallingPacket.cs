@@ -28,15 +28,15 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case SignallingPacketTypes.Deny: PacketData = new Deny(dataStream, 2);
                     break;
-                case SignallingPacketTypes.Binded: PacketData = new Binded(dataStream, 2);
+                case SignallingPacketTypes.Binded: PacketData = new BindedUnbinded(dataStream, 2);
                     break;
                 case SignallingPacketTypes.Unbinded: PacketData = new Unbinded();
                     break;
-                case SignallingPacketTypes.Deafen: PacketData = new Deafen(dataStream, 2);
+                case SignallingPacketTypes.Deafen: PacketData = new DeafenUndeafen(dataStream, 2);
                     break;
                 case SignallingPacketTypes.Undeafen: PacketData = new Undeafen(dataStream, 2);
                     break;
-                case SignallingPacketTypes.Mute: PacketData = new Mute(dataStream, 2);
+                case SignallingPacketTypes.Mute: PacketData = new MuteUnmute(dataStream, 2);
                     break;
                 case SignallingPacketTypes.Unmute: PacketData = new Unmute(dataStream, 2);
                     break;
@@ -84,10 +84,8 @@ namespace VoiceCraft.Core.Packets
         Unbinded,
 
         //States
-        Deafen,
-        Undeafen,
-        Mute,
-        Unmute,
+        DeafenUndeafen,
+        MuteUnmute,
 
         //Channels
         AddChannel,

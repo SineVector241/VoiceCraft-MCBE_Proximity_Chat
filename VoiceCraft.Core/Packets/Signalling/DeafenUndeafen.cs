@@ -4,18 +4,21 @@ using VoiceCraft.Core.Packets.Interfaces;
 
 namespace VoiceCraft.Core.Packets.Signalling
 {
-    public class Mute : IPacketData
+    public class DeafenUndeafen : IPacketData
     {
         public ushort LoginKey { get; set; }
+        public bool Value { get; set; }
 
-        public Mute()
+        public DeafenUndeafen()
         {
             LoginKey = 0;
+            Value = false;
         }
 
-        public Mute(byte[] dataStream, int readOffset = 0)
+        public DeafenUndeafen(byte[] dataStream, int readOffset = 0)
         {
             LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            Value = BitConverter.ToBoolean(dataStream, readOffset + 2); //Read value - 1 byte.
         }
 
         public byte[] GetPacketStream()
@@ -23,17 +26,20 @@ namespace VoiceCraft.Core.Packets.Signalling
             var dataStream = new List<byte>();
 
             dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Value));
 
             return dataStream.ToArray();
         }
-        public static SignallingPacket Create(ushort loginKey)
+
+        public static SignallingPacket Create(ushort loginKey, bool value)
         {
             return new SignallingPacket()
             {
-                PacketType = SignallingPacketTypes.Mute,
-                PacketData = new Mute()
+                PacketType = SignallingPacketTypes.DeafenUndeafen,
+                PacketData = new DeafenUndeafen()
                 {
-                    LoginKey = loginKey
+                    LoginKey = loginKey,
+                    Value = value
                 }
             };
         }

@@ -22,11 +22,11 @@ namespace VoiceCraft.Core.Client.Sockets
         public delegate void LogoutPacket(Logout packet);
         public delegate void AcceptPacket(Accept packet);
         public delegate void DenyPacket(Deny packet);
-        public delegate void BindedPacket(Binded packet);
+        public delegate void BindedPacket(BindedUnbinded packet);
         public delegate void UnbindedPacket(Unbinded packet);
-        public delegate void DeafenPacket(Deafen packet);
+        public delegate void DeafenPacket(DeafenUndeafen packet);
         public delegate void UndeafenPacket(Undeafen packet);
-        public delegate void MutePacket(Mute packet);
+        public delegate void MutePacket(MuteUnmute packet);
         public delegate void UnmutePacket(Unmute packet);
         public delegate void AddChannelPacket(AddChannel packet);
         public delegate void JoinChannelPacket(JoinChannel packet);
@@ -236,7 +236,7 @@ namespace VoiceCraft.Core.Client.Sockets
                     break;
                 case SignallingPacketTypes.Binded:
                     if (IsConnected)
-                        OnBindedPacketReceived?.Invoke((Binded)packet.PacketData);
+                        OnBindedPacketReceived?.Invoke((BindedUnbinded)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unbinded:
                     if (IsConnected)
@@ -244,7 +244,7 @@ namespace VoiceCraft.Core.Client.Sockets
                     break;
                 case SignallingPacketTypes.Deafen:
                     if (IsConnected)
-                        OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData);
+                        OnDeafenPacketReceived?.Invoke((DeafenUndeafen)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Undeafen:
                     if (IsConnected)
@@ -252,7 +252,7 @@ namespace VoiceCraft.Core.Client.Sockets
                     break;
                 case SignallingPacketTypes.Mute:
                     if (IsConnected)
-                        OnMutePacketReceived?.Invoke((Mute)packet.PacketData);
+                        OnMutePacketReceived?.Invoke((MuteUnmute)packet.PacketData);
                     break;
                 case SignallingPacketTypes.Unmute:
                     if (IsConnected)

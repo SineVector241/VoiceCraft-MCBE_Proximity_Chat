@@ -30,11 +30,11 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void LogoutPacket(Logout packet, Socket socket);
         public delegate void AcceptPacket(Accept packet, Socket socket);
         public delegate void DenyPacket(Deny packet, Socket socket);
-        public delegate void BindedPacket(Binded packet, Socket socket);
+        public delegate void BindedPacket(BindedUnbinded packet, Socket socket);
         public delegate void UnbindedPacket(Unbinded packet, Socket socket);
-        public delegate void DeafenPacket(Deafen packet, Socket socket);
+        public delegate void DeafenPacket(DeafenUndeafen packet, Socket socket);
         public delegate void UndeafenPacket(Undeafen packet, Socket socket);
-        public delegate void MutePacket(Mute packet, Socket socket);
+        public delegate void MutePacket(MuteUnmute packet, Socket socket);
         public delegate void UnmutePacket(Unmute packet, Socket socket);
         public delegate void AddChannelPacket(AddChannel packet, Socket socket);
         public delegate void JoinChannelPacket(JoinChannel packet, Socket socket);
@@ -248,19 +248,19 @@ namespace VoiceCraft.Core.Server.Sockets
                         OnDenyPacketReceived?.Invoke((Deny)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Binded:
-                        OnBindedPacketReceived?.Invoke((Binded)packet.PacketData, socket);
+                        OnBindedPacketReceived?.Invoke((BindedUnbinded)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Unbinded:
                         OnUnbindedPacketReceived?.Invoke((Unbinded)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Deafen:
-                        OnDeafenPacketReceived?.Invoke((Deafen)packet.PacketData, socket);
+                        OnDeafenPacketReceived?.Invoke((DeafenUndeafen)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Undeafen:
                         OnUndeafenPacketReceived?.Invoke((Undeafen)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Mute:
-                        OnMutePacketReceived?.Invoke((Mute)packet.PacketData, socket);
+                        OnMutePacketReceived?.Invoke((MuteUnmute)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.Unmute:
                         OnUnmutePacketReceived?.Invoke((Unmute)packet.PacketData, socket);
