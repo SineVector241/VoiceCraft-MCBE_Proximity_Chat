@@ -86,6 +86,7 @@ namespace VoiceCraft.Client
             PositioningType = positioningType;
 
             //Event Registry
+            //Signalling
             Signalling.OnConnected += Signalling_Connected;
             Signalling.OnBindedUnbinded += Signalling_BindedUnbinded;
             Signalling.OnLogin += Signalling_Login;
@@ -96,6 +97,7 @@ namespace VoiceCraft.Client
             Signalling.OnJoinLeaveChannel += Signalling_JoinLeaveChannel;
             Signalling.OnDisconnected += Signalling_Disconnected;
 
+            //Voice
             Voice.OnConnected += Voice_Connected;
             Voice.OnServerAudio += Voice_ServerAudio;
             Voice.OnDisconnected += Voice_Disconnected;
@@ -128,9 +130,17 @@ namespace VoiceCraft.Client
             Voice.OnServerAudio -= Voice_ServerAudio;
             Voice.OnDisconnected -= Voice_Disconnected;
 
+            MCWSS.OnConnect -= WebsocketConnected;
+            MCWSS.OnPlayerTravelled -= WebsocketPlayerTravelled;
+            MCWSS.OnDisconnect -= WebsocketDisconnected;
+
+            ClearParticipants();
+
             OnDisconnected?.Invoke(reason);
             Signalling.Disconnect();
             Voice.Disconnect();
+            IsDeafened = false;
+            IsMuted = false;
             ConnectionState = ConnectionState.Disconnected;
         }
 
@@ -294,6 +304,15 @@ namespace VoiceCraft.Client
             OnUnbinded?.Invoke();
         }
         #endregion
+
+        private void ClearParticipants()
+        {
+            foreach (var participant in Participants)
+            {
+                participant.Value.Dispose();
+            }
+            Participants.Clear();
+        }
     }
 
     public enum ConnectionState

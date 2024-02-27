@@ -12,6 +12,7 @@ namespace VoiceCraft.Client
         private float volume = 1.0f;
         private float proximityVolume = 0.0f;
 
+        public bool IsDisposed { get; private set; }
         public WaveFormat AudioFormat { get; }
         public int FrameSizeMS { get; }
         public bool IsMuted { get; set; }
@@ -68,9 +69,27 @@ namespace VoiceCraft.Client
             JitterBuffer.Put(audio, packetCount);
         }
 
+        ~VoiceCraftParticipant()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    VoiceCraftStream.Dispose();
+                    IsDisposed = true;
+                }
+            }
+        }
+
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
