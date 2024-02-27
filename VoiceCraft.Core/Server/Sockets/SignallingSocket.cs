@@ -37,7 +37,7 @@ namespace VoiceCraft.Core.Server.Sockets
         public delegate void MutePacket(MuteUnmute packet, Socket socket);
         public delegate void UnmutePacket(Unmute packet, Socket socket);
         public delegate void AddChannelPacket(AddChannel packet, Socket socket);
-        public delegate void JoinChannelPacket(JoinChannel packet, Socket socket);
+        public delegate void JoinChannelPacket(JoinLeaveChannel packet, Socket socket);
         public delegate void LeaveChannelPacket(LeaveChannel packet, Socket socket);
         public delegate void ErrorPacket(Error packet, Socket socket);
         public delegate void PingPacket(Ping packet, Socket socket);
@@ -269,7 +269,7 @@ namespace VoiceCraft.Core.Server.Sockets
                         OnAddChannelPacketReceived?.Invoke((AddChannel)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.JoinChannel:
-                        OnJoinChannelPacketReceived?.Invoke((JoinChannel)packet.PacketData, socket);
+                        OnJoinChannelPacketReceived?.Invoke((JoinLeaveChannel)packet.PacketData, socket);
                         break;
                     case SignallingPacketTypes.LeaveChannel:
                         OnLeaveChannelPacketReceived?.Invoke((LeaveChannel)packet.PacketData, socket);

@@ -255,7 +255,7 @@ namespace VoiceCraft.Core.Client
             OnChannelAdded?.Invoke(channel);
         }
 
-        private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet)
+        private void SignallingJoinChannel(Packets.Signalling.JoinLeaveChannel packet)
         {
             var channel = Channels.FirstOrDefault(x => x.ChannelId == packet.ChannelId);
             if (channel != null)
@@ -439,7 +439,7 @@ namespace VoiceCraft.Core.Client
         {
             if (!channel.Joined)
             {
-                _ = Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(channel.ChannelId, password));
+                _ = Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create(channel.ChannelId, password));
             }
         }
 

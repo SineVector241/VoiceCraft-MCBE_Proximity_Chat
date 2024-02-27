@@ -363,7 +363,7 @@ namespace VoiceCraft.Core.Server
             }
         }
 
-        private void SignallingJoinChannel(Packets.Signalling.JoinChannel packet, Socket socket)
+        private void SignallingJoinChannel(Packets.Signalling.JoinLeaveChannel packet, Socket socket)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket == socket);
             if (participant.Value != null && participant.Value.Binded)
@@ -393,7 +393,7 @@ namespace VoiceCraft.Core.Server
                         Signalling.SendPacketAsync(Packets.Signalling.Login.Create(PositioningTypes.ServerSided, client.Key, client.Value.IsDeafened, client.Value.IsMuted, client.Value.Name, string.Empty), socket);
                     }
 
-                    Signalling.SendPacketAsync(Packets.Signalling.JoinChannel.Create(packet.ChannelId, string.Empty), socket);
+                    Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create(packet.ChannelId, string.Empty), socket);
                 }
                 else if(channel.Password != packet.Password && !string.IsNullOrWhiteSpace(channel.Password))
                 {
@@ -788,7 +788,7 @@ namespace VoiceCraft.Core.Server
 
             if (channel != null)
             {
-                SignallingJoinChannel(new Packets.Signalling.JoinChannel() { ChannelId = packet.ChannelId, Password = channel.Password }, participant.Value.SignallingSocket);
+                SignallingJoinChannel(new Packets.Signalling.JoinLeaveChannel() { ChannelId = packet.ChannelId, Password = channel.Password }, participant.Value.SignallingSocket);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
