@@ -9,11 +9,11 @@ namespace VoiceCraft.Core.Packets.Signalling
             return new byte[0];
         }
 
-        public static SignallingPacket Create()
+        public static SignallingPacket Create(SignallingPacketTypes packetType)
         {
             return new SignallingPacket()
             {
-                PacketType = SignallingPacketTypes.Null,
+                PacketType = packetType,
                 PacketData = new Null()
             };
         }

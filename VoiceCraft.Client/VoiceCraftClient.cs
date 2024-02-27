@@ -194,6 +194,7 @@ namespace VoiceCraft.Client
             }
             else if(Participants.Remove(data.Key, out var participant))
             {
+                AudioOutput.RemoveMixerInput(participant.AudioOutput);
                 participant.Dispose();
                 OnParticipantLeft?.Invoke(participant, data.Key);
             }

@@ -1,6 +1,5 @@
 ﻿using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using OpusSharp;
 using System;
 using VoiceCraft.Core.Audio;
 using VoiceCraft.Core.Audio.Streams;

@@ -20,6 +20,9 @@ namespace VoiceCraft.Core.Sockets
         public bool IsHosting { get; private set; }
         public bool IsDisposed { get; private set; }
         public int LastActive { get; private set; }
+        public int ActivityInterval { get; set; } = 1000;
+        public int ActivityTimeout { get; set; } = 8000;
+        private Task? ActivityChecker { get; set; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
@@ -194,6 +197,9 @@ namespace VoiceCraft.Core.Sockets
                 {
                     IsConnected = false;
                     CTS.Cancel();
+                    ActivityChecker?.Wait(); //Wait to finish before disposing.
+                    ActivityChecker?.Dispose();
+                    ActivityChecker = null;
                     OnAccept -= Accept;
                     OnDeny -= Deny;
 
@@ -246,7 +252,7 @@ namespace VoiceCraft.Core.Sockets
                     {
                         if (!socket.Connected || CTS.IsCancellationRequested)
                         {
-                            if(IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
+                            if (IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
                             break; //Socket is closed.
                         }
                     }
@@ -283,7 +289,7 @@ namespace VoiceCraft.Core.Sockets
 
                     if (!socket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
-                        if(IsHosting)
+                        if (IsHosting)
                             OnSocketDisconnected?.Invoke(socket, "Lost connection.");
                         else
                             Disconnect(ex.Message);
@@ -358,6 +364,21 @@ namespace VoiceCraft.Core.Sockets
             };
         }
 
+        private async Task ActivityCheck()
+        {
+            while (IsConnected)
+            {
+                var dist = Environment.TickCount - (long)LastActive; //negative distance wraps
+                if (dist > ActivityTimeout)
+                {
+                    Disconnect("Signalling timed out!");
+                    break;
+                }
+                await SendPacketAsync(Null.Create(SignallingPacketTypes.PingCheck), Socket);
+                await Task.Delay(ActivityTimeout).ConfigureAwait(false);
+            }
+        }
+
         ~Signalling()
         {
             Dispose(false);
@@ -372,6 +393,12 @@ namespace VoiceCraft.Core.Sockets
                     Socket.Close();
                     IsConnected = false;
                     IsHosting = false;
+                    if (ActivityChecker != null)
+                    {
+                        ActivityChecker?.Wait(); //Wait to finish before disposing.
+                        ActivityChecker?.Dispose();
+                        ActivityChecker = null;
+                    }
                 }
                 IsDisposed = true;
             }
@@ -387,10 +414,11 @@ namespace VoiceCraft.Core.Sockets
         #region Event Methods
         private void Accept(Accept data, Socket socket)
         {
-            if(!IsConnected)
+            if (!IsConnected)
             {
                 IsConnected = true;
                 LastActive = Environment.TickCount;
+                ActivityChecker = Task.Run(async () => await ActivityCheck());
                 OnConnected?.Invoke(data.VoicePort, data.Key);
             }
         }
