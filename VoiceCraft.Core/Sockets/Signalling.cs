@@ -371,7 +371,7 @@ namespace VoiceCraft.Core.Sockets
                 var dist = Environment.TickCount - (long)LastActive; //negative distance wraps
                 if (dist > ActivityTimeout)
                 {
-                    Disconnect("Signalling timed out!");
+                    Disconnect("Signalling timed out!", true);
                     break;
                 }
                 await SendPacketAsync(Null.Create(SignallingPacketTypes.PingCheck), Socket);

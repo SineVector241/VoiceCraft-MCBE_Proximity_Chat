@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using NAudio.Wave.SampleProviders;
 using System.Net.Sockets;
 using System.Linq;
+using OpusSharp;
 
 namespace VoiceCraft.Client
 {
@@ -23,6 +24,7 @@ namespace VoiceCraft.Client
         public bool LinearProximity { get; set; }
         public bool DirectionalHearing { get; set; }
         public MixingSampleProvider AudioOutput { get; }
+        public uint PacketCount { get; private set; }
 
         //Network Variables
         public ConnectionState ConnectionState { get; private set; }
@@ -37,6 +39,9 @@ namespace VoiceCraft.Client
         //Participants/Channels
         public Dictionary<ushort, VoiceCraftParticipant> Participants { get; }
         public List<VoiceCraftChannel> Channels { get; }
+
+        //Encoder
+        private OpusEncoder Encoder { get; set; }
 
         #region Events
         public delegate void SignallingConnected();
@@ -76,7 +81,11 @@ namespace VoiceCraft.Client
             MCWSS = new MCWSS(MCWSSPort);
             Participants = new Dictionary<ushort, VoiceCraftParticipant>();
             Channels = new List<VoiceCraftChannel>();
-            AudioOutput = new MixingSampleProvider(PlaybackFormat);
+
+            Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Enums.Application.VOIP);
+            Encoder.Bitrate = 32000;
+            Encoder.PacketLossPerc = 50;
+            AudioOutput = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
         }
 
         public async Task Connect(string iP, int port, ushort preferredKey, PositioningTypes positioningType)
@@ -84,6 +93,7 @@ namespace VoiceCraft.Client
             if (ConnectionState != ConnectionState.Disconnected) throw new Exception("You must disconnect before connecting!");
             IP = iP;
             PositioningType = positioningType;
+            PacketCount = 0;
 
             //Event Registry
             //Signalling
@@ -111,7 +121,58 @@ namespace VoiceCraft.Client
             await Signalling.Connect(iP, port, preferredKey, positioningType, Version);
         }
 
-        public void Disconnect(string? reason = null)
+        public async Task SendAudio(byte[] data, int bytesRecorded)
+        {
+            if (IsDeafened || IsMuted || ConnectionState != ConnectionState.Connected) return;
+
+            //Prevent overloading the highest max count of a uint.
+            if (PacketCount >= uint.MaxValue)
+                PacketCount = 0;
+
+            //Count packets
+            PacketCount++;
+
+            byte[] audioEncodeBuffer = new byte[1000];
+            var encodedBytes = Encoder.Encode(data, bytesRecorded, audioEncodeBuffer);
+            byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
+
+            //Send the audio
+            await Voice.SendPacketAsync(Core.Packets.Voice.ClientAudio.Create(PacketCount, audioTrimmed));
+        }
+
+        public async Task SetMute()
+        {
+            if (ConnectionState != ConnectionState.Connected) return;
+
+            IsMuted = !IsMuted;
+            await Signalling.SendPacketAsync(Core.Packets.Signalling.MuteUnmute.Create(0, IsMuted), Signalling.Socket); //Mute and Deafen are based on IP from client to server.
+        }
+
+        public async Task SetDeafen()
+        {
+            if (ConnectionState != ConnectionState.Connected) return;
+
+            IsDeafened = !IsDeafened;
+            await Signalling.SendPacketAsync(Core.Packets.Signalling.DeafenUndeafen.Create(0, IsDeafened), Signalling.Socket); //Mute and Deafen are based on IP from client to server.
+        }
+
+        public async Task JoinChannel(VoiceCraftChannel channel, string password = "")
+        {
+            if (!channel.Joined)
+            {
+                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(channel.ChannelId, password, true), Signalling.Socket);
+            }
+        }
+
+        public async Task LeaveChannel(VoiceCraftChannel channel)
+        {
+            if (channel.Joined)
+            {
+                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(channel.ChannelId, "", false), Signalling.Socket);
+            }
+        }
+
+        public void Disconnect(string? reason = null, bool force = false)
         {
             if (ConnectionState == ConnectionState.Disconnected) return; //Already Disconnected.
 
@@ -135,10 +196,12 @@ namespace VoiceCraft.Client
             MCWSS.OnDisconnect -= WebsocketDisconnected;
 
             ClearParticipants();
+            Channels.Clear();
 
             OnDisconnected?.Invoke(reason);
-            Signalling.Disconnect();
+            Signalling.Disconnect(force: force);
             Voice.Disconnect();
+            MCWSS.Stop();
             IsDeafened = false;
             IsMuted = false;
             ConnectionState = ConnectionState.Disconnected;
