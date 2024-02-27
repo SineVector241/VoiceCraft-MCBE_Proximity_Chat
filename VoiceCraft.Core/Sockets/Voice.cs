@@ -31,21 +31,24 @@ namespace VoiceCraft.Core.Sockets
         #region Delegates
         public delegate void Connected();
         public delegate void Disconnected(string? reason = null);
-        public delegate void PacketData<T>(T data, Socket socket);
+        public delegate void PacketData<T>(T data, EndPoint endPoint);
 
-        public delegate void SocketConnected(Socket socket);
-        public delegate void SocketDisconnected(Socket socket);
-        public delegate void OutboundPacket(VoicePacket packet, EndPoint socket);
-        public delegate void InboundPacket(VoicePacket packet, EndPoint socket);
+        public delegate void OutboundPacket(VoicePacket packet, EndPoint endPoint);
+        public delegate void InboundPacket(VoicePacket packet, EndPoint endPoint);
         public delegate void ExceptionError(Exception error);
         #endregion
 
         #region Events
         public event Connected? OnConnected;
         public event Disconnected? OnDisconnected;
+        public event PacketData<Login>? OnLogin;
+        public event PacketData<Null>? OnAccept;
+        public event PacketData<Deny>? OnDeny;
+        public event PacketData<ClientAudio>? OnClientAudio;
+        public event PacketData<ServerAudio>? OnServerAudio;
+        public event PacketData<UpdatePosition>? OnUpdatePosition;
+        public event PacketData<Null>? OnNull;
 
-        public event SocketConnected? OnSocketConnected;
-        public event SocketDisconnected? OnSocketDisconnected;
         public event OutboundPacket? OnOutboundPacket;
         public event InboundPacket? OnInboundPacket;
         public event ExceptionError? OnExceptionError;
@@ -74,6 +77,9 @@ namespace VoiceCraft.Core.Sockets
             if (IsHosting) throw new InvalidOperationException("Cannot connect as the socket is in a hosting state!");
 
             await Socket.ConnectAsync(IP, Port);
+
+            OnAccept += Accept;
+            OnDeny += Deny;
             try
             {
                 _ = ListenAsync();
@@ -164,13 +170,13 @@ namespace VoiceCraft.Core.Sockets
             {
                 if (IsHosting) throw new InvalidOperationException("Cannot disconnect as connection is in a hosting state.");
 
-                if (Socket.Connected)
+                if (Socket.Connected || IsConnected)
                 {
+                    IsConnected = false;
                     CTS.Cancel();
                     Socket.Disconnect(true);
 
                     OnDisconnected?.Invoke(reason);
-                    IsConnected = false;
                 }
             }
             catch (Exception ex)
@@ -222,7 +228,16 @@ namespace VoiceCraft.Core.Sockets
 
         private void HandlePacket(VoicePacket packet, EndPoint endPoint)
         {
-
+            switch(packet.PacketType)
+            {
+                case VoicePacketTypes.Login: OnLogin?.Invoke((Login)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.Accept: OnAccept?.Invoke(new Null(), endPoint); break;
+                case VoicePacketTypes.Deny: OnDeny?.Invoke((Deny)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.ClientAudio: OnClientAudio?.Invoke((ClientAudio)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.ServerAudio: OnServerAudio?.Invoke((ServerAudio)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.UpdatePosition: OnUpdatePosition?.Invoke((UpdatePosition)packet.PacketData, endPoint); break;
+                default: OnNull?.Invoke(new Null(), endPoint); break;
+            }
         }
 
         ~Voice()
@@ -248,6 +263,25 @@ namespace VoiceCraft.Core.Sockets
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        #endregion
+
+        #region Event Methods
+        private void Accept(Null data, EndPoint endPoint)
+        {
+            if (!IsConnected)
+            {
+                IsConnected = true;
+                OnConnected?.Invoke();
+            }
+        }
+
+        private void Deny(Deny data, EndPoint endPoint)
+        {
+            if (!IsConnected)
+            {
+                Disconnect(data.Reason);
+            }
         }
         #endregion
     }

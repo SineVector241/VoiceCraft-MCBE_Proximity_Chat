@@ -35,7 +35,7 @@ namespace VoiceCraft.Core.Sockets
         public delegate void PacketData<T>(T data, Socket socket);
 
         public delegate void SocketConnected(Socket socket);
-        public delegate void SocketDisconnected(Socket socket);
+        public delegate void SocketDisconnected(Socket socket, string? reason = null);
         public delegate void OutboundPacket(SignallingPacket packet, Socket socket);
         public delegate void InboundPacket(SignallingPacket packet, Socket socket);
         public delegate void ExceptionError(Exception error);
@@ -191,8 +191,9 @@ namespace VoiceCraft.Core.Sockets
             {
                 if (IsHosting) throw new InvalidOperationException("Cannot disconnect as connection is in a hosting state.");
 
-                if (Socket.Connected)
+                if (Socket.Connected || IsConnected)
                 {
+                    IsConnected = false;
                     CTS.Cancel();
                     OnAccept -= Accept;
                     OnPingCheck -= PingCheck;
@@ -207,7 +208,6 @@ namespace VoiceCraft.Core.Sockets
                         Socket.Disconnect(true);
 
                     OnDisconnected?.Invoke(reason);
-                    IsConnected = false;
                 }
             }
             catch (Exception ex)
@@ -247,8 +247,11 @@ namespace VoiceCraft.Core.Sockets
                     if (bytes == 0)
                     {
                         if (!socket.Connected || CTS.IsCancellationRequested)
-                            break;
-                    }//Socket is closed.
+                        {
+                            if(IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
+                            break; //Socket is closed.
+                        }
+                    }
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
                     //If packets are an invalid length then we break out to prevent memory exceptions
@@ -264,7 +267,11 @@ namespace VoiceCraft.Core.Sockets
                     while (offset < packetLength)
                     {
                         int bytesRead = await stream.ReadAsync(packetBuffer, offset, packetLength).ConfigureAwait(false);
-                        if (bytesRead == 0) break; //Socket is closed.
+                        if (bytesRead == 0)
+                        {
+                            if (IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
+                            break; //Socket is closed.
+                        }
 
                         offset += bytesRead;
                     }
@@ -278,7 +285,10 @@ namespace VoiceCraft.Core.Sockets
 
                     if (!socket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
-                        Disconnect(ex.Message);
+                        if(IsHosting)
+                            OnSocketDisconnected?.Invoke(socket, "Lost connection.");
+                        else
+                            Disconnect(ex.Message);
                         break;
                     }
                 }
@@ -289,13 +299,20 @@ namespace VoiceCraft.Core.Sockets
 
                     if (!socket.Connected || CTS.IsCancellationRequested)
                     {
-                        Disconnect(ex.Message);
+                        if (IsHosting)
+                            OnSocketDisconnected?.Invoke(socket, ex.Message);
+                        else
+                            Disconnect(ex.Message);
                         break;
                     }
                 }
             }
 
             await stream.DisposeAsync();
+            if (IsHosting)
+                socket.Close();
+            else
+                Disconnect();
         }
 
         private async Task AcceptConnectionsAsync()
