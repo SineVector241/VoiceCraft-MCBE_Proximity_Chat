@@ -137,7 +137,7 @@ namespace VoiceCraft.Core.Sockets
         /// </summary>
         /// <param name="packet">The packet to send.</param>
         /// <returns></returns>
-        public async Task SendPacketAsync(ISignallingPacket packet, Socket socket)
+        public async Task SendPacketAsync(SignallingPacket packet, Socket socket)
         {
             if (Socket.Connected)
             {
@@ -160,7 +160,7 @@ namespace VoiceCraft.Core.Sockets
         /// Sends a packet, You can send a packet before the signalling is connected but not before the TCP socket is connected.
         /// </summary>
         /// <param name="packet">The packet to send.</param>
-        public void SendPacket(ISignallingPacket packet, Socket socket)
+        public void SendPacket(SignallingPacket packet, Socket socket)
         {
             if (Socket.Connected)
             {

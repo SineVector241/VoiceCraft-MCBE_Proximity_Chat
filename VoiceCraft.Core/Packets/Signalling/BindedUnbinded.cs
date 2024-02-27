@@ -8,17 +8,17 @@ namespace VoiceCraft.Core.Packets.Signalling
     public class BindedUnbinded : IPacketData
     {
         public string Name { get; set; } = string.Empty;
-        public bool Value { get; set; }
+        public bool Binded { get; set; }
 
         public BindedUnbinded()
         {
             Name = string.Empty;
-            Value = false;
+            Binded = false;
         }
 
         public BindedUnbinded(byte[] dataStream, int readOffset = 0)
         {
-            Value = BitConverter.ToBoolean(dataStream, readOffset); //Read value - 1 byte.
+            Binded = BitConverter.ToBoolean(dataStream, readOffset); //Read value - 1 byte.
             var nameLength = BitConverter.ToInt32(dataStream, readOffset + 1); //read name length - 4 bytes.
 
             if(nameLength > 0)
@@ -29,7 +29,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(Value));
+            dataStream.AddRange(BitConverter.GetBytes(Binded));
 
             if (!string.IsNullOrWhiteSpace(Name))
                 dataStream.AddRange(BitConverter.GetBytes(Name.Length));
@@ -50,7 +50,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketData = new BindedUnbinded()
                 {
                     Name = name,
-                    Value = value
+                    Binded = value
                 }
             };
         }

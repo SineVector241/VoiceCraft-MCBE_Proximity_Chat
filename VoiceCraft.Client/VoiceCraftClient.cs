@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using NAudio.Wave.SampleProviders;
 using System.Net.Sockets;
-using VoiceCraft.Core;
 using System.Linq;
 
 namespace VoiceCraft.Client
@@ -17,6 +16,7 @@ namespace VoiceCraft.Client
 
         //Audio Variables
         public WaveFormat AudioFormat { get; }
+        public WaveFormat PlaybackFormat { get; }
         public int FrameSizeMS { get; }
         public bool IsMuted { get; private set; }
         public bool IsDeafened { get; private set; }
@@ -29,7 +29,9 @@ namespace VoiceCraft.Client
         public PositioningTypes PositioningType { get; private set; }
         public Signalling Signalling { get; }
         public Voice Voice { get; }
+        public MCWSS MCWSS { get; private set; }
         public string? IP { get; private set; }
+        public string? Name { get; private set; }
         public ushort Key { get; private set; }
 
         //Participants/Channels
@@ -39,6 +41,8 @@ namespace VoiceCraft.Client
         #region Events
         public delegate void SignallingConnected();
         public delegate void VoiceConnected();
+        public delegate void Binded(string? name);
+        public delegate void Unbinded();
         public delegate void ParticipantJoined(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant, ushort key);
         public delegate void ParticipantDeafenedStateChanged(VoiceCraftParticipant participant, bool value);
@@ -50,6 +54,8 @@ namespace VoiceCraft.Client
 
         public event SignallingConnected? OnSignallingConnected;
         public event VoiceConnected? OnVoiceConnected;
+        public event Binded? OnBinded;
+        public event Unbinded? OnUnbinded;
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
         public event ParticipantDeafenedStateChanged? OnParticipantDeafenedStateChanged;
@@ -60,15 +66,17 @@ namespace VoiceCraft.Client
         public event Disconnected? OnDisconnected;
         #endregion
 
-        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS)
+        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS, int MCWSSPort = 8080)
         {
             AudioFormat = audioFormat;
+            PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
             FrameSizeMS = frameSizeMS;
             Signalling = new Signalling();
             Voice = new Voice();
+            MCWSS = new MCWSS(MCWSSPort);
             Participants = new Dictionary<ushort, VoiceCraftParticipant>();
             Channels = new List<VoiceCraftChannel>();
-            AudioOutput = new MixingSampleProvider(audioFormat);
+            AudioOutput = new MixingSampleProvider(PlaybackFormat);
         }
 
         public async Task Connect(string iP, int port, ushort preferredKey, PositioningTypes positioningType)
@@ -79,6 +87,7 @@ namespace VoiceCraft.Client
 
             //Event Registry
             Signalling.OnConnected += Signalling_Connected;
+            Signalling.OnBindedUnbinded += Signalling_BindedUnbinded;
             Signalling.OnLogin += Signalling_Login;
             Signalling.OnLogout += Signalling_Logout;
             Signalling.OnDeafenUndeafen += Signalling_DeafenUndeafen;
@@ -91,6 +100,11 @@ namespace VoiceCraft.Client
             Voice.OnServerAudio += Voice_ServerAudio;
             Voice.OnDisconnected += Voice_Disconnected;
 
+            //MCWSS
+            MCWSS.OnConnect += WebsocketConnected;
+            MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
+            MCWSS.OnDisconnect += WebsocketDisconnected;
+
             ConnectionState = ConnectionState.Connecting;
             await Signalling.Connect(iP, port, preferredKey, positioningType, Version);
         }
@@ -101,6 +115,7 @@ namespace VoiceCraft.Client
 
             //Event Registry
             Signalling.OnConnected -= Signalling_Connected;
+            Signalling.OnBindedUnbinded -= Signalling_BindedUnbinded;
             Signalling.OnLogin -= Signalling_Login;
             Signalling.OnLogout -= Signalling_Logout;
             Signalling.OnDeafenUndeafen -= Signalling_DeafenUndeafen;
@@ -110,6 +125,7 @@ namespace VoiceCraft.Client
             Signalling.OnDisconnected -= Signalling_Disconnected;
 
             Voice.OnConnected -= Voice_Connected;
+            Voice.OnServerAudio -= Voice_ServerAudio;
             Voice.OnDisconnected -= Voice_Disconnected;
 
             OnDisconnected?.Invoke(reason);
@@ -131,6 +147,15 @@ namespace VoiceCraft.Client
             else
             {
                 Disconnect("IP WAS SOMEHOW EMPTY!");
+            }
+        }
+
+        private void Signalling_BindedUnbinded(Core.Packets.Signalling.BindedUnbinded data, Socket socket)
+        {
+            if(data.Binded)
+            {
+                Name = data.Name;
+                OnBinded?.Invoke(Name);
             }
         }
 
@@ -237,6 +262,31 @@ namespace VoiceCraft.Client
         private void Voice_Disconnected(string? reason = null)
         {
             Disconnect(reason);
+        }
+
+        //MCWSS
+        private void WebsocketConnected(string Username)
+        {
+            if (ConnectionState != ConnectionState.Connected) return;
+
+            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create(Username, true), Signalling.Socket);
+            OnBinded?.Invoke(Username);
+        }
+
+        private void WebsocketPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
+        {
+            if (ConnectionState != ConnectionState.Connected) return;
+
+            _ = Voice.SendPacketAsync(Core.Packets.Voice.UpdatePosition.Create(position, Dimension));
+        }
+
+        private void WebsocketDisconnected()
+        {
+            if (ConnectionState != ConnectionState.Connected) return;
+
+            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create("", false), Signalling.Socket);
+            //Clear the entire list later.
+            OnUnbinded?.Invoke();
         }
         #endregion
     }
