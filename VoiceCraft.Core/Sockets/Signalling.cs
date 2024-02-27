@@ -28,7 +28,7 @@ namespace VoiceCraft.Core.Sockets
         #endregion
 
         #region Delegates
-        public delegate void Connected();
+        public delegate void Connected(ushort port = 0, ushort key = 0);
         public delegate void Disconnected(string? reason = null);
 
         public delegate void SocketConnected(Socket socket);
