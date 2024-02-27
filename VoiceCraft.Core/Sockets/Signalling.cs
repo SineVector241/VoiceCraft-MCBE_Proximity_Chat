@@ -17,6 +17,7 @@ namespace VoiceCraft.Core.Sockets
         private CancellationTokenSource CTS { get; set; }
         public Socket Socket { get; private set; }
         public bool IsConnected { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
@@ -68,6 +69,7 @@ namespace VoiceCraft.Core.Sockets
         /// <exception cref="Exception"></exception>
         public async Task Connect(string IP, int Port, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
 
             var cancelTask = Task.Delay(5000);
@@ -79,15 +81,19 @@ namespace VoiceCraft.Core.Sockets
             {
                 _ = ListenAsync(Socket);
                 await SendPacketAsync(Login.Create(PositioningType, LoginKey, false, false, string.Empty, Version));
-                await Task.Delay(5000);
-                
-                if (!IsConnected) throw new Exception("Signalling timed out.");
-                Disconnect();
             }
             catch (Exception ex)
             {
                 Disconnect();
                 throw ex;
+            }
+
+            await Task.Delay(5000);
+
+            if (!IsConnected)
+            {
+                Disconnect();
+                throw new Exception("Signalling timed out.");
             }
         }
 
@@ -100,6 +106,7 @@ namespace VoiceCraft.Core.Sockets
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             Socket.Listen(100);
             _ = AcceptConnectionsAsync();
+            IsConnected = true;
             OnConnected?.Invoke();
         }
 
@@ -159,7 +166,7 @@ namespace VoiceCraft.Core.Sockets
         {
             try
             {
-                if (IsConnected)
+                if (Socket.Connected)
                 {
                     CTS.Cancel();
                     if (force)
@@ -187,9 +194,14 @@ namespace VoiceCraft.Core.Sockets
         /// </summary>
         public void StopHosting()
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
+            if (IsConnected) throw new InvalidOperationException("You must stop hosting before starting a host!");
+
             CTS.Cancel();
             Socket.Close();
-            Socket.Dispose();
+            Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IsConnected = false;
+            OnDisconnected?.Invoke();
         }
 
         private async Task ListenAsync(Socket socket)
@@ -229,10 +241,13 @@ namespace VoiceCraft.Core.Sockets
                         offset += bytesRead;
                     }
                     var packet = new SignallingPacket(packetBuffer);
-                    HandlePacket(packet);
+                    HandlePacket(packet, socket);
                 }
                 catch (SocketException ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CTS.IsCancellationRequested || ex.ErrorCode == 995) //Break out and dispose if its an IO exception or if TCP is not connected or disconnect requested.
                     {
                         Disconnect(ex.Message);
@@ -241,6 +256,9 @@ namespace VoiceCraft.Core.Sockets
                 }
                 catch (Exception ex)
                 {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
+
                     if (!socket.Connected || CTS.IsCancellationRequested)
                     {
                         Disconnect(ex.Message);
@@ -276,7 +294,7 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
-        private void HandlePacket(SignallingPacket packet)
+        private void HandlePacket(SignallingPacket packet, Socket socket)
         {
 
         }
