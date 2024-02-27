@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using VoiceCraft.Core.Packets;
 
-namespace VoiceCraft.Core.Server
+namespace VoiceCraft.Core
 {
     public class DebugProperties
     {

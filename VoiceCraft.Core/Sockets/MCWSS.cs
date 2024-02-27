@@ -1,10 +1,10 @@
 ﻿using Fleck;
 using System.Numerics;
 using System;
-using VoiceCraft.Core.Client.Builders;
 using System.Diagnostics;
 using VoiceCraft.Core.Packets.MCWSS;
 using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Builders;
 
 namespace VoiceCraft.Core.Sockets
 {

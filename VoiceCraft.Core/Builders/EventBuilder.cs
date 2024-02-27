@@ -2,7 +2,7 @@
 using System;
 using System.ComponentModel;
 
-namespace VoiceCraft.Core.Client.Builders
+namespace VoiceCraft.Core.Builders
 {
     //https://gist.github.com/jocopa3/5f718f4198f1ea91a37e3a9da468675c
     public enum EventType

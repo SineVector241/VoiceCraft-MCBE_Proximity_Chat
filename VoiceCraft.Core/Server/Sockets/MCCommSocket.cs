@@ -24,13 +24,7 @@ namespace VoiceCraft.Core.Server.Sockets
 
         //Delegates
         public delegate void Started();
-        public delegate void LoginPacket(Login packet, HttpListenerContext ctx);
-        public delegate void BindedPacket(Bind packet, HttpListenerContext ctx);
-        public delegate void UpdatePacket(Update packet, HttpListenerContext ctx);
-        public delegate void UpdateSettingsPacket(UpdateSettings packet, HttpListenerContext ctx);
-        public delegate void GetSettingsPacket(GetSettings packet, HttpListenerContext ctx);
-        public delegate void RemoveParticipantPacket(RemoveParticipant packet, HttpListenerContext ctx);
-        public delegate void ChannelMovePacket(ChannelMove packet, HttpListenerContext ctx);
+        public delegate void PacketData<T>(T packet, HttpListenerContext ctx);
 
         public delegate void InboundPacket(MCCommPacket packet);
         public delegate void OutboundPacket(MCCommPacket packet);
@@ -38,13 +32,13 @@ namespace VoiceCraft.Core.Server.Sockets
 
         //events
         public event Started? OnStarted;
-        public event LoginPacket? OnLoginPacketReceived;
-        public event BindedPacket? OnBindedPacketReceived;
-        public event UpdatePacket? OnUpdatePacketReceived;
-        public event UpdateSettingsPacket? OnUpdateSettingsPacketReceived;
-        public event GetSettingsPacket? OnGetSettingsPacketReceived;
-        public event RemoveParticipantPacket? OnRemoveParticipantPacketReceived;
-        public event ChannelMovePacket? OnChannelMovePacketReceived;
+        public event PacketData<Login>? OnLoginPacketReceived;
+        public event PacketData<Bind>? OnBindedPacketReceived;
+        public event PacketData<Update>? OnUpdatePacketReceived;
+        public event PacketData<UpdateSettings>? OnUpdateSettingsPacketReceived;
+        public event PacketData<GetSettings>? OnGetSettingsPacketReceived;
+        public event PacketData<RemoveParticipant>? OnRemoveParticipantPacketReceived;
+        public event PacketData<ChannelMove>? OnChannelMovePacketReceived;
 
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
