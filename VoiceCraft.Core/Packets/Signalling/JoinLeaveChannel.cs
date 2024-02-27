@@ -8,20 +8,20 @@ namespace VoiceCraft.Core.Packets.Signalling
     public class JoinLeaveChannel : IPacketData
     {
         public byte ChannelId { get; set; } = 0;
-        public bool JoiningChannel { get; set; } = true;
+        public bool Joined { get; set; } = true;
         public string Password { get; set; } = string.Empty;
 
         public JoinLeaveChannel()
         {
             ChannelId = 0;
             Password = string.Empty;
-            JoiningChannel = true;
+            Joined = true;
         }
 
         public JoinLeaveChannel(byte[] dataStream, int readOffset = 0)
         {
             ChannelId = dataStream[readOffset]; //Read channel id - 1 byte.
-            JoiningChannel = BitConverter.ToBoolean(dataStream, readOffset + 1); //Read if joining - 1 byte.
+            Joined = BitConverter.ToBoolean(dataStream, readOffset + 1); //Read if joining - 1 byte.
 
             int passwordLength = BitConverter.ToInt32(dataStream, readOffset + 2); //read name length - 4 bytes.
 
@@ -35,7 +35,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             var dataStream = new List<byte>() { ChannelId };
 
-            dataStream.AddRange(BitConverter.GetBytes(JoiningChannel));
+            dataStream.AddRange(BitConverter.GetBytes(Joined));
 
             if (Password.Length > 0)
                 dataStream.AddRange(BitConverter.GetBytes(Password.Length));
@@ -48,16 +48,16 @@ namespace VoiceCraft.Core.Packets.Signalling
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(byte channelId, string password, bool isJoining)
+        public static SignallingPacket Create(byte channelId, string password, bool isJoined)
         {
             return new SignallingPacket()
             {
-                PacketType = SignallingPacketTypes.JoinChannel,
+                PacketType = SignallingPacketTypes.JoinLeaveChannel,
                 PacketData = new JoinLeaveChannel()
                 {
                     ChannelId = channelId,
                     Password = password,
-                    JoiningChannel = isJoining
+                    Joined = isJoined
                 }
             };
         }

@@ -6,23 +6,23 @@ namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Logout : IPacketData
     {
-        public ushort LoginKey { get; set; }
+        public ushort Key { get; set; }
 
         public Logout()
         {
-            LoginKey = 0;
+            Key = 0;
         }
 
         public Logout(byte[] dataStream, int readOffset = 0)
         {
-            LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            Key = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
         }
 
         public byte[] GetPacketStream()
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Key));
 
             return dataStream.ToArray();
         }
@@ -34,7 +34,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketType = SignallingPacketTypes.Logout,
                 PacketData = new Logout()
                 {
-                    LoginKey = loginKey
+                    Key = loginKey
                 }
             };
         }

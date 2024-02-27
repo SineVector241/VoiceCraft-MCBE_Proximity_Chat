@@ -165,7 +165,7 @@ namespace VoiceCraft.Core.Client
         private void SignallingAccept(Packets.Signalling.Accept packet)
         {
             ActivityChecker.Start();
-            LoginKey = packet.LoginKey;
+            LoginKey = packet.Key;
             _ = Voice.ConnectAsync(IP, packet.VoicePort, LoginKey);
         }
 
@@ -176,40 +176,40 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingLogin(Packets.Signalling.Login packet)
         {
-            if (!Participants.ContainsKey(packet.LoginKey))
+            if (!Participants.ContainsKey(packet.Key))
             {
                 var participant = new VoiceCraftParticipant(packet.Name, RecordFormat, FrameMilliseconds)
                 {
                     Muted = packet.IsMuted,
                     Deafened = packet.IsDeafened
                 };
-                Participants.TryAdd(packet.LoginKey, participant);
+                Participants.TryAdd(packet.Key, participant);
                 Mixer.AddMixerInput(participant.AudioProvider);
-                OnParticipantJoined?.Invoke(participant, packet.LoginKey);
+                OnParticipantJoined?.Invoke(participant, packet.Key);
             }
         }
 
         private void SignallingLogout(Packets.Signalling.Logout packet)
         {
             //Logout participant. If LoginKey is the same as this then disconnect.
-            if (packet.LoginKey == LoginKey)
+            if (packet.Key == LoginKey)
             {
                 Disconnect();
                 OnDisconnected?.Invoke("Kicked or banned.");
             }
             else
             {
-                RemoveParticipant(packet.LoginKey);
+                RemoveParticipant(packet.Key);
             }
         }
 
         private void SignallingDeafen(Packets.Signalling.DeafenUndeafen packet)
         {
-            Participants.TryGetValue(packet.LoginKey, out var participant);
+            Participants.TryGetValue(packet.Key, out var participant);
             if (participant != null)
             {
                 participant.Deafened = true;
-                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
+                OnParticipantUpdated?.Invoke(participant, packet.Key);
             }
         }
 
@@ -225,11 +225,11 @@ namespace VoiceCraft.Core.Client
 
         private void SignallingMute(Packets.Signalling.MuteUnmute packet)
         {
-            Participants.TryGetValue(packet.LoginKey, out var participant);
+            Participants.TryGetValue(packet.Key, out var participant);
             if (participant != null)
             {
                 participant.Muted = true;
-                OnParticipantUpdated?.Invoke(participant, packet.LoginKey);
+                OnParticipantUpdated?.Invoke(participant, packet.Key);
             }
         }
 
@@ -288,7 +288,7 @@ namespace VoiceCraft.Core.Client
         private void VoiceServerAudio(Packets.Voice.ServerAudio packet)
         {
             //Add audio to a participant
-            Participants.TryGetValue(packet.LoginKey, out var participant);
+            Participants.TryGetValue(packet.Key, out var participant);
             if (participant != null)
             {
                 participant.ProximityVolume = LinearVolume ? (float)((Math.Exp(packet.Volume) - 1) / (Math.E - 1)) : packet.Volume;

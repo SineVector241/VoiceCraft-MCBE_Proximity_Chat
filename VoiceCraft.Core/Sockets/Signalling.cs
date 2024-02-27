@@ -95,7 +95,6 @@ namespace VoiceCraft.Core.Sockets
             if (cancelTask.IsCompleted) throw new Exception("TCP socket timed out.");
 
             OnAccept += Accept;
-            OnPingCheck += PingCheck;
             OnDeny += Deny;
 
             try
@@ -196,7 +195,6 @@ namespace VoiceCraft.Core.Sockets
                     IsConnected = false;
                     CTS.Cancel();
                     OnAccept -= Accept;
-                    OnPingCheck -= PingCheck;
                     OnDeny -= Deny;
 
                     if (force)
@@ -341,7 +339,8 @@ namespace VoiceCraft.Core.Sockets
 
         private void HandlePacket(SignallingPacket packet, Socket socket)
         {
-            switch(packet.PacketType)
+            LastActive = Environment.TickCount;
+            switch (packet.PacketType)
             {
                 case SignallingPacketTypes.Login: OnLogin?.Invoke((Login)packet.PacketData, socket); break;
                 case SignallingPacketTypes.Logout: OnLogout?.Invoke((Logout)packet.PacketData, socket); break;
@@ -392,7 +391,7 @@ namespace VoiceCraft.Core.Sockets
             {
                 IsConnected = true;
                 LastActive = Environment.TickCount;
-                OnConnected?.Invoke(data.VoicePort, data.LoginKey);
+                OnConnected?.Invoke(data.VoicePort, data.Key);
             }
         }
 
@@ -402,11 +401,6 @@ namespace VoiceCraft.Core.Sockets
             {
                 Disconnect(data.Reason, true);
             }
-        }
-
-        private void PingCheck(Null data, Socket socket)
-        {
-            LastActive = Environment.TickCount;
         }
         #endregion
     }

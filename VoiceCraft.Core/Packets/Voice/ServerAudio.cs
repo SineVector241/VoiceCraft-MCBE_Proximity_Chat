@@ -6,7 +6,7 @@ namespace VoiceCraft.Core.Packets.Voice
 {
     public class ServerAudio : IPacketData
     {
-        public ushort LoginKey { get; set; }
+        public ushort Key { get; set; }
         public uint PacketCount { get; set; }
         public float Volume { get; set; }
         public float EchoFactor { get; set; }
@@ -16,7 +16,7 @@ namespace VoiceCraft.Core.Packets.Voice
 
         public ServerAudio()
         {
-            LoginKey = 0;
+            Key = 0;
             PacketCount = 0;
             Volume = 0;
             EchoFactor = 0;
@@ -27,7 +27,7 @@ namespace VoiceCraft.Core.Packets.Voice
 
         public ServerAudio(byte[] dataStream, int readOffset = 0)
         {
-            LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //read login key - 2 bytes.
+            Key = BitConverter.ToUInt16(dataStream, readOffset); //read login key - 2 bytes.
             PacketCount = BitConverter.ToUInt32(dataStream, readOffset + 2); //read packet count - 4 bytes.
             Volume = BitConverter.ToSingle(dataStream, readOffset + 6); //read volume - 4 bytes.
             EchoFactor = BitConverter.ToSingle(dataStream, readOffset + 10); //read echo factor - 4 bytes.
@@ -47,7 +47,7 @@ namespace VoiceCraft.Core.Packets.Voice
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
             dataStream.AddRange(BitConverter.GetBytes(Volume));
             dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
@@ -72,7 +72,7 @@ namespace VoiceCraft.Core.Packets.Voice
                 PacketType = VoicePacketTypes.ServerAudio,
                 PacketData = new ServerAudio()
                 {
-                    LoginKey = loginKey,
+                    Key = loginKey,
                     PacketCount = packetCount,
                     Volume = volume,
                     EchoFactor = echoFactor,

@@ -46,7 +46,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             return new SignallingPacket()
             {
-                PacketType = SignallingPacketTypes.Binded,
+                PacketType = SignallingPacketTypes.BindedUnbinded,
                 PacketData = new BindedUnbinded()
                 {
                     Name = name,

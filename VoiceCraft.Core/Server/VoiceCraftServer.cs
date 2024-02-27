@@ -225,11 +225,11 @@ namespace VoiceCraft.Core.Server
                 return;
             }
 
-            var key = packet.LoginKey;
+            var key = packet.Key;
             Signalling.ConnectedSockets.TryGetValue(socket, out var stream);
             var participant = new VoiceCraftParticipant(socket, packet.PositioningType);
 
-            if (Participants.ContainsKey(packet.LoginKey))
+            if (Participants.ContainsKey(packet.Key))
             {
                 for (ushort i = 0; i < ushort.MaxValue; i++)
                 {
@@ -507,7 +507,7 @@ namespace VoiceCraft.Core.Server
 
         private void OnVoiceLogin(Packets.Voice.Login packet, EndPoint endPoint)
         {
-            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault() == endPoint.ToString()?.Split(':').FirstOrDefault() && x.Key == packet.LoginKey);
+            var participant = Participants.FirstOrDefault(x => x.Value.SignallingSocket.RemoteEndPoint.ToString()?.Split(':').FirstOrDefault() == endPoint.ToString()?.Split(':').FirstOrDefault() && x.Key == packet.Key);
             if (participant.Value != null && participant.Value.VoiceEndpoint == null)
             {
                 participant.Value.VoiceEndpoint = endPoint;

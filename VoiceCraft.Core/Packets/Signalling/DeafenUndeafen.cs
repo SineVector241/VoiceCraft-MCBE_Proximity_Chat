@@ -6,18 +6,18 @@ namespace VoiceCraft.Core.Packets.Signalling
 {
     public class DeafenUndeafen : IPacketData
     {
-        public ushort LoginKey { get; set; }
+        public ushort Key { get; set; }
         public bool Value { get; set; }
 
         public DeafenUndeafen()
         {
-            LoginKey = 0;
+            Key = 0;
             Value = false;
         }
 
         public DeafenUndeafen(byte[] dataStream, int readOffset = 0)
         {
-            LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            Key = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
             Value = BitConverter.ToBoolean(dataStream, readOffset + 2); //Read value - 1 byte.
         }
 
@@ -25,7 +25,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(Value));
 
             return dataStream.ToArray();
@@ -38,7 +38,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketType = SignallingPacketTypes.DeafenUndeafen,
                 PacketData = new DeafenUndeafen()
                 {
-                    LoginKey = loginKey,
+                    Key = loginKey,
                     Value = value
                 }
             };

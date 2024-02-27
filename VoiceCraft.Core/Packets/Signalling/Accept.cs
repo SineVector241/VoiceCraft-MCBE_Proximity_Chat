@@ -6,18 +6,18 @@ namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Accept : IPacketData
     {
-        public ushort LoginKey { get; set; }
+        public ushort Key { get; set; }
         public ushort VoicePort { get; set; }
 
         public Accept()
         {
-            LoginKey = 0;
+            Key = 0;
             VoicePort = 0;
         }
 
         public Accept(byte[] dataStream, int readOffset = 0)
         {
-            LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            Key = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
             VoicePort = BitConverter.ToUInt16(dataStream, readOffset + 2); //Read voice port - 2 bytes.
         }
 
@@ -25,7 +25,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(VoicePort));
 
             return dataStream.ToArray();
@@ -38,7 +38,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketType = SignallingPacketTypes.Accept,
                 PacketData = new Accept()
                 {
-                    LoginKey = loginKey,
+                    Key = loginKey,
                     VoicePort = voicePort
                 }
             };

@@ -322,7 +322,7 @@ namespace VoiceCraft.Server
                     var packet = new Core.Packets.SignallingPacket()
                     {
                         PacketType = Core.Packets.SignallingPacketTypes.Logout,
-                        PacketData = new Login() { LoginKey = value }
+                        PacketData = new Login() { Key = value }
                     };
                     server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
                     participant.SignallingSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
@@ -359,7 +359,7 @@ namespace VoiceCraft.Server
                         var packet = new Core.Packets.SignallingPacket()
                         {
                             PacketType = Core.Packets.SignallingPacketTypes.Logout,
-                            PacketData = new Login() { LoginKey = value }
+                            PacketData = new Login() { Key = value }
                         };
                         server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
                         participant.SignallingSocket.Shutdown(SocketShutdown.Both);

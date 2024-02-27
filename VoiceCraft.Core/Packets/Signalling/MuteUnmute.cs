@@ -6,18 +6,18 @@ namespace VoiceCraft.Core.Packets.Signalling
 {
     public class MuteUnmute : IPacketData
     {
-        public ushort LoginKey { get; set; }
+        public ushort Key { get; set; }
         public bool Value { get; set; }
 
         public MuteUnmute()
         {
-            LoginKey = 0;
+            Key = 0;
             Value = false;
         }
 
         public MuteUnmute(byte[] dataStream, int readOffset = 0)
         {
-            LoginKey = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            Key = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
             Value = BitConverter.ToBoolean(dataStream, readOffset + 2); //Read value - 1 byte.
         }
 
@@ -25,7 +25,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(LoginKey));
+            dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(Value));
 
             return dataStream.ToArray();
@@ -37,7 +37,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketType = SignallingPacketTypes.MuteUnmute,
                 PacketData = new MuteUnmute()
                 {
-                    LoginKey = loginKey,
+                    Key = loginKey,
                     Value = value
                 }
             };
