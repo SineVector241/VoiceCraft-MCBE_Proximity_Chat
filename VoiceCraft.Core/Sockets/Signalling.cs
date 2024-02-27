@@ -84,16 +84,14 @@ namespace VoiceCraft.Core.Sockets
             }
             catch (Exception ex)
             {
-                Disconnect();
-                throw ex;
+                Disconnect(ex.Message);
             }
 
             await Task.Delay(5000);
 
-            if (!IsConnected)
+            if (!IsConnected && Socket.Connected)
             {
-                Disconnect();
-                throw new Exception("Signalling timed out.");
+                Disconnect("Signalling timed out.");
             }
         }
 
