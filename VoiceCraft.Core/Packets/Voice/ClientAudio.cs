@@ -6,8 +6,8 @@ namespace VoiceCraft.Core.Packets.Voice
 {
     public class ClientAudio : IPacketData
     {
-        public uint PacketCount = 0;
-        public byte[] Audio = new byte[0];
+        public uint PacketCount { get; set; } = 0;
+        public byte[] Audio { get; set; } = new byte[0];
 
         public ClientAudio()
         {

@@ -22,8 +22,6 @@ namespace VoiceCraft.Core.Packets
             {
                 case VoicePacketTypes.Login: PacketData = new Login(dataStream, 2);
                     break;
-                case VoicePacketTypes.Accept: PacketData = new Accept();
-                    break;
                 case VoicePacketTypes.Deny: PacketData = new Deny(dataStream, 2);
                     break;
                 case VoicePacketTypes.ClientAudio: PacketData = new ClientAudio(dataStream, 2);
