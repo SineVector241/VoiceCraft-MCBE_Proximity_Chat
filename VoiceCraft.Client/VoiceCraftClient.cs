@@ -241,6 +241,11 @@ namespace VoiceCraft.Client
         {
             ConnectionState = ConnectionState.Connected;
             OnVoiceConnected?.Invoke();
+
+            if(PositioningType == PositioningTypes.ClientSided)
+            {
+                MCWSS.Start();
+            }
         }
 
         private void Voice_ServerAudio(Core.Packets.Voice.ServerAudio data, System.Net.EndPoint endPoint)
