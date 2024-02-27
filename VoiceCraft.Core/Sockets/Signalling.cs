@@ -48,12 +48,24 @@ namespace VoiceCraft.Core.Sockets
         public event ExceptionError? OnExceptionError;
         #endregion
 
+        #region Methods
         public Signalling()
         {
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             CTS = new CancellationTokenSource();
         }
 
+        /// <summary>
+        /// Connects to a signalling socket that is hosting.
+        /// </summary>
+        /// <param name="IP">IP to connect to.</param>
+        /// <param name="Port">The port to connect to.</param>
+        /// <param name="LoginKey">The preferred key to login as.</param>
+        /// <param name="PositioningType">The positioning type to connect as.</param>
+        /// <param name="Version">Version protocol.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="Exception"></exception>
         public async Task Connect(string IP, int Port, ushort LoginKey = 0, PositioningTypes PositioningType = PositioningTypes.ServerSided, string Version = "")
         {
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
@@ -79,6 +91,10 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
+        /// <summary>
+        /// Starts a server for signalling socket connections.
+        /// </summary>
+        /// <param name="Port">The port to host on.</param>
         public void Host(ushort Port)
         {
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
@@ -87,6 +103,11 @@ namespace VoiceCraft.Core.Sockets
             OnConnected?.Invoke();
         }
 
+        /// <summary>
+        /// Sends a packet asynchronously, You can send a packet before the signalling is connected but not before the TCP socket is connected.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
+        /// <returns></returns>
         public async Task SendPacketAsync(ISignallingPacket packet)
         {
             if (Socket.Connected)
@@ -106,6 +127,10 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
+        /// <summary>
+        /// Sends a packet, You can send a packet before the signalling is connected but not before the TCP socket is connected.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
         public void SendPacket(ISignallingPacket packet)
         {
             if (Socket.Connected)
@@ -125,6 +150,11 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
+        /// <summary>
+        /// Disconnects the socket.
+        /// </summary>
+        /// <param name="reason">The reason that gets passed into the OnDisconnected event.</param>
+        /// <param name="force">Whether to force close the socket.</param>
         public void Disconnect(string? reason = null, bool force = false)
         {
             try
@@ -152,6 +182,9 @@ namespace VoiceCraft.Core.Sockets
             }
         }
 
+        /// <summary>
+        /// Stops hosting the signalling socket server.
+        /// </summary>
         public void StopHosting()
         {
             CTS.Cancel();
@@ -247,5 +280,6 @@ namespace VoiceCraft.Core.Sockets
         {
 
         }
+        #endregion
     }
 }
