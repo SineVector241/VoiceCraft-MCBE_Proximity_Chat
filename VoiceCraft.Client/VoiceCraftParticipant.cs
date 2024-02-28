@@ -55,7 +55,7 @@ namespace VoiceCraft.Client
             IsDeafened = false;
 
             //Setup and wire everything up.
-            JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat);
+            JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat, frameSizeMS);
             VoiceCraftStream = new VoiceCraftStream(AudioFormat, JitterBuffer);
             FloatProvider = new Wave16ToFloatProvider(VoiceCraftStream);
             EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider());

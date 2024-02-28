@@ -1,22 +1,19 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
-using VoiceCraft.Core.Packets;
+using VoiceCraft.Core;
 
-namespace VoiceCraft.Core.Server
+namespace VoiceCraft.Data.Server
 {
-    public class VoiceCraftParticipant
+    public class VoiceCraftParticipant : Participant
     {
         //General Data
-        public string Name { get; set; } = string.Empty;
         public PositioningTypes PositioningType { get; }
         public bool Binded { get; set; }
         public VoiceCraftChannel? Channel { get; set; } //Null channel is no channel
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public bool IsServerMuted { get; set; }
-        public DateTime LastActive { get; set; } = DateTime.UtcNow;
 
         //Minecraft Data
         public Vector3 Position { get; set; }
@@ -31,10 +28,10 @@ namespace VoiceCraft.Core.Server
         public Socket SignallingSocket { get; }
         public EndPoint? VoiceEndpoint { get; set; }
 
-        public VoiceCraftParticipant(Socket SignallingSocket, PositioningTypes PositioningType)
+        public VoiceCraftParticipant(string name, Socket signallingSocket, PositioningTypes positioningType) : base(name)
         {
-            this.PositioningType = PositioningType;
-            this.SignallingSocket = SignallingSocket;
+            PositioningType = positioningType;
+            SignallingSocket = signallingSocket;
         }
     }
 }

@@ -1,8 +1,13 @@
-﻿namespace VoiceCraft.Core.Server
+﻿using VoiceCraft.Core;
+
+namespace VoiceCraft.Data.Server
 {
-    public class VoiceCraftChannel
+    public class VoiceCraftChannel : Channel
     {
-        public string Name { get; set; } = string.Empty;
+        public VoiceCraftChannel(string name) : base(name)
+        {
+        }
+
         public string Password { get; set; } = string.Empty;
         public ChannelSettings? OverrideSettings { get; set; }
     }

@@ -3,7 +3,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
@@ -48,9 +47,9 @@ namespace VoiceCraft.Core.Audio.Streams
                             await Task.Delay((int)dist).ConfigureAwait(false);
                             continue;
                         }
-                        startTick += VoiceCraftClient.FrameMilliseconds;
+                        startTick += JitterBuffer.FrameSizeMS;
 
-                        var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(VoiceCraftClient.FrameMilliseconds)];
+                        var buffer = new byte[WaveFormat.ConvertLatencyToByteSize(JitterBuffer.FrameSizeMS)];
                         var count = JitterBuffer.Get(buffer);
                         if (count > 0)
                         {

@@ -9,11 +9,11 @@ namespace VoiceCraft.Core.Packets.Voice
             return new byte[0];
         }
 
-        public static VoicePacket Create()
+        public static VoicePacket Create(VoicePacketTypes packetType)
         {
             return new VoicePacket()
             {
-                PacketType = VoicePacketTypes.Null,
+                PacketType = packetType,
                 PacketData = new Null()
             };
         }

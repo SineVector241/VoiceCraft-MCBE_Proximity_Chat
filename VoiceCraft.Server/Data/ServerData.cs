@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
-using VoiceCraft.Core.Server;
+using VoiceCraft.Server;
 
-namespace VoiceCraft.Server
+namespace VoiceCraft.Data.Server
 {
     public class ServerData
     {
@@ -32,7 +32,7 @@ namespace VoiceCraft.Server
                     Logger.LogToConsole(LogType.Warn, $"Failed to parse {PropertiesDirectory}. Falling back to default properties.", "Properties");
             }
 
-            if(ServerProperties.MCCommPortTCP == ServerProperties.SignallingPortTCP)
+            if (ServerProperties.MCCommPortTCP == ServerProperties.SignallingPortTCP)
                 throw new Exception("MCComm and Signalling port cannot be identical!");
             if (ServerProperties.SignallingPortTCP < 1025 || ServerProperties.VoicePortUDP < 1025 || ServerProperties.MCCommPortTCP < 1025)
                 throw new Exception("One of the ports is lower than the minimum port 1025!");

@@ -86,10 +86,4 @@ namespace VoiceCraft.Core.Packets
         PingCheck,
         Null
     }
-
-    public enum PositioningTypes
-    {
-        ServerSided,
-        ClientSided
-    }
 }

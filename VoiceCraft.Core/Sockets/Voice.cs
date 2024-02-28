@@ -110,7 +110,6 @@ namespace VoiceCraft.Core.Sockets
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             _ = ListenAsync();
             IsHosting = true;
-            OnConnected?.Invoke();
         }
 
         /// <summary>
@@ -125,7 +124,6 @@ namespace VoiceCraft.Core.Sockets
                 try
                 {
                     var packetStream = packet.GetPacketStream();
-                    await Socket.SendAsync(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     await Socket.SendAsync(packetStream, SocketFlags.None);
                 }
                 catch (Exception ex)
@@ -148,8 +146,52 @@ namespace VoiceCraft.Core.Sockets
                 try
                 {
                     var packetStream = packet.GetPacketStream();
-                    Socket.Send(BitConverter.GetBytes((ushort)packetStream.Length), SocketFlags.None);
                     Socket.Send(packetStream, SocketFlags.None);
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine(ex);
+#endif
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends a packet asynchronously to an endpoint, You can send a packet before the voice is connected but not before the UDP socket is connected.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
+        /// <returns></returns>
+        public async Task SendPacketToAsync(VoicePacket packet, EndPoint endPoint)
+        {
+            if (Socket.Connected)
+            {
+                try
+                {
+                    var packetStream = packet.GetPacketStream();
+                    await Socket.SendToAsync(packetStream, SocketFlags.None, endPoint);
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine(ex);
+#endif
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends a packet to an endpoint, You can send a packet before the voice is connected but not before the UDP socket is connected.
+        /// </summary>
+        /// <param name="packet">The packet to send.</param>
+        public void SendPacketTo(VoicePacket packet, EndPoint endPoint)
+        {
+            if (Socket.Connected)
+            {
+                try
+                {
+                    var packetStream = packet.GetPacketStream();
+                    Socket.SendTo(packetStream, SocketFlags.None, endPoint);
                 }
                 catch (Exception ex)
                 {

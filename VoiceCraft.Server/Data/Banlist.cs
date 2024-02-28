@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace VoiceCraft.Core.Server
+﻿namespace VoiceCraft.Data.Server
 {
     public class Banlist
     {

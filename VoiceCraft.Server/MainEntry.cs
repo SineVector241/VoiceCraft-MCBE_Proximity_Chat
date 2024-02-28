@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using VoiceCraft.Core.Packets.Signalling;
 using VoiceCraft.Core.Server;
+using VoiceCraft.Data.Server;
 
 namespace VoiceCraft.Server
 {
@@ -46,9 +47,9 @@ namespace VoiceCraft.Server
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
 #if DEBUG
-            Console.WriteLine("[v1.0.1][v1.0.2]========================[DEBUG]\n");
+            Console.WriteLine("[v1.0.1][v1.0.3]========================[DEBUG]\n");
 #else
-            Console.WriteLine("[v1.0.1][v1.0.2]======================[RELEASE]\n");
+            Console.WriteLine("[v1.0.1][v1.0.3]======================[RELEASE]\n");
 #endif
 
             //Register Commands

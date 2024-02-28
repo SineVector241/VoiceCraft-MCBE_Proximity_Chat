@@ -1,6 +1,5 @@
 ﻿using NAudio.Wave;
 using System.Threading.Tasks;
-using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Sockets;
 using System;
 using System.Collections.Generic;
@@ -8,12 +7,14 @@ using NAudio.Wave.SampleProviders;
 using System.Net.Sockets;
 using System.Linq;
 using OpusSharp;
+using VoiceCraft.Core;
 
 namespace VoiceCraft.Client
 {
-    public class VoiceCraftClient
+    public class VoiceCraftClient : IDisposable
     {
         public const string Version = "v1.0.3";
+        public bool IsDisposed { get; private set; }
 
         //Audio Variables
         public WaveFormat AudioFormat { get; }
@@ -376,6 +377,41 @@ namespace VoiceCraft.Client
                 participant.Value.Dispose();
             }
             Participants.Clear();
+        }
+
+        ~VoiceCraftClient()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    if (ConnectionState == ConnectionState.Connected)
+                        Disconnect(); //Disconnect before disposing.
+
+                    foreach (var participant in Participants)
+                    {
+                        participant.Value.Dispose();
+                    }
+
+                    Signalling.Dispose();
+                    MCWSS.Dispose();
+                    Voice.Dispose();
+                    Encoder.Dispose();
+                    ConnectionState = ConnectionState.Disconnected;
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 

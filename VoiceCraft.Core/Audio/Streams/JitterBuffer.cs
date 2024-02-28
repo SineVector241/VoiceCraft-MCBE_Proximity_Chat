@@ -2,7 +2,6 @@
 using OpusSharp;
 using System;
 using System.Linq;
-using VoiceCraft.Core.Client;
 
 namespace VoiceCraft.Core.Audio.Streams
 {
@@ -19,11 +18,11 @@ namespace VoiceCraft.Core.Audio.Streams
 
         private int SilencedFrames;
 
-        public JitterBuffer(WaveFormat WaveFormat, int bufferMilliseconds = 80, int maxBufferSizeMilliseconds = 1000)
+        public JitterBuffer(WaveFormat WaveFormat, int bufferMilliseconds = 80, int maxBufferSizeMilliseconds = 1000, int frameSizeMS = 20)
         {
             this.WaveFormat = WaveFormat;
-            QueueLength = bufferMilliseconds / VoiceCraftClient.FrameMilliseconds;
-            MaxQueueLength = maxBufferSizeMilliseconds / VoiceCraftClient.FrameMilliseconds;
+            QueueLength = bufferMilliseconds / frameSizeMS;
+            MaxQueueLength = maxBufferSizeMilliseconds / frameSizeMS;
             QueuedFrames = new Frame[MaxQueueLength];
             IsFirst = true;
         }
@@ -182,14 +181,16 @@ namespace VoiceCraft.Core.Audio.Streams
 
     public class VoiceCraftJitterBuffer
     {
+        public readonly int FrameSizeMS;
         private Frame inFrame;
         private Frame outFrame;
         private readonly JitterBuffer JitterBuffer;
         private readonly OpusDecoder Decoder;
 
-        public VoiceCraftJitterBuffer(WaveFormat waveFormat)
+        public VoiceCraftJitterBuffer(WaveFormat waveFormat, int frameSizeMS = 20)
         {
-            JitterBuffer = new JitterBuffer(waveFormat, 80, 2000);
+            FrameSizeMS = frameSizeMS;
+            JitterBuffer = new JitterBuffer(waveFormat, 80, 2000, frameSizeMS);
             Decoder = new OpusDecoder(waveFormat.SampleRate, waveFormat.Channels);
         }
 

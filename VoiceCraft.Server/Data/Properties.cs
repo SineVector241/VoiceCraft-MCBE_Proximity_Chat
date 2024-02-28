@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using VoiceCraft.Core;
 
-namespace VoiceCraft.Core.Server
+namespace VoiceCraft.Data.Server
 {
     public class Properties
     {

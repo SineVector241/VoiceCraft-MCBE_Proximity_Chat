@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Packets.Interfaces;
 using VoiceCraft.Core.Packets.Signalling;
 
 namespace VoiceCraft.Core.Sockets
@@ -132,7 +131,6 @@ namespace VoiceCraft.Core.Sockets
             Socket.Listen(100);
             IsHosting = true;
             _ = AcceptConnectionsAsync();
-            OnConnected?.Invoke();
         }
 
         /// <summary>
@@ -395,8 +393,8 @@ namespace VoiceCraft.Core.Sockets
                     IsHosting = false;
                     if (ActivityChecker != null)
                     {
-                        ActivityChecker?.Wait(); //Wait to finish before disposing.
-                        ActivityChecker?.Dispose();
+                        ActivityChecker.Wait(); //Wait to finish before disposing.
+                        ActivityChecker.Dispose();
                         ActivityChecker = null;
                     }
                 }
