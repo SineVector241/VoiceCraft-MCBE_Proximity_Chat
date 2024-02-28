@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Net.Sockets;
-using VoiceCraft.Core.Packets.Signalling;
 using VoiceCraft.Core.Server;
 using VoiceCraft.Data.Server;
 
@@ -101,6 +100,7 @@ namespace VoiceCraft.Server
 #endif
                 Logger.LogToConsole(LogType.Info, "Shutting down server in 10 seconds...", "Server");
                 await Task.Delay(10000);
+                ExitCommand(new string[0]);
             }
         }
 
@@ -114,7 +114,7 @@ namespace VoiceCraft.Server
 #endif
             Logger.LogToConsole(LogType.Info, "Shutting down server in 10 seconds...", "Server");
             Task.Delay(10000).Wait();
-            Environment.Exit(0);
+            ExitCommand(new string[0]);
         }
 
         private void SignallingStarted()
@@ -245,6 +245,8 @@ namespace VoiceCraft.Server
         void ExitCommand(string[] args)
         {
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
+            server.Stop();
+            server.Dispose();
             Environment.Exit(0);
         }
 

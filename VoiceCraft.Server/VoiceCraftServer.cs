@@ -663,6 +663,10 @@ namespace VoiceCraft.Core.Server
         {
             if (ServerState == ServerState.Stopped) return; //Already stopped
 
+            foreach(var participant in Participants)
+            {
+                participant.Value.SignallingSocket.DisconnectAsync(false);
+            }
             CTS.Cancel();
             Signalling.StopHosting();
             Voice.StopHosting();
