@@ -691,7 +691,7 @@ namespace VoiceCraft.Core.Server
                     await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), participant.Value.SignallingSocket);
                     foreach (var client in Participants)
                     {
-                        if (client.Value.Channel == participant.Value.Channel)
+                        if (client.Value.Channel == participant.Value.Channel && client.Value.Binded)
                             await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
                     }
                 }
@@ -730,7 +730,7 @@ namespace VoiceCraft.Core.Server
         }
         #endregion
 
-        private void ServerChecks()
+        private async Task ServerChecks()
         {
             while(ServerState != ServerState.Stopped && !CTS.IsCancellationRequested)
             {
@@ -753,6 +753,8 @@ namespace VoiceCraft.Core.Server
                         _ = RemoveParticipant(participant, true, "Timeout");
                     }
                 }
+
+                await Task.Delay(ActivityInterval).ConfigureAwait(false);
             }
         }
 

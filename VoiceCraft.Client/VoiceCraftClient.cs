@@ -9,7 +9,6 @@ using System.Linq;
 using OpusSharp;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
-using System.Diagnostics;
 
 namespace VoiceCraft.Client
 {
@@ -93,35 +92,42 @@ namespace VoiceCraft.Client
 
         public async Task Connect(string iP, int port, ushort preferredKey, PositioningTypes positioningType)
         {
-            if (ConnectionState != ConnectionState.Disconnected) throw new Exception("You must disconnect before connecting!");
-            IP = iP;
-            PositioningType = positioningType;
-            PacketCount = 0;
+            try
+            {
+                if (ConnectionState != ConnectionState.Disconnected) throw new Exception("You must disconnect before connecting!");
+                IP = iP;
+                PositioningType = positioningType;
+                PacketCount = 0;
 
-            //Event Registry
-            //Signalling
-            Signalling.OnConnected += Signalling_Connected;
-            Signalling.OnBindedUnbinded += Signalling_BindedUnbinded;
-            Signalling.OnLogin += Signalling_Login;
-            Signalling.OnLogout += Signalling_Logout;
-            Signalling.OnDeafenUndeafen += Signalling_DeafenUndeafen;
-            Signalling.OnMuteUnmute += Signalling_MuteUnmute;
-            Signalling.OnAddChannel += Signalling_AddChannel;
-            Signalling.OnJoinLeaveChannel += Signalling_JoinLeaveChannel;
-            Signalling.OnDisconnected += Signalling_Disconnected;
+                //Event Registry
+                //Signalling
+                Signalling.OnConnected += Signalling_Connected;
+                Signalling.OnBindedUnbinded += Signalling_BindedUnbinded;
+                Signalling.OnLogin += Signalling_Login;
+                Signalling.OnLogout += Signalling_Logout;
+                Signalling.OnDeafenUndeafen += Signalling_DeafenUndeafen;
+                Signalling.OnMuteUnmute += Signalling_MuteUnmute;
+                Signalling.OnAddChannel += Signalling_AddChannel;
+                Signalling.OnJoinLeaveChannel += Signalling_JoinLeaveChannel;
+                Signalling.OnDisconnected += Signalling_Disconnected;
 
-            //Voice
-            Voice.OnConnected += Voice_Connected;
-            Voice.OnServerAudio += Voice_ServerAudio;
-            Voice.OnDisconnected += Voice_Disconnected;
+                //Voice
+                Voice.OnConnected += Voice_Connected;
+                Voice.OnServerAudio += Voice_ServerAudio;
+                Voice.OnDisconnected += Voice_Disconnected;
 
-            //MCWSS
-            MCWSS.OnConnect += WebsocketConnected;
-            MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
-            MCWSS.OnDisconnect += WebsocketDisconnected;
+                //MCWSS
+                MCWSS.OnConnect += WebsocketConnected;
+                MCWSS.OnPlayerTravelled += WebsocketPlayerTravelled;
+                MCWSS.OnDisconnect += WebsocketDisconnected;
 
-            ConnectionState = ConnectionState.Connecting;
-            await Signalling.Connect(iP, port, preferredKey, positioningType, Version);
+                ConnectionState = ConnectionState.Connecting;
+                await Signalling.Connect(iP, port, preferredKey, positioningType, Version);
+            }
+            catch(Exception ex)
+            {
+                Disconnect(ex.Message);
+            }
         }
 
         public async Task SendAudio(byte[] data, int bytesRecorded)
@@ -202,10 +208,10 @@ namespace VoiceCraft.Client
             Channels.Clear();
 
             ConnectionState = ConnectionState.Disconnected;
-            OnDisconnected?.Invoke(reason);
             Signalling.Disconnect(force: force);
             Voice.Disconnect();
             MCWSS.Stop();
+            OnDisconnected?.Invoke(reason);
             IsDeafened = false;
             IsMuted = false;
         }
@@ -367,7 +373,8 @@ namespace VoiceCraft.Client
             if (ConnectionState != ConnectionState.Connected) return;
 
             _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create("", false), Signalling.Socket);
-            //Clear the entire list later.
+            ClearParticipants();
+            Channels.Clear();
             OnUnbinded?.Invoke();
         }
         #endregion

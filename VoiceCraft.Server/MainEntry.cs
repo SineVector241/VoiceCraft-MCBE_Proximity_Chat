@@ -320,13 +320,8 @@ namespace VoiceCraft.Server
             {
                 if (server.Participants.TryGetValue(value, out var participant))
                 {
-                    var packet = new Core.Packets.SignallingPacket()
-                    {
-                        PacketType = Core.Packets.SignallingPacketTypes.Logout,
-                        PacketData = new Login() { Key = value }
-                    };
-                    server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
-                    participant.SignallingSocket.Shutdown(System.Net.Sockets.SocketShutdown.Both);
+                    server.RemoveParticipant(value, true, "Kicked").Wait();
+                    participant.SignallingSocket.Shutdown(SocketShutdown.Both);
                     participant.SignallingSocket.Close();
                     Logger.LogToConsole(LogType.Success, $"Kicked participant: {(string.IsNullOrWhiteSpace(participant.Name) ? value : participant.Name)}", "Commands");
                 }
@@ -357,12 +352,7 @@ namespace VoiceCraft.Server
                     {
                         server.Banlist.IPBans.Add(ip);
                         ServerData.SaveBanlist(server.Banlist);
-                        var packet = new Core.Packets.SignallingPacket()
-                        {
-                            PacketType = Core.Packets.SignallingPacketTypes.Logout,
-                            PacketData = new Login() { Key = value }
-                        };
-                        server.Signalling.SendPacketAsync(packet, participant.SignallingSocket);
+                        server.RemoveParticipant(value, true, "Banned").Wait();
                         participant.SignallingSocket.Shutdown(SocketShutdown.Both);
                         participant.SignallingSocket.Close();
                         Logger.LogToConsole(LogType.Success, $"Banned participant: {(string.IsNullOrWhiteSpace(participant.Name) ? value : participant.Name)}", "Commands");

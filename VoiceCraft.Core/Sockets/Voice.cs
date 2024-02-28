@@ -304,6 +304,7 @@ namespace VoiceCraft.Core.Sockets
             {
                 if (disposing)
                 {
+                    Disconnect();
                     Socket.Close();
                     IsConnected = false;
                     IsHosting = false;
