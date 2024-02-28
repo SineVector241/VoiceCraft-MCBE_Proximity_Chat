@@ -11,7 +11,7 @@ namespace VoiceCraft.Core.Server
     public class VoiceCraftServer : IDisposable
     {
         //Constants
-        public const string Version = "v1.0.3";
+        public const string Version = "v1.0.2";
         public const int ActivityInterval = 5000;
 
         //Data
