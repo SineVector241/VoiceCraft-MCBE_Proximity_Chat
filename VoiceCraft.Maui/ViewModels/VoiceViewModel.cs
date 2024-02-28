@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
@@ -107,8 +107,8 @@ namespace VoiceCraft.Maui.ViewModels
                 var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
                 if (displayParticipant != null)
                 {
-                    displayParticipant.IsMuted = message.Value.Muted;
-                    displayParticipant.IsDeafened = message.Value.Deafened;
+                    displayParticipant.IsMuted = message.Value.IsMuted;
+                    displayParticipant.IsDeafened = message.Value.IsDeafened;
                 }
             });
 

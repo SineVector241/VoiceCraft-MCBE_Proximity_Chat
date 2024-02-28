@@ -140,7 +140,7 @@ namespace VoiceCraft.Core.Sockets
         /// <returns></returns>
         public async Task SendPacketAsync(SignallingPacket packet, Socket socket)
         {
-            if (Socket.Connected)
+            if (socket.Connected)
             {
                 try
                 {
@@ -163,7 +163,7 @@ namespace VoiceCraft.Core.Sockets
         /// <param name="packet">The packet to send.</param>
         public void SendPacket(SignallingPacket packet, Socket socket)
         {
-            if (Socket.Connected)
+            if (socket.Connected)
             {
                 try
                 {
@@ -248,11 +248,8 @@ namespace VoiceCraft.Core.Sockets
                     var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
                     if (bytes == 0)
                     {
-                        if (!socket.Connected || CTS.IsCancellationRequested)
-                        {
-                            if (IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
-                            break; //Socket is closed.
-                        }
+                        if (IsHosting) OnSocketDisconnected?.Invoke(socket, "Client logged out.");
+                        break; //Socket is closed.
                     }
 
                     ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
@@ -373,7 +370,7 @@ namespace VoiceCraft.Core.Sockets
                     break;
                 }
                 await SendPacketAsync(Null.Create(SignallingPacketTypes.PingCheck), Socket);
-                await Task.Delay(ActivityTimeout).ConfigureAwait(false);
+                await Task.Delay(ActivityInterval).ConfigureAwait(false);
             }
         }
 

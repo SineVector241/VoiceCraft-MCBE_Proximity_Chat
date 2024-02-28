@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Linq;
 using OpusSharp;
 using VoiceCraft.Core;
+using VoiceCraft.Core.Packets;
+using System.Diagnostics;
 
 namespace VoiceCraft.Client
 {
@@ -28,7 +30,7 @@ namespace VoiceCraft.Client
         public uint PacketCount { get; private set; }
 
         //Network Variables
-        public ConnectionState ConnectionState { get; private set; }
+        public ConnectionState ConnectionState { get; private set; } = ConnectionState.Disconnected;
         public PositioningTypes PositioningType { get; private set; }
         public Signalling Signalling { get; }
         public Voice Voice { get; }
@@ -199,13 +201,13 @@ namespace VoiceCraft.Client
             ClearParticipants();
             Channels.Clear();
 
+            ConnectionState = ConnectionState.Disconnected;
             OnDisconnected?.Invoke(reason);
             Signalling.Disconnect(force: force);
             Voice.Disconnect();
             MCWSS.Stop();
             IsDeafened = false;
             IsMuted = false;
-            ConnectionState = ConnectionState.Disconnected;
         }
 
         #region Event Methods
@@ -412,6 +414,78 @@ namespace VoiceCraft.Client
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        //Static methods
+        public static async Task<string> PingAsync(string IP, int Port)
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var message = "";
+            var pingTime = DateTime.UtcNow;
+            byte[]? packetBuffer = null;
+            byte[] lengthBuffer = new byte[2];
+            try
+            {
+                if (socket.ConnectAsync(IP, Port).Wait(5000))
+                {
+                    var stream = new NetworkStream(socket);
+                    var pingPacket = Core.Packets.Signalling.Ping.Create(string.Empty).GetPacketStream();
+                    await socket.SendAsync(BitConverter.GetBytes((ushort)pingPacket.Length), SocketFlags.None);
+                    await socket.SendAsync(pingPacket, SocketFlags.None);
+                    //TCP Is Annoying
+                    var bytes = await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length).ConfigureAwait(false);
+                    if (bytes == 0)
+                    {
+                        stream.Dispose();
+                        throw new Exception("Socket closed"); //Socket is closed.
+                    }
+
+                    ushort packetLength = SignallingPacket.GetPacketLength(lengthBuffer);
+                    //If packets are an invalid length then we break out to prevent memory exceptions and disconnect the client.
+                    if (packetLength > 1024)
+                    {
+                        stream.Dispose();
+                        throw new Exception("Invalid packet received.");
+                    }//Packets will never be bigger than 500 bytes but the hard limit is 1024 bytes/1mb
+
+                    packetBuffer = new byte[packetLength];
+
+                    //Read until packet is fully received
+                    int offset = 0;
+                    while (offset < packetLength)
+                    {
+                        int bytesRead = await stream.ReadAsync(packetBuffer, offset, packetLength).ConfigureAwait(false);
+                        if (bytesRead == 0) break; //Socket is closed.
+
+                        offset += bytesRead;
+                    }
+                    var packet = new SignallingPacket(packetBuffer);
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                    if (packet.PacketType == SignallingPacketTypes.Ping)
+                    {
+                        var data = (Core.Packets.Signalling.Ping)packet.PacketData;
+                        message = $"{data.ServerData}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                    }
+                    else
+                        message = $"Unexpected packet received\nPing Time: {Math.Floor(pingTimeMS)}ms";
+
+                    stream.Dispose();
+                }
+                else
+                {
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                    message = $"Timed out\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+
+                socket.Disconnect(false);
+                socket.Close();
+            }
+            catch (Exception ex)
+            {
+                message = $"Error: {ex.Message}";
+            }
+
+            return message;
         }
     }
 

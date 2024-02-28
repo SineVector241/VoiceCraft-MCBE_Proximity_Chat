@@ -4,15 +4,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:app="clr-namespace:VoiceCraft.Maui"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
-             xmlns:vc="clr-namespace:VoiceCraft.Core.Client;assembly=VoiceCraft.Core"
+             xmlns:vc="clr-namespace:VoiceCraft.Client;assembly=VoiceCraft.Client"
              Title="Credits">
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <ScrollView>
             <Grid RowDefinitions="auto, *">
                 <Border Grid.Row="0"
-                       HorizontalOptions="Fill"
-                       VerticalOptions="StartAndExpand">
+                        HorizontalOptions="Fill"
+                        VerticalOptions="StartAndExpand">
                     <Grid ColumnDefinitions="Auto, Auto">
                         <toolkit:Icon Grid.Column="0"
                                       Margin="3,3,20,3"
@@ -28,9 +28,9 @@
                     </Grid>
                 </Border>
                 <Border Grid.Row="1"
-                       Margin="5"
-                       HorizontalOptions="FillAndExpand"
-                       VerticalOptions="StartAndExpand">
+                        Margin="5"
+                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="StartAndExpand">
                     <Grid RowDefinitions="Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
                                FontAttributes="Bold"

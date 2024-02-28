@@ -108,8 +108,8 @@ namespace VoiceCraft.Core.Sockets
             if (IsConnected) throw new InvalidOperationException("Cannot start hosting as socket is in a connection state!");
 
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
-            _ = ListenAsync();
             IsHosting = true;
+            _ = ListenAsync();
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace VoiceCraft.Core.Sockets
         /// <returns></returns>
         public async Task SendPacketToAsync(VoicePacket packet, EndPoint endPoint)
         {
-            if (Socket.Connected)
+            if (Socket.Connected || IsHosting)
             {
                 try
                 {
@@ -186,7 +186,7 @@ namespace VoiceCraft.Core.Sockets
         /// <param name="packet">The packet to send.</param>
         public void SendPacketTo(VoicePacket packet, EndPoint endPoint)
         {
-            if (Socket.Connected)
+            if (Socket.Connected || IsHosting)
             {
                 try
                 {
@@ -216,7 +216,6 @@ namespace VoiceCraft.Core.Sockets
                 {
                     IsConnected = false;
                     CTS.Cancel();
-                    Socket.Disconnect(true);
 
                     OnDisconnected?.Invoke(reason);
                 }
@@ -250,12 +249,24 @@ namespace VoiceCraft.Core.Sockets
                 try
                 {
                     var buffer = new byte[1024];
-                    var networkStream = await Socket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
-                    var packet = new VoicePacket(buffer);
+                    if (IsHosting)
+                    {
+                        var networkStream = await Socket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
+                        var packet = new VoicePacket(buffer);
 
-                    if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
-                        OnInboundPacket?.Invoke(packet, networkStream.RemoteEndPoint);
-                    HandlePacket(packet, networkStream.RemoteEndPoint);
+                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                            OnInboundPacket?.Invoke(packet, networkStream.RemoteEndPoint);
+                        HandlePacket(packet, networkStream.RemoteEndPoint);
+                    }
+                    else
+                    {
+                        var networkStream = await Socket.ReceiveAsync(buffer, SocketFlags.None);
+                        var packet = new VoicePacket(buffer);
+
+                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                            OnInboundPacket?.Invoke(packet, Socket.RemoteEndPoint);
+                        HandlePacket(packet, Socket.RemoteEndPoint);
+                    }
                 }
                 catch (Exception ex)
                 {

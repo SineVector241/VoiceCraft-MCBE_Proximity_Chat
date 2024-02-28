@@ -2,7 +2,7 @@
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Models;
 using CommunityToolkit.Mvvm.Messaging;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 
 namespace VoiceCraft.Maui
 {
@@ -36,7 +36,7 @@ namespace VoiceCraft.Maui
                     VoipService.OnChannelEntered += ChannelEntered;
                     VoipService.OnChannelLeave += ChannelLeave;
                     VoipService.OnServiceDisconnected += OnServiceDisconnected;
-                    VoipService.Network.Signalling.OnDenyPacketReceived += SignallingDeny;
+                    VoipService.Network.Signalling.OnDeny += OnDeny;
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, RequestDataMSG message) =>
                     {
@@ -54,12 +54,12 @@ namespace VoiceCraft.Maui
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, MuteUnmuteMSG message) =>
                     {
-                        VoipService.Network.SetMute();
+                        _ = VoipService.Network.SetMute();
                     });
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, DeafenUndeafenMSG message) =>
                     {
-                        VoipService.Network.SetDeafen();
+                        _ = VoipService.Network.SetDeafen();
                     });
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, DisconnectMSG message) =>
@@ -69,12 +69,12 @@ namespace VoiceCraft.Maui
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, JoinChannelMSG message) =>
                     {
-                        VoipService.Network.JoinChannel(message.Value.Channel, message.Value.Password);
+                        _ = VoipService.Network.JoinChannel(message.Value.Channel, message.Value.Password);
                     });
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, LeaveChannelMSG message) =>
                     {
-                        VoipService.Network.LeaveChannel(message.Value.Channel);
+                        _ =VoipService.Network.LeaveChannel(message.Value.Channel);
                     });
 
                     VoipService.Start(Cts.Token).Wait();
@@ -96,7 +96,7 @@ namespace VoiceCraft.Maui
                     VoipService.OnChannelEntered -= ChannelEntered;
                     VoipService.OnChannelLeave -= ChannelLeave;
                     VoipService.OnServiceDisconnected -= OnServiceDisconnected;
-                    VoipService.Network.Signalling.OnDenyPacketReceived -= SignallingDeny;
+                    VoipService.Network.Signalling.OnDeny -= OnDeny;
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
                     Cts.Dispose();
@@ -195,13 +195,13 @@ namespace VoiceCraft.Maui
             });
             Cts.Cancel();
         }
-        private void SignallingDeny(Core.Packets.Signalling.Deny packet)
+        private void OnDeny(Core.Packets.Signalling.Deny data, System.Net.Sockets.Socket socket)
         {
-            if (!packet.Disconnect)
+            if (VoipService.Network.Signalling.IsConnected)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    WeakReferenceMessenger.Default.Send(new DenyMSG(packet.Reason));
+                    WeakReferenceMessenger.Default.Send(new DenyMSG(data.Reason));
                 });
             }
         }

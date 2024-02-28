@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Maui.Models;

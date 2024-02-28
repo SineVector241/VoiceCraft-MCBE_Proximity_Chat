@@ -9,7 +9,7 @@ namespace VoiceCraft.Maui.Interfaces
         /// </summary>
         /// <param name="AudioFormat"></param>
         /// <returns></returns>
-        Task<IWaveIn> CreateRecorder(WaveFormat AudioFormat);
+        Task<IWaveIn> CreateRecorder(WaveFormat AudioFormat, int bufferMS);
 
         /// <summary>
         /// Creates a player on the native device.

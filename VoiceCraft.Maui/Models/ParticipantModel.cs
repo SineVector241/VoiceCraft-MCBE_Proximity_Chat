@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 
 namespace VoiceCraft.Maui.Models
 {
@@ -19,8 +19,8 @@ namespace VoiceCraft.Maui.Models
         public ParticipantModel(VoiceCraftParticipant participant)
         {
             this.participant = participant;
-            isMuted = participant.Muted;
-            isDeafened = participant.Deafened;
+            isMuted = participant.IsMuted;
+            isDeafened = participant.IsDeafened;
             volume = participant.Volume;
         }
 

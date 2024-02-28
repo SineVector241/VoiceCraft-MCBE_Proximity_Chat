@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
-using VoiceCraft.Core.Audio.Streams;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Sockets;
 using VoiceCraft.Data.Server;
@@ -12,7 +11,7 @@ namespace VoiceCraft.Core.Server
     public class VoiceCraftServer : IDisposable
     {
         //Constants
-        public const string Version = "v1.0.1";
+        public const string Version = "v1.0.3";
         public const int ActivityInterval = 5000;
 
         //Data
@@ -360,8 +359,8 @@ namespace VoiceCraft.Core.Server
             if (participant.Value != null && participant.Value.VoiceEndpoint == null)
             {
                 participant.Value.VoiceEndpoint = endPoint;
-                _ = Voice.SendPacketToAsync(Packets.Voice.Null.Create(VoicePacketTypes.Accept), endPoint);
                 OnParticipantConnected?.Invoke(participant.Value, participant.Key);
+                _ = Voice.SendPacketToAsync(Packets.Voice.Null.Create(VoicePacketTypes.Accept), endPoint);
             }
             else
             {
@@ -450,12 +449,6 @@ namespace VoiceCraft.Core.Server
         #endregion
 
         #region MCComm
-        //MCComm
-        private void MCCommStarted()
-        {
-            OnWebserverStarted?.Invoke();
-        }
-
         private void MCCommLogin(Packets.MCComm.Login packet, HttpListenerContext ctx)
         {
             if (packet.LoginKey != MCComm.ServerKey)
@@ -511,7 +504,7 @@ namespace VoiceCraft.Core.Server
             participant.Value.Name = packet.Gamertag;
             participant.Value.MinecraftId = packet.PlayerId;
             participant.Value.Binded = true;
-            _ = Signalling.SendPacketAsync(Packets.Signalling.BindedUnbinded.Create(participant.Value.Name, false), participant.Value.SignallingSocket);
+            _ = Signalling.SendPacketAsync(Packets.Signalling.BindedUnbinded.Create(participant.Value.Name, true), participant.Value.SignallingSocket);
 
             MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
             var list = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);

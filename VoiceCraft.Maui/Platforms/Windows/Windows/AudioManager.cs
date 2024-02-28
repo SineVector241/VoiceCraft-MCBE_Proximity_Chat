@@ -1,5 +1,5 @@
 ﻿using NAudio.Wave;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Services;
 
@@ -30,7 +30,7 @@ public class AudioManager : IAudioManager
         return Player;
     }
 
-    public async Task<IWaveIn> CreateRecorder(WaveFormat waveFormat)
+    public async Task<IWaveIn> CreateRecorder(WaveFormat waveFormat, int bufferMS)
     {
         var settings = Database.Instance.Settings;
         if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
@@ -41,7 +41,7 @@ public class AudioManager : IAudioManager
 
         var Recorder = new WaveInEvent();
         Recorder.WaveFormat = waveFormat;
-        Recorder.BufferMilliseconds = VoiceCraftClient.FrameMilliseconds;
+        Recorder.BufferMilliseconds = bufferMS;
         Recorder.DeviceNumber = settings.InputDevice - 1;
         return Recorder;
     }

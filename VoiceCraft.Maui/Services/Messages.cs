@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using VoiceCraft.Core.Client;
+using VoiceCraft.Client;
 using VoiceCraft.Maui.Models;
 
 namespace VoiceCraft.Maui.Services

@@ -1,13 +1,17 @@
 ﻿using NAudio.Wave;
-using VoiceCraft.Core.Client;
 using VoiceCraft.Core.Audio;
 using VoiceCraft.Maui.Models;
 using System.Diagnostics;
+using VoiceCraft.Client;
 
 namespace VoiceCraft.Maui.Services
 {
     public class VoipService
     {
+        public const int SampleRate = 48000;
+        public const int Channels = 1;
+        public const int FrameSizeMS = 20;
+
         //State Variables
         public string StatusMessage { get; private set; } = "Connecting...";
         private string Username = "";
@@ -53,9 +57,9 @@ namespace VoiceCraft.Maui.Services
             Settings = Database.Instance.Settings;
             Server = server;
 
-            Network = new VoiceCraftClient(server.Key, Settings.ClientSidedPositioning ? Core.Packets.PositioningTypes.ClientSided : Core.Packets.PositioningTypes.ServerSided, 20, Settings.WebsocketPort)
+            Network = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.WebsocketPort)
             {
-                LinearVolume = Settings.LinearVolume,
+                LinearProximity = Settings.LinearVolume,
                 DirectionalHearing = Settings.DirectionalAudioEnabled
             };
         }
@@ -68,23 +72,24 @@ namespace VoiceCraft.Maui.Services
 
                 if (Settings.SoftLimiterEnabled)
                 {
-                    Normalizer = new SoftLimiter(Network.Mixer);
+                    Normalizer = new SoftLimiter(Network.AudioOutput);
                     Normalizer.Boost.CurrentValue = Settings.SoftLimiterGain;
                     AudioPlayer = await audioManager.CreatePlayer(Normalizer);
                 }
                 else
                 {
-                    AudioPlayer = await audioManager.CreatePlayer(Network.Mixer);
+                    AudioPlayer = await audioManager.CreatePlayer(Network.AudioOutput);
                 }
-                AudioRecorder = await audioManager.CreateRecorder(Network.RecordFormat);
+                AudioRecorder = await audioManager.CreateRecorder(Network.AudioFormat, FrameSizeMS);
 
                 //Event Initializations
-                Network.OnConnected += OnConnected;
+                Network.OnVoiceConnected += OnConnected;
                 Network.OnBinded += Binded;
                 Network.OnUnbinded += Unbinded;
                 Network.OnParticipantJoined += ParticipantJoined;
                 Network.OnParticipantLeft += ParticipantLeft;
-                Network.OnParticipantUpdated += ParticipantUpdated;
+                Network.OnParticipantMutedStateChanged += ParticipantMutedStatusChanged;
+                Network.OnParticipantDeafenedStateChanged += ParticipantDeafenedStateChanged;
                 Network.OnChannelAdded += ChannelAdded;
                 Network.OnChannelJoined += ChannelJoined;
                 Network.OnChannelLeft += ChannelLeft;
@@ -95,7 +100,7 @@ namespace VoiceCraft.Maui.Services
 
                 try
                 {
-                    Network.Connect(Server.IP, Server.Port);
+                    _ = Network.Connect(Server.IP, Server.Port, Server.Key, Settings.ClientSidedPositioning ? Core.PositioningTypes.ClientSided : Core.PositioningTypes.ServerSided);
 
                     //Setup state variables for this instance.
                     List<VoiceCraftParticipant> talkingParticipants = new List<VoiceCraftParticipant>();
@@ -128,14 +133,14 @@ namespace VoiceCraft.Maui.Services
                                 previousDeafenedState = Network.IsDeafened;
                             }
 
-                            var newTalkingParticipants = Network.Participants.Where(x => DateTime.UtcNow.Subtract(x.Value.LastSpoke).TotalSeconds < 1 && !talkingParticipants.Contains(x.Value));
+                            var newTalkingParticipants = Network.Participants.Where(x => Environment.TickCount - x.Value.LastActive < 1000 && !talkingParticipants.Contains(x.Value));
                             foreach (var participant in newTalkingParticipants)
                             {
                                 talkingParticipants.Add(participant.Value);
                                 OnParticipantSpeakingStatusChanged?.Invoke(participant.Value, true);
                             }
 
-                            var oldTalkingParticipants = talkingParticipants.Where(x => DateTime.UtcNow.Subtract(x.LastSpoke).TotalMilliseconds >= 500).ToArray();
+                            var oldTalkingParticipants = talkingParticipants.Where(x => Environment.TickCount - x.LastActive >= 500).ToArray();
                             foreach (var participant in oldTalkingParticipants)
                             {
                                 talkingParticipants.Remove(participant);
@@ -155,14 +160,19 @@ namespace VoiceCraft.Maui.Services
                 }
                 catch (OperationCanceledException)
                 { }
+                catch(Exception ex)
+                {
+                    OnServiceDisconnected?.Invoke(ex.Message);
+                }
                 finally
                 {
-                    Network.OnConnected -= OnConnected;
+                    Network.OnVoiceConnected -= OnConnected;
                     Network.OnBinded -= Binded;
                     Network.OnUnbinded -= Unbinded;
                     Network.OnParticipantJoined -= ParticipantJoined;
                     Network.OnParticipantLeft -= ParticipantLeft;
-                    Network.OnParticipantUpdated -= ParticipantUpdated;
+                    Network.OnParticipantMutedStateChanged -= ParticipantMutedStatusChanged;
+                    Network.OnParticipantDeafenedStateChanged -= ParticipantDeafenedStateChanged;
                     Network.OnChannelAdded -= ChannelAdded;
                     Network.OnChannelJoined -= ChannelJoined;
                     Network.OnChannelLeft -= ChannelLeft;
@@ -222,14 +232,14 @@ namespace VoiceCraft.Maui.Services
         //Goes in this protocol order.
         private void OnConnected()
         {
-            StatusMessage = Network.PositioningType == Core.Packets.PositioningTypes.ServerSided ? $"Connected! Key - {Network.LoginKey}\nWaiting for binding..." : $"Connected! Key - {Network.LoginKey}\nWaiting for MCWSS connection...";
+            StatusMessage = Network.PositioningType == Core.PositioningTypes.ServerSided ? $"Connected! Key - {Network.Key}\nWaiting for binding..." : $"Connected! Key\nWaiting for MCWSS connection...";
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 
         private void Binded(string? name)
         {
             Username = name ?? "<N.A.>";
-            StatusMessage = $"Connected - Key: {Network.LoginKey}\n{Username}";
+            StatusMessage = $"Connected - Key: {Network.Key}\n{Username}";
 
             //Last step of verification. We start sending data and playing any received data.
             try
@@ -266,14 +276,19 @@ namespace VoiceCraft.Maui.Services
             OnParticipantRemoved?.Invoke(participant);
         }
 
-        private void ParticipantUpdated(VoiceCraftParticipant participant, ushort key)
+        private void ParticipantDeafenedStateChanged(VoiceCraftParticipant participant, bool value)
+        {
+            OnParticipantChanged?.Invoke(participant);
+        }
+
+        private void ParticipantMutedStatusChanged(VoiceCraftParticipant participant, bool value)
         {
             OnParticipantChanged?.Invoke(participant);
         }
 
         private void Unbinded()
         {
-            StatusMessage = $"Connected - Key: {Network.LoginKey}\nUnbinded. MCWSS Disconnected";
+            StatusMessage = $"Connected\nUnbinded. MCWSS Disconnected";
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 
