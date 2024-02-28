@@ -199,5 +199,36 @@ namespace VoiceCraft.Maui.ViewModels
         {
             WeakReferenceMessenger.Default.Send(new DeafenUndeafenMSG());
         }
+
+        [RelayCommand]
+        public void ShowHideChannels()
+        {
+            ShowChannels = !ShowChannels;
+        }
+
+        [RelayCommand]
+        public async Task JoinChannel(VoiceCraftChannel channel)
+        {
+            SelectedChannel = channel;
+            if (channel.Joined)
+            {
+                WeakReferenceMessenger.Default.Send(new LeaveChannelMSG(new LeaveChannel(channel)));
+            }
+            else
+            {
+                if (channel.RequiresPassword)
+                {
+                    var res = await Shell.Current.DisplayPromptAsync("Password", "Please input a password for the channel.", maxLength: 12);
+                    if(!string.IsNullOrWhiteSpace(res))
+                    {
+                        WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel) { Password = res }));
+                    }
+                }
+                else
+                {
+                    WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel)));
+                }
+            }
+        }
     }
 }

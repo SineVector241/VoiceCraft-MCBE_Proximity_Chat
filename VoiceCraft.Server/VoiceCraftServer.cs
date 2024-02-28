@@ -297,10 +297,14 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = Environment.TickCount;
                 var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId - 1);
-                if (channel != null && participant.Value.Channel != channel && (channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password)))
+                if (channel != null && participant.Value.Channel != channel && (channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password)) && data.Joined)
                 {
                     _ = RemoveParticipantFromChannel(participant); //Tell the client to leave the previous channel if it is in one.
                     _ = AddParticipantToChannel(channel, participant);
+                }
+                else if(!data.Joined)
+                {
+                    _ = RemoveParticipantFromChannel(participant); //Tell the client to leave the channel if it is in one.
                 }
                 else if (channel?.Password != data.Password && !string.IsNullOrWhiteSpace(channel?.Password))
                 {

@@ -108,10 +108,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Images\arrow_right_thick.svg" />
 	  <None Remove="Resources\Images\bgdark.png" />
 	  <None Remove="Resources\Images\bglight.png" />
 	  <None Remove="Resources\Images\cog.svg" />
 	  <None Remove="Resources\Images\delete.svg" />
+	  <None Remove="Resources\Images\exit_run.svg" />
 	  <None Remove="Resources\Images\headphones.svg" />
 	  <None Remove="Resources\Images\headphones_off.svg" />
 	  <None Remove="Resources\Images\information.svg" />
@@ -119,6 +121,7 @@
 	  <None Remove="Resources\Images\pencil.svg" />
 	  <None Remove="Resources\Images\server.svg" />
 	  <None Remove="Resources\Images\server_plus.svg" />
+	  <None Remove="Resources\Images\view_list.svg" />
 	</ItemGroup>
 
 	<ItemGroup>
