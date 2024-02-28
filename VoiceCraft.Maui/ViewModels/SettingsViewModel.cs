@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using NAudio.Wave;
 using System.Collections.ObjectModel;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Models;
+using NAudio.Wave;
 
 namespace VoiceCraft.Maui.ViewModels
 {

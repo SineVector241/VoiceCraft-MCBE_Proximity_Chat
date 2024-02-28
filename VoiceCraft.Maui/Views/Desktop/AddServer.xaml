@@ -2,6 +2,7 @@
 <ContentPage x:Class="VoiceCraft.Maui.Views.Desktop.AddServer"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mtoolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              Title="AddServer"
@@ -10,6 +11,12 @@
     <ContentPage.BindingContext>
         <vm:AddServerViewModel />
     </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Style x:Key="InvalidEntryStyle" TargetType="Entry">
+            <Setter Property="TextColor" Value="Red" />
+        </Style>
+    </ContentPage.Resources>
 
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
@@ -49,6 +56,7 @@
                                Text="Name" />
                         <Entry Grid.Row="2"
                                Margin="0,10,0,0"
+                               MaxLength="30"
                                Placeholder="Name"
                                Text="{Binding Server.Name}" />
                         <Label Grid.Row="3"
@@ -57,6 +65,7 @@
                                Text="IP" />
                         <Entry Grid.Row="4"
                                Margin="0,10,0,0"
+                               MaxLength="40"
                                Placeholder="127.0.0.1"
                                Text="{Binding Server.IP}" />
                         <Label Grid.Row="5"
@@ -65,16 +74,36 @@
                                Text="Port" />
                         <Entry Grid.Row="6"
                                Margin="0,10,0,0"
+                               Keyboard="Numeric"
                                Placeholder="9050"
-                               Text="{Binding Server.Port}" />
+                               Text="{Binding Server.Port}"
+                               Unfocused="PortEntryUnfocused">
+                            <Entry.Behaviors>
+                                <mtoolkit:NumericValidationBehavior Flags="ValidateOnValueChanged"
+                                                                    InvalidStyle="{StaticResource InvalidEntryStyle}"
+                                                                    MaximumDecimalPlaces="0"
+                                                                    MaximumValue="65535"
+                                                                    MinimumValue="1025" />
+                            </Entry.Behaviors>
+                        </Entry>
                         <Label Grid.Row="7"
                                Margin="0,10,0,0"
                                FontSize="Small"
                                Text="Key" />
                         <Entry Grid.Row="8"
                                Margin="0,15,0,0"
+                               Keyboard="Numeric"
                                Placeholder="0"
-                               Text="{Binding Server.Key}" />
+                               Text="{Binding Server.Key}"
+                               Unfocused="KeyEntryUnfocused">
+                            <Entry.Behaviors>
+                                <mtoolkit:NumericValidationBehavior Flags="ValidateOnValueChanged"
+                                                                    InvalidStyle="{StaticResource InvalidEntryStyle}"
+                                                                    MaximumDecimalPlaces="0"
+                                                                    MaximumValue="65535"
+                                                                    MinimumValue="0" />
+                            </Entry.Behaviors>
+                        </Entry>
                         <toolkit:ContentButton Grid.Row="9"
                                                Margin="0,10,0,0"
                                                Command="{Binding SaveServerCommand}"
