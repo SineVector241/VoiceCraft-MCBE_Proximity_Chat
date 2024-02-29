@@ -7,6 +7,7 @@ using System.Threading;
 using System;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Voice;
+using Fleck;
 
 namespace VoiceCraft.Core.Sockets
 {
@@ -121,6 +122,9 @@ namespace VoiceCraft.Core.Sockets
         {
             if (Socket.Connected)
             {
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, Socket.RemoteEndPoint);
+
                 try
                 {
                     var packetStream = packet.GetPacketStream();
@@ -131,6 +135,10 @@ namespace VoiceCraft.Core.Sockets
 #if DEBUG
                     Debug.WriteLine(ex);
 #endif
+                    if (LogExceptions)
+                    {
+                        OnExceptionError?.Invoke(ex);
+                    }
                 }
             }
         }
@@ -143,6 +151,9 @@ namespace VoiceCraft.Core.Sockets
         {
             if (Socket.Connected)
             {
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, Socket.RemoteEndPoint);
+
                 try
                 {
                     var packetStream = packet.GetPacketStream();
@@ -153,6 +164,10 @@ namespace VoiceCraft.Core.Sockets
 #if DEBUG
                     Debug.WriteLine(ex);
 #endif
+                    if (LogExceptions)
+                    {
+                        OnExceptionError?.Invoke(ex);
+                    }
                 }
             }
         }
@@ -166,6 +181,9 @@ namespace VoiceCraft.Core.Sockets
         {
             if (Socket.Connected || IsHosting)
             {
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, endPoint);
+
                 try
                 {
                     var packetStream = packet.GetPacketStream();
@@ -176,6 +194,10 @@ namespace VoiceCraft.Core.Sockets
 #if DEBUG
                     Debug.WriteLine(ex);
 #endif
+                    if (LogExceptions)
+                    {
+                        OnExceptionError?.Invoke(ex);
+                    }
                 }
             }
         }
@@ -188,6 +210,9 @@ namespace VoiceCraft.Core.Sockets
         {
             if (Socket.Connected || IsHosting)
             {
+                if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains(packet.PacketType)))
+                    OnOutboundPacket?.Invoke(packet, endPoint);
+
                 try
                 {
                     var packetStream = packet.GetPacketStream();
@@ -198,6 +223,10 @@ namespace VoiceCraft.Core.Sockets
 #if DEBUG
                     Debug.WriteLine(ex);
 #endif
+                    if (LogExceptions)
+                    {
+                        OnExceptionError?.Invoke(ex);
+                    }
                 }
             }
         }
@@ -281,7 +310,10 @@ namespace VoiceCraft.Core.Sockets
 
         private void HandlePacket(VoicePacket packet, EndPoint endPoint)
         {
-            switch(packet.PacketType)
+            if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
+                OnInboundPacket?.Invoke(packet, endPoint);
+
+            switch (packet.PacketType)
             {
                 case VoicePacketTypes.Login: OnLogin?.Invoke((Login)packet.PacketData, endPoint); break;
                 case VoicePacketTypes.Accept: OnAccept?.Invoke(new Null(), endPoint); break;

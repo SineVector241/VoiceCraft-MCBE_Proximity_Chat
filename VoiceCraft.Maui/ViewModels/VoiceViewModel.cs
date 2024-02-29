@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using VoiceCraft.Client;
-using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
 
