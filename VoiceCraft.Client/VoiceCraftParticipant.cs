@@ -53,7 +53,7 @@ namespace VoiceCraft.Client
             FrameSizeMS = frameSizeMS;
             IsMuted = false;
             IsDeafened = false;
-            LastActive = int.MaxValue;
+            LastActive = 0;
 
             //Setup and wire everything up.
             JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat, frameSizeMS);
