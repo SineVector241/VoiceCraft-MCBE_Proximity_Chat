@@ -6,14 +6,16 @@ using System.Text;
 using System.Threading;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.MCComm;
+using System.Net.Sockets;
 
 namespace VoiceCraft.Core.Sockets
 {
-    public class MCCOMM
+    public class MCCOMM : IDisposable
     {
         private readonly HttpListener Listener;
         public string ServerKey { get; private set; } = string.Empty;
         public CancellationToken CT { get; }
+        public bool IsDisposed { get; private set; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
@@ -58,8 +60,8 @@ namespace VoiceCraft.Core.Sockets
 
         public void Stop()
         {
-            Listener.Stop();
-            Listener.Close();
+            if(Listener.IsListening)
+                Listener.Stop();
         }
 
         private void Listen(IAsyncResult result)
@@ -189,6 +191,29 @@ namespace VoiceCraft.Core.Sockets
             ctx.Response.ContentType = "text/plain";
             ctx.Response.OutputStream.Write(content, 0, content.Length);
             ctx.Response.OutputStream.Close();
+        }
+
+        ~MCCOMM()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    Listener.Close();
+                }
+                IsDisposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

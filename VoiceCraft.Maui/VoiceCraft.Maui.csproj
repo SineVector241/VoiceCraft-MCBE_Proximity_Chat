@@ -135,7 +135,6 @@
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OpusSharp" Version="1.0.0" />
-		<PackageReference Include="SharpHook" Version="5.2.3" />
 		<PackageReference Include="SimpleToolkit.Core" Version="4.0.0" />
 	</ItemGroup>
 

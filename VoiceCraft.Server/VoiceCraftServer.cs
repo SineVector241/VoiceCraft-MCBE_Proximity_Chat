@@ -672,7 +672,9 @@ namespace VoiceCraft.Core.Server
             Signalling.StopHosting();
             Voice.StopHosting();
             if (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
+            {
                 MCComm.Stop();
+            }
             ActivityChecker?.Wait();
             ActivityChecker?.Dispose();
             ServerState = ServerState.Stopped;
@@ -779,7 +781,7 @@ namespace VoiceCraft.Core.Server
                 {
                     Signalling.Dispose();
                     Voice.Dispose();
-                    MCComm.Stop();
+                    MCComm.Dispose();
                     CTS.Cancel();
                     ServerState = ServerState.Stopped;
                     if (ActivityChecker != null)
