@@ -18,7 +18,7 @@ namespace VoiceCraft.Maui.Services
 
         //VOIP and Audio handler variables
         public VoiceCraftClient Network { get; private set; }
-        private DateTime RecordDetection;
+        private int RecordDetection;
         private IWaveIn? AudioRecorder;
         private IWavePlayer? AudioPlayer;
         private SoftLimiter? Normalizer;
@@ -114,7 +114,7 @@ namespace VoiceCraft.Maui.Services
                         try
                         {
                             await Task.Delay(200);
-                            var currentSpeakingState = DateTime.UtcNow.Subtract(RecordDetection).TotalMilliseconds < 500;
+                            var currentSpeakingState = Environment.TickCount - (long)RecordDetection < 500;
                             if (previousSpeakingState != currentSpeakingState)
                             {
                                 OnSpeakingStatusChanged?.Invoke(currentSpeakingState);
@@ -215,10 +215,10 @@ namespace VoiceCraft.Maui.Services
 
             if (max >= Settings.MicrophoneDetectionPercentage)
             {
-                RecordDetection = DateTime.UtcNow;
+                RecordDetection = Environment.TickCount;
             }
 
-            if (DateTime.UtcNow.Subtract(RecordDetection).TotalSeconds < 1)
+            if (Environment.TickCount - (long)RecordDetection < 1000)
             {
                 _ = Task.Run(() => Network.SendAudio(e.Buffer, e.BytesRecorded));
             }

@@ -195,9 +195,14 @@ namespace VoiceCraft.Core.Sockets
                 {
                     IsConnected = false;
                     CTS.Cancel();
-                    ActivityChecker?.Wait(); //Wait to finish before disposing.
-                    ActivityChecker?.Dispose();
-                    ActivityChecker = null;
+                    if (ActivityChecker != null)
+                    {
+                        _ = Task.Run(() => {
+                            ActivityChecker.Wait(); //Wait to finish before disposing.
+                            ActivityChecker.Dispose();
+                            ActivityChecker = null;
+                        });
+                    }
                     OnAccept -= Accept;
                     OnDeny -= Deny;
 
@@ -388,12 +393,9 @@ namespace VoiceCraft.Core.Sockets
                     Socket.Close();
                     IsConnected = false;
                     IsHosting = false;
-                    if (ActivityChecker != null)
-                    {
-                        ActivityChecker.Wait(); //Wait to finish before disposing.
-                        ActivityChecker.Dispose();
-                        ActivityChecker = null;
-                    }
+                    ActivityChecker?.Wait(); //Wait to finish before disposing.
+                    ActivityChecker?.Dispose();
+                    ActivityChecker = null;
                 }
                 IsDisposed = true;
             }

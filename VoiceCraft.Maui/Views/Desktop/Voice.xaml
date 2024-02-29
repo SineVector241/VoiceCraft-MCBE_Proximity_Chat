@@ -395,12 +395,31 @@
                                 </CollectionView.ItemsLayout>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="Auto, *">
+                                        <Grid ColumnDefinitions="Auto, *, Auto">
                                             <Label Grid.Column="0"
                                                    FontSize="Medium"
                                                    Text="{Binding Name}"
                                                    VerticalTextAlignment="Center" />
-                                            <toolkit:ContentButton Grid.Column="1"
+                                            <toolkit:Icon Grid.Column="1"
+                                                          HeightRequest="45"
+                                                          HorizontalOptions="EndAndExpand"
+                                                          Source="lock_outline.png"
+                                                          TintColor="{AppThemeBinding Dark='White',
+                                                                                      Light='Black'}"
+                                                          WidthRequest="45">
+                                                <toolkit:Icon.Style>
+                                                    <Style TargetType="toolkit:Icon">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RequiresPassword}"
+                                                                         TargetType="toolkit:Icon"
+                                                                         Value="False">
+                                                                <Setter Property="IsVisible" Value="Collapse" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </toolkit:Icon.Style>
+                                            </toolkit:Icon>
+                                            <toolkit:ContentButton Grid.Column="2"
                                                                    Command="{Binding Source={x:Reference voice}, Path=BindingContext.JoinChannelCommand}"
                                                                    CommandParameter="{Binding Channel}"
                                                                    HeightRequest="45"

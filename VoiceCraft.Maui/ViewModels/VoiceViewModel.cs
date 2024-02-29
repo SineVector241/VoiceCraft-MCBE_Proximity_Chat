@@ -30,12 +30,6 @@ namespace VoiceCraft.Maui.ViewModels
         bool showChannels = false;
 
         [ObservableProperty]
-        bool showPasswordInput = false;
-
-        [ObservableProperty]
-        VoiceCraftChannel? selectedChannel;
-
-        [ObservableProperty]
         ObservableCollection<ParticipantModel> participants = new ObservableCollection<ParticipantModel>();
 
         [ObservableProperty]
@@ -209,7 +203,6 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task JoinChannel(VoiceCraftChannel channel)
         {
-            SelectedChannel = channel;
             if (channel.Joined)
             {
                 WeakReferenceMessenger.Default.Send(new LeaveChannelMSG(new LeaveChannel(channel)));

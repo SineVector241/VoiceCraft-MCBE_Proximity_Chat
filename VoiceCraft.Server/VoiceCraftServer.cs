@@ -297,18 +297,20 @@ namespace VoiceCraft.Core.Server
             {
                 participant.Value.LastActive = Environment.TickCount;
                 var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId - 1);
-                if (channel != null && participant.Value.Channel != channel && (channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password)) && data.Joined)
+                if (channel != null)
                 {
-                    _ = RemoveParticipantFromChannel(participant); //Tell the client to leave the previous channel if it is in one.
-                    _ = AddParticipantToChannel(channel, participant);
-                }
-                else if(!data.Joined)
-                {
-                    _ = RemoveParticipantFromChannel(participant); //Tell the client to leave the channel if it is in one.
-                }
-                else if (channel?.Password != data.Password && !string.IsNullOrWhiteSpace(channel?.Password))
-                {
-                    _ = Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!"), socket);
+                    if (participant.Value.Channel != channel && (channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password)) && data.Joined)
+                    {
+                        _ = MoveParticipantToChannel(channel, participant);
+                    }
+                    else if (!data.Joined)
+                    {
+                        _ = MoveParticipantToChannel(null, participant);
+                    }
+                    else if (channel?.Password != data.Password && !string.IsNullOrWhiteSpace(channel?.Password))
+                    {
+                        _ = Signalling.SendPacketAsync(Packets.Signalling.Deny.Create("Incorrect Password!"), socket);
+                    }
                 }
                 else
                 {
@@ -627,15 +629,14 @@ namespace VoiceCraft.Core.Server
 
             if (packet.ChannelId == 0 && participant.Value.Channel != null)
             {
-                _ = RemoveParticipantFromChannel(participant);
+                _ = MoveParticipantToChannel(null, participant);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
 
             if (channel != null)
             {
-                _ = RemoveParticipantFromChannel(participant);
-                _ = AddParticipantToChannel(channel, participant);
+                _ = MoveParticipantToChannel(channel, participant);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
@@ -708,27 +709,26 @@ namespace VoiceCraft.Core.Server
             return false;
         }
 
-        public async Task RemoveParticipantFromChannel(KeyValuePair<ushort, VoiceCraftParticipant> participant)
+        public async Task MoveParticipantToChannel(VoiceCraftChannel? toChannel, KeyValuePair<ushort, VoiceCraftParticipant> participant)
         {
-            if (participant.Value.Channel != null)
-            {
-                var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-                await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create((byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1), "", false), participant.Value.SignallingSocket);
-                participant.Value.Channel = null;
-                for (ushort i = 0; i < channelList.Count(); i++)
-                {
-                    var client = channelList.ElementAt(i);
-                    await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
-                    await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), participant.Value.SignallingSocket);
-                }
-            }
-        }
+            if (participant.Value.Channel == toChannel) return;
 
-        public async Task AddParticipantToChannel(VoiceCraftChannel channel, KeyValuePair<ushort, VoiceCraftParticipant> participant)
-        {
-            participant.Value.Channel = channel;
+            if(participant.Value.Channel != null) 
+                await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create((byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1), string.Empty, false), participant.Value.SignallingSocket);
+
             var channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
-            await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create((byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1), string.Empty, true), participant.Value.SignallingSocket);
+            for (ushort i = 0; i < channelList.Count(); i++)
+            {
+                var client = channelList.ElementAt(i);
+                await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(participant.Key), client.Value.SignallingSocket);
+                await Signalling.SendPacketAsync(Packets.Signalling.Logout.Create(client.Key), participant.Value.SignallingSocket);
+            }
+            participant.Value.Channel = toChannel;
+
+            if (participant.Value.Channel != null)
+                await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create((byte)(ServerProperties.Channels.IndexOf(participant.Value.Channel) + 1), string.Empty, true), participant.Value.SignallingSocket);
+
+            channelList = Participants.Where(x => x.Key != participant.Key && x.Value.Binded && x.Value.Channel == participant.Value.Channel);
             for (ushort i = 0; i < channelList.Count(); i++)
             {
                 var client = channelList.ElementAt(i);
