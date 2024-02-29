@@ -2,6 +2,7 @@
 <ContentPage x:Class="VoiceCraft.Maui.Views.Desktop.Settings"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ahKit="clr-namespace:AlohaKit.Controls;assembly=AlohaKit"
              xmlns:mtoolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
@@ -20,8 +21,8 @@
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />
         <Grid RowDefinitions="auto, *">
             <Border Grid.Row="0"
-                   HorizontalOptions="Fill"
-                   VerticalOptions="StartAndExpand">
+                    HorizontalOptions="Fill"
+                    VerticalOptions="StartAndExpand">
                 <Grid ColumnDefinitions="Auto, Auto">
                     <toolkit:Icon Grid.Column="0"
                                   Margin="3,3,20,3"
@@ -37,9 +38,9 @@
                 </Grid>
             </Border>
             <Border Grid.Row="1"
-                   Margin="5"
-                   HorizontalOptions="Fill"
-                   VerticalOptions="StartAndExpand">
+                    Margin="5"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="StartAndExpand">
                 <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="290, *">
                         <Label Grid.Column="0"
@@ -178,11 +179,69 @@
                                Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:P2}'}"
                                VerticalTextAlignment="Center" />
 
+                        <ahKit:ProgressBar Grid.Column="1"
+                                           Background="Transparent"
+                                           EnableAnimations="False"
+                                           HeightRequest="22"
+                                           IsVertical="False"
+                                           Progress="{Binding MicrophoneDetection}"
+                                           ProgressBrush="{StaticResource SwitchOn}"
+                                           VerticalOptions="StartAndExpand" />
+
                         <Slider Grid.Column="1"
                                 Margin="10,0,0,0"
                                 Maximum="1.0"
                                 Minimum="0.0"
                                 Value="{Binding Settings.MicrophoneDetectionPercentage}" />
+
+                        <toolkit:ContentButton Grid.Column="2"
+                                               Margin="5,0,0,0"
+                                               Command="{Binding OpenCloseMicrophoneCommand}"
+                                               HorizontalOptions="Start">
+                            <Border x:Name="microphoneBorder"
+                                    Padding="6"
+                                    Background="#2fFFFFFF"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="4" />
+                                </Border.StrokeShape>
+
+                                <Label Grid.Column="0"
+                                       FontAttributes="Bold"
+                                       FontSize="Small"
+                                       Text="Start Testing"
+                                       VerticalTextAlignment="Center">
+                                    <Label.Style>
+                                        <Style TargetType="Label">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRecording}"
+                                                             TargetType="Label"
+                                                             Value="True">
+                                                    <Setter Property="Text" Value="Stop Testing" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                </Label>
+                            </Border>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup>
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="microphoneBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="microphoneBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                        </toolkit:ContentButton>
                     </Grid>
                 </Grid>
             </Border>

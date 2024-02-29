@@ -18,6 +18,15 @@ namespace VoiceCraft.Maui.ViewModels
         [ObservableProperty]
         ObservableCollection<string> outputDevices = new ObservableCollection<string>() { "Default" };
 
+        [ObservableProperty]
+        float microphoneDetection;
+
+        [ObservableProperty]
+        bool isRecording = false;
+
+        private IWaveIn? Microphone;
+        private WaveFormat AudioFormat = new WaveFormat(48000, 1);
+
         public SettingsViewModel()
         {
 #if WINDOWS
@@ -41,7 +50,54 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public void SaveSettings()
         {
+            if(Microphone != null)
+            {
+                Microphone.StopRecording();
+                Microphone.DataAvailable -= Microphone_DataAvailable;
+                Microphone.Dispose();
+                Microphone = null;
+                MicrophoneDetection = 0;
+            }
             _ = Database.Instance.SaveSettings();
+        }
+
+        [RelayCommand]
+        public async Task OpenCloseMicrophone()
+        {
+            if (Microphone == null)
+            {
+                var manager = new AudioManager();
+                Microphone = await manager.CreateRecorder(AudioFormat, 20);
+                Microphone.DataAvailable += Microphone_DataAvailable;
+                Microphone.StartRecording();
+                IsRecording = true;
+            }
+            else
+            {
+                Microphone.StopRecording();
+                Microphone.DataAvailable -= Microphone_DataAvailable;
+                Microphone.Dispose();
+                Microphone = null;
+                MicrophoneDetection = 0;
+                IsRecording = false;
+            }
+        }
+
+        private void Microphone_DataAvailable(object? sender, WaveInEventArgs e)
+        {
+            float max = 0;
+            // interpret as 16 bit audio
+            for (int index = 0; index < e.BytesRecorded; index += 2)
+            {
+                short sample = (short)((e.Buffer[index + 1] << 8) |
+                                        e.Buffer[index + 0]);
+                // to floating point
+                var sample32 = sample / 32768f;
+                // absolute value 
+                if (sample32 < 0) sample32 = -sample32;
+                if (sample32 > max) max = sample32;
+            }
+            MicrophoneDetection = max;
         }
     }
 }
