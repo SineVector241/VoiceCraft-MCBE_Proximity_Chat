@@ -1,4 +1,6 @@
-﻿namespace VoiceCraft.Maui
+﻿using System.Diagnostics;
+
+namespace VoiceCraft.Maui
 {
     public partial class App : Application
     {
