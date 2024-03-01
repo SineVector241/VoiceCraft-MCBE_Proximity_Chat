@@ -7,7 +7,6 @@ using System.Threading;
 using System;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.Voice;
-using Fleck;
 
 namespace VoiceCraft.Core.Sockets
 {
