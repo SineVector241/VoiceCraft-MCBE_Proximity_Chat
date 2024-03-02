@@ -39,6 +39,7 @@ namespace VoiceCraft.Core.Sockets
         public event PacketData<GetSettings>? OnGetSettingsPacketReceived;
         public event PacketData<RemoveParticipant>? OnRemoveParticipantPacketReceived;
         public event PacketData<ChannelMove>? OnChannelMovePacketReceived;
+        public event PacketData<AcceptUpdate>? OnAcceptUpdatePacketReceived;
 
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
@@ -169,6 +170,15 @@ namespace VoiceCraft.Core.Sockets
                             break;
                         }
                         OnChannelMovePacketReceived?.Invoke(channelMoveData, ctx);
+                        break;
+                    case MCCommPacketTypes.AcceptUpdate:
+                        var acceptUpdateData = (AcceptUpdate)packet.PacketData;
+                        if (acceptUpdateData == null)
+                        {
+                            SendResponse(ctx, HttpStatusCode.OK, Deny.Create("Invalid Data!"));
+                            break;
+                        }
+                        OnAcceptUpdatePacketReceived?.Invoke(acceptUpdateData, ctx);
                         break;
                 }
             }

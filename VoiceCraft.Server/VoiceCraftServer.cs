@@ -572,7 +572,7 @@ namespace VoiceCraft.Core.Server
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.AcceptUpdate.Create(Participants.Values.Where(x => Environment.TickCount - (long)x.LastSpoke < 500).Select(x => x.MinecraftId).ToList()));
         }
 
         private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
