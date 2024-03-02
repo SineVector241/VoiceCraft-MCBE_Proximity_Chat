@@ -18,7 +18,9 @@ namespace VoiceCraft.Core.Sockets
         public bool IsConnected { get; private set; }
         public bool IsHosting { get; private set; }
         public bool IsDisposed { get; private set; }
-        public IPEndPoint IPListener { get; } = new IPEndPoint(IPAddress.Any, 0);
+        public int ActivityInterval { get; set; } = 5000;
+        private IPEndPoint IPListener { get; set; } = new IPEndPoint(IPAddress.Any, 0);
+        private Task? ActivityChecker { get; set; }
 
         //Debug Settings
         public bool LogExceptions { get; set; } = false;
@@ -47,6 +49,7 @@ namespace VoiceCraft.Core.Sockets
         public event PacketData<ClientAudio>? OnClientAudio;
         public event PacketData<ServerAudio>? OnServerAudio;
         public event PacketData<UpdatePosition>? OnUpdatePosition;
+        public event PacketData<Null>? OnKeepAlive;
         public event PacketData<Null>? OnNull;
 
         public event OutboundPacket? OnOutboundPacket;
@@ -70,7 +73,7 @@ namespace VoiceCraft.Core.Sockets
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="Exception"></exception>
-        public async Task Connect(string IP, int Port, ushort LoginKey = 0)
+        public async Task Connect(string IP, int Port, int localPort, ushort LoginKey = 0)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
@@ -244,6 +247,14 @@ namespace VoiceCraft.Core.Sockets
                 {
                     IsConnected = false;
                     CTS.Cancel();
+                    if (ActivityChecker != null)
+                    {
+                        _ = Task.Run(() => {
+                            ActivityChecker?.Wait(); //Wait to finish before disposing.
+                            ActivityChecker?.Dispose();
+                            ActivityChecker = null;
+                        });
+                    }
 
                     OnDisconnected?.Invoke(reason);
                 }
@@ -288,7 +299,7 @@ namespace VoiceCraft.Core.Sockets
                     }
                     else
                     {
-                        var networkStream = await Socket.ReceiveAsync(buffer, SocketFlags.None);
+                        var networkStream = await Socket.ReceiveFromAsync(buffer, SocketFlags.None, IPListener);
                         var packet = new VoicePacket(buffer);
 
                         if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains(packet.PacketType)))
@@ -320,7 +331,17 @@ namespace VoiceCraft.Core.Sockets
                 case VoicePacketTypes.ClientAudio: OnClientAudio?.Invoke((ClientAudio)packet.PacketData, endPoint); break;
                 case VoicePacketTypes.ServerAudio: OnServerAudio?.Invoke((ServerAudio)packet.PacketData, endPoint); break;
                 case VoicePacketTypes.UpdatePosition: OnUpdatePosition?.Invoke((UpdatePosition)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.KeepAlive: OnKeepAlive?.Invoke((Null)packet.PacketData, endPoint); break;
                 default: OnNull?.Invoke(new Null(), endPoint); break;
+            }
+        }
+
+        private async Task ActivityCheck()
+        {
+            while (IsConnected)
+            {
+                await SendPacketAsync(Null.Create(VoicePacketTypes.KeepAlive));
+                await Task.Delay(ActivityInterval).ConfigureAwait(false);
             }
         }
 
@@ -339,6 +360,9 @@ namespace VoiceCraft.Core.Sockets
                     Socket.Close();
                     IsConnected = false;
                     IsHosting = false;
+                    ActivityChecker?.Wait(); //Wait to finish before disposing.
+                    ActivityChecker?.Dispose();
+                    ActivityChecker = null;
                 }
                 IsDisposed = true;
             }
@@ -357,6 +381,7 @@ namespace VoiceCraft.Core.Sockets
             if (!IsConnected)
             {
                 IsConnected = true;
+                ActivityChecker = Task.Run(async () => await ActivityCheck());
                 OnConnected?.Invoke();
             }
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Fleck;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
@@ -12,7 +13,7 @@ namespace VoiceCraft.Core.Server
     {
         //Constants
         public const string Version = "v1.0.2";
-        public const int ActivityInterval = 5000;
+        public const int ActivityInterval = 1000;
 
         //Data
         public ConcurrentDictionary<ushort, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<ushort, VoiceCraftParticipant>();
@@ -76,6 +77,7 @@ namespace VoiceCraft.Core.Server
 
             //Voice
             Voice.OnLogin += Voice_Login;
+            Voice.OnKeepAlive += Voice_KeepAlive;
             Voice.OnClientAudio += Voice_ClientAudio;
             Voice.OnUpdatePosition += Voice_UpdatePosition;
 
@@ -93,8 +95,8 @@ namespace VoiceCraft.Core.Server
         {
             if (ServerState != ServerState.Stopped) throw new Exception("Server already running!");
 
-            ActivityChecker = Task.Run(ServerChecks);
             ServerState = ServerState.Starting;
+            ActivityChecker = Task.Run(ServerChecks);
             try
             {
                 //Host Signalling
@@ -374,11 +376,21 @@ namespace VoiceCraft.Core.Server
             }
         }
 
+        private void Voice_KeepAlive(Packets.Voice.Null data, EndPoint endPoint)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.Equals(endPoint) ?? false);
+            if (participant.Value != null)
+            {
+                participant.Value.LastActive = Environment.TickCount;
+                _ = Voice.SendPacketToAsync(Packets.Voice.Null.Create(VoicePacketTypes.KeepAlive), endPoint);
+            }
+        }
+
         private void Voice_ClientAudio(Packets.Voice.ClientAudio data, EndPoint endPoint)
         {
             _ = Task.Run(async () =>
             {
-                var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.ToString() == endPoint.ToString());
+                var participant = Participants.FirstOrDefault(x => x.Value.VoiceEndpoint?.Equals(endPoint) ?? false);
                 if (participant.Value != null &&
                     !participant.Value.IsMuted && !participant.Value.IsDeafened &&
                     !participant.Value.IsServerMuted && participant.Value.Binded)
@@ -426,7 +438,6 @@ namespace VoiceCraft.Core.Server
                         for (ushort i = 0; i < list.Count(); i++)
                         {
                             var client = list.ElementAt(i);
-
                             if (client.Value.VoiceEndpoint != null)
                             {
                                 await Voice.SendPacketToAsync(Packets.Voice.ServerAudio.Create(participant.Key, data.PacketCount, 1.0f, 0.0f, 1.5f, false, data.Audio), client.Value.VoiceEndpoint);
@@ -751,7 +762,7 @@ namespace VoiceCraft.Core.Server
                     if (Environment.TickCount - (long)server.LastActive > ServerProperties.ExternalServerTimeoutMS)
                     {
                         ExternalServers.RemoveAt(i);
-                        OnExternalServerDisconnected?.Invoke(server, "Timeout");
+                        OnExternalServerDisconnected?.Invoke(server, $"Timeout - Last Active: {Environment.TickCount - (long)server.LastActive}ms");
                     }
                 }
                 for (int i = Participants.Count - 1; i >= 0; i--)
@@ -760,7 +771,7 @@ namespace VoiceCraft.Core.Server
 
                     if (Environment.TickCount - (long)participant.Value.LastActive > ServerProperties.ClientTimeoutMS)
                     {
-                        _ = RemoveParticipant(participant, true, "Timeout");
+                        _ = RemoveParticipant(participant, true, $"Timeout - Last Active: {Environment.TickCount - (long)participant.Value.LastActive}ms");
                     }
                 }
 

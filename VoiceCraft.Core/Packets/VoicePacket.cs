@@ -30,6 +30,8 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case VoicePacketTypes.UpdatePosition: PacketData = new UpdatePosition(dataStream, 2);
                     break;
+                case VoicePacketTypes.KeepAlive: new Null();
+                    break;
                 default: PacketData = new Null();
                     break;
             }
@@ -54,6 +56,7 @@ namespace VoiceCraft.Core.Packets
         ClientAudio,
         ServerAudio,
         UpdatePosition,
+        KeepAlive,
         Null
     }
 }

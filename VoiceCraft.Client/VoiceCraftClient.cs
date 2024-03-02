@@ -9,6 +9,7 @@ using System.Linq;
 using OpusSharp;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
+using System.Net;
 
 namespace VoiceCraft.Client
 {
@@ -224,7 +225,7 @@ namespace VoiceCraft.Client
             if (!string.IsNullOrWhiteSpace(IP))
             {
                 Key = key;
-                _ = Voice.Connect(IP, port, key);
+                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, key);
             }
             else
             {
@@ -331,7 +332,7 @@ namespace VoiceCraft.Client
             }
         }
 
-        private void Voice_ServerAudio(Core.Packets.Voice.ServerAudio data, System.Net.EndPoint endPoint)
+        private void Voice_ServerAudio(Core.Packets.Voice.ServerAudio data, EndPoint endPoint)
         {
             if(Participants.TryGetValue(data.Key, out var participant))
             {

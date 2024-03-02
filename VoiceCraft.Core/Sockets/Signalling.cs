@@ -212,8 +212,8 @@ namespace VoiceCraft.Core.Sockets
                     if (ActivityChecker != null)
                     {
                         _ = Task.Run(() => {
-                            ActivityChecker.Wait(); //Wait to finish before disposing.
-                            ActivityChecker.Dispose();
+                            ActivityChecker?.Wait(); //Wait to finish before disposing.
+                            ActivityChecker?.Dispose();
                             ActivityChecker = null;
                         });
                     }
