@@ -13,7 +13,7 @@ namespace VoiceCraft.Core.Packets.MCComm
                 PacketType = MCCommPacketTypes.AcceptUpdate,
                 PacketData = new AcceptUpdate()
                 {
-                    SpeakingPlayers = data;
+                    SpeakingPlayers = data
                 }
             };
         }

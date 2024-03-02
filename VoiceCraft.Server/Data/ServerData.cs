@@ -5,31 +5,49 @@ namespace VoiceCraft.Data.Server
 {
     public class ServerData
     {
-        const string PropertiesDirectory = "ServerProperties.json";
-        const string BanlistDirectory = "Banlist.json";
+        const string ConfigFolder = "config";
+        const string PropertiesFile = "ServerProperties.json";
+        const string BanlistFile = "Banlist.json";
+        const string PropertiesDirectory = $"{ConfigFolder}/{PropertiesFile}";
+        const string BanlistDirectory = $"{ConfigFolder}/{BanlistFile}";
 
         private Properties ServerProperties { get; set; } = new Properties();
         private Banlist BanlistData { get; set; } = new Banlist();
 
         public Properties LoadProperties()
         {
-            //Load properties files and create if not exists.
-            if (!File.Exists(PropertiesDirectory))
+            if(!Directory.Exists(ConfigFolder))
             {
-                Logger.LogToConsole(LogType.Warn, $"{PropertiesDirectory} file does not exist. Creating file...", "Properties");
-                string jsonString = JsonConvert.SerializeObject(ServerProperties, Formatting.Indented);
-                File.WriteAllText(PropertiesDirectory, jsonString);
-                Logger.LogToConsole(LogType.Success, $"Successfully created file {PropertiesDirectory}.", "Properties");
+                Directory.CreateDirectory(ConfigFolder);
             }
-            else
+
+            //Load properties files and create if not exists.
+            if(File.Exists(PropertiesFile))
             {
-                Logger.LogToConsole(LogType.Info, "Loading properties...", "Properties");
+                Logger.LogToConsole(LogType.Info, $"Loading properties from {PropertiesFile}...", "Properties");
+                string jsonString = File.ReadAllText(PropertiesFile);
+                var properties = JsonConvert.DeserializeObject<Properties>(jsonString);
+                if (properties != null)
+                    ServerProperties = properties;
+                else
+                    Logger.LogToConsole(LogType.Warn, $"Failed to parse {PropertiesFile}. Falling back to default properties.", "Properties");
+            }
+            else if(File.Exists(PropertiesDirectory))
+            {
+                Logger.LogToConsole(LogType.Info, $"Loading properties from {PropertiesDirectory}...", "Properties");
                 string jsonString = File.ReadAllText(PropertiesDirectory);
                 var properties = JsonConvert.DeserializeObject<Properties>(jsonString);
                 if (properties != null)
                     ServerProperties = properties;
                 else
                     Logger.LogToConsole(LogType.Warn, $"Failed to parse {PropertiesDirectory}. Falling back to default properties.", "Properties");
+            }
+            else
+            {
+                Logger.LogToConsole(LogType.Warn, $"{PropertiesFile} file cannot be found. Creating file at {PropertiesDirectory}...", "Properties");
+                string jsonString = JsonConvert.SerializeObject(ServerProperties, Formatting.Indented);
+                File.WriteAllText(PropertiesDirectory, jsonString);
+                Logger.LogToConsole(LogType.Success, $"Successfully created file {PropertiesDirectory}.", "Properties");
             }
 
             if (ServerProperties.MCCommPortTCP == ServerProperties.SignallingPortTCP)
@@ -73,22 +91,32 @@ namespace VoiceCraft.Data.Server
         public Banlist LoadBanlist()
         {
             //Load banlist files and create if not exists.
-            if (!File.Exists(BanlistDirectory))
+            if(File.Exists(BanlistFile))
             {
-                Logger.LogToConsole(LogType.Warn, $"{BanlistDirectory} file does not exist. Creating file...", "Banlist");
-                string jsonString = JsonConvert.SerializeObject(BanlistData, Formatting.Indented);
-                File.WriteAllText(BanlistDirectory, jsonString);
-                Logger.LogToConsole(LogType.Success, $"Successfully created file {BanlistDirectory}.", "Banlist");
+                Logger.LogToConsole(LogType.Info, $"Loading banlist from {BanlistFile}...", "Banlist");
+                string jsonString = File.ReadAllText(BanlistFile);
+                var properties = JsonConvert.DeserializeObject<Banlist>(jsonString);
+                if (properties != null)
+                    BanlistData = properties;
+                else
+                    Logger.LogToConsole(LogType.Warn, $"Failed to parse {BanlistFile}. Falling back to default banlist.", "Banlist");
             }
-            else
+            else if(File.Exists(BanlistDirectory))
             {
-                Logger.LogToConsole(LogType.Info, "Loading banlist...", "Banlist");
+                Logger.LogToConsole(LogType.Info, $"Loading banlist from {BanlistDirectory}...", "Banlist");
                 string jsonString = File.ReadAllText(BanlistDirectory);
                 var properties = JsonConvert.DeserializeObject<Banlist>(jsonString);
                 if (properties != null)
                     BanlistData = properties;
                 else
                     Logger.LogToConsole(LogType.Warn, $"Failed to parse {BanlistDirectory}. Falling back to default banlist.", "Banlist");
+            }
+            else
+            {
+                Logger.LogToConsole(LogType.Warn, $"{BanlistFile} file cannot be found. Creating file at {BanlistDirectory}...", "Banlist");
+                string jsonString = JsonConvert.SerializeObject(BanlistData, Formatting.Indented);
+                File.WriteAllText(BanlistDirectory, jsonString);
+                Logger.LogToConsole(LogType.Success, $"Successfully created file {BanlistDirectory}.", "Banlist");
             }
 
             Logger.LogToConsole(LogType.Success, "Loaded banlist successfully!", "Banlist");
