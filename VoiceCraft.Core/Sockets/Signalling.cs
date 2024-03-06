@@ -341,10 +341,7 @@ namespace VoiceCraft.Core.Sockets
                 {
                     var socket = await Socket.AcceptAsync();
                     OnSocketConnected?.Invoke(socket);
-                    _ = Task.Run(async () =>
-                    {
-                        await ListenAsync(socket);
-                    });
+                    _ = ListenAsync(socket);
                 }
                 catch (Exception ex)
                 {
