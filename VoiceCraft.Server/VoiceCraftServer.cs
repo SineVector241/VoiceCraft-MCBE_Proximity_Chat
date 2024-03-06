@@ -476,8 +476,7 @@ namespace VoiceCraft.Core.Server
             }
             if (ExternalServers.Exists(x => x.IP == ctx.Request.RemoteEndPoint?.ToString().Split(":").FirstOrDefault()))
             {
-                var denyPacket = Packets.MCComm.Deny.Create("Already Logged In!");
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, denyPacket);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
 
@@ -488,8 +487,7 @@ namespace VoiceCraft.Core.Server
             ExternalServers.Add(server);
             OnExternalServerConnected?.Invoke(server);
 
-            var acceptPacket = Packets.MCComm.Accept.Create();
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, acceptPacket);
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
         }
 
         private void MCCommBinded(Packets.MCComm.Bind packet, HttpListenerContext ctx)
