@@ -21,7 +21,7 @@ namespace VoiceCraft.Core.Packets.Voice
         {
             PrivateId = BitConverter.ToInt32(dataStream, readOffset); //Read login Id - 4 bytes.
             PacketCount = BitConverter.ToUInt32(dataStream, readOffset + 4); //Read packet count - 4 bytes.
-            ushort audioLength = BitConverter.ToUInt16(dataStream, readOffset + 8); //Read audio length - 2 bytes.
+            int audioLength = BitConverter.ToInt32(dataStream, readOffset + 8); //Read audio length - 4 bytes.
 
             Audio = new byte[audioLength];
             if(audioLength > 0)
