@@ -162,24 +162,24 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Warn, $"External Server Disconnected: IP - {server.IP}, Reason - {reason}", "Server");
         }
 
-        private void ParticipantConnected(VoiceCraftParticipant participant, ushort key)
+        private void ParticipantConnected(VoiceCraftParticipant participant, int privateId)
         {
-            Logger.LogToConsole(LogType.Success, $"Participant connected: Key - {key}, Positioning Type - {participant.PositioningType}", "Server");
+            Logger.LogToConsole(LogType.Success, $"Participant connected: Key - {participant.PublicId}, Positioning Type - {participant.PositioningType}", "Server");
         }
 
-        private void ParticipantBinded(VoiceCraftParticipant participant, ushort key)
+        private void ParticipantBinded(VoiceCraftParticipant participant, int privateId)
         {
-            Logger.LogToConsole(LogType.Success, $"Participant binded: Key - {key}, Name - {participant.Name}", "Server");
+            Logger.LogToConsole(LogType.Success, $"Participant binded: Key - {participant.PublicId}, Name - {participant.Name}", "Server");
         }
 
-        private void ParticipantUnbinded(VoiceCraftParticipant participant, ushort key)
+        private void ParticipantUnbinded(VoiceCraftParticipant participant, int privateId)
         {
-            Logger.LogToConsole(LogType.Warn, $"Participant unbinded: Key - {key}, Name - {participant.Name}", "Server");
+            Logger.LogToConsole(LogType.Warn, $"Participant unbinded: Key - {participant.PublicId}, Name - {participant.Name}", "Server");
         }
 
-        private void ParticipantDisconnected(string reason, VoiceCraftParticipant participant, ushort key)
+        private void ParticipantDisconnected(string reason, VoiceCraftParticipant participant, int privateId)
         {
-            Logger.LogToConsole(LogType.Warn, $"Participant disconnected: Key - {key}, Reason - {reason}", "Server");
+            Logger.LogToConsole(LogType.Warn, $"Participant disconnected: Key - {participant.PublicId}, Reason - {reason}", "Server");
         }
 
         //Debug Events

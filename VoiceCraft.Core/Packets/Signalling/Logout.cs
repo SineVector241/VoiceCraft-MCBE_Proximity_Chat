@@ -6,35 +6,40 @@ namespace VoiceCraft.Core.Packets.Signalling
 {
     public class Logout : IPacketData
     {
-        public ushort Key { get; set; }
+        public ushort PublicId { get; set; }
+        public int PrivateId { get; set; }
 
         public Logout()
         {
-            Key = 0;
+            PublicId = 0;
+            PrivateId = 0;
         }
 
         public Logout(byte[] dataStream, int readOffset = 0)
         {
-            Key = BitConverter.ToUInt16(dataStream, readOffset); //Read login key - 2 bytes.
+            PublicId = BitConverter.ToUInt16(dataStream, readOffset); //Read public id - 2 bytes.
+            PrivateId = BitConverter.ToInt32(dataStream, readOffset + 2); //Read private Id - 4 bytes.
         }
 
         public byte[] GetPacketStream()
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(Key));
+            dataStream.AddRange(BitConverter.GetBytes(PublicId));
+            dataStream.AddRange(BitConverter.GetBytes(PrivateId));
 
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(ushort loginKey)
+        public static SignallingPacket Create(int privateId,ushort publicId)
         {
             return new SignallingPacket()
             {
                 PacketType = SignallingPacketTypes.Logout,
                 PacketData = new Logout()
                 {
-                    Key = loginKey
+                    PublicId = publicId,
+                    PrivateId = privateId
                 }
             };
         }

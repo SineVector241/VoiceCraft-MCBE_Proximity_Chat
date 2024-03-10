@@ -49,7 +49,7 @@ namespace VoiceCraft.Core.Sockets
         public event PacketData<ClientAudio>? OnClientAudio;
         public event PacketData<ServerAudio>? OnServerAudio;
         public event PacketData<UpdatePosition>? OnUpdatePosition;
-        public event PacketData<Null>? OnKeepAlive;
+        public event PacketData<KeepAlive>? OnKeepAlive;
         public event PacketData<Null>? OnNull;
 
         public event OutboundPacket? OnOutboundPacket;
@@ -73,7 +73,7 @@ namespace VoiceCraft.Core.Sockets
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="Exception"></exception>
-        public async Task Connect(string IP, int Port, int localPort, ushort LoginKey = 0)
+        public async Task Connect(string IP, int Port, int localPort, int privateId)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");
@@ -86,7 +86,7 @@ namespace VoiceCraft.Core.Sockets
             try
             {
                 _ = ListenAsync();
-                await SendPacketAsync(Login.Create(LoginKey));
+                await SendPacketAsync(Login.Create(privateId));
             }
             catch (Exception ex)
             {
@@ -331,7 +331,7 @@ namespace VoiceCraft.Core.Sockets
                 case VoicePacketTypes.ClientAudio: OnClientAudio?.Invoke((ClientAudio)packet.PacketData, endPoint); break;
                 case VoicePacketTypes.ServerAudio: OnServerAudio?.Invoke((ServerAudio)packet.PacketData, endPoint); break;
                 case VoicePacketTypes.UpdatePosition: OnUpdatePosition?.Invoke((UpdatePosition)packet.PacketData, endPoint); break;
-                case VoicePacketTypes.KeepAlive: OnKeepAlive?.Invoke((Null)packet.PacketData, endPoint); break;
+                case VoicePacketTypes.KeepAlive: OnKeepAlive?.Invoke((KeepAlive)packet.PacketData, endPoint); break;
                 default: OnNull?.Invoke(new Null(), endPoint); break;
             }
         }

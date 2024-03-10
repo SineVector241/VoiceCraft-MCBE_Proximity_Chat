@@ -37,7 +37,8 @@ namespace VoiceCraft.Client
         public MCWSS MCWSS { get; private set; }
         public string? IP { get; private set; }
         public string? Name { get; private set; }
-        public ushort Key { get; private set; }
+        public ushort PublicId { get; private set; }
+        public int PrivateId { get; private set; }
 
         //Participants/Channels
         public Dictionary<ushort, VoiceCraftParticipant> Participants { get; }
@@ -147,7 +148,7 @@ namespace VoiceCraft.Client
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
             //Send the audio
-            await Voice.SendPacketAsync(Core.Packets.Voice.ClientAudio.Create(PacketCount, audioTrimmed));
+            await Voice.SendPacketAsync(Core.Packets.Voice.ClientAudio.Create(PrivateId, PacketCount, audioTrimmed));
         }
 
         public async Task SetMute()
@@ -155,7 +156,7 @@ namespace VoiceCraft.Client
             if (ConnectionState != ConnectionState.Connected) return;
 
             IsMuted = !IsMuted;
-            await Signalling.SendPacketAsync(Core.Packets.Signalling.MuteUnmute.Create(0, IsMuted), Signalling.Socket); //Mute and Deafen are based on IP from client to server.
+            await Signalling.SendPacketAsync(Core.Packets.Signalling.MuteUnmute.Create(PrivateId, 0, IsMuted), Signalling.Socket); //Mute and Deafen are based on IP & Private Id from client to server.
         }
 
         public async Task SetDeafen()
@@ -163,14 +164,14 @@ namespace VoiceCraft.Client
             if (ConnectionState != ConnectionState.Connected) return;
 
             IsDeafened = !IsDeafened;
-            await Signalling.SendPacketAsync(Core.Packets.Signalling.DeafenUndeafen.Create(0, IsDeafened), Signalling.Socket); //Mute and Deafen are based on IP from client to server.
+            await Signalling.SendPacketAsync(Core.Packets.Signalling.DeafenUndeafen.Create(PrivateId, 0, IsDeafened), Signalling.Socket); //Mute and Deafen are based on IP & Private Id from client to server.
         }
 
         public async Task JoinChannel(VoiceCraftChannel channel, string password = "")
         {
             if (!channel.Joined)
             {
-                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(channel.ChannelId, password, true), Signalling.Socket);
+                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(PrivateId, channel.ChannelId, password, true), Signalling.Socket);
             }
         }
 
@@ -178,7 +179,7 @@ namespace VoiceCraft.Client
         {
             if (channel.Joined)
             {
-                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(channel.ChannelId, "", false), Signalling.Socket);
+                await Signalling.SendPacketAsync(Core.Packets.Signalling.JoinLeaveChannel.Create(PrivateId, channel.ChannelId, "", false), Signalling.Socket);
             }
         }
 
@@ -219,13 +220,14 @@ namespace VoiceCraft.Client
 
         #region Event Methods
         //Signalling
-        private void Signalling_Connected(ushort port, ushort key = 0)
+        private void Signalling_Connected(ushort port, ushort publicId = 0, int privateId = 0)
         {
             OnSignallingConnected?.Invoke();
             if (!string.IsNullOrWhiteSpace(IP))
             {
-                Key = key;
-                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, key);
+                PublicId = publicId;
+                PrivateId = privateId;
+                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, publicId);
             }
             else
             {
@@ -244,38 +246,38 @@ namespace VoiceCraft.Client
 
         private void Signalling_Login(Core.Packets.Signalling.Login data, Socket socket)
         {
-            if(!Participants.ContainsKey(data.Key))
+            if(!Participants.ContainsKey(data.PublicId))
             {
-                var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS)
+                var participant = new VoiceCraftParticipant(data.Name, data.PublicId, AudioFormat, FrameSizeMS)
                 {
                     IsDeafened = data.IsDeafened,
                     IsMuted = data.IsMuted
                 };
 
-                Participants.TryAdd(data.Key, participant);
+                Participants.TryAdd(data.PublicId, participant);
                 AudioOutput.AddMixerInput(participant.AudioOutput);
-                OnParticipantJoined?.Invoke(participant, data.Key);
+                OnParticipantJoined?.Invoke(participant, data.PublicId);
             }
         }
 
         private void Signalling_Logout(Core.Packets.Signalling.Logout data, Socket socket)
         {
-            //Logout participant. If LoginKey is the same as this then disconnect.
-            if (data.Key == Key)
+            //Logout participant. If PrivateId is the same as this then disconnect.
+            if (data.PrivateId == PrivateId)
             {
                 Disconnect("Kicked or banned!");
             }
-            else if(Participants.Remove(data.Key, out var participant))
+            else if(Participants.Remove(data.PublicId, out var participant))
             {
                 AudioOutput.RemoveMixerInput(participant.AudioOutput);
                 participant.Dispose();
-                OnParticipantLeft?.Invoke(participant, data.Key);
+                OnParticipantLeft?.Invoke(participant, data.PublicId);
             }
         }
 
         private void Signalling_DeafenUndeafen(Core.Packets.Signalling.DeafenUndeafen data, Socket socket)
         {
-            if(Participants.TryGetValue(data.Key, out var participant))
+            if(Participants.TryGetValue(data.PublicId, out var participant))
             {
                 participant.IsDeafened = data.Value;
                 OnParticipantDeafenedStateChanged?.Invoke(participant, data.Value);
@@ -284,7 +286,7 @@ namespace VoiceCraft.Client
 
         private void Signalling_MuteUnmute(Core.Packets.Signalling.MuteUnmute data, Socket socket)
         {
-            if (Participants.TryGetValue(data.Key, out var participant))
+            if (Participants.TryGetValue(data.PublicId, out var participant))
             {
                 participant.IsMuted = data.Value;
                 OnParticipantDeafenedStateChanged?.Invoke(participant, data.Value);
@@ -334,7 +336,7 @@ namespace VoiceCraft.Client
 
         private void Voice_ServerAudio(Core.Packets.Voice.ServerAudio data, EndPoint endPoint)
         {
-            if(Participants.TryGetValue(data.Key, out var participant))
+            if(Participants.TryGetValue(data.PublicId, out var participant))
             {
                 participant.ProximityVolume = LinearProximity ? (float)((Math.Exp(data.Volume) - 1) / (Math.E - 1)) : data.Volume;
                 participant.EchoFactor = data.EchoFactor;
@@ -358,7 +360,7 @@ namespace VoiceCraft.Client
         {
             if (ConnectionState != ConnectionState.Connected) return;
 
-            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create(Username, true), Signalling.Socket);
+            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create(PrivateId, Username, true), Signalling.Socket);
             OnBinded?.Invoke(Username);
         }
 
@@ -366,14 +368,14 @@ namespace VoiceCraft.Client
         {
             if (ConnectionState != ConnectionState.Connected) return;
 
-            _ = Voice.SendPacketAsync(Core.Packets.Voice.UpdatePosition.Create(position, Dimension));
+            _ = Voice.SendPacketAsync(Core.Packets.Voice.UpdatePosition.Create(PrivateId, position, Dimension));
         }
 
         private void WebsocketDisconnected()
         {
             if (ConnectionState != ConnectionState.Connected) return;
 
-            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create("", false), Signalling.Socket);
+            _ = Signalling.SendPacketAsync(Core.Packets.Signalling.BindedUnbinded.Create(PrivateId, "", false), Signalling.Socket);
             ClearParticipants();
             Channels.Clear();
             OnUnbinded?.Invoke();

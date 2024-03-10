@@ -232,14 +232,14 @@ namespace VoiceCraft.Maui.Services
         //Goes in this protocol order.
         private void OnConnected()
         {
-            StatusMessage = Network.PositioningType == Core.PositioningTypes.ServerSided ? $"Connected! Key - {Network.Key}\nWaiting for binding..." : $"Connected! Key\nWaiting for MCWSS connection...";
+            StatusMessage = Network.PositioningType == Core.PositioningTypes.ServerSided ? $"Connected! Key - {Network.PublicId}\nWaiting for binding..." : $"Connected! Key\nWaiting for MCWSS connection...";
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 
         private void Binded(string? name)
         {
             Username = name ?? "<N.A.>";
-            StatusMessage = $"Connected - Key: {Network.Key}\n{Username}";
+            StatusMessage = $"Connected - Key: {Network.PublicId}\n{Username}";
 
             //Last step of verification. We start sending data and playing any received data.
             try

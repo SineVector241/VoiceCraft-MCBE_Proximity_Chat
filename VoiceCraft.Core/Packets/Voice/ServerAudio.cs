@@ -6,7 +6,7 @@ namespace VoiceCraft.Core.Packets.Voice
 {
     public class ServerAudio : IPacketData
     {
-        public ushort Key { get; set; }
+        public ushort PublicId { get; set; }
         public uint PacketCount { get; set; }
         public float Volume { get; set; }
         public float EchoFactor { get; set; }
@@ -16,7 +16,7 @@ namespace VoiceCraft.Core.Packets.Voice
 
         public ServerAudio()
         {
-            Key = 0;
+            PublicId = 0;
             PacketCount = 0;
             Volume = 0;
             EchoFactor = 0;
@@ -27,7 +27,7 @@ namespace VoiceCraft.Core.Packets.Voice
 
         public ServerAudio(byte[] dataStream, int readOffset = 0)
         {
-            Key = BitConverter.ToUInt16(dataStream, readOffset); //read login key - 2 bytes.
+            PublicId = BitConverter.ToUInt16(dataStream, readOffset); //read login key - 2 bytes.
             PacketCount = BitConverter.ToUInt32(dataStream, readOffset + 2); //read packet count - 4 bytes.
             Volume = BitConverter.ToSingle(dataStream, readOffset + 6); //read volume - 4 bytes.
             EchoFactor = BitConverter.ToSingle(dataStream, readOffset + 10); //read echo factor - 4 bytes.
@@ -47,7 +47,7 @@ namespace VoiceCraft.Core.Packets.Voice
         {
             var dataStream = new List<byte>();
 
-            dataStream.AddRange(BitConverter.GetBytes(Key));
+            dataStream.AddRange(BitConverter.GetBytes(PublicId));
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
             dataStream.AddRange(BitConverter.GetBytes(Volume));
             dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
@@ -65,14 +65,14 @@ namespace VoiceCraft.Core.Packets.Voice
             return dataStream.ToArray();
         }
 
-        public static VoicePacket Create(ushort loginKey, uint packetCount, float volume, float echoFactor, float rotation, bool muffled, byte[] audio)
+        public static VoicePacket Create(ushort publicId, uint packetCount, float volume, float echoFactor, float rotation, bool muffled, byte[] audio)
         {
             return new VoicePacket()
             {
                 PacketType = VoicePacketTypes.ServerAudio,
                 PacketData = new ServerAudio()
                 {
-                    Key = loginKey,
+                    PublicId = publicId,
                     PacketCount = packetCount,
                     Volume = volume,
                     EchoFactor = echoFactor,

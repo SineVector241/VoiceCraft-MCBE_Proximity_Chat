@@ -43,6 +43,8 @@ namespace VoiceCraft.Core.Packets
                     break;
                 case SignallingPacketTypes.Ping: PacketData = new Ping(dataStream, 2);
                     break;
+                case SignallingPacketTypes.PingCheck: PacketData = new PingCheck(dataStream, 2);
+                    break;
                 default: PacketData = new Null();
                     break;
             }

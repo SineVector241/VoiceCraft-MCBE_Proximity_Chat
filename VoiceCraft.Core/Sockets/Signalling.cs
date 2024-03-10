@@ -32,7 +32,7 @@ namespace VoiceCraft.Core.Sockets
         #endregion
 
         #region Delegates
-        public delegate void Connected(ushort port = 0, ushort key = 0);
+        public delegate void Connected(ushort port = 0, ushort publicId = 0, int privateId = 0);
         public delegate void Disconnected(string? reason = null);
         public delegate void PacketData<T>(T data, Socket socket);
 
@@ -57,7 +57,7 @@ namespace VoiceCraft.Core.Sockets
         public event PacketData<JoinLeaveChannel>? OnJoinLeaveChannel;
         public event PacketData<Error>? OnError;
         public event PacketData<Ping>? OnPing;
-        public event PacketData<Null>? OnPingCheck;
+        public event PacketData<PingCheck>? OnPingCheck;
         public event PacketData<Null>? OnNull;
 
         public event SocketConnected? OnSocketConnected;
@@ -373,7 +373,7 @@ namespace VoiceCraft.Core.Sockets
                 case SignallingPacketTypes.JoinLeaveChannel: OnJoinLeaveChannel?.Invoke((JoinLeaveChannel)packet.PacketData, socket); break;
                 case SignallingPacketTypes.Error: OnError?.Invoke((Error)packet.PacketData, socket); break;
                 case SignallingPacketTypes.Ping: OnPing?.Invoke((Ping)packet.PacketData, socket); break;
-                case SignallingPacketTypes.PingCheck: OnPingCheck?.Invoke((Null)packet.PacketData, socket); break;
+                case SignallingPacketTypes.PingCheck: OnPingCheck?.Invoke((PingCheck)packet.PacketData, socket); break;
                 default: OnNull?.Invoke(new Null(), socket); break;
             };
         }
@@ -430,7 +430,7 @@ namespace VoiceCraft.Core.Sockets
                 IsConnected = true;
                 LastActive = Environment.TickCount;
                 ActivityChecker = Task.Run(async () => await ActivityCheck());
-                OnConnected?.Invoke(data.VoicePort, data.Key);
+                OnConnected?.Invoke(data.VoicePort, data.PublicId);
             }
         }
 

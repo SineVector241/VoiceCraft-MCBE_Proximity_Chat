@@ -47,7 +47,7 @@ namespace VoiceCraft.Client
         private LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioOutput { get; }
 
-        public VoiceCraftParticipant(string name, WaveFormat audioFormat, int frameSizeMS) : base(name)
+        public VoiceCraftParticipant(string name, ushort publicId, WaveFormat audioFormat, int frameSizeMS) : base(name, publicId)
         {
             AudioFormat = audioFormat;
             FrameSizeMS = frameSizeMS;

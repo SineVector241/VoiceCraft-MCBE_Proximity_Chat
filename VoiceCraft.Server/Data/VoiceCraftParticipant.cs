@@ -29,7 +29,7 @@ namespace VoiceCraft.Data.Server
         public Socket SignallingSocket { get; }
         public EndPoint? VoiceEndpoint { get; set; }
 
-        public VoiceCraftParticipant(string name, Socket signallingSocket, PositioningTypes positioningType) : base(name)
+        public VoiceCraftParticipant(string name, ushort publicId, Socket signallingSocket, PositioningTypes positioningType) : base(name, publicId)
         {
             PositioningType = positioningType;
             SignallingSocket = signallingSocket;

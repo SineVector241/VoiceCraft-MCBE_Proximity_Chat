@@ -4,18 +4,18 @@ using VoiceCraft.Core.Packets.Interfaces;
 
 namespace VoiceCraft.Core.Packets.Voice
 {
-    public class Login : IPacketData
+    public class KeepAlive : IPacketData
     {
-        public int PrivateId { get; set; }
+        public int PrivateId { get; set; } = 0;
 
-        public Login(byte[] dataStream, int readOffset = 0)
-        {
-            PrivateId = BitConverter.ToInt32(dataStream, readOffset); //read login key - 4 bytes.
-        }
-
-        public Login()
+        public KeepAlive()
         {
             PrivateId = 0;
+        }
+
+        public KeepAlive(byte[] dataStream, int readOffset = 0)
+        {
+            PrivateId = BitConverter.ToInt32(dataStream, readOffset); //Read private Id - 4 bytes.
         }
 
         public byte[] GetPacketStream()
@@ -31,8 +31,8 @@ namespace VoiceCraft.Core.Packets.Voice
         {
             return new VoicePacket()
             {
-                PacketType = VoicePacketTypes.Login,
-                PacketData = new Login()
+                PacketType = VoicePacketTypes.KeepAlive,
+                PacketData = new KeepAlive()
                 {
                     PrivateId = privateId
                 }

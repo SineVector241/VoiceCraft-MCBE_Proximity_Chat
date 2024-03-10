@@ -8,7 +8,7 @@ namespace VoiceCraft.Core.Packets.Signalling
     public class Login : IPacketData
     {
         public PositioningTypes PositioningType { get; set; }
-        public ushort Key { get; set; }
+        public ushort PublicId { get; set; }
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         public Login()
         {
             PositioningType = PositioningTypes.ServerSided;
-            Key = 0;
+            PublicId = 0;
             Name = string.Empty;
             Version = string.Empty;
         }
@@ -25,7 +25,7 @@ namespace VoiceCraft.Core.Packets.Signalling
         public Login(byte[] dataStream, int readOffset = 0)
         {
             PositioningType = (PositioningTypes)BitConverter.ToUInt16(dataStream, readOffset); //Read positioning type - 2 Bytes.
-            Key = BitConverter.ToUInt16(dataStream, readOffset + 2); //Read login key - 2 bytes.
+            PublicId = BitConverter.ToUInt16(dataStream, readOffset + 2); //Read login key - 2 bytes.
             IsDeafened = BitConverter.ToBoolean(dataStream, readOffset + 4); //Read deafen variable - 1 byte.
             IsMuted = BitConverter.ToBoolean(dataStream, readOffset + 5); //Read muted variable - 1 byte.
 
@@ -48,7 +48,7 @@ namespace VoiceCraft.Core.Packets.Signalling
             var dataStream = new List<byte>();
 
             dataStream.AddRange(BitConverter.GetBytes((ushort)PositioningType));
-            dataStream.AddRange(BitConverter.GetBytes(Key));
+            dataStream.AddRange(BitConverter.GetBytes(PublicId));
             dataStream.AddRange(BitConverter.GetBytes(IsDeafened));
             dataStream.AddRange(BitConverter.GetBytes(IsMuted));
 
@@ -71,7 +71,7 @@ namespace VoiceCraft.Core.Packets.Signalling
             return dataStream.ToArray();
         }
 
-        public static SignallingPacket Create(PositioningTypes positioningType, ushort loginKey, bool isDeafened, bool isMuted, string name, string version)
+        public static SignallingPacket Create(PositioningTypes positioningType, ushort publicId, bool isDeafened, bool isMuted, string name, string version)
         {
             return new SignallingPacket()
             {
@@ -79,7 +79,7 @@ namespace VoiceCraft.Core.Packets.Signalling
                 PacketData = new Login()
                 {
                     PositioningType = positioningType,
-                    Key = loginKey,
+                    PublicId = publicId,
                     IsDeafened = isDeafened,
                     IsMuted = isMuted,
                     Name = name,
