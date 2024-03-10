@@ -21,6 +21,7 @@ namespace VoiceCraft.Core.Sockets
         public int LastActive { get; private set; }
         public int ActivityInterval { get; set; } = 1000;
         public int ActivityTimeout { get; set; } = 8000;
+        private int PrivateId { get; set; } = 0;
         private Task? ActivityChecker { get; set; }
 
         //Debug Settings
@@ -388,7 +389,7 @@ namespace VoiceCraft.Core.Sockets
                     Disconnect($"Signalling timed out!\nTime since last packet {Environment.TickCount - LastActive}ms.", true);
                     break;
                 }
-                await SendPacketAsync(Null.Create(SignallingPacketTypes.PingCheck), Socket);
+                await SendPacketAsync(PingCheck.Create(PrivateId), Socket);
                 await Task.Delay(ActivityInterval).ConfigureAwait(false);
             }
         }
@@ -427,10 +428,11 @@ namespace VoiceCraft.Core.Sockets
         {
             if (!IsConnected)
             {
+                PrivateId = data.PrivateId;
                 IsConnected = true;
                 LastActive = Environment.TickCount;
                 ActivityChecker = Task.Run(async () => await ActivityCheck());
-                OnConnected?.Invoke(data.VoicePort, data.PublicId);
+                OnConnected?.Invoke(data.VoicePort, data.PublicId, data.PrivateId);
             }
         }
 

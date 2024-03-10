@@ -227,7 +227,7 @@ namespace VoiceCraft.Client
             {
                 PublicId = publicId;
                 PrivateId = privateId;
-                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, publicId);
+                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, privateId);
             }
             else
             {

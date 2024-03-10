@@ -221,7 +221,7 @@ namespace VoiceCraft.Core.Server
             {
                 for (ushort i = ushort.MinValue; i < ushort.MaxValue; i++)
                 {
-                    if (Participants.Values.FirstOrDefault(x => x.PublicId == publicId) == null)
+                    if (Participants.Values.FirstOrDefault(x => x.PublicId == i) == null)
                     {
                         publicId = i;
                         break;
@@ -379,7 +379,7 @@ namespace VoiceCraft.Core.Server
         #region Voice
         private void Voice_Login(Packets.Voice.Login data, EndPoint endPoint)
         {
-            if (Participants.TryGetValue(data.PrivateId, out var participant) && participant.SignallingSocket.RemoteEndPoint != null && ((IPEndPoint)participant.SignallingSocket.RemoteEndPoint).Address == ((IPEndPoint)endPoint).Address && participant.VoiceEndpoint == null)
+            if (Participants.TryGetValue(data.PrivateId, out var participant) && participant.SignallingSocket.RemoteEndPoint != null && ((IPEndPoint)participant.SignallingSocket.RemoteEndPoint).Address.ToString() == ((IPEndPoint)endPoint).Address.ToString() && participant.VoiceEndpoint == null)
             {
                 participant.VoiceEndpoint = endPoint;
                 OnParticipantConnected?.Invoke(participant, data.PrivateId);
@@ -394,7 +394,7 @@ namespace VoiceCraft.Core.Server
         private void Voice_KeepAlive(Packets.Voice.KeepAlive data, EndPoint endPoint)
         {
             //Get participant by private ID and see if the source IP address is the same.
-            if (Participants.TryGetValue(data.PrivateId, out var participant) && participant.VoiceEndpoint != null && ((IPEndPoint)participant.VoiceEndpoint).Address == ((IPEndPoint)endPoint).Address)
+            if (Participants.TryGetValue(data.PrivateId, out var participant) && participant.VoiceEndpoint != null && ((IPEndPoint)participant.VoiceEndpoint).Address.ToString() == ((IPEndPoint)endPoint).Address.ToString())
             {
                 participant.LastActive = Environment.TickCount;
                 //Update endpoint if it has changed, BECAUSE NAT IS FUCKING ANNOYING!
@@ -409,7 +409,7 @@ namespace VoiceCraft.Core.Server
         {
             _ = Task.Run(async () =>
             {
-                var found = Participants.TryGetValue(data.PrivateId, out var participant) && participant.VoiceEndpoint != null && ((IPEndPoint)participant.VoiceEndpoint).Address == ((IPEndPoint)endPoint).Address;
+                var found = Participants.TryGetValue(data.PrivateId, out var participant) && participant.VoiceEndpoint != null && ((IPEndPoint)participant.VoiceEndpoint).Address.ToString() == ((IPEndPoint)endPoint).Address.ToString();
                 if (participant != null &&
                     !participant.IsMuted && !participant.IsDeafened &&
                     !participant.IsServerMuted && participant.Binded)
@@ -513,7 +513,7 @@ namespace VoiceCraft.Core.Server
         {
             if (!ServerLoggedIn(ctx)) return;
 
-            var participant = Participants.FirstOrDefault(x => x.Key == packet.PlayerKey);
+            var participant = Participants.FirstOrDefault(x => x.Value.PublicId == packet.PlayerKey);
             if (participant.Value == null)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Deny.Create("Could not find key!"));
