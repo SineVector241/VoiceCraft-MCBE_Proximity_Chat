@@ -220,7 +220,7 @@ namespace VoiceCraft.Maui.Services
 
             if (Environment.TickCount - (long)RecordDetection < 1000)
             {
-                _ = Task.Run(() => Network.SendAudio(e.Buffer, e.BytesRecorded));
+                _ = Network.SendAudio(e.Buffer, e.BytesRecorded);
             }
         }
 
