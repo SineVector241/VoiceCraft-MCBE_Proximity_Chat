@@ -259,7 +259,7 @@ namespace VoiceCraft.Core.Server
 
                 OnParticipantBinded?.Invoke(participant, data.PrivateId);
             }
-            if (found && participant?.PositioningType == PositioningTypes.ClientSided && participant.Binded && !data.Binded) //data.Binded is the client requesting to unbind.
+            else if (found && participant?.PositioningType == PositioningTypes.ClientSided && participant.Binded && !data.Binded) //data.Binded is the client requesting to unbind.
             {
                 participant.LastActive = Environment.TickCount;
                 participant.Binded = false;
