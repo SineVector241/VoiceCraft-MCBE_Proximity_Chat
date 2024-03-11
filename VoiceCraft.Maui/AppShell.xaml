@@ -10,12 +10,10 @@
        FlyoutBackgroundColor="#22000000"
        Shell.FlyoutBackdrop="#6f404040"
        Shell.FlyoutBehavior="{OnIdiom Default='Flyout',
-                                      Phone='Disabled',
-                                      Tablet='Disabled'}"
+                                      Phone='Disabled'}"
        Shell.NavBarIsVisible="False"
        Shell.TabBarIsVisible="{OnIdiom Default='False',
-                                       Phone='True',
-                                       Tablet='True'}">
+                                       Phone='True'}">
 
 
     <!--  Shell Styles  -->

@@ -7,7 +7,7 @@
             InitializeComponent();
 
             //Routing
-            if(DeviceInfo.Idiom == DeviceIdiom.Phone || DeviceInfo.Idiom == DeviceIdiom.Tablet)
+            if(DeviceInfo.Idiom == DeviceIdiom.Phone)
             {
                 Routing.RegisterRoute(nameof(Views.Mobile.Servers), typeof(Views.Mobile.Servers));
                 Routing.RegisterRoute(nameof(Views.Mobile.ServerDetails), typeof(Views.Mobile.ServerDetails));
