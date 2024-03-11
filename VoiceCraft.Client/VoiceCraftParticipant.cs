@@ -9,9 +9,6 @@ namespace VoiceCraft.Client
 {
     public class VoiceCraftParticipant : Participant, IDisposable
     {
-        private float volume = 1.0f;
-        private float proximityVolume = 0.0f;
-
         public bool IsDisposed { get; private set; }
         public WaveFormat AudioFormat { get; }
         public int FrameSizeMS { get; }
@@ -23,26 +20,25 @@ namespace VoiceCraft.Client
         public float LeftVolume { get => AudioOutput.LeftVolume; set => AudioOutput.LeftVolume = value; }
         public float Volume
         {
-            get { return volume; }
+            get { return FloatProvider.Volume; }
             set
             {
-                volume = value;
-                FloatProvider.Volume = proximityVolume * volume;
+                FloatProvider.Volume = value;
             }
         }
         public float ProximityVolume
         {
-            get { return proximityVolume; }
+            get { return SmoothVolumeProvider.TargetVolume; }
             set
             {
-                proximityVolume = value;
-                FloatProvider.Volume = proximityVolume * volume;
+                SmoothVolumeProvider.TargetVolume = value;
             }
         }
 
         private VoiceCraftJitterBuffer JitterBuffer { get; }
         private VoiceCraftStream VoiceCraftStream { get; }
         private Wave16ToFloatProvider FloatProvider { get; }
+        private SmoothVolumeSampleProvider SmoothVolumeProvider { get; }
         private EchoSampleProvider EchoProvider { get; }
         private LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioOutput { get; }
@@ -59,7 +55,8 @@ namespace VoiceCraft.Client
             JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat, frameSizeMS);
             VoiceCraftStream = new VoiceCraftStream(AudioFormat, JitterBuffer);
             FloatProvider = new Wave16ToFloatProvider(VoiceCraftStream);
-            EchoProvider = new EchoSampleProvider(FloatProvider.ToSampleProvider(), 120) { DecayFactor = 0.1f };
+            SmoothVolumeProvider = new SmoothVolumeSampleProvider(FloatProvider.ToSampleProvider(), 20);
+            EchoProvider = new EchoSampleProvider(SmoothVolumeProvider, 120) { DecayFactor = 0.1f };
             LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
             AudioOutput = new MonoToStereoSampleProvider(LowpassProvider);
         }

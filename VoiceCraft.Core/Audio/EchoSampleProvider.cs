@@ -29,6 +29,7 @@ namespace VoiceCraft.Core.Audio
         public int Read(float[] buffer, int offset, int count)
         {
             int read = source.Read(buffer, offset, count);
+            if (EchoFactor == 0) return read;
             for (int i = 0; i < read; i++)
             {
                 for (int ch = 0; ch < source.WaveFormat.Channels; ch++)
