@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using VoiceCraft.Client;
-using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
 
@@ -34,21 +33,6 @@ namespace VoiceCraft.Maui.ViewModels
 
         [ObservableProperty]
         ObservableCollection<ChannelModel> channels = new ObservableCollection<ChannelModel>();
-
-#if WINDOWS
-        private IServiceManager serviceManager;
-#endif
-
-        public VoiceViewModel()
-        {
-            WeakReferenceMessenger.Default.Send(new RequestDataMSG());
-#if WINDOWS
-            serviceManager = new ServiceManager(); //Hold a reference so it does not get disposed by the GC.
-            serviceManager.StartService();
-#elif ANDROID
-            new ServiceManager().StartService();
-#endif
-        }
 
         [RelayCommand]
         public async Task OnPageAppearing()

@@ -4,6 +4,7 @@ using VoiceCraft.Client;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Maui.Models;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace VoiceCraft.Maui.ViewModels
 {
@@ -27,6 +28,7 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task Connect()
         {
+            WeakReferenceMessenger.Default.Send(new StartServiceMSG());
             await Navigator.NavigateTo(nameof(Voice), Server);
         }
     }

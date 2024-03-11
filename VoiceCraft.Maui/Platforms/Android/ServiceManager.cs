@@ -8,16 +8,15 @@ using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Client;
-using System.Linq;
 
 namespace VoiceCraft.Maui
 {
     [Service(ForegroundServiceType = Android.Content.PM.ForegroundService.TypeMicrophone)]
     public class ServiceManager : Service, IServiceManager
     {
-        private CancellationTokenSource Cts;
-        private VoipService VoipService;
-        private Intent serviceIntent;
+        private CancellationTokenSource? Cts;
+        private VoipService? VoipService;
+        private Intent? serviceIntent;
 
         private string NOTIFICATION_CHANNEL_ID = "1000";
         private int NOTIFICATION_ID = 1;
@@ -27,6 +26,12 @@ namespace VoiceCraft.Maui
         {
             serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
             StartForegroundService(serviceIntent);
+        }
+
+        public void Stop() 
+        {
+            Preferences.Set("VoipServiceRunning", false);
+            StopService(serviceIntent);
         }
 
         private void StartVoiceCraftService()
@@ -124,23 +129,25 @@ namespace VoiceCraft.Maui
                 }
                 finally
                 {
-                    VoipService.OnStatusUpdated -= StatusUpdated;
-                    VoipService.OnSpeakingStatusChanged -= SpeakingStatusChanged;
-                    VoipService.OnMutedStatusChanged -= MutedStatusChanged;
-                    VoipService.OnDeafenedStatusChanged -= DeafenedStatusChanged;
-                    VoipService.OnParticipantAdded -= ParticipantAdded;
-                    VoipService.OnParticipantRemoved -= ParticipantRemoved;
-                    VoipService.OnParticipantSpeakingStatusChanged -= ParticipantSpeakingStatusChanged;
-                    VoipService.OnParticipantChanged -= ParticipantChanged;
-                    VoipService.OnChannelCreated -= ChannelCreated;
-                    VoipService.OnChannelEntered -= ChannelEntered;
-                    VoipService.OnChannelLeave -= ChannelLeave;
-                    VoipService.OnServiceDisconnected -= OnServiceDisconnected;
-                    VoipService.Network.Signalling.OnDeny -= OnDeny;
+                    if (VoipService != null)
+                    {
+                        VoipService.OnStatusUpdated -= StatusUpdated;
+                        VoipService.OnSpeakingStatusChanged -= SpeakingStatusChanged;
+                        VoipService.OnMutedStatusChanged -= MutedStatusChanged;
+                        VoipService.OnDeafenedStatusChanged -= DeafenedStatusChanged;
+                        VoipService.OnParticipantAdded -= ParticipantAdded;
+                        VoipService.OnParticipantRemoved -= ParticipantRemoved;
+                        VoipService.OnParticipantSpeakingStatusChanged -= ParticipantSpeakingStatusChanged;
+                        VoipService.OnParticipantChanged -= ParticipantChanged;
+                        VoipService.OnChannelCreated -= ChannelCreated;
+                        VoipService.OnChannelEntered -= ChannelEntered;
+                        VoipService.OnChannelLeave -= ChannelLeave;
+                        VoipService.OnServiceDisconnected -= OnServiceDisconnected;
+                        VoipService.Network.Signalling.OnDeny -= OnDeny;
+                    }
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
-                    Preferences.Set("VoipServiceRunning", false);
-                    StopService(serviceIntent);
+                    Stop();
                     Cts.Dispose();
                 }
             }, Cts.Token);
@@ -151,9 +158,9 @@ namespace VoiceCraft.Maui
         {
             try
             {
-                if (!Cts.IsCancellationRequested)
+                if (!Cts?.IsCancellationRequested ?? false)
                 {
-                    Cts.Cancel();
+                    Cts?.Cancel();
                     Preferences.Set("VoipServiceRunning", false);
                 }
             }
@@ -252,11 +259,11 @@ namespace VoiceCraft.Maui
             {
                 WeakReferenceMessenger.Default.Send(new DisconnectedMSG(reason ?? string.Empty));
             });
-            Cts.Cancel();
+            Cts?.Cancel();
         }
         private void OnDeny(Core.Packets.Signalling.Deny data, System.Net.Sockets.Socket socket)
         {
-            if (VoipService.Network.Signalling.IsConnected)
+            if (VoipService?.Network.Signalling.IsConnected ?? false)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {

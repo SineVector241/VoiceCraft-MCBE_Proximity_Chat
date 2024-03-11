@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using VoiceCraft.Maui.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -10,6 +11,8 @@ namespace VoiceCraft.Maui.WinUI
     /// </summary>
     public partial class App : MauiWinUIApplication
     {
+        ServiceManager? serviceManager;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -17,6 +20,20 @@ namespace VoiceCraft.Maui.WinUI
         public App()
         {
             this.InitializeComponent();
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, StartServiceMSG message) =>
+            {
+                serviceManager = new ServiceManager();
+                serviceManager.StartService();
+            });
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, StopServiceMSG message) =>
+            {
+                if(serviceManager != null)
+                {
+                    serviceManager = null; //Dereference to dispose.
+                }
+            });
         }
 
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
