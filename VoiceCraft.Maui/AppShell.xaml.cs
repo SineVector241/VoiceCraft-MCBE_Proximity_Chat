@@ -6,13 +6,8 @@
         {
             InitializeComponent();
 
-            if(DeviceInfo.Idiom == DeviceIdiom.Desktop)
-            {
-                CurrentItem = desktopDefault;
-            }
-
             //Routing
-            if(DeviceInfo.Idiom == DeviceIdiom.Phone)
+            if(DeviceInfo.Idiom == DeviceIdiom.Phone || DeviceInfo.Idiom == DeviceIdiom.Tablet)
             {
                 Routing.RegisterRoute(nameof(Views.Mobile.Servers), typeof(Views.Mobile.Servers));
                 Routing.RegisterRoute(nameof(Views.Mobile.ServerDetails), typeof(Views.Mobile.ServerDetails));
@@ -24,6 +19,8 @@
             }
             else
             {
+                CurrentItem = desktopDefault;
+
                 Routing.RegisterRoute(nameof(Views.Desktop.Servers), typeof(Views.Desktop.Servers));
                 Routing.RegisterRoute(nameof(Views.Desktop.ServerDetails), typeof(Views.Desktop.ServerDetails));
                 Routing.RegisterRoute(nameof(Views.Desktop.AddServer), typeof(Views.Desktop.AddServer));

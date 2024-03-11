@@ -237,6 +237,10 @@ namespace VoiceCraft.Core.Sockets
 #if DEBUG
                 Debug.WriteLine(ex);
 #endif
+                if (LogExceptions)
+                {
+                    OnExceptionError?.Invoke(ex);
+                }
             }
         }
 
