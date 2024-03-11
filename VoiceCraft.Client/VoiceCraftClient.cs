@@ -10,7 +10,6 @@ using OpusSharp;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using System.Net;
-using System.Diagnostics;
 
 namespace VoiceCraft.Client
 {
