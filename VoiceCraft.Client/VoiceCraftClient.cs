@@ -289,7 +289,7 @@ namespace VoiceCraft.Client
             if (Participants.TryGetValue(data.PublicId, out var participant))
             {
                 participant.IsMuted = data.Value;
-                OnParticipantDeafenedStateChanged?.Invoke(participant, data.Value);
+                OnParticipantMutedStateChanged?.Invoke(participant, data.Value);
             }
         }
 
