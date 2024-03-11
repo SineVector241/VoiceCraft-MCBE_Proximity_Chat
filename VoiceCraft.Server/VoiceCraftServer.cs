@@ -413,6 +413,7 @@ namespace VoiceCraft.Core.Server
                     !participant.IsMuted && !participant.IsDeafened &&
                     !participant.IsServerMuted && participant.Binded)
                 {
+                    participant.LastSpoke = Environment.TickCount;
                     var proximityToggle = participant.Channel?.OverrideSettings?.ProximityToggle ?? ServerProperties.ProximityToggle;
                     if (proximityToggle)
                     {
@@ -588,7 +589,7 @@ namespace VoiceCraft.Core.Server
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.AcceptUpdate.Create(Participants.Values.Where(x => Environment.TickCount - (long)x.LastSpoke < 500).Select(x => x.MinecraftId).ToList()));
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.AcceptUpdate.Create(Participants.Values.Where(x => Environment.TickCount - (long)x.LastSpoke < 200).Select(x => x.MinecraftId).ToList()));
         }
 
         private void MCCommGetSettings(Packets.MCComm.GetSettings packet, HttpListenerContext ctx)

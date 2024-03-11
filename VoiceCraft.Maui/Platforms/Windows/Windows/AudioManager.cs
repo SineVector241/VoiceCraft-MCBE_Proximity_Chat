@@ -22,7 +22,7 @@ public class AudioManager : IAudioManager
         }
 
         var Player = new WaveOutEvent();
-        Player.DesiredLatency = 400;
+        Player.DesiredLatency = 50;
         Player.NumberOfBuffers = 3;
         Player.DeviceNumber = settings.OutputDevice - 1;
         Player.Init(waveProvider);
