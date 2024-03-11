@@ -1,5 +1,4 @@
-﻿using Fleck;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
@@ -320,11 +319,11 @@ namespace VoiceCraft.Core.Server
                 {
                     if (participant.Channel != channel && (channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password)) && data.Joined)
                     {
-                        _ = MoveParticipantToChannel(channel, participant, int.MinValue); //Don't need to send the private Id back.
+                        _ = MoveParticipantToChannel(channel, participant);
                     }
                     else if (!data.Joined)
                     {
-                        _ = MoveParticipantToChannel(null, participant, int.MinValue); //Don't need to send the private Id back.
+                        _ = MoveParticipantToChannel(null, participant);
                     }
                     else if (channel?.Password != data.Password && !string.IsNullOrWhiteSpace(channel?.Password))
                     {
@@ -422,7 +421,7 @@ namespace VoiceCraft.Core.Server
                         var voiceEffects = participant.Channel?.OverrideSettings?.VoiceEffects ?? ServerProperties.VoiceEffects;
 
                         var list = Participants.Where(x =>
-                        x.Key != data.PrivateId &&
+                        x.Value != participant &&
                         x.Value.Binded &&
                         !x.Value.IsDeafened &&
                         !x.Value.IsDead &&
@@ -449,7 +448,7 @@ namespace VoiceCraft.Core.Server
                     else if (found)
                     {
                         var list = Participants.Where(x =>
-                        x.Key != data.PrivateId &&
+                        x.Value != participant &&
                         x.Value.Binded &&
                         !x.Value.IsDeafened &&
                         x.Value.Channel == participant.Channel);
@@ -657,14 +656,14 @@ namespace VoiceCraft.Core.Server
 
             if (packet.ChannelId == 0 && participant.Value.Channel != null)
             {
-                _ = MoveParticipantToChannel(null, participant.Value, participant.Key);
+                _ = MoveParticipantToChannel(null, participant.Value);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
 
             if (channel != null)
             {
-                _ = MoveParticipantToChannel(channel, participant.Value, participant.Key);
+                _ = MoveParticipantToChannel(channel, participant.Value);
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, Packets.MCComm.Accept.Create());
                 return;
             }
@@ -740,14 +739,14 @@ namespace VoiceCraft.Core.Server
             return false;
         }
 
-        public async Task MoveParticipantToChannel(VoiceCraftChannel? toChannel, VoiceCraftParticipant participant, int privateId)
+        public async Task MoveParticipantToChannel(VoiceCraftChannel? toChannel, VoiceCraftParticipant participant)
         {
             if (participant.Channel == toChannel) return;
 
             if(participant.Channel != null) 
                 await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create(int.MinValue, (byte)(ServerProperties.Channels.IndexOf(participant.Channel) + 1), string.Empty, false), participant.SignallingSocket);
 
-            var channelList = Participants.Where(x => x.Key != privateId && x.Value.Binded && x.Value.Channel == participant.Channel);
+            var channelList = Participants.Where(x => x.Value != participant && x.Value.Binded && x.Value.Channel == participant.Channel);
             for (ushort i = 0; i < channelList.Count(); i++)
             {
                 var client = channelList.ElementAt(i);
@@ -759,7 +758,7 @@ namespace VoiceCraft.Core.Server
             if (participant.Channel != null)
                 await Signalling.SendPacketAsync(Packets.Signalling.JoinLeaveChannel.Create(int.MinValue, (byte)(ServerProperties.Channels.IndexOf(participant.Channel) + 1), string.Empty, true), participant.SignallingSocket);
 
-            channelList = Participants.Where(x => x.Key != privateId && x.Value.Binded && x.Value.Channel == participant.Channel);
+            channelList = Participants.Where(x => x.Value != participant && x.Value.Binded && x.Value.Channel == participant.Channel);
             for (ushort i = 0; i < channelList.Count(); i++)
             {
                 var client = channelList.ElementAt(i);

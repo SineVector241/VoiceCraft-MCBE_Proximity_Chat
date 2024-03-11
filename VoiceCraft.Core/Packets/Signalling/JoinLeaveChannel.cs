@@ -36,9 +36,10 @@ namespace VoiceCraft.Core.Packets.Signalling
 
         public byte[] GetPacketStream()
         {
-            var dataStream = new List<byte>() { ChannelId };
+            var dataStream = new List<byte>();
 
             dataStream.AddRange(BitConverter.GetBytes(PrivateId));
+            dataStream.Add(ChannelId);
             dataStream.AddRange(BitConverter.GetBytes(Joined));
 
             if (Password.Length > 0)
