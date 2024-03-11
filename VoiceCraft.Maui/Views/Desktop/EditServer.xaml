@@ -46,6 +46,7 @@
                         WidthRequest="400">
                     <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
+                               x:DataType="vm:EditServerViewModel"
                                FontSize="Medium"
                                HorizontalTextAlignment="Center"
                                Text="{Binding UnsavedServer.Name}" />
@@ -55,6 +56,7 @@
                                Text="IP" />
                         <Entry Grid.Row="2"
                                Margin="0,10,0,0"
+                               x:DataType="vm:EditServerViewModel"
                                MaxLength="40"
                                Placeholder="127.0.0.1"
                                Text="{Binding UnsavedServer.IP}" />
@@ -64,6 +66,7 @@
                                Text="Port" />
                         <Entry Grid.Row="4"
                                Margin="0,10,0,0"
+                               x:DataType="vm:EditServerViewModel"
                                Keyboard="Numeric"
                                Placeholder="9050"
                                Text="{Binding UnsavedServer.Port}"
@@ -82,6 +85,7 @@
                                Text="Key" />
                         <Entry Grid.Row="6"
                                Margin="0,15,0,0"
+                               x:DataType="vm:EditServerViewModel"
                                Keyboard="Numeric"
                                Placeholder="0"
                                Text="{Binding UnsavedServer.Key}"
@@ -96,6 +100,7 @@
                         </Entry>
                         <toolkit:ContentButton Grid.Row="7"
                                                Margin="0,10,0,0"
+                                               x:DataType="vm:EditServerViewModel"
                                                Command="{Binding SaveServerCommand}"
                                                HorizontalOptions="FillAndExpand">
                             <Border x:Name="addServerBorder"

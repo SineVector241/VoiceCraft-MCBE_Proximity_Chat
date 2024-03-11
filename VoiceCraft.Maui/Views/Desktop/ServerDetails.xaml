@@ -26,6 +26,7 @@
                                       TintColor="{AppThemeBinding Dark='White',
                                                                   Light='Black'}" />
                         <Label Grid.Column="1"
+                               x:DataType="vm:ServerDetailsViewModel"
                                FontAttributes="Bold"
                                FontSize="Title"
                                Text="{Binding Server.Name}"
@@ -39,6 +40,7 @@
                         VerticalOptions="StartAndExpand">
                     <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
+                               x:DataType="vm:ServerDetailsViewModel"
                                FontAttributes="Bold"
                                FontSize="Title"
                                Text="{Binding Server.Name}"
@@ -65,15 +67,18 @@
                             </Label.Style>
                         </Label>
                         <Label Grid.Row="2"
+                               x:DataType="vm:ServerDetailsViewModel"
                                FontSize="Subtitle"
                                Text="{Binding Server.Key, StringFormat='Key: {0}'}"
                                VerticalTextAlignment="Center" />
                         <Label Grid.Row="3"
+                               x:DataType="vm:ServerDetailsViewModel"
                                FontSize="Subtitle"
                                Text="{Binding PingDetails}"
                                VerticalTextAlignment="Center" />
                         <toolkit:ContentButton Grid.Row="4"
                                                Margin="0,10,0,0"
+                                               x:DataType="vm:ServerDetailsViewModel"
                                                Command="{Binding ConnectCommand}"
                                                HorizontalOptions="FillAndExpand">
                             <Border x:Name="connectBorder"

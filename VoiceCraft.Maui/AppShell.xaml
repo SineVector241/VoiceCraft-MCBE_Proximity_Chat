@@ -28,12 +28,14 @@
                 </Grid.ColumnDefinitions>
                 <toolkit:Icon Grid.Column="0"
                               Margin="10"
+                              x:DataType="BaseShellItem"
                               HeightRequest="25"
                               HorizontalOptions="Start"
                               Source="{Binding Icon}"
                               TintColor="{AppThemeBinding Dark='White',
                                                           Light='Black'}" />
                 <Label Grid.Column="1"
+                       x:DataType="BaseShellItem"
                        FontAttributes="Bold"
                        FontSize="17"
                        Text="{Binding Title}"
