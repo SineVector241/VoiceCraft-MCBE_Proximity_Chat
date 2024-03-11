@@ -74,7 +74,6 @@
                                VerticalTextAlignment="Center" />
                         <toolkit:ContentButton Grid.Row="4"
                                                Margin="0,10,0,0"
-                                               x:DataType="toolkit:ContentButton"
                                                Command="{Binding ConnectCommand}"
                                                HorizontalOptions="FillAndExpand">
                             <Border x:Name="connectBorder"

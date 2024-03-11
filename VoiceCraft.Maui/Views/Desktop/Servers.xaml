@@ -32,7 +32,6 @@
                                VerticalTextAlignment="Center" />
 
                         <toolkit:ContentButton Grid.Column="2"
-                                               x:DataType="toolkit:ContentButton"
                                                Command="{Binding GoToAddServerCommand}"
                                                HeightRequest="45"
                                                HorizontalOptions="End"
@@ -79,7 +78,6 @@
                                         <Grid ColumnDefinitions="*, auto, auto" ColumnSpacing="5">
                                             <Label FontSize="Medium" Text="{Binding Name}" />
                                             <toolkit:ContentButton Grid.Column="1"
-                                                                   x:DataType="toolkit:ContentButton"
                                                                    Command="{Binding Source={x:Reference servers}, Path=BindingContext.GoToEditServerCommand}"
                                                                    CommandParameter="{Binding}"
                                                                    HeightRequest="35"
@@ -114,7 +112,6 @@
                                             </toolkit:ContentButton>
 
                                             <toolkit:ContentButton Grid.Column="2"
-                                                                   x:DataType="toolkit:ContentButton"
                                                                    Command="{Binding Source={x:Reference servers}, Path=BindingContext.DeleteServerCommand}"
                                                                    CommandParameter="{Binding}"
                                                                    HeightRequest="35"
@@ -178,7 +175,6 @@
 
                                         <toolkit:ContentButton Grid.Row="3"
                                                                Margin="0,10,0,0"
-                                                               x:DataType="toolkit:ContentButton"
                                                                Command="{Binding Source={x:Reference servers}, Path=BindingContext.GoToServerCommand}"
                                                                CommandParameter="{Binding}"
                                                                HeightRequest="35"

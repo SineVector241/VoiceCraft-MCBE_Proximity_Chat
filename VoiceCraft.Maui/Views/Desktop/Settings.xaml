@@ -196,7 +196,6 @@
 
                         <toolkit:ContentButton Grid.Column="2"
                                                Margin="5,0,0,0"
-                                               x:DataType="toolkit:ContentButton"
                                                Command="{Binding OpenCloseMicrophoneCommand}"
                                                HorizontalOptions="Start">
                             <Border x:Name="microphoneBorder"
