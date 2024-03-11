@@ -15,7 +15,7 @@ namespace VoiceCraft.Client
 {
     public class VoiceCraftClient : IDisposable
     {
-        public const string Version = "v1.0.2";
+        public const string Version = "v1.0.3";
         public bool IsDisposed { get; private set; }
 
         //Audio Variables
