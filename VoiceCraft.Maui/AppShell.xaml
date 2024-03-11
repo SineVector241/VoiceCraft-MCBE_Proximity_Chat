@@ -9,10 +9,10 @@
        Title="VoiceCraft"
        FlyoutBackgroundColor="#22000000"
        Shell.FlyoutBackdrop="#6f404040"
-       Shell.FlyoutBehavior="{OnIdiom Desktop='Flyout',
+       Shell.FlyoutBehavior="{OnIdiom Default='Flyout',
                                       Phone='Disabled'}"
        Shell.NavBarIsVisible="False"
-       Shell.TabBarIsVisible="{OnIdiom Desktop='False',
+       Shell.TabBarIsVisible="{OnIdiom Default='False',
                                        Phone='True'}">
 
 
