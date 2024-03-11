@@ -25,7 +25,7 @@ namespace VoiceCraft.Core.Packets.Voice
 
             Audio = new byte[audioLength];
             if(audioLength > 0)
-                Buffer.BlockCopy(dataStream, readOffset + 10, Audio, 0, audioLength);
+                Buffer.BlockCopy(dataStream, readOffset + 12, Audio, 0, audioLength);
             else
                 Audio = new byte[0];
         }

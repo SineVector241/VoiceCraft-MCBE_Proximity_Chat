@@ -12,7 +12,7 @@ namespace VoiceCraft.Core.Server
     public class VoiceCraftServer : IDisposable
     {
         //Constants
-        public const string Version = "v1.0.2";
+        public const string Version = "v1.0.3";
         public const int ActivityInterval = 1000;
 
         //Data
@@ -694,7 +694,7 @@ namespace VoiceCraft.Core.Server
 
             foreach(var participant in Participants)
             {
-                participant.Value.SignallingSocket.DisconnectAsync(false);
+                _ = participant.Value.SignallingSocket.DisconnectAsync(false);
             }
             CTS.Cancel();
             Signalling.StopHosting();

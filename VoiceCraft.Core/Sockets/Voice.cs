@@ -73,7 +73,7 @@ namespace VoiceCraft.Core.Sockets
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="Exception"></exception>
-        public async Task Connect(string IP, int Port, int localPort, int privateId)
+        public async Task Connect(string IP, int Port, int privateId)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must disconnect before connecting!");

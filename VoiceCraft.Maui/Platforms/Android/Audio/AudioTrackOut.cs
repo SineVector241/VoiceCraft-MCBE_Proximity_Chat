@@ -200,8 +200,10 @@ namespace NAudio.Wave
             m_AudioTrack.Play();
             if (m_PlaybackThread == null || !m_PlaybackThread.IsAlive)
             {
-                m_PlaybackThread = new Thread(PlaybackThread);
-                m_PlaybackThread.Priority = ThreadPriority.Highest;
+                m_PlaybackThread = new Thread(PlaybackThread)
+                {
+                    Priority = ThreadPriority.Highest
+                };
                 m_PlaybackThread.Start();
             }
         }
@@ -321,8 +323,10 @@ namespace NAudio.Wave
             //Initialize the wave buffer
             int waveBufferSize = (m_AudioTrack.BufferSizeInFrames + NumberOfBuffers - 1) / NumberOfBuffers * m_WaveProvider.WaveFormat.BlockAlign;
             waveBufferSize = (waveBufferSize + 3) & ~3;
-            WaveBuffer waveBuffer = new WaveBuffer(waveBufferSize);
-            waveBuffer.ByteBufferCount = waveBufferSize;
+            WaveBuffer waveBuffer = new(waveBufferSize)
+            {
+                ByteBufferCount = waveBufferSize
+            };
 
             //Run the playback loop
             while (PlaybackState != PlaybackState.Stopped)
@@ -391,10 +395,11 @@ namespace NAudio.Wave
         private void ThrowIfDisposed()
         {
             //Throw an exception if this object has been disposed
-            if (m_IsDisposed)
+            if (!m_IsDisposed)
             {
-                throw new ObjectDisposedException(GetType().FullName);
+                return;
             }
+            throw new ObjectDisposedException(GetType().FullName);
         }
 
         #endregion

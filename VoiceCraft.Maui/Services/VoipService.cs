@@ -22,8 +22,8 @@ namespace VoiceCraft.Maui.Services
         private IWaveIn? AudioRecorder;
         private IWavePlayer? AudioPlayer;
         private SoftLimiter? Normalizer;
-        private SettingsModel Settings;
-        private ServerModel Server;
+        private readonly SettingsModel Settings;
+        private readonly ServerModel Server;
 
         //Events
         public delegate void StatusMessageUpdated(string status);
@@ -103,7 +103,7 @@ namespace VoiceCraft.Maui.Services
                     _ = Network.Connect(Server.IP, Server.Port, Server.Key, Settings.ClientSidedPositioning ? Core.PositioningTypes.ClientSided : Core.PositioningTypes.ServerSided);
 
                     //Setup state variables for this instance.
-                    List<VoiceCraftParticipant> talkingParticipants = new List<VoiceCraftParticipant>();
+                    List<VoiceCraftParticipant> talkingParticipants = [];
                     bool previousSpeakingState = false;
                     bool previousMuteState = false;
                     bool previousDeafenedState = false;
@@ -191,7 +191,7 @@ namespace VoiceCraft.Maui.Services
                     Network.Disconnect();
                     Network.Dispose();
                 }
-            });
+            }, CT);
         }
 
         //Audio Events

@@ -10,6 +10,7 @@ using OpusSharp;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using System.Net;
+using System.Diagnostics;
 
 namespace VoiceCraft.Client
 {
@@ -86,9 +87,11 @@ namespace VoiceCraft.Client
             Participants = new Dictionary<ushort, VoiceCraftParticipant>();
             Channels = new List<VoiceCraftChannel>();
 
-            Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Enums.Application.VOIP);
-            Encoder.Bitrate = 32000;
-            Encoder.PacketLossPerc = 50;
+            Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Enums.Application.VOIP)
+            {
+                Bitrate = 32000,
+                PacketLossPerc = 50
+            };
             AudioOutput = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
         }
 
@@ -227,7 +230,7 @@ namespace VoiceCraft.Client
             {
                 PublicId = publicId;
                 PrivateId = privateId;
-                _ = Voice.Connect(IP, port, ((IPEndPoint)Signalling.Socket.LocalEndPoint).Port, privateId);
+                _ = Voice.Connect(IP, port, privateId);
             }
             else
             {
@@ -430,10 +433,9 @@ namespace VoiceCraft.Client
         public static async Task<string> PingAsync(string IP, int Port)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            var message = "";
             var pingTime = DateTime.UtcNow;
-            byte[]? packetBuffer = null;
             byte[] lengthBuffer = new byte[2];
+            string? message;
             try
             {
                 if (socket.ConnectAsync(IP, Port).Wait(5000))
@@ -458,7 +460,7 @@ namespace VoiceCraft.Client
                         throw new Exception("Invalid packet received.");
                     }//Packets will never be bigger than 500 bytes but the hard limit is 1024 bytes/1mb
 
-                    packetBuffer = new byte[packetLength];
+                    byte[]? packetBuffer = new byte[packetLength];
 
                     //Read until packet is fully received
                     int offset = 0;
