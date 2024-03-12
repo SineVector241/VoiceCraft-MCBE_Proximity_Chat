@@ -17,7 +17,7 @@ public class AudioManager : IAudioManager
         }
 
         var Player = new AudioTrackOut();
-        Player.DesiredLatency = 400;
+        Player.DesiredLatency = 50;
         Player.NumberOfBuffers = 3;
         Player.Init(waveProvider);
         return Player;
