@@ -35,8 +35,8 @@
     <Color x:Key="SwitchOn">#3f11FF11</Color>
 
     <!--  Border Colors  -->
-    <Color x:Key="BorderBackgroundDark">#6f000000</Color>
-    <Color x:Key="BorderBackgroundLight">#6fFFFFFF</Color>
+    <Color x:Key="BorderBackgroundDark">#9F000000</Color>
+    <Color x:Key="BorderBackgroundLight">#9fFFFFFF</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}" />

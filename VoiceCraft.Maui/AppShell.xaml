@@ -14,8 +14,6 @@
        Shell.NavBarIsVisible="False"
        Shell.TabBarIsVisible="{OnIdiom Default='False',
                                        Phone='True'}">
-
-
     <!--  Shell Styles  -->
     <Shell.ItemTemplate>
         <DataTemplate>
