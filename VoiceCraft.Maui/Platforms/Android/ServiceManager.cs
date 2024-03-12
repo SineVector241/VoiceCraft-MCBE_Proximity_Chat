@@ -158,10 +158,10 @@ namespace VoiceCraft.Maui
         {
             try
             {
+                Preferences.Set("VoipServiceRunning", false); //Set to false anyways.
                 if (!Cts?.IsCancellationRequested ?? false)
                 {
                     Cts?.Cancel();
-                    Preferences.Set("VoipServiceRunning", false);
                 }
             }
             catch (System.OperationCanceledException)
