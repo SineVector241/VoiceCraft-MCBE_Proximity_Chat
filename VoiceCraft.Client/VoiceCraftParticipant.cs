@@ -56,7 +56,7 @@ namespace VoiceCraft.Client
             VoiceCraftStream = new VoiceCraftStream(AudioFormat, JitterBuffer);
             FloatProvider = new Wave16ToFloatProvider(VoiceCraftStream);
             SmoothVolumeProvider = new SmoothVolumeSampleProvider(FloatProvider.ToSampleProvider(), 20);
-            EchoProvider = new EchoSampleProvider(SmoothVolumeProvider, 120) { DecayFactor = 0.3f };
+            EchoProvider = new EchoSampleProvider(SmoothVolumeProvider, 120) { DecayFactor = 0.2f };
             LowpassProvider = new LowpassSampleProvider(EchoProvider, 200, 1);
             AudioOutput = new MonoToStereoSampleProvider(LowpassProvider);
         }
