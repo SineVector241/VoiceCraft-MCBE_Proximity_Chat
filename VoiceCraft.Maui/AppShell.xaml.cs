@@ -1,4 +1,7 @@
-﻿namespace VoiceCraft.Maui
+﻿using CommunityToolkit.Mvvm.Messaging;
+using VoiceCraft.Maui.Services;
+
+namespace VoiceCraft.Maui
 {
     public partial class AppShell : Shell
     {
@@ -29,6 +32,24 @@
                 Routing.RegisterRoute(nameof(Views.Desktop.Credits), typeof(Views.Desktop.Credits));
                 Routing.RegisterRoute(nameof(Views.Desktop.EditServer), typeof(Views.Desktop.EditServer));
             }
+        }
+
+        protected override void OnAppearing()
+        {
+            if (Preferences.Get("VoipServiceRunning", false))
+            {
+                MainThread.BeginInvokeOnMainThread(async () => await Navigator.NavigateTo(nameof(Views.Desktop.Voice)));
+            }
+            base.OnAppearing();
+        }
+
+        protected override void OnDisappearing()
+        {
+            if(DeviceInfo.Platform == DevicePlatform.WinUI)
+            {
+                Preferences.Set("VoipServiceRunning", false);
+            }
+            base.OnDisappearing();
         }
     }
 }
