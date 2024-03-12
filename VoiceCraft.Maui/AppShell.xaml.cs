@@ -45,10 +45,9 @@ namespace VoiceCraft.Maui
 
         protected override void OnDisappearing()
         {
-            if(DeviceInfo.Platform == DevicePlatform.WinUI)
-            {
-                Preferences.Set("VoipServiceRunning", false);
-            }
+#if WINDOWS
+            Preferences.Set("VoipServiceRunning", false);
+#endif
             base.OnDisappearing();
         }
     }
