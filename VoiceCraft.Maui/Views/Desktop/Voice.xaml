@@ -91,9 +91,9 @@
                                    HorizontalTextAlignment="Center"
                                    Text="{Binding StatusText}" />
                         </Border>
+                        <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
                         <CollectionView Grid.Row="1"
                                         Margin="10"
-                                        x:DataType="vm:VoiceViewModel"
                                         ItemsSource="{Binding Participants}">
                             <CollectionView.ItemsLayout>
                                 <LinearItemsLayout ItemSpacing="10" Orientation="Vertical" />
@@ -403,7 +403,8 @@
                             </Grid>
                         </Border>
                         <Border Grid.Row="1" Margin="0,10,0,0">
-                            <CollectionView x:DataType="vm:VoiceViewModel" ItemsSource="{Binding Channels}">
+                            <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
+                            <CollectionView ItemsSource="{Binding Channels}">
                                 <CollectionView.ItemsLayout>
                                     <LinearItemsLayout ItemSpacing="5" Orientation="Vertical" />
                                 </CollectionView.ItemsLayout>

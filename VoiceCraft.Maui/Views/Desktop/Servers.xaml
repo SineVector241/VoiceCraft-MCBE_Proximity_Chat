@@ -67,9 +67,8 @@
                         </toolkit:ContentButton>
                     </Grid>
                 </Border>
-                <CollectionView Grid.Row="1"
-                                x:DataType="vm:ServersViewModel"
-                                ItemsSource="{Binding Servers}">
+                <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
+                <CollectionView Grid.Row="1" ItemsSource="{Binding Servers}">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout HorizontalItemSpacing="20"
                                          Orientation="Vertical"
