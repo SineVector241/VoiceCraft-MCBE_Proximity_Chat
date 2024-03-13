@@ -36,10 +36,12 @@ namespace VoiceCraft.Maui
 
         protected override void OnAppearing()
         {
+#if !WINDOWS
             if (Preferences.Get("VoipServiceRunning", false))
             {
                 MainThread.BeginInvokeOnMainThread(async () => await Navigator.NavigateTo(nameof(Views.Desktop.Voice)));
             }
+#endif
             base.OnAppearing();
         }
 
