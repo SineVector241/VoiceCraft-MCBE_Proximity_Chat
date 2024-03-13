@@ -6,6 +6,7 @@
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              Title="AddServer"
+             x:DataType="vm:AddServerViewModel"
              Shell.FlyoutBehavior="Disabled">
 
     <ContentPage.BindingContext>
@@ -56,7 +57,6 @@
                                Text="Name" />
                         <Entry Grid.Row="2"
                                Margin="0,10,0,0"
-                               x:DataType="vm:AddServerViewModel"
                                MaxLength="30"
                                Placeholder="Name"
                                Text="{Binding Server.Name}" />
@@ -66,7 +66,6 @@
                                Text="IP" />
                         <Entry Grid.Row="4"
                                Margin="0,10,0,0"
-                               x:DataType="vm:AddServerViewModel"
                                MaxLength="40"
                                Placeholder="127.0.0.1"
                                Text="{Binding Server.IP}" />
@@ -76,7 +75,6 @@
                                Text="Port" />
                         <Entry Grid.Row="6"
                                Margin="0,10,0,0"
-                               x:DataType="vm:AddServerViewModel"
                                Keyboard="Numeric"
                                Placeholder="9050"
                                Text="{Binding Server.Port}"
@@ -95,7 +93,6 @@
                                Text="Key" />
                         <Entry Grid.Row="8"
                                Margin="0,15,0,0"
-                               x:DataType="vm:AddServerViewModel"
                                Keyboard="Numeric"
                                Placeholder="0"
                                Text="{Binding Server.Key}"
@@ -110,7 +107,6 @@
                         </Entry>
                         <toolkit:ContentButton Grid.Row="9"
                                                Margin="0,10,0,0"
-                                               x:DataType="vm:AddServerViewModel"
                                                Command="{Binding SaveServerCommand}"
                                                HorizontalOptions="FillAndExpand">
                             <Border x:Name="addServerBorder"

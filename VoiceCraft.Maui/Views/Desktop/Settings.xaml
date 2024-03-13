@@ -6,7 +6,8 @@
              xmlns:mtoolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
-             Title="Settings">
+             Title="Settings"
+             x:DataType="vm:SettingsViewModel">
     <ContentPage.BindingContext>
         <vm:SettingsViewModel />
     </ContentPage.BindingContext>
@@ -51,7 +52,6 @@
 
                         <Picker Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 ItemsSource="{Binding InputDevices}"
                                 SelectedIndex="{Binding Settings.InputDevice}"
                                 VerticalOptions="Center" />
@@ -68,7 +68,6 @@
 
                         <Picker Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 ItemsSource="{Binding OutputDevices}"
                                 SelectedIndex="{Binding Settings.OutputDevice}"
                                 VerticalOptions="Center" />
@@ -82,7 +81,6 @@
 
                         <Switch Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 IsToggled="{Binding Settings.DirectionalAudioEnabled}"
                                 VerticalOptions="Center" />
                     </Grid>
@@ -96,7 +94,6 @@
 
                         <Switch Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 IsToggled="{Binding Settings.SoftLimiterEnabled}"
                                 VerticalOptions="Center" />
                     </Grid>
@@ -110,7 +107,6 @@
 
                         <Switch Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 IsToggled="{Binding Settings.ClientSidedPositioning}"
                                 VerticalOptions="Center" />
                     </Grid>
@@ -124,7 +120,6 @@
 
                         <Switch Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 IsToggled="{Binding Settings.LinearVolume}"
                                 VerticalOptions="Center" />
                     </Grid>
@@ -138,7 +133,6 @@
 
                         <Switch Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 IsToggled="{Binding Settings.HideAddress}"
                                 VerticalOptions="Center" />
                     </Grid>
@@ -151,7 +145,6 @@
                                VerticalTextAlignment="Center" />
 
                         <Entry Grid.Column="1"
-                               x:DataType="vm:SettingsViewModel"
                                Keyboard="Numeric"
                                Text="{Binding Settings.WebsocketPort}"
                                Unfocused="WebsocketEntryUnfocused">
@@ -167,7 +160,6 @@
 
                     <Grid Grid.Row="8" ColumnDefinitions="290, 0.4*, 0.6*">
                         <Label Grid.Column="0"
-                               x:DataType="vm:SettingsViewModel"
                                FontAttributes="Bold"
                                FontSize="Small"
                                Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}"
@@ -175,7 +167,6 @@
 
                         <Slider Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 Maximum="20.0"
                                 Minimum="1.0"
                                 VerticalOptions="Center"
@@ -184,14 +175,12 @@
 
                     <Grid Grid.Row="9" ColumnDefinitions="290, 0.4*, 0.6*">
                         <Label Grid.Column="0"
-                               x:DataType="vm:SettingsViewModel"
                                FontAttributes="Bold"
                                FontSize="Small"
                                Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:P2}'}"
                                VerticalTextAlignment="Center" />
 
                         <ahKit:ProgressBar Grid.Column="1"
-                                           x:DataType="vm:SettingsViewModel"
                                            Background="Transparent"
                                            EnableAnimations="False"
                                            HeightRequest="22"
@@ -202,14 +191,12 @@
 
                         <Slider Grid.Column="1"
                                 Margin="10,0,0,0"
-                                x:DataType="vm:SettingsViewModel"
                                 Maximum="1.0"
                                 Minimum="0.0"
                                 Value="{Binding Settings.MicrophoneDetectionPercentage}" />
 
                         <toolkit:ContentButton Grid.Column="2"
                                                Margin="5,0,0,0"
-                                               x:DataType="vm:SettingsViewModel"
                                                Command="{Binding OpenCloseMicrophoneCommand}"
                                                HorizontalOptions="Start">
                             <Border x:Name="microphoneBorder"

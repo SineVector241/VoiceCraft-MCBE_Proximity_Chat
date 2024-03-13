@@ -6,7 +6,8 @@
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              x:Name="servers"
-             Title="Servers">
+             Title="Servers"
+             x:DataType="vm:ServersViewModel">
 
     <ContentPage.BindingContext>
         <vm:ServersViewModel />
@@ -33,7 +34,6 @@
                                VerticalTextAlignment="Center" />
 
                         <toolkit:ContentButton Grid.Column="2"
-                                               x:DataType="vm:ServersViewModel"
                                                Command="{Binding GoToAddServerCommand}"
                                                HeightRequest="45"
                                                HorizontalOptions="End"
@@ -50,7 +50,6 @@
                         </toolkit:ContentButton>
                     </Grid>
                 </Border>
-                <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
                 <CollectionView Grid.Row="1"
                                 Margin="20"
                                 ItemsSource="{Binding Servers}">
@@ -59,13 +58,11 @@
                     </CollectionView.ItemsLayout>
 
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="model:ServerModel">
                             <Border Padding="20">
                                 <Grid RowDefinitions="auto, auto, auto, auto">
                                     <Grid ColumnDefinitions="*, auto, auto" ColumnSpacing="5">
-                                        <Label x:DataType="model:ServerModel"
-                                               FontSize="Medium"
-                                               Text="{Binding Name}" />
+                                        <Label FontSize="Medium" Text="{Binding Name}" />
                                         <toolkit:ContentButton Grid.Column="1"
                                                                Command="{Binding Source={x:Reference servers}, Path=BindingContext.GoToEditServerCommand}"
                                                                CommandParameter="{Binding}"
@@ -124,7 +121,6 @@
                                     </Label>
 
                                     <Label Grid.Row="2"
-                                           x:DataType="model:ServerModel"
                                            FontSize="Subtitle"
                                            Text="{Binding Key, StringFormat='Key: {0}'}"
                                            VerticalTextAlignment="Center" />

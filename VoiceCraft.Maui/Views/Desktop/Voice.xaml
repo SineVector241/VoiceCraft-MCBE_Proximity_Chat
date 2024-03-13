@@ -7,6 +7,7 @@
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              x:Name="voice"
              Title="Voice"
+             x:DataType="vm:VoiceViewModel"
              Shell.FlyoutBehavior="Disabled">
     <ContentPage.BindingContext>
         <vm:VoiceViewModel />
@@ -36,7 +37,6 @@
                                Text="Voice"
                                VerticalTextAlignment="Center" />
                         <Label Grid.Column="2"
-                               x:DataType="vm:VoiceViewModel"
                                FontAttributes="Bold"
                                FontSize="Title"
                                HorizontalTextAlignment="End"
@@ -45,7 +45,6 @@
 
                         <toolkit:ContentButton Grid.Column="3"
                                                Margin="10,0"
-                                               x:DataType="vm:VoiceViewModel"
                                                Command="{Binding ShowHideChannelsCommand}"
                                                HeightRequest="45"
                                                HorizontalOptions="FillAndExpand"
@@ -86,12 +85,10 @@
                                 Margin="10"
                                 HorizontalOptions="Fill"
                                 VerticalOptions="StartAndExpand">
-                            <Label x:DataType="vm:VoiceViewModel"
-                                   FontSize="Title"
+                            <Label FontSize="Title"
                                    HorizontalTextAlignment="Center"
                                    Text="{Binding StatusText}" />
                         </Border>
-                        <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
                         <CollectionView Grid.Row="1"
                                         Margin="10"
                                         ItemsSource="{Binding Participants}">
@@ -99,7 +96,7 @@
                                 <LinearItemsLayout ItemSpacing="10" Orientation="Vertical" />
                             </CollectionView.ItemsLayout>
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="model:ParticipantModel">
                                     <Border HorizontalOptions="Fill"
                                             StrokeThickness="2.5"
                                             VerticalOptions="StartAndExpand">
@@ -117,7 +114,6 @@
                                         <Grid ColumnDefinitions="250, *, 38, 38">
                                             <Label Grid.Column="0"
                                                    Margin="5"
-                                                   x:DataType="model:ParticipantModel"
                                                    FontSize="Title"
                                                    Text="{Binding Participant.Name}"
                                                    VerticalTextAlignment="Center" />
@@ -125,13 +121,11 @@
                                                   ColumnDefinitions="*, Auto"
                                                   VerticalOptions="Center">
                                                 <Slider Grid.Column="0"
-                                                        x:DataType="model:ParticipantModel"
                                                         Maximum="2"
                                                         Minimum="0"
                                                         Value="{Binding Volume}" />
                                                 <Label Grid.Column="1"
                                                        Margin="5,0,5,0"
-                                                       x:DataType="model:ParticipantModel"
                                                        FontSize="Medium"
                                                        Text="{Binding Volume, StringFormat='{0:P0}'}"
                                                        VerticalOptions="Center" />
@@ -202,9 +196,7 @@
                                 </Style>
                             </Border.Style>
                             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
-                                <toolkit:ContentButton Grid.Column="0"
-                                                       x:DataType="vm:VoiceViewModel"
-                                                       Command="{Binding DisconnectCommand}">
+                                <toolkit:ContentButton Grid.Column="0" Command="{Binding DisconnectCommand}">
                                     <Border x:Name="disconnectBorder"
                                             Padding="2"
                                             Background="#4fF00000"
@@ -235,9 +227,7 @@
                                         </VisualStateGroupList>
                                     </VisualStateManager.VisualStateGroups>
                                 </toolkit:ContentButton>
-                                <toolkit:ContentButton Grid.Column="1"
-                                                       x:DataType="vm:VoiceViewModel"
-                                                       Command="{Binding MuteUnmuteCommand}">
+                                <toolkit:ContentButton Grid.Column="1" Command="{Binding MuteUnmuteCommand}">
                                     <Border x:Name="muteBorder"
                                             Padding="2"
                                             Background="#2fFFFFFF"
@@ -302,9 +292,7 @@
                                     </VisualStateManager.VisualStateGroups>
                                 </toolkit:ContentButton>
 
-                                <toolkit:ContentButton Grid.Column="2"
-                                                       x:DataType="vm:VoiceViewModel"
-                                                       Command="{Binding DeafenUndeafenCommand}">
+                                <toolkit:ContentButton Grid.Column="2" Command="{Binding DeafenUndeafenCommand}">
                                     <Border x:Name="deafenBorder"
                                             Padding="2"
                                             Background="#2fFFFFFF"
@@ -403,16 +391,14 @@
                             </Grid>
                         </Border>
                         <Border Grid.Row="1" Margin="0,10,0,0">
-                            <!--  DO NOT INCLUDE DATATYPE BINDING ON COMMANDS AS IT WILL CAUSE ERRORS! ITS A MAUI BUG!  -->
                             <CollectionView ItemsSource="{Binding Channels}">
                                 <CollectionView.ItemsLayout>
                                     <LinearItemsLayout ItemSpacing="5" Orientation="Vertical" />
                                 </CollectionView.ItemsLayout>
                                 <CollectionView.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate x:DataType="model:ChannelModel">
                                         <Grid ColumnDefinitions="Auto, *, Auto">
                                             <Label Grid.Column="0"
-                                                   x:DataType="model:ChannelModel"
                                                    FontSize="Medium"
                                                    Text="{Binding Name}"
                                                    VerticalTextAlignment="Center" />
@@ -436,7 +422,6 @@
                                                 </toolkit:Icon.Style>
                                             </toolkit:Icon>
                                             <toolkit:ContentButton Grid.Column="2"
-                                                                   x:DataType="model:ChannelModel"
                                                                    Command="{Binding Source={x:Reference voice}, Path=BindingContext.JoinChannelCommand}"
                                                                    CommandParameter="{Binding Channel}"
                                                                    HeightRequest="45"
