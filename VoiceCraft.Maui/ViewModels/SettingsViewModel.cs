@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Models;
 using NAudio.Wave;
+using OpusSharp;
 
 namespace VoiceCraft.Maui.ViewModels
 {
@@ -57,6 +58,7 @@ namespace VoiceCraft.Maui.ViewModels
                 Microphone.Dispose();
                 Microphone = null;
                 MicrophoneDetection = 0;
+                IsRecording = false;
             }
             _ = Database.Instance.SaveSettings();
         }
@@ -66,6 +68,16 @@ namespace VoiceCraft.Maui.ViewModels
         {
             if (Microphone == null)
             {
+#if ANDROID
+                var status = await Permissions.RequestAsync<Permissions.Microphone>();
+                if (Permissions.ShouldShowRationale<Permissions.Microphone>())
+                {
+                    await Shell.Current.DisplayAlert("Error", "VoiceCraft requires the microphone to communicate with other users!", "OK");
+                    return;
+                }
+                if (status != PermissionStatus.Granted) return;
+#endif
+
                 var manager = new AudioManager();
                 Microphone = await manager.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
