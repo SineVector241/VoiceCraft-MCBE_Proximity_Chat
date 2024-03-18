@@ -163,6 +163,7 @@ namespace VoiceCraft.Maui.ViewModels
         public async Task Disconnect()
         {
             WeakReferenceMessenger.Default.Send(new DisconnectMSG());
+            Preferences.Set("VoipServiceRunning", false);
             await Navigator.GoBack();
         }
 
