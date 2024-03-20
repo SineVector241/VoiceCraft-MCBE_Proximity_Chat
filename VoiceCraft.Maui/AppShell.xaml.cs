@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using VoiceCraft.Maui.Services;
+﻿using VoiceCraft.Maui.Services;
 
 namespace VoiceCraft.Maui
 {
@@ -36,12 +35,10 @@ namespace VoiceCraft.Maui
 
         protected override void OnAppearing()
         {
-#if !WINDOWS
-            if (Preferences.Get("VoipServiceRunning", false))
+            if (Preferences.Get("VoipServiceRunning", false) && AppShell.Current.CurrentPage?.BindingContext is not ViewModels.VoiceViewModel)
             {
                 MainThread.BeginInvokeOnMainThread(async () => await Navigator.NavigateTo(nameof(Views.Desktop.Voice)));
             }
-#endif
             base.OnAppearing();
         }
 

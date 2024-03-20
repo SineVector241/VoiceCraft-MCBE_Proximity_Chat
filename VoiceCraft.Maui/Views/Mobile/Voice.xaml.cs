@@ -22,4 +22,9 @@ public partial class Voice : ContentPage
         viewModel.PageDisappearingCommand.Execute(this);
         base.OnAppearing();
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        return true;
+    }
 }

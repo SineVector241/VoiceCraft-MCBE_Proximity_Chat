@@ -247,7 +247,10 @@ namespace VoiceCraft.Maui.Services
                 AudioRecorder?.StartRecording();
                 AudioPlayer?.Play();
             }
-            catch { } //Do nothing. This is just to make sure that the recorder and player is working.
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            } //Do nothing. This is just to make sure that the recorder and player is working.
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 

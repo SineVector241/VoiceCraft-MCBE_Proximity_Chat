@@ -7,7 +7,8 @@
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              x:Name="voice"
              Title="Voice"
-             x:DataType="vm:VoiceViewModel">
+             x:DataType="vm:VoiceViewModel"
+             Shell.TabBarIsVisible="False">
     <ContentPage.BindingContext>
         <vm:VoiceViewModel />
     </ContentPage.BindingContext>
@@ -195,166 +196,57 @@
                                 </Style>
                             </Border.Style>
                             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
-                                <toolkit:ContentButton Grid.Column="0" Command="{Binding DisconnectCommand}">
-                                    <Border x:Name="disconnectBorder"
-                                            Padding="2"
-                                            Background="#4fF00000"
-                                            StrokeThickness="0">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="4" />
-                                        </Border.StrokeShape>
-                                        <Label Margin="5"
-                                               FontSize="Small"
-                                               HorizontalTextAlignment="Center"
-                                               Text="Disconnect" />
-                                    </Border>
-                                    <VisualStateManager.VisualStateGroups>
-                                        <VisualStateGroupList>
-                                            <VisualStateGroup>
-                                                <VisualState x:Name="Normal" />
-                                                <VisualState x:Name="Pressed">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="disconnectBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                                <VisualState x:Name="PointerOver">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="disconnectBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                            </VisualStateGroup>
-                                        </VisualStateGroupList>
-                                    </VisualStateManager.VisualStateGroups>
-                                </toolkit:ContentButton>
-                                <toolkit:ContentButton Grid.Column="1" Command="{Binding MuteUnmuteCommand}">
-                                    <Border x:Name="muteBorder"
-                                            Padding="2"
-                                            Background="#2fFFFFFF"
-                                            StrokeThickness="0">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="4" />
-                                        </Border.StrokeShape>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMuted}"
-                                                                 TargetType="Border"
-                                                                 Value="True">
-                                                        <Setter Property="Background" Value="#3fFFFFFF" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsMuted}"
-                                                                 TargetType="Border"
-                                                                 Value="False">
-                                                        <Setter Property="Background" Value="#2fFFFFFF" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <Label Margin="5"
-                                               FontSize="Small"
-                                               HorizontalTextAlignment="Center"
-                                               Text="Mute">
-                                            <Label.Style>
-                                                <Style TargetType="Label">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMuted}"
-                                                                     TargetType="Label"
-                                                                     Value="True">
-                                                            <Setter Property="Text" Value="Unmute" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsMuted}"
-                                                                     TargetType="Label"
-                                                                     Value="False">
-                                                            <Setter Property="Text" Value="Mute" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Label.Style>
-                                        </Label>
-                                    </Border>
-                                    <VisualStateManager.VisualStateGroups>
-                                        <VisualStateGroupList>
-                                            <VisualStateGroup>
-                                                <VisualState x:Name="Normal" />
-                                                <VisualState x:Name="Pressed">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="muteBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                                <VisualState x:Name="PointerOver">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="muteBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                            </VisualStateGroup>
-                                        </VisualStateGroupList>
-                                    </VisualStateManager.VisualStateGroups>
-                                </toolkit:ContentButton>
+                                <Button Grid.Column="0"
+                                        Margin="0,10,0,0"
+                                        BackgroundColor="#4fF00000"
+                                        Command="{Binding DisconnectCommand}"
+                                        CommandParameter="{Binding}"
+                                        Text="Disconnect"
+                                        TextColor="{AppThemeBinding Dark='White',
+                                                                    Light='Black'}" />
+                                <Button Grid.Column="1"
+                                        Margin="0,10,0,0"
+                                        BackgroundColor="#2fFFFFFF"
+                                        Command="{Binding MuteUnmuteCommand}"
+                                        CommandParameter="{Binding}"
+                                        Text="Mute"
+                                        TextColor="{AppThemeBinding Dark='White',
+                                                                    Light='Black'}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMuted}"
+                                                             TargetType="Button"
+                                                             Value="True">
+                                                    <Setter Property="Background" Value="#3fFFFFFF" />
+                                                    <Setter Property="Text" Value="Unmute" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
 
-                                <toolkit:ContentButton Grid.Column="2" Command="{Binding DeafenUndeafenCommand}">
-                                    <Border x:Name="deafenBorder"
-                                            Padding="2"
-                                            Background="#2fFFFFFF"
-                                            StrokeThickness="0">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="4" />
-                                        </Border.StrokeShape>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsDeafened}"
-                                                                 TargetType="Border"
-                                                                 Value="True">
-                                                        <Setter Property="Background" Value="#3fFFFFFF" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsDeafened}"
-                                                                 TargetType="Border"
-                                                                 Value="False">
-                                                        <Setter Property="Background" Value="#2fFFFFFF" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <Label Margin="5"
-                                               FontSize="Small"
-                                               HorizontalTextAlignment="Center"
-                                               Text="Deafen">
-                                            <Label.Style TargetType="Label">
-                                                <Style TargetType="Label">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsDeafened}"
-                                                                     TargetType="Label"
-                                                                     Value="True">
-                                                            <Setter Property="Text" Value="Undeafen" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsDeafened}"
-                                                                     TargetType="Label"
-                                                                     Value="False">
-                                                            <Setter Property="Text" Value="Deafen" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Label.Style>
-                                        </Label>
-                                    </Border>
-                                    <VisualStateManager.VisualStateGroups>
-                                        <VisualStateGroupList>
-                                            <VisualStateGroup>
-                                                <VisualState x:Name="Normal" />
-                                                <VisualState x:Name="Pressed">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="deafenBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonPressedLight}, Light={StaticResource Key=PrimaryButtonPressedDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                                <VisualState x:Name="PointerOver">
-                                                    <VisualState.Setters>
-                                                        <Setter TargetName="deafenBorder" Property="Background" Value="{AppThemeBinding Dark={StaticResource Key=PrimaryButtonHoverLight}, Light={StaticResource Key=PrimaryButtonHoverDark}}" />
-                                                    </VisualState.Setters>
-                                                </VisualState>
-                                            </VisualStateGroup>
-                                        </VisualStateGroupList>
-                                    </VisualStateManager.VisualStateGroups>
-                                </toolkit:ContentButton>
+                                <Button Grid.Column="2"
+                                        Margin="0,10,0,0"
+                                        BackgroundColor="#2fFFFFFF"
+                                        Command="{Binding DeafenUndeafenCommand}"
+                                        CommandParameter="{Binding}"
+                                        Text="Deafen"
+                                        TextColor="{AppThemeBinding Dark='White',
+                                                                    Light='Black'}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDeafened}"
+                                                             TargetType="Button"
+                                                             Value="True">
+                                                    <Setter Property="Background" Value="#3fFFFFFF" />
+                                                    <Setter Property="Text" Value="Undeafen" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </Grid>
                         </Border>
                     </Grid>

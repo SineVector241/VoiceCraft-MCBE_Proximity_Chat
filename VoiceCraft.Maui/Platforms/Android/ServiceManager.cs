@@ -23,15 +23,30 @@ namespace VoiceCraft.Maui
 
         public void StartService()
         {
-            var serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
-            Android.App.Application.Context.StartForegroundService(serviceIntent);
+            try
+            {
+                Preferences.Set("VoipServiceRunning", true);
+                var serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
+                Android.App.Application.Context.StartForegroundService(serviceIntent);
+            }
+            catch
+            {
+                Preferences.Set("VoipServiceRunning", false);
+            }
         }
 
         public void Stop() 
         {
-            Preferences.Set("VoipServiceRunning", false);
-            var serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
-            Android.App.Application.Context.StopService(serviceIntent);
+            try
+            {
+                Preferences.Set("VoipServiceRunning", false);
+                var serviceIntent = new Intent(Android.App.Application.Context, typeof(ServiceManager));
+                Android.App.Application.Context.StopService(serviceIntent);
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         private void StartVoiceCraftService()
@@ -67,7 +82,6 @@ namespace VoiceCraft.Maui
             {
                 try
                 {
-                    Preferences.Set("VoipServiceRunning", true);
                     VoipService = new VoipService(Navigator.GetNavigationData<ServerModel>());
                     VoipService.OnStatusUpdated += StatusUpdated;
                     VoipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
