@@ -5,6 +5,7 @@ using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Maui.Models;
 using CommunityToolkit.Mvvm.Messaging;
+using NAudio.Wave;
 
 namespace VoiceCraft.Maui.ViewModels
 {
@@ -36,6 +37,15 @@ namespace VoiceCraft.Maui.ViewModels
                 return;
             }
             if (status != PermissionStatus.Granted) return;
+#elif WINDOWS
+            if (Settings.InputDevice > WaveIn.DeviceCount)
+            {
+                Settings.InputDevice = 0;
+            }
+            if (Settings.OutputDevice > WaveOut.DeviceCount)
+            {
+                Settings.OutputDevice = 0;
+            }
 #endif
             WeakReferenceMessenger.Default.Send(new StartServiceMSG());
             await Navigator.NavigateTo(nameof(Voice), Server);
