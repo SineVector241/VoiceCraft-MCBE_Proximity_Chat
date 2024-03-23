@@ -123,6 +123,7 @@
 	  <None Remove="Resources\Images\server.svg" />
 	  <None Remove="Resources\Images\server_plus.svg" />
 	  <None Remove="Resources\Images\view_list.svg" />
+	  <None Remove="Resources\Images\volume_high.svg" />
 	</ItemGroup>
 
 	<ItemGroup>
