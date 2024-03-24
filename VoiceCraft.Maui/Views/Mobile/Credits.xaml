@@ -31,7 +31,7 @@
                         Margin="5"
                         HorizontalOptions="FillAndExpand"
                         VerticalOptions="StartAndExpand">
-                    <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto">
                         <Label Grid.Row="0"
                                FontAttributes="Bold"
                                FontSize="Small"
@@ -48,6 +48,10 @@
                                FontAttributes="Bold"
                                FontSize="Small"
                                Text="{Binding Source={x:Static app:App.Version}, StringFormat='App Version: {0}'}" />
+                        <Label Grid.Row="4"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="Codec: Opus - v1.5.1" />
                     </Grid>
                 </Border>
             </Grid>
