@@ -213,6 +213,7 @@ namespace VoiceCraft.Maui
             try
             {
                 Preferences.Set("VoipServiceRunning", false); //Set to false anyways.
+                easterEggLoop = null;
                 if (!Cts?.IsCancellationRequested ?? false)
                 {
                     Cts?.Cancel();
