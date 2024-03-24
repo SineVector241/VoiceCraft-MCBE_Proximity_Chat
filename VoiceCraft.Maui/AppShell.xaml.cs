@@ -11,24 +11,24 @@ namespace VoiceCraft.Maui
             //Routing
             if(DeviceInfo.Idiom == DeviceIdiom.Phone)
             {
-                Routing.RegisterRoute(nameof(Views.Mobile.Servers), typeof(Views.Mobile.Servers));
+                tabBar.Items.Add(new ShellContent() { Title = "Servers", Icon = "server.png", ContentTemplate = new DataTemplate(typeof(Views.Mobile.Servers)), Route = nameof(Views.Mobile.Servers) });
+                tabBar.Items.Add(new ShellContent() { Title = "Settings", Icon = "cog.png", ContentTemplate = new DataTemplate(typeof(Views.Mobile.Settings)), Route = nameof(Views.Mobile.Settings) });
+                tabBar.Items.Add(new ShellContent() { Title = "Credits", Icon = "information.png", ContentTemplate = new DataTemplate(typeof(Views.Mobile.Credits)), Route = nameof(Views.Mobile.Credits) });
+
                 Routing.RegisterRoute(nameof(Views.Mobile.ServerDetails), typeof(Views.Mobile.ServerDetails));
                 Routing.RegisterRoute(nameof(Views.Mobile.AddServer), typeof(Views.Mobile.AddServer));
                 Routing.RegisterRoute(nameof(Views.Mobile.Voice), typeof(Views.Mobile.Voice));
-                Routing.RegisterRoute(nameof(Views.Mobile.Settings), typeof(Views.Mobile.Settings));
-                Routing.RegisterRoute(nameof(Views.Mobile.Credits), typeof(Views.Mobile.Credits));
                 Routing.RegisterRoute(nameof(Views.Mobile.EditServer), typeof(Views.Mobile.EditServer));
             }
             else
             {
-                CurrentItem = desktopDefault;
+                flyoutItem.Items.Add(new ShellContent() { Title = "Servers", Icon = "server.png", ContentTemplate = new DataTemplate(typeof(Views.Desktop.Servers)), Route = nameof(Views.Desktop.Servers) });
+                flyoutItem.Items.Add(new ShellContent() { Title = "Settings", Icon = "cog.png", ContentTemplate = new DataTemplate(typeof(Views.Desktop.Settings)), Route = nameof(Views.Desktop.Settings) });
+                flyoutItem.Items.Add(new ShellContent() { Title = "Credits", Icon = "information.png", ContentTemplate = new DataTemplate(typeof(Views.Desktop.Credits)), Route = nameof(Views.Desktop.Credits) });
 
-                Routing.RegisterRoute(nameof(Views.Desktop.Servers), typeof(Views.Desktop.Servers));
                 Routing.RegisterRoute(nameof(Views.Desktop.ServerDetails), typeof(Views.Desktop.ServerDetails));
                 Routing.RegisterRoute(nameof(Views.Desktop.AddServer), typeof(Views.Desktop.AddServer));
                 Routing.RegisterRoute(nameof(Views.Desktop.Voice), typeof(Views.Desktop.Voice));
-                Routing.RegisterRoute(nameof(Views.Desktop.Settings), typeof(Views.Desktop.Settings));
-                Routing.RegisterRoute(nameof(Views.Desktop.Credits), typeof(Views.Desktop.Credits));
                 Routing.RegisterRoute(nameof(Views.Desktop.EditServer), typeof(Views.Desktop.EditServer));
             }
         }
