@@ -180,20 +180,23 @@
                                Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:P2}'}"
                                VerticalTextAlignment="Center" />
 
-                        <ahKit:ProgressBar Grid.Column="1"
-                                           Background="Transparent"
-                                           EnableAnimations="False"
-                                           HeightRequest="22"
-                                           IsVertical="False"
-                                           Progress="{Binding MicrophoneDetection}"
-                                           ProgressBrush="{StaticResource SwitchOn}"
-                                           VerticalOptions="StartAndExpand" />
+                        <Grid Grid.Column="1"
+                              Margin="10,0,0,0"
+                              RowDefinitions="0, Auto">
+                            <ahKit:ProgressBar Grid.Row="0"
+                                               Background="Transparent"
+                                               EnableAnimations="False"
+                                               HeightRequest="22"
+                                               IsVertical="False"
+                                               Progress="{Binding MicrophoneDetection}"
+                                               ProgressBrush="{StaticResource SwitchOn}"
+                                               VerticalOptions="StartAndExpand" />
 
-                        <Slider Grid.Column="1"
-                                Margin="10,0,0,0"
-                                Maximum="1.0"
-                                Minimum="0.0"
-                                Value="{Binding Settings.MicrophoneDetectionPercentage}" />
+                            <Slider Grid.Row="1"
+                                    Maximum="1.0"
+                                    Minimum="0.0"
+                                    Value="{Binding Settings.MicrophoneDetectionPercentage}" />
+                        </Grid>
 
                         <toolkit:ContentButton Grid.Column="2"
                                                Margin="5,0,0,0"

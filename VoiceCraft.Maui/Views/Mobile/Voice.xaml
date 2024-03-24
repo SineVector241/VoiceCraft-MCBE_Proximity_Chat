@@ -235,7 +235,6 @@
                             </Border.Style>
                             <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
                                 <Button Grid.Column="0"
-                                        Margin="0,10,0,0"
                                         BackgroundColor="#4fF00000"
                                         Command="{Binding DisconnectCommand}"
                                         CommandParameter="{Binding}"
@@ -243,7 +242,6 @@
                                         TextColor="{AppThemeBinding Dark='White',
                                                                     Light='Black'}" />
                                 <Button Grid.Column="1"
-                                        Margin="0,10,0,0"
                                         BackgroundColor="#2fFFFFFF"
                                         Command="{Binding MuteUnmuteCommand}"
                                         CommandParameter="{Binding}"
@@ -265,7 +263,6 @@
                                 </Button>
 
                                 <Button Grid.Column="2"
-                                        Margin="0,10,0,0"
                                         BackgroundColor="#2fFFFFFF"
                                         Command="{Binding DeafenUndeafenCommand}"
                                         CommandParameter="{Binding}"
