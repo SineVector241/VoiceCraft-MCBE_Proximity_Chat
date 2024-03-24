@@ -24,13 +24,16 @@ namespace VoiceCraft.Maui
 
         string[] splashEasterEggs = {
             "1+1 = window.",
-            "creeper, aww man.", "ANDROID FTW.",
+            "creeper, aww man.", 
+            "ANDROID FTW.",
             "PC master race.", "No way dude, That's insane.",
             "What came first, the chicken or the egg?",
             "Android version only has easter eggs.",
             "The wheel's on a bus go... oh nevermind.",
             "Press F for help.",
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            $"{Math.PI}",
+            "Baby shark do doo do doo do do"
         };
 
         public void StartService()
