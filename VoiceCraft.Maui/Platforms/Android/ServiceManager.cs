@@ -201,6 +201,7 @@ namespace VoiceCraft.Maui
                     WeakReferenceMessenger.Default.UnregisterAll(this);
                     Stop();
                     Cts.Dispose();
+                    easterEggLoop = null;
                 }
             }, Cts.Token);
             return StartCommandResult.Sticky;
