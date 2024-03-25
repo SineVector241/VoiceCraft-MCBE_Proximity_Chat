@@ -17,6 +17,9 @@ namespace VoiceCraft.Maui.ViewModels
         string passwordInput = string.Empty;
 
         [ObservableProperty]
+        ParticipantModel? selectedParticipant;
+
+        [ObservableProperty]
         bool isMuted = false;
 
         [ObservableProperty]
@@ -27,6 +30,9 @@ namespace VoiceCraft.Maui.ViewModels
 
         [ObservableProperty]
         bool showChannels = false;
+
+        [ObservableProperty]
+        bool showParticipantVolume = false;
 
         [ObservableProperty]
         ObservableCollection<ParticipantModel> participants = new ObservableCollection<ParticipantModel>();
@@ -139,15 +145,15 @@ namespace VoiceCraft.Maui.ViewModels
                     Shell.Current.DisplayAlert("Denied", message.Value, "OK");
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ResponseData message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ResponseDataMSG message) =>
 
             {
-                StatusText = message.StatusMessage;
-                IsMuted = message.IsMuted;
-                IsDeafened = message.IsDeafened;
-                IsSpeaking = message.IsSpeaking;
-                Participants = new ObservableCollection<ParticipantModel>(message.Participants);
-                Channels = new ObservableCollection<ChannelModel>(message.Channels);
+                StatusText = message.Value.StatusMessage;
+                IsMuted = message.Value.IsMuted;
+                IsDeafened = message.Value.IsDeafened;
+                IsSpeaking = message.Value.IsSpeaking;
+                Participants = new ObservableCollection<ParticipantModel>(message.Value.Participants);
+                Channels = new ObservableCollection<ChannelModel>(message.Value.Channels);
             });
 
             WeakReferenceMessenger.Default.Send(new RequestDataMSG());
@@ -183,6 +189,19 @@ namespace VoiceCraft.Maui.ViewModels
         public void ShowHideChannels()
         {
             ShowChannels = !ShowChannels;
+        }
+
+        [RelayCommand]
+        public void ShowVolume(ParticipantModel participant)
+        {
+            SelectedParticipant = participant;
+            ShowParticipantVolume = true;
+        }
+
+        [RelayCommand]
+        public void HideVolume()
+        {
+            ShowParticipantVolume = false;
         }
 
         [RelayCommand]

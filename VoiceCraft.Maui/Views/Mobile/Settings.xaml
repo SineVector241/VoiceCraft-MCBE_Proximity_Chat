@@ -147,17 +147,22 @@
                            Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:P2}'}"
                            VerticalTextAlignment="Center" />
 
-                    <Grid Grid.Row="10" Margin="0,10">
-                        <Slider Maximum="1.0"
-                                Minimum="0.0"
-                                Value="{Binding Settings.MicrophoneDetectionPercentage}" />
-                        <ahKit:ProgressBar Background="Transparent"
+                    <Grid Grid.Row="10"
+                          Margin="0,10"
+                          RowDefinitions="0, Auto">
+                        <ahKit:ProgressBar Grid.Row="0"
+                                           Margin="15,0"
+                                           Background="Transparent"
                                            EnableAnimations="False"
-                                           HeightRequest="10"
+                                           HeightRequest="17"
                                            IsVertical="False"
                                            Progress="{Binding MicrophoneDetection}"
                                            ProgressBrush="{StaticResource SwitchOn}"
                                            VerticalOptions="Center" />
+                        <Slider Grid.Row="1"
+                                Maximum="1.0"
+                                Minimum="0.0"
+                                Value="{Binding Settings.MicrophoneDetectionPercentage}" />
                     </Grid>
                     <Button Grid.Row="11"
                             Margin="0,10,0,0"
