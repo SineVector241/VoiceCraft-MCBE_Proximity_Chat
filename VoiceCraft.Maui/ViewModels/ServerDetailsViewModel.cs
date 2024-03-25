@@ -29,6 +29,12 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task Connect()
         {
+            var settings = Database.Instance.Settings;
+            if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
+            {
+                settings.WebsocketPort = 8080;
+                await Database.Instance.SaveSettings();
+            }
 #if ANDROID
             var status = await Permissions.RequestAsync<Permissions.Microphone>();
             if (Permissions.ShouldShowRationale<Permissions.Microphone>())
