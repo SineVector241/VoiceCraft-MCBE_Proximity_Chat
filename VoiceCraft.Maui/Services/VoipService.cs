@@ -74,13 +74,13 @@ namespace VoiceCraft.Maui.Services
                 {
                     Normalizer = new SoftLimiter(Network.AudioOutput);
                     Normalizer.Boost.CurrentValue = Settings.SoftLimiterGain;
-                    AudioPlayer = await audioManager.CreatePlayer(Normalizer);
+                    AudioPlayer = audioManager.CreatePlayer(Normalizer);
                 }
                 else
                 {
-                    AudioPlayer = await audioManager.CreatePlayer(Network.AudioOutput);
+                    AudioPlayer = audioManager.CreatePlayer(Network.AudioOutput);
                 }
-                AudioRecorder = await audioManager.CreateRecorder(Network.AudioFormat, FrameSizeMS);
+                AudioRecorder = audioManager.CreateRecorder(Network.AudioFormat, FrameSizeMS);
 
                 //Event Initializations
                 Network.OnVoiceConnected += OnConnected;

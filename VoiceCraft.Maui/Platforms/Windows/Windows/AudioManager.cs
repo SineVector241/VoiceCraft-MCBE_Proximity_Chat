@@ -6,20 +6,9 @@ namespace VoiceCraft.Maui;
 
 public class AudioManager : IAudioManager
 {
-    public async Task<IWavePlayer> CreatePlayer(ISampleProvider waveProvider)
+    public IWavePlayer CreatePlayer(ISampleProvider waveProvider)
     {
         var settings = Database.Instance.Settings;
-        if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
-        {
-            settings.WebsocketPort = 8080;
-            await Database.Instance.SaveSettings();
-        }
-
-        if (settings.OutputDevice > WaveOut.DeviceCount)
-        {
-            settings.OutputDevice = 0;
-            await Database.Instance.SaveSettings();
-        }
 
         var Player = new WaveOutEvent();
         Player.DesiredLatency = 50;
@@ -29,14 +18,9 @@ public class AudioManager : IAudioManager
         return Player;
     }
 
-    public async Task<IWaveIn> CreateRecorder(WaveFormat waveFormat, int bufferMS)
+    public IWaveIn CreateRecorder(WaveFormat waveFormat, int bufferMS)
     {
         var settings = Database.Instance.Settings;
-        if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
-        {
-            settings.WebsocketPort = 8080;
-            await Database.Instance.SaveSettings();
-        }
 
         var Recorder = new WaveInEvent();
         Recorder.WaveFormat = waveFormat;

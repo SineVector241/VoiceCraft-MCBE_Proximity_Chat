@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Models;
 using NAudio.Wave;
-using OpusSharp;
 
 namespace VoiceCraft.Maui.ViewModels
 {
@@ -64,7 +63,7 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public async Task OpenCloseMicrophone()
+        public void OpenCloseMicrophone()
         {
             if (Microphone == null)
             {
@@ -79,7 +78,7 @@ namespace VoiceCraft.Maui.ViewModels
 #endif
 
                 var manager = new AudioManager();
-                Microphone = await manager.CreateRecorder(AudioFormat, 20);
+                Microphone = manager.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
                 Microphone.StartRecording();
                 IsRecording = true;
