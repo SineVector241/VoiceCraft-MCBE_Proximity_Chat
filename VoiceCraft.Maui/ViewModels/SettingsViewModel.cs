@@ -63,7 +63,11 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
+#if ANDROID
+        public async Task OpenCloseMicrophone()
+#else
         public void OpenCloseMicrophone()
+#endif
         {
             if (Microphone == null)
             {
