@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
@@ -38,6 +37,7 @@ namespace VoiceCraft.Core.Sockets
         public delegate void OutboundPacket(VoicePacket packet, EndPoint endPoint);
         public delegate void InboundPacket(VoicePacket packet, EndPoint endPoint);
         public delegate void ExceptionError(Exception error);
+        public delegate void SocketStarted();
         #endregion
 
         #region Events
@@ -55,6 +55,7 @@ namespace VoiceCraft.Core.Sockets
         public event OutboundPacket? OnOutboundPacket;
         public event InboundPacket? OnInboundPacket;
         public event ExceptionError? OnExceptionError;
+        public event SocketStarted? OnSocketStarted;
         #endregion
 
         #region Methods
@@ -104,7 +105,7 @@ namespace VoiceCraft.Core.Sockets
         /// Starts a server for voice socket connections.
         /// </summary>
         /// <param name="Port">The port to host on.</param>
-        public void Host(ushort Port)
+        public async Task Host(ushort Port)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
             if (IsConnected) throw new InvalidOperationException("You must stop hosting before starting a host!");
@@ -112,7 +113,8 @@ namespace VoiceCraft.Core.Sockets
 
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             IsHosting = true;
-            _ = ListenAsync();
+            OnSocketStarted?.Invoke();
+            await ListenAsync();
         }
 
         /// <summary>
@@ -249,7 +251,8 @@ namespace VoiceCraft.Core.Sockets
                     CTS.Cancel();
                     if (ActivityChecker != null)
                     {
-                        _ = Task.Run(() => {
+                        _ = Task.Run(() =>
+                        {
                             ActivityChecker?.Wait(); //Wait to finish before disposing.
                             ActivityChecker?.Dispose();
                             ActivityChecker = null;

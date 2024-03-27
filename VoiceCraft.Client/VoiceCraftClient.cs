@@ -146,7 +146,11 @@ namespace VoiceCraft.Client
             PacketCount++;
 
             byte[] audioEncodeBuffer = new byte[1000];
-            var encodedBytes = Encoder.Encode(data, bytesRecorded, audioEncodeBuffer);
+            int encodedBytes;
+            lock (Encoder)
+            {
+                encodedBytes = Encoder.Encode(data, bytesRecorded, audioEncodeBuffer);
+            }
             byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
 
             //Send the audio

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -42,6 +41,7 @@ namespace VoiceCraft.Core.Sockets
         public delegate void OutboundPacket(SignallingPacket packet, Socket socket);
         public delegate void InboundPacket(SignallingPacket packet, Socket socket);
         public delegate void ExceptionError(Exception error);
+        public delegate void SocketStarted();
         #endregion
 
         #region Events
@@ -66,6 +66,7 @@ namespace VoiceCraft.Core.Sockets
         public event OutboundPacket? OnOutboundPacket;
         public event InboundPacket? OnInboundPacket;
         public event ExceptionError? OnExceptionError;
+        public event SocketStarted? OnSocketStarted;
         #endregion
 
         #region Methods
@@ -122,16 +123,17 @@ namespace VoiceCraft.Core.Sockets
         /// Starts a server for signalling socket connections.
         /// </summary>
         /// <param name="Port">The port to host on.</param>
-        public void Host(ushort Port)
+        public async Task Host(ushort Port)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(Voice));
+            if (IsDisposed) throw new ObjectDisposedException(nameof(Signalling));
             if (IsHosting) throw new InvalidOperationException("You must stop hosting before starting a host!");
             if (IsConnected) throw new InvalidOperationException("Cannot start hosting as socket is in a connection state!");
 
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             Socket.Listen(100);
             IsHosting = true;
-            _ = AcceptConnectionsAsync();
+            OnSocketStarted?.Invoke();
+            await AcceptConnectionsAsync();
         }
 
         /// <summary>

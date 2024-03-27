@@ -74,12 +74,14 @@ namespace VoiceCraft.Core.Server
             Signalling.OnSocketDisconnected += Signalling_SocketDisconnected;
             Signalling.OnPingCheck += Signalling_PingCheck;
             Signalling.OnPing += Signalling_Ping;
+            Signalling.OnSocketStarted += Signalling_SocketStarted;
 
             //Voice
             Voice.OnLogin += Voice_Login;
             Voice.OnKeepAlive += Voice_KeepAlive;
             Voice.OnClientAudio += Voice_ClientAudio;
             Voice.OnUpdatePosition += Voice_UpdatePosition;
+            Voice.OnSocketStarted += Voice_SocketStarted;
 
             //MCComm
             MCComm.OnLoginPacketReceived += MCCommLogin;
@@ -89,6 +91,7 @@ namespace VoiceCraft.Core.Server
             MCComm.OnUpdateSettingsPacketReceived += MCCommUpdateSettings;
             MCComm.OnRemoveParticipantPacketReceived += MCCommRemoveParticipant;
             MCComm.OnChannelMovePacketReceived += MCCommChannelMove;
+            MCComm.OnSocketStarted += MCComm_SocketStarted;
         }
 
         public void Start()
@@ -99,42 +102,27 @@ namespace VoiceCraft.Core.Server
             ActivityChecker = Task.Run(ServerChecks);
             try
             {
-                //Host Signalling
-                Signalling.LogInbound = ServerProperties.Debugger.LogInboundSignallingPackets;
-                Signalling.LogOutbound = ServerProperties.Debugger.LogOutboundSignallingPackets;
-                Signalling.InboundFilter = ServerProperties.Debugger.InboundSignallingFilter;
-                Signalling.OutboundFilter = ServerProperties.Debugger.OutboundSignallingFilter;
-                Signalling.LogExceptions = ServerProperties.Debugger.LogExceptions;
-                Signalling.Host(ServerProperties.SignallingPortTCP);
-                OnSignallingStarted?.Invoke();
-
-                //Host Voice
-                Voice.LogInbound = ServerProperties.Debugger.LogInboundVoicePackets;
-                Voice.LogOutbound = ServerProperties.Debugger.LogOutboundVoicePackets;
-                Voice.InboundFilter = ServerProperties.Debugger.InboundVoiceFilter;
-                Voice.OutboundFilter = ServerProperties.Debugger.OutboundVoiceFilter;
-                Voice.LogExceptions = ServerProperties.Debugger.LogExceptions;
-                Voice.Host(ServerProperties.VoicePortUDP);
-                OnVoiceStarted?.Invoke();
-
-                if (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
-                {
-                    MCComm.LogInbound = ServerProperties.Debugger.LogInboundMCCommPackets;
-                    MCComm.LogOutbound = ServerProperties.Debugger.LogOutboundMCCommPackets;
-                    MCComm.InboundFilter = ServerProperties.Debugger.InboundMCCommFilter;
-                    MCComm.OutboundFilter = ServerProperties.Debugger.OutboundMCCommFilter;
-                    MCComm.LogExceptions = ServerProperties.Debugger.LogExceptions;
-                    MCComm.Start(ServerProperties.MCCommPortTCP, ServerProperties.PermanentServerKey);
-                    OnWebserverStarted?.Invoke();
-
-                    /*
-                        var username = Environment.GetEnvironmentVariable("USERNAME");
-                        var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
-                        Console.WriteLine($"Please give access by typing in the following command in a command prompt\nnetsh http add urlacl url=http://*:{Port}/ user={userdomain}\\{username} listen=yes\nAnd then restart the server\n");
-                        */
-                }
-
-                ServerState = ServerState.Started;
+                _ = Task.Run(async () => {
+                    try
+                    {
+                        //Host Signalling
+                        Signalling.LogInbound = ServerProperties.Debugger.LogInboundSignallingPackets;
+                        Signalling.LogOutbound = ServerProperties.Debugger.LogOutboundSignallingPackets;
+                        Signalling.InboundFilter = ServerProperties.Debugger.InboundSignallingFilter;
+                        Signalling.OutboundFilter = ServerProperties.Debugger.OutboundSignallingFilter;
+                        Signalling.LogExceptions = ServerProperties.Debugger.LogExceptions;
+                        await Signalling.Host(ServerProperties.SignallingPortTCP);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        OnError?.Invoke(ex);
+                        CTS.Cancel();
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -146,6 +134,33 @@ namespace VoiceCraft.Core.Server
 
         //Event Methods
         #region Signalling
+        private void Signalling_SocketStarted()
+        {
+            OnSignallingStarted?.Invoke();
+
+            _ = Task.Run(async () => {
+                try
+                {
+                    //Host Voice
+                    Voice.LogInbound = ServerProperties.Debugger.LogInboundVoicePackets;
+                    Voice.LogOutbound = ServerProperties.Debugger.LogOutboundVoicePackets;
+                    Voice.InboundFilter = ServerProperties.Debugger.InboundVoiceFilter;
+                    Voice.OutboundFilter = ServerProperties.Debugger.OutboundVoiceFilter;
+                    Voice.LogExceptions = ServerProperties.Debugger.LogExceptions;
+                    await Voice.Host(ServerProperties.VoicePortUDP);
+                }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    OnError?.Invoke(ex);
+                    CTS.Cancel();
+                }
+            });
+        }
+
         private void Signalling_Ping(Packets.Signalling.Ping data, Socket socket)
         {
             var connType = "Hybrid";
@@ -376,6 +391,41 @@ namespace VoiceCraft.Core.Server
         #endregion
 
         #region Voice
+        private void Voice_SocketStarted()
+        {
+            OnVoiceStarted?.Invoke();
+
+            if (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
+            {
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        MCComm.LogInbound = ServerProperties.Debugger.LogInboundMCCommPackets;
+                        MCComm.LogOutbound = ServerProperties.Debugger.LogOutboundMCCommPackets;
+                        MCComm.InboundFilter = ServerProperties.Debugger.InboundMCCommFilter;
+                        MCComm.OutboundFilter = ServerProperties.Debugger.OutboundMCCommFilter;
+                        MCComm.LogExceptions = ServerProperties.Debugger.LogExceptions;
+                        MCComm.Start(ServerProperties.MCCommPortTCP, ServerProperties.PermanentServerKey);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnError?.Invoke(ex);
+                        CTS.Cancel();
+                        /*
+                        var username = Environment.GetEnvironmentVariable("USERNAME");
+                        var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
+                        Console.WriteLine($"Please give access by typing in the following command in a command prompt\nnetsh http add urlacl url=http://*:{Port}/ user={userdomain}\\{username} listen=yes\nAnd then restart the server\n");
+                        */
+                    }
+                });
+            }
+            else
+            {
+                ServerState = ServerState.Started;
+            }
+        }
+
         private void Voice_Login(Packets.Voice.Login data, EndPoint endPoint)
         {
             if (Participants.TryGetValue(data.PrivateId, out var participant) && participant.SignallingSocket.RemoteEndPoint != null && ((IPEndPoint)participant.SignallingSocket.RemoteEndPoint).Address.ToString() == ((IPEndPoint)endPoint).Address.ToString() && participant.VoiceEndpoint == null)
@@ -485,6 +535,12 @@ namespace VoiceCraft.Core.Server
         #endregion
 
         #region MCComm
+        private void MCComm_SocketStarted()
+        {
+            ServerState = ServerState.Started;
+            OnWebserverStarted?.Invoke();
+        }
+
         private void MCCommLogin(Packets.MCComm.Login packet, HttpListenerContext ctx)
         {
             if (packet.LoginKey != MCComm.ServerKey)

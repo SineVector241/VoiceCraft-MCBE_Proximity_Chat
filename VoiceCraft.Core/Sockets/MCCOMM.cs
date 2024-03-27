@@ -30,6 +30,7 @@ namespace VoiceCraft.Core.Sockets
         public delegate void InboundPacket(MCCommPacket packet);
         public delegate void OutboundPacket(MCCommPacket packet);
         public delegate void ExceptionError(Exception error);
+        public delegate void SocketStarted();
 
         //events
         public event PacketData<Login>? OnLoginPacketReceived;
@@ -44,6 +45,7 @@ namespace VoiceCraft.Core.Sockets
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
         public event ExceptionError? OnExceptionError;
+        public event SocketStarted? OnSocketStarted;
 
         public MCCOMM(CancellationToken CT)
         {
@@ -57,6 +59,7 @@ namespace VoiceCraft.Core.Sockets
             Listener.Prefixes.Add($"http://*:{Port}/");
             Listener.Start();
             Listener.BeginGetContext(new AsyncCallback(Listen), null);
+            OnSocketStarted?.Invoke();
         }
 
         public void Stop()
