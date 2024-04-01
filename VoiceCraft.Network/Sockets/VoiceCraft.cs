@@ -195,6 +195,7 @@ namespace VoiceCraft.Network.Sockets
             Socket.Close();
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             CTS = new CancellationTokenSource();
+            State = VoiceCraftSocketState.Stopped;
             OnStopped?.Invoke(reason);
         }
 
