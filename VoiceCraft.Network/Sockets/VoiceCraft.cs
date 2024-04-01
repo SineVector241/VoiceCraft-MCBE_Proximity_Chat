@@ -142,6 +142,11 @@ namespace VoiceCraft.Network.Sockets
 
         public void Disconnect(string? reason = null)
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            if (State == VoiceCraftSocketState.Starting || State == VoiceCraftSocketState.Started) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
+            if (State == VoiceCraftSocketState.Disconnecting) throw new InvalidOperationException("Already disconnecting.");
+            if (State == VoiceCraftSocketState.Stopped) return;
+
             State = VoiceCraftSocketState.Disconnecting;
             //Deregister the Events
             OnAcceptReceived += OnAccept;
@@ -151,6 +156,7 @@ namespace VoiceCraft.Network.Sockets
             SendQueue = null;
             ReliabilityQueue = null;
             ActivityChecker = null;
+            State = VoiceCraftSocketState.Stopped;
             OnDisconnected?.Invoke(reason);
         }
 
@@ -350,7 +356,7 @@ namespace VoiceCraft.Network.Sockets
 
         private void OnDeny(Deny data, EndPoint endPoint)
         {
-            throw new NotImplementedException();
+            Disconnect(data.Reason);
         }
         #endregion
     }
