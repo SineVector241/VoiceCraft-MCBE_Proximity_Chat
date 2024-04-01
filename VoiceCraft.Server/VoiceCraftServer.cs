@@ -28,7 +28,7 @@ namespace VoiceCraft.Core.Server
 
         //Sockets
         public Signalling Signalling { get; set; }
-        public Voice Voice { get; set; }
+        public Sockets.VoiceCraft Voice { get; set; }
         public MCCOMM MCComm { get; set; }
 
         //Delegates
@@ -60,7 +60,7 @@ namespace VoiceCraft.Core.Server
         public VoiceCraftServer()
         {
             Signalling = new Signalling();
-            Voice = new Voice();
+            Voice = new Sockets.VoiceCraft();
             MCComm = new MCCOMM(CTS.Token);
 
             //Event methods in order!

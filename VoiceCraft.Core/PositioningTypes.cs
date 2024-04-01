@@ -3,6 +3,7 @@
     public enum PositioningTypes
     {
         ServerSided,
-        ClientSided
+        ClientSided,
+        Unknown
     }
 }

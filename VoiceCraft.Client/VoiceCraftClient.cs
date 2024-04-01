@@ -33,7 +33,7 @@ namespace VoiceCraft.Client
         public ConnectionState ConnectionState { get; private set; } = ConnectionState.Disconnected;
         public PositioningTypes PositioningType { get; private set; }
         public Signalling Signalling { get; }
-        public Voice Voice { get; }
+        public Core.Sockets.VoiceCraft Voice { get; }
         public MCWSS MCWSS { get; private set; }
         public string? IP { get; private set; }
         public string? Name { get; private set; }
@@ -81,7 +81,7 @@ namespace VoiceCraft.Client
             PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
             FrameSizeMS = frameSizeMS;
             Signalling = new Signalling();
-            Voice = new Voice();
+            Voice = new Core.Sockets.VoiceCraft();
             MCWSS = new MCWSS(MCWSSPort);
             Participants = new Dictionary<ushort, VoiceCraftParticipant>();
             Channels = new List<VoiceCraftChannel>();
