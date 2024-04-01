@@ -45,6 +45,7 @@ namespace VoiceCraft.Network.Sockets
 
         public delegate void Started();
         public delegate void Stopped(string? reason = null);
+        public delegate void PeerDisconnected(NetPeer peer, string? reason = null);
 
         public delegate void PacketData<T>(T data, EndPoint endPoint);
 
@@ -63,6 +64,7 @@ namespace VoiceCraft.Network.Sockets
         //Server Events
         public event Started? OnStarted;
         public event Stopped? OnStopped;
+        public event PeerDisconnected? OnPeerDisconnected;
 
         //Packet Events
         public event PacketData<Login>? OnLoginReceived;
@@ -173,6 +175,7 @@ namespace VoiceCraft.Network.Sockets
             {
                 RemoteEndpoint = new IPEndPoint(IPAddress.Any, Port);
                 Socket.Bind(RemoteEndpoint);
+                ActivityChecker = Task.Run(ServerCheck);
                 State = VoiceCraftSocketState.Started;
                 OnStarted?.Invoke();
                 await ReceiveAsync();
@@ -198,6 +201,7 @@ namespace VoiceCraft.Network.Sockets
             Socket.Close();
             CTS = new CancellationTokenSource();
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            ActivityChecker = null;
             State = VoiceCraftSocketState.Stopped;
             OnStopped?.Invoke(reason);
         }
@@ -218,12 +222,14 @@ namespace VoiceCraft.Network.Sockets
                 SendQueue.Enqueue(packet);
         }
 
-        public async Task DisconnectPeer(long Id, string? reason = null)
+        public async Task DisconnectPeer(long Id, bool notifyPeer = false, string? reason = null)
         {
             if (NetPeers.TryRemove(Id, out var peer))
             {
-                await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty, Sequence = peer.GetNextSequence() }, peer.EP); //Send immediately.
+                if(notifyPeer)
+                    await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty, Sequence = peer.GetNextSequence() }, peer.EP); //Send immediately.
                 peer.Dispose();
+                OnPeerDisconnected?.Invoke(peer, reason);
             }
         }
 
@@ -231,7 +237,7 @@ namespace VoiceCraft.Network.Sockets
         {
             foreach(var peerId in NetPeers.Keys)
             {
-                await DisconnectPeer(peerId, null);
+                await DisconnectPeer(peerId, true, null);
             }
         }
 
@@ -341,10 +347,27 @@ namespace VoiceCraft.Network.Sockets
                 var dist = Environment.TickCount64 - LastActive;
                 if (dist > Timeout)
                 {
-                    await Disconnect($"Signalling timed out!\nTime since last active {Environment.TickCount - LastActive}ms.");
+                    Disconnect($"Signalling timed out!\nTime since last active {Environment.TickCount - LastActive}ms.");
                     break;
                 }
                 Send(new Ping() { Id = Id });
+                await Task.Delay(ActivityInterval).ConfigureAwait(false);
+            }
+        }
+
+        private async Task ServerCheck()
+        {
+            while (!CTS.IsCancellationRequested)
+            {
+                for (int i = NetPeers.Count - 1; i >= 0; i--)
+                {
+                    var peer = NetPeers.ElementAt(i);
+
+                    if (Environment.TickCount64 - peer.Value.LastActive > Timeout)
+                    {
+                        await DisconnectPeer(peer.Key, true, $"Timeout - Last Active: {Environment.TickCount64 - peer.Value.LastActive}ms");
+                    }
+                }
                 await Task.Delay(ActivityInterval).ConfigureAwait(false);
             }
         }
@@ -355,6 +378,7 @@ namespace VoiceCraft.Network.Sockets
         {
             Id = data.Id;
             Key = data.Key;
+            ActivityChecker = Task.Run(ActivityCheck);
             OnConnected?.Invoke();
         }
 
