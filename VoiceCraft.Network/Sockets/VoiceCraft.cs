@@ -153,6 +153,8 @@ namespace VoiceCraft.Network.Sockets
             OnDenyReceived += OnDeny;
 
             CTS.Cancel();
+            CTS.Dispose();
+            CTS = new CancellationTokenSource();
             SendQueue = null;
             ReliabilityQueue = null;
             ActivityChecker = null;
@@ -192,9 +194,10 @@ namespace VoiceCraft.Network.Sockets
             State = VoiceCraftSocketState.Stopping;
             await DisconnectPeers();
             CTS.Cancel();
+            CTS.Dispose();
             Socket.Close();
-            Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             CTS = new CancellationTokenSource();
+            Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             State = VoiceCraftSocketState.Stopped;
             OnStopped?.Invoke(reason);
         }
