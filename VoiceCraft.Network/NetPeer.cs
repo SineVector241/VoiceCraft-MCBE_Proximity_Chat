@@ -16,6 +16,7 @@ namespace VoiceCraft.Network
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
+        private CancellationTokenSource CTS { get; } = new CancellationTokenSource();
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue { get; set; }
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
 
@@ -27,7 +28,7 @@ namespace VoiceCraft.Network
         /// <summary>
         /// The cancellation token used to stop listening on the socket for this peer.
         /// </summary>
-        public CancellationTokenSource CTS { get; } = new CancellationTokenSource();
+        public CancellationToken Token { get => CTS.Token; }
 
         /// <summary>
         /// When the client was last active.
