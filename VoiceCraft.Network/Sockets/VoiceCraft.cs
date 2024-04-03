@@ -24,6 +24,30 @@ namespace VoiceCraft.Network.Sockets
         private Task? ActivityChecker { get; set; }
         #endregion
 
+        public VoiceCraft()
+        {
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Login, typeof(Login));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Logout, typeof(Logout));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Accept, typeof(Accept));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Deny, typeof(Deny));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Ack, typeof(Ack));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Ping, typeof(Ping));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantJoined, typeof(ParticipantJoined));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantLeft, typeof(ParticipantLeft));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Mute, typeof(Mute));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Unmute, typeof(Unmute));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Deafen, typeof(Deafen));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Undeafen, typeof(Undeafen));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.JoinChannel, typeof(JoinChannel));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.LeaveChannel, typeof(LeaveChannel));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.AddChannel, typeof(AddChannel));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.RemoveChannel, typeof(RemoveChannel));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.UpdatePosition, typeof(UpdatePosition));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ClientAudio, typeof(ClientAudio));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ServerAudio, typeof(ServerAudio));
+        }
+
         #region Debug Settings
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;
@@ -91,7 +115,7 @@ namespace VoiceCraft.Network.Sockets
         #endregion
 
         #region Methods
-        public async Task ConnectAsync(string IP, int port, ushort preferredKey, PositioningTypes positioningType, string version)
+        public async Task ConnectAsync(string IP, int port, short preferredKey, PositioningTypes positioningType, string version)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting) throw new Exception("Cannot start connection as socket is in a hosting state!");
@@ -99,8 +123,7 @@ namespace VoiceCraft.Network.Sockets
 
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
-            ClientNetpeer = new NetPeer(RemoteEndpoint, 0, 0);
-            ClientNetpeer.LastActive = Environment.TickCount64;
+            ClientNetpeer = new NetPeer(RemoteEndpoint, long.MinValue, preferredKey);
 
             //Register the Events
             OnAcceptReceived += OnAccept;
@@ -241,6 +264,7 @@ namespace VoiceCraft.Network.Sockets
             {
                 if(notifyPeer && State == VoiceCraftSocketState.Started)
                     await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty }, peer.EP); //Send immediately.
+                peer.OnPacketReceived -= HandlePacketReceived;
                 peer.Dispose();
                 OnPeerDisconnected?.Invoke(peer, reason);
             }
@@ -268,12 +292,13 @@ namespace VoiceCraft.Network.Sockets
             await Socket.SendToAsync(buffer.ToArray(), RemoteEndpoint, CTS.Token);
         }
 
-        private NetPeer? GetNetPeer(SocketAddress receivedAddress, bool createNew = false)
+        private NetPeer GetOrCreateNetPeer(SocketAddress receivedAddress)
         {
-            if (!NetPeers.TryGetValue(receivedAddress, out var netPeer) && createNew)
+            if (!NetPeers.TryGetValue(receivedAddress, out var netPeer))
             {
                 // Create an EndPoint from the SocketAddress
-                netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), 0, 0);
+                netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), long.MinValue, short.MinValue);
+                netPeer.OnPacketReceived += HandlePacketReceived;
 
                 var lookupCopy = new SocketAddress(receivedAddress.Family, receivedAddress.Size);
                 receivedAddress.Buffer.CopyTo(lookupCopy.Buffer);
@@ -295,9 +320,9 @@ namespace VoiceCraft.Network.Sockets
                 try
                 {
                     var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, receivedAddress, CTS.Token);
-                    //var ep = GetEndPoint(receivedAddress);
-
-                    //Do something with the received data.
+                    var netPeer = GetOrCreateNetPeer(receivedAddress);
+                    var packet = PacketRegistry.GetPacketFromDataStream(bufferMem.ToArray());
+                    netPeer.AddToReceiveBuffer(packet);
                 }
                 catch (SocketException ex)
                 {
@@ -317,8 +342,8 @@ namespace VoiceCraft.Network.Sockets
                 try
                 {
                     var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, socketAddr, peer.CTS.Token);
-
-                    //Do something with the received data.
+                    var packet = PacketRegistry.GetPacketFromDataStream(bufferMem.ToArray());
+                    peer.AddToReceiveBuffer(packet);
                 }
                 catch (SocketException ex)
                 {
@@ -391,6 +416,15 @@ namespace VoiceCraft.Network.Sockets
                 }
 
                 await Task.Delay(1).ConfigureAwait(false);
+            }
+        }
+
+        private async Task HandlePacketReceived(NetPeer peer, VoiceCraftPacket packet)
+        {
+            switch ((VoiceCraftPacketTypes)packet.PacketId)
+            {
+                case VoiceCraftPacketTypes.Login:
+                    break;
             }
         }
 

@@ -8,7 +8,7 @@ namespace VoiceCraft.Network.Packets.VoiceCraft
         public override bool IsReliable => true;
 
         public long Id { get; set; } = long.MinValue;
-        public ushort Key { get; set; }
+        public short Key { get; set; }
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -20,8 +20,8 @@ namespace VoiceCraft.Network.Packets.VoiceCraft
             Id = BitConverter.ToInt64(dataStream, offset); //Read Id - 8 bytes.
             offset += sizeof(long);
 
-            Key = BitConverter.ToUInt16(dataStream, offset); //Read Key - 2 bytes.
-            offset += sizeof(ushort);
+            Key = BitConverter.ToInt16(dataStream, offset); //Read Key - 2 bytes.
+            offset += sizeof(short);
 
             IsDeafened = BitConverter.ToBoolean(dataStream, offset); //Read Deafened State - 1 byte.
             offset += sizeof(bool);

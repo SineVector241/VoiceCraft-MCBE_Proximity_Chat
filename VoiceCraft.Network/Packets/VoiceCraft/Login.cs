@@ -9,7 +9,7 @@ namespace VoiceCraft.Network.Packets.VoiceCraft
         public override bool IsReliable => true;
 
         //Packet Variables
-        public ushort Key { get; set; }
+        public short Key { get; set; }
         public PositioningTypes PositioningType { get; set; }
         public string Version { get; set; } = string.Empty;
 
@@ -17,8 +17,8 @@ namespace VoiceCraft.Network.Packets.VoiceCraft
         {
             offset = base.ReadPacket(ref dataStream, offset);
 
-            Key = BitConverter.ToUInt16(dataStream, offset); //Read Key - 2 bytes.
-            offset += sizeof(ushort);
+            Key = BitConverter.ToInt16(dataStream, offset); //Read Key - 2 bytes.
+            offset += sizeof(short);
 
             PositioningType = (PositioningTypes)dataStream[offset]; //Read PositioningType - 1 byte.
             offset++;

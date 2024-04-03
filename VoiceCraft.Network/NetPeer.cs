@@ -12,7 +12,7 @@ namespace VoiceCraft.Network
         public const int RetryResendTime = 500;
         public const int MaxRecvBufferSize = 30; //30 packets.
 
-        public delegate void PacketReceived(VoiceCraftPacket packet);
+        public delegate Task PacketReceived(NetPeer peer, VoiceCraftPacket packet);
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
@@ -32,7 +32,7 @@ namespace VoiceCraft.Network
         /// <summary>
         /// When the client was last active.
         /// </summary>
-        public long LastActive { get; set; }
+        public long LastActive { get; set; } = Environment.TickCount64;
 
         /// <summary>
         /// The ID of the NetPeer, Used to update the endpoint if invalid.
@@ -42,14 +42,14 @@ namespace VoiceCraft.Network
         /// <summary>
         /// The key for the NetPeer, Used as a public shareable Id.
         /// </summary>
-        public ushort Key { get; set; }
+        public short Key { get; set; }
 
         /// <summary>
         /// Send Queue.
         /// </summary>
         public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
 
-        public NetPeer(EndPoint ep, long Id, ushort key)
+        public NetPeer(EndPoint ep, long Id, short key)
         {
             EP = ep;
             ID = Id;
@@ -83,7 +83,7 @@ namespace VoiceCraft.Network
 
             if(!packet.IsReliable)
             {
-                OnPacketReceived?.Invoke(packet);
+                OnPacketReceived?.Invoke(this, packet);
                 return true; //Not reliable, We can just say it's received.
             }
 
@@ -95,7 +95,7 @@ namespace VoiceCraft.Network
                 if (p.Key == NextSequence && ReceiveBuffer.TryRemove(p)) //Remove packet and notify listeners.
                 {
                     NextSequence++; //Update next expected packet.
-                    OnPacketReceived?.Invoke(p.Value);
+                    OnPacketReceived?.Invoke(this, p.Value);
                 }
                 else if (p.Key < NextSequence)
                     ReceiveBuffer.TryRemove(p); //Remove old packet.

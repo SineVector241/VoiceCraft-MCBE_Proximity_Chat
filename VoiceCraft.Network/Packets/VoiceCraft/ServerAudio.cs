@@ -5,7 +5,7 @@
         public override byte PacketId => (byte)VoiceCraftPacketTypes.ServerAudio;
         public override bool IsReliable => false;
 
-        public ushort Key { get; set; }
+        public short Key { get; set; }
         public uint PacketCount { get; set; }
         public float Volume { get; set; }
         public float EchoFactor { get; set; }
@@ -17,8 +17,8 @@
         {
             offset = base.ReadPacket(ref dataStream, offset);
 
-            Key = BitConverter.ToUInt16(dataStream, offset); //Read Id - 2 bytes.
-            offset += sizeof(ushort);
+            Key = BitConverter.ToInt16(dataStream, offset); //Read Id - 2 bytes.
+            offset += sizeof(short);
 
             PacketCount = BitConverter.ToUInt32(dataStream, offset); //read packet count - 4 bytes.
             offset += sizeof(uint);
