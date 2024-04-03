@@ -2,8 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
-using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Sockets;
 using VoiceCraft.Data.Server;
 
 namespace VoiceCraft.Core.Server

@@ -11,24 +11,17 @@ namespace VoiceCraft.Network.Sockets
     {
         #region Variables
         //Public Variables
+        public PacketRegistry PacketRegistry { get; set; } = new PacketRegistry();
         public Socket Socket { get; private set; } = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         public IPEndPoint RemoteEndpoint { get; private set; } = new IPEndPoint(IPAddress.Any, 0);
         public VoiceCraftSocketState State { get; private set; }
-        public long LastActive { get; private set; } = 0; //Client Variable
-        public int ActivityInterval { get; set; } = 1000;
         public int Timeout { get; set; } = 8000;
-        public ushort Key { get; set; } = 0; //Client Variable
-        public long Id { get; set; } //Client Variable
 
         //Private Variables
         private CancellationTokenSource CTS { get; set; } = new CancellationTokenSource();
-        private ConcurrentDictionary<SocketAddress, EndPoint> EndPointBuffer { get; set; } = new ConcurrentDictionary<SocketAddress, EndPoint>();
-        private ConcurrentDictionary<long, NetPeer> NetPeers { get; set; } = new ConcurrentDictionary<long, NetPeer>();
-        private ConcurrentQueue<VoiceCraftPacket>? SendQueue { get; set; } //Client Variable
-        private ConcurrentBag<VoiceCraftPacket>? ReliabilityQueue { get; set; } //Client Variable
+        private ConcurrentDictionary<SocketAddress, NetPeer> NetPeers { get; set; } = new ConcurrentDictionary<SocketAddress, NetPeer>(); //Server Variable
+        private NetPeer? ClientNetpeer { get; set; } //Client Variable
         private Task? ActivityChecker { get; set; }
-        private uint NextSequence { get; set; } //Client Variable
-        private uint Sequence { get; set; } //Client Variable
         #endregion
 
         #region Debug Settings
@@ -45,6 +38,7 @@ namespace VoiceCraft.Network.Sockets
 
         public delegate void Started();
         public delegate void Stopped(string? reason = null);
+        public delegate void PeerConnected(NetPeer peer);
         public delegate void PeerDisconnected(NetPeer peer, string? reason = null);
 
         public delegate void PacketData<T>(T data, EndPoint endPoint);
@@ -64,6 +58,7 @@ namespace VoiceCraft.Network.Sockets
         //Server Events
         public event Started? OnStarted;
         public event Stopped? OnStopped;
+        public event PeerConnected? OnPeerConnected;
         public event PeerDisconnected? OnPeerDisconnected;
 
         //Packet Events
@@ -104,30 +99,36 @@ namespace VoiceCraft.Network.Sockets
 
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
-            SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
-            ReliabilityQueue = new ConcurrentBag<VoiceCraftPacket>();
-            NextSequence = 0;
-            Sequence = 0;
-            Key = preferredKey;
-            Id = 0;
+            ClientNetpeer = new NetPeer(RemoteEndpoint, 0, 0);
+            ClientNetpeer.LastActive = Environment.TickCount64;
 
             //Register the Events
             OnAcceptReceived += OnAccept;
             OnDenyReceived += OnDeny;
+            OnLogoutReceived += OnLogout;
 
             try
             {
-                var addresses = await Dns.GetHostAddressesAsync(IP, CTS.Token);
-                if(addresses.Length == 0) throw new ArgumentException("Unable to retrieve address from the specified host name.", nameof(IP));
-                RemoteEndpoint = new IPEndPoint(addresses[0], port);
+                if (IPAddress.TryParse(IP, out var ip))
+                {
+                    RemoteEndpoint = new IPEndPoint(ip, port);
+                }
+                else
+                {
+                    var addresses = await Dns.GetHostAddressesAsync(IP, CTS.Token);
+                    if (addresses.Length == 0) throw new ArgumentException("Unable to retrieve address from the specified host name.", nameof(IP));
+                    RemoteEndpoint = new IPEndPoint(addresses[0], port);
+                }
+
+                State = VoiceCraftSocketState.Connecting;
                 Send(new Login() { Key = preferredKey, PositioningType = positioningType, Version = version });
 
-                while(!CTS.IsCancellationRequested) //Block until we are connected or timed out.
+                while (!CTS.IsCancellationRequested) //Block until we are connected or timed out.
                 {
                     await Task.Delay(1); //1 ms delay so we don't destroy the CPU.
-                    if (Environment.TickCount64 - LastActive > Timeout)
+                    if (Environment.TickCount64 - ClientNetpeer.LastActive > Timeout)
                     {
-                        throw new Exception("Connection Timed Out");
+                        throw new Exception("Connection Timed Out.");
                     }
                     else if (State == VoiceCraftSocketState.Connected)
                     {
@@ -142,23 +143,29 @@ namespace VoiceCraft.Network.Sockets
             }
         }
 
-        public void Disconnect(string? reason = null)
+        public async Task DisconnectAsync(string? reason = null, bool notifyServer = true)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Starting || State == VoiceCraftSocketState.Started) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Disconnecting) throw new InvalidOperationException("Already disconnecting.");
             if (State == VoiceCraftSocketState.Stopped) return;
 
+            //We don't need to wait until we are connected because the Cancellation Token already takes care of cancelling other thread related requests.
+
+            if (notifyServer && State == VoiceCraftSocketState.Connected) //Only send if we are connected.
+                await SocketSendAsync(new Logout() { Id = ClientNetpeer?.ID ?? long.MinValue });
+
             State = VoiceCraftSocketState.Disconnecting;
             //Deregister the Events
-            OnAcceptReceived += OnAccept;
-            OnDenyReceived += OnDeny;
+            OnAcceptReceived -= OnAccept;
+            OnDenyReceived -= OnDeny;
+            OnLogoutReceived -= OnLogout;
 
             CTS.Cancel();
             CTS.Dispose();
             CTS = new CancellationTokenSource();
-            SendQueue = null;
-            ReliabilityQueue = null;
+            ClientNetpeer?.Dispose();
+            ClientNetpeer = null;
             ActivityChecker = null;
             State = VoiceCraftSocketState.Stopped;
             OnDisconnected?.Invoke(reason);
@@ -192,6 +199,12 @@ namespace VoiceCraft.Network.Sockets
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Stopping) throw new InvalidOperationException("Already stopping.");
+
+            while (State == VoiceCraftSocketState.Starting) //Wait until started then we stop.
+            {
+                await Task.Delay(1); //1ms delay so we don't destroy the CPU.
+            }
+
             if (State == VoiceCraftSocketState.Stopped) return;
 
             State = VoiceCraftSocketState.Stopping;
@@ -209,25 +222,25 @@ namespace VoiceCraft.Network.Sockets
         public void Send(VoiceCraftPacket packet)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
-            if (State != VoiceCraftSocketState.Connecting || State != VoiceCraftSocketState.Connected) throw new InvalidOperationException("Socket must be in a connecting or connected state to send packets!");
-
-            if(packet.IsReliable && ReliabilityQueue != null)
+            if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected)
             {
-                packet.Sequence = Sequence++;
-                packet.ResendTime = Environment.TickCount64 + 200;
-                ReliabilityQueue.Add(packet);
+                if (ClientNetpeer != null)
+                {
+                    ClientNetpeer.AddToSendBuffer(packet);
+                }
             }
-
-            if(SendQueue != null)
-                SendQueue.Enqueue(packet);
+            else
+                throw new InvalidOperationException("Socket must be in a connecting or connected state to send packets!");
         }
 
-        public async Task DisconnectPeer(long Id, bool notifyPeer = false, string? reason = null)
+        public async Task DisconnectPeer(SocketAddress Address, bool notifyPeer = false, string? reason = null)
         {
-            if (NetPeers.TryRemove(Id, out var peer))
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+
+            if (NetPeers.TryRemove(Address, out var peer))
             {
-                if(notifyPeer)
-                    await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty, Sequence = peer.GetNextSequence() }, peer.EP); //Send immediately.
+                if(notifyPeer && State == VoiceCraftSocketState.Started)
+                    await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty }, peer.EP); //Send immediately.
                 peer.Dispose();
                 OnPeerDisconnected?.Invoke(peer, reason);
             }
@@ -235,9 +248,9 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task DisconnectPeers()
         {
-            foreach(var peerId in NetPeers.Keys)
+            foreach(var peerSocket in NetPeers.Keys)
             {
-                await DisconnectPeer(peerId, true, null);
+                await DisconnectPeer(peerSocket, true, null);
             }
         }
 
@@ -255,20 +268,20 @@ namespace VoiceCraft.Network.Sockets
             await Socket.SendToAsync(buffer.ToArray(), RemoteEndpoint, CTS.Token);
         }
 
-        private EndPoint GetEndPoint(SocketAddress receivedAddress)
+        private NetPeer? GetNetPeer(SocketAddress receivedAddress, bool createNew = false)
         {
-            if (!EndPointBuffer.TryGetValue(receivedAddress, out var endpoint))
+            if (!NetPeers.TryGetValue(receivedAddress, out var netPeer) && createNew)
             {
                 // Create an EndPoint from the SocketAddress
-                endpoint = RemoteEndpoint.Create(receivedAddress);
+                netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), 0, 0);
 
                 var lookupCopy = new SocketAddress(receivedAddress.Family, receivedAddress.Size);
                 receivedAddress.Buffer.CopyTo(lookupCopy.Buffer);
 
-                EndPointBuffer[lookupCopy] = endpoint;
+                NetPeers[lookupCopy] = netPeer;
             }
 
-            return endpoint;
+            return netPeer;
         }
 
         private async Task ReceiveAsync()
@@ -282,7 +295,7 @@ namespace VoiceCraft.Network.Sockets
                 try
                 {
                     var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, receivedAddress, CTS.Token);
-                    var ep = GetEndPoint(receivedAddress);
+                    //var ep = GetEndPoint(receivedAddress);
 
                     //Do something with the received data.
                 }
@@ -292,10 +305,30 @@ namespace VoiceCraft.Network.Sockets
                     return;
                 }
             }
-            await StopAsync();
         }
 
-        private async Task ClientReceive()
+        private async Task ReceiveFromAsync(SocketAddress socketAddr, NetPeer peer)
+        {
+            byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
+            Memory<byte> bufferMem = buffer.AsMemory();
+
+            while (!CTS.IsCancellationRequested && !peer.CTS.IsCancellationRequested)
+            {
+                try
+                {
+                    var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, socketAddr, peer.CTS.Token);
+
+                    //Do something with the received data.
+                }
+                catch (SocketException ex)
+                {
+                    await DisconnectPeer(socketAddr, false, ex.Message); //Socket is basically closed at this point, We can't send a message.
+                    return;
+                }
+            }
+        }
+
+        private async Task ClientReceiveAsync()
         {
             byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
             Memory<byte> bufferMem = buffer.AsMemory();
@@ -310,48 +343,31 @@ namespace VoiceCraft.Network.Sockets
                 }
                 catch (SocketException ex)
                 {
-                    //Disconnect Method Here
+                    await DisconnectAsync(ex.Message, false); //Socket is basically closed at this point, We can't send a message.
                     return;
                 }
             }
-            //Disconnect Method Here
-        }
-
-        private async Task ReceiveFromAsync(NetPeer peer)
-        {
-            byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
-            Memory<byte> bufferMem = buffer.AsMemory();
-
-            while (!CTS.IsCancellationRequested)
-            {
-                try
-                {
-                    var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, peer.EP, peer.CTS.Token);
-
-                    //Do something with the received data.
-                }
-                catch (SocketException ex)
-                {
-                    //Remove the netpeer
-                    return;
-                }
-            }
-
-            //Stop method goes here.
         }
 
         private async Task ActivityCheck()
         {
+            var time = Environment.TickCount64;
             while (!CTS.IsCancellationRequested)
             {
-                var dist = Environment.TickCount64 - LastActive;
+                var dist = Environment.TickCount64 - ClientNetpeer?.LastActive;
                 if (dist > Timeout)
                 {
-                    Disconnect($"Signalling timed out!\nTime since last active {Environment.TickCount - LastActive}ms.");
+                    await DisconnectAsync($"Signalling timed out!\nTime since last active {Environment.TickCount - ClientNetpeer?.LastActive}ms.", false);
                     break;
                 }
-                Send(new Ping() { Id = Id });
-                await Task.Delay(ActivityInterval).ConfigureAwait(false);
+                ClientNetpeer?.ResendPackets();
+
+                if (Environment.TickCount64 - time >= 1000) //1 second ping interval.
+                {
+                    Send(new Ping() { Id = ClientNetpeer?.ID ?? long.MinValue });
+                    time = Environment.TickCount64;
+                }
+                await Task.Delay(1).ConfigureAwait(false);
             }
         }
 
@@ -368,23 +384,43 @@ namespace VoiceCraft.Network.Sockets
                         await DisconnectPeer(peer.Key, true, $"Timeout - Last Active: {Environment.TickCount64 - peer.Value.LastActive}ms");
                     }
                 }
-                await Task.Delay(ActivityInterval).ConfigureAwait(false);
+
+                foreach (var peer in NetPeers)
+                {
+                    peer.Value.ResendPackets();
+                }
+
+                await Task.Delay(1).ConfigureAwait(false);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting)
+                StopAsync().Wait();
         }
         #endregion
 
         #region Client Event Methods
         private void OnAccept(Accept data, EndPoint endPoint)
         {
-            Id = data.Id;
-            Key = data.Key;
+            if(ClientNetpeer != null)
+            {
+                ClientNetpeer.ID = data.Id;
+                ClientNetpeer.Key = data.Key;
+            }    
             ActivityChecker = Task.Run(ActivityCheck);
             OnConnected?.Invoke();
         }
 
         private void OnDeny(Deny data, EndPoint endPoint)
         {
-            Disconnect(data.Reason);
+            DisconnectAsync(data.Reason, false).Wait();
+        }
+
+        private void OnLogout(Logout data, EndPoint endPoint)
+        {
+            DisconnectAsync(data.Reason, false).Wait();
         }
         #endregion
     }

@@ -2,13 +2,22 @@
 using System.Net;
 using VoiceCraft.Core;
 using VoiceCraft.Network.Packets;
+using VoiceCraft.Network.Packets.VoiceCraft;
 
 namespace VoiceCraft.Network
 {
     public class NetPeer : Disposable
     {
-        private uint Sequence { get; set; } //The peer's current sequence number.
-        private uint NextSequence { get; set; } //The peer's next expected receive sequence number.
+        public const int ResendTime = 200;
+        public const int RetryResendTime = 500;
+        public const int MaxRecvBufferSize = 30; //30 packets.
+
+        public delegate void PacketReceived(VoiceCraftPacket packet);
+        public event PacketReceived? OnPacketReceived;
+        private uint Sequence;
+        private uint NextSequence;
+        private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue { get; set; }
+        private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
 
         /// <summary>
         /// Endpoint of the NetPeer
@@ -28,7 +37,7 @@ namespace VoiceCraft.Network
         /// <summary>
         /// The ID of the NetPeer, Used to update the endpoint if invalid.
         /// </summary>
-        public long ID { get; } //Not secure enough but it'll do.
+        public long ID { get; set; } //Not secure enough but it'll do.
 
         /// <summary>
         /// The key for the NetPeer, Used as a public shareable Id.
@@ -40,25 +49,70 @@ namespace VoiceCraft.Network
         /// </summary>
         public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
 
-        /// <summary>
-        /// Reliability Send Queue.
-        /// </summary>
-        public ConcurrentBag<VoiceCraftPacket> ReliabilityQueue { get; set; }
-
         public NetPeer(EndPoint ep, long Id, ushort key)
         {
             EP = ep;
             ID = Id;
             Key = key;
             SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
-            ReliabilityQueue = new ConcurrentBag<VoiceCraftPacket>();
+            ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
+            ReceiveBuffer = new ConcurrentDictionary<uint, VoiceCraftPacket>();
         }
 
-        public uint GetNextSequence()
+        public void AddToSendBuffer(VoiceCraftPacket packet)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
 
-            return Sequence++;
+            if (packet.IsReliable)
+            {
+                packet.Sequence = Sequence;
+                packet.ResendTime = Environment.TickCount64 + ResendTime;
+                ReliabilityQueue.TryAdd(packet.Sequence, packet); //If reliable, Add to reliability queue. ResendTime is determined by the application.
+                Sequence++;
+            }
+
+            SendQueue.Enqueue(packet);
+        }
+
+        public bool AddToReceiveBuffer(VoiceCraftPacket packet)
+        {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
+
+            if(ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
+                return false; //We can reset the connection because of too many incorrect packets, however that is up to the application.
+
+            if(!packet.IsReliable)
+            {
+                OnPacketReceived?.Invoke(packet);
+                return true; //Not reliable, We can just say it's received.
+            }
+
+            ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
+            AddToSendBuffer(new Ack() { Id = ID, PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
+
+            foreach(var p in ReceiveBuffer)
+            {
+                if (p.Key == NextSequence && ReceiveBuffer.TryRemove(p)) //Remove packet and notify listeners.
+                {
+                    NextSequence++; //Update next expected packet.
+                    OnPacketReceived?.Invoke(p.Value);
+                }
+                else if (p.Key < NextSequence)
+                    ReceiveBuffer.TryRemove(p); //Remove old packet.
+            }
+            return true;
+        }
+
+        public void ResendPackets()
+        {
+            foreach (var packet in ReliabilityQueue)
+            {
+                if (packet.Value.ResendTime <= Environment.TickCount64)
+                {
+                    packet.Value.ResendTime = Environment.TickCount64 + RetryResendTime; //More delay.
+                    SendQueue.Enqueue(packet.Value);
+                }
+            }
         }
 
         public static long GenerateId()
@@ -66,12 +120,27 @@ namespace VoiceCraft.Network
             return Random.Shared.NextInt64(long.MaxValue, long.MinValue); //long.MinValue is used to specify no Id. Used when sending from server > client.
         }
 
-        protected override void Dispose(bool disposing)
+        public void Reset()
         {
-            if (CTS.IsCancellationRequested)
-                CTS.Dispose();
+            if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
+
             SendQueue.Clear();
             ReliabilityQueue.Clear();
+            ReceiveBuffer.Clear();
+            NextSequence = 0;
+            Sequence = 0;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(!CTS.IsCancellationRequested)
+                CTS.Cancel();
+
+            CTS.Dispose();
+            SendQueue.Clear();
+            ReliabilityQueue.Clear();
+            ReceiveBuffer.Clear();
+            OnPacketReceived = null;
         }
     }
 }
