@@ -65,7 +65,7 @@ namespace VoiceCraft.Network.Sockets
         public delegate void PeerConnected(NetPeer peer);
         public delegate void PeerDisconnected(NetPeer peer, string? reason = null);
 
-        public delegate void PacketData<T>(T data, EndPoint endPoint);
+        public delegate void PacketData<T>(T data, NetPeer peer);
 
         //Error events
         public delegate void ExceptionError(Exception error);
@@ -419,13 +419,37 @@ namespace VoiceCraft.Network.Sockets
             }
         }
 
-        private async Task HandlePacketReceived(NetPeer peer, VoiceCraftPacket packet)
+        private void HandlePacketReceived(NetPeer peer, VoiceCraftPacket packet)
         {
             switch ((VoiceCraftPacketTypes)packet.PacketId)
             {
-                case VoiceCraftPacketTypes.Login:
-                    break;
+                case VoiceCraftPacketTypes.Login: OnLoginReceived?.Invoke((Login)packet, peer); break;
+                case VoiceCraftPacketTypes.Logout: OnLogoutReceived?.Invoke((Logout)packet, peer); break;
+                case VoiceCraftPacketTypes.Accept: OnAcceptReceived?.Invoke((Accept)packet, peer); break;
+                case VoiceCraftPacketTypes.Deny: OnDenyReceived?.Invoke((Deny)packet, peer); break;
+                case VoiceCraftPacketTypes.Ack: OnAckReceived?.Invoke((Ack)packet, peer); break;
             }
+        }
+
+        private long GetAvailableId()
+        {
+            var id = NetPeer.GenerateId();
+            while (!IdentifierTaken(id))
+            {
+                id = NetPeer.GenerateId();
+            }
+
+            return id;
+        }
+
+        private bool IdentifierTaken(long id)
+        {
+            foreach (var netPeer in NetPeers)
+            {
+                if (netPeer.Value.ID == id)
+                    return true;
+            }
+            return false;
         }
 
         protected override void Dispose(bool disposing)
@@ -436,7 +460,7 @@ namespace VoiceCraft.Network.Sockets
         #endregion
 
         #region Client Event Methods
-        private void OnAccept(Accept data, EndPoint endPoint)
+        private void OnAccept(Accept data, NetPeer peer)
         {
             if(ClientNetpeer != null)
             {
@@ -447,12 +471,12 @@ namespace VoiceCraft.Network.Sockets
             OnConnected?.Invoke();
         }
 
-        private void OnDeny(Deny data, EndPoint endPoint)
+        private void OnDeny(Deny data, NetPeer peer)
         {
             DisconnectAsync(data.Reason, false).Wait();
         }
 
-        private void OnLogout(Logout data, EndPoint endPoint)
+        private void OnLogout(Logout data, NetPeer peer)
         {
             DisconnectAsync(data.Reason, false).Wait();
         }

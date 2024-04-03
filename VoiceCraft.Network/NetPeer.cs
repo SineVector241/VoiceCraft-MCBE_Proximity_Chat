@@ -12,7 +12,7 @@ namespace VoiceCraft.Network
         public const int RetryResendTime = 500;
         public const int MaxRecvBufferSize = 30; //30 packets.
 
-        public delegate Task PacketReceived(NetPeer peer, VoiceCraftPacket packet);
+        public delegate void PacketReceived(NetPeer peer, VoiceCraftPacket packet);
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
@@ -117,7 +117,7 @@ namespace VoiceCraft.Network
 
         public static long GenerateId()
         {
-            return Random.Shared.NextInt64(long.MaxValue, long.MinValue); //long.MinValue is used to specify no Id. Used when sending from server > client.
+            return Random.Shared.NextInt64(long.MaxValue, long.MinValue + 1); //long.MinValue is used to specify no Id. Used when sending from server > client.
         }
 
         public void Reset()
