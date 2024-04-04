@@ -23,7 +23,7 @@ namespace VoiceCraft.Core.Packets
             }
             else
             {
-                throw new ArgumentException($"PacketType needs to inherit from {nameof(VoiceCraftPacket)} or {nameof(MCCom)}", nameof(PacketType));
+                throw new ArgumentException($"PacketType needs to inherit from {nameof(VoiceCraftPacket)} or {nameof(MCComm)}", nameof(PacketType));
             }
         }
 
@@ -78,7 +78,7 @@ namespace VoiceCraft.Core.Packets
             if (!RegisteredPackets.TryGetValue(PacketId, out var packetType))
                 throw new InvalidOperationException($"Invalid packet id {PacketId}");
 
-            MCCommPacket packet = GetMCPacketFromType(packetType);
+            MCCommPacket packet = GetMCPacketFromType(data, packetType);
             return packet;
         }
 
@@ -107,12 +107,12 @@ namespace VoiceCraft.Core.Packets
         /// <returns>The packet</returns>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="Exception"></exception>
-        public static MCCommPacket GetMCPacketFromType(Type PacketType)
+        public static MCCommPacket GetMCPacketFromType(string data, Type PacketType)
         {
             if (!typeof(MCCommPacket).IsAssignableFrom(PacketType))
                 throw new ArgumentException($"PacketType needs to inherit from {nameof(MCCommPacket)}", nameof(PacketType));
 
-            var packet = Activator.CreateInstance(PacketType);
+            var packet = JsonConvert.DeserializeObject(data, PacketType);
             if (packet == null) throw new Exception("Could not create packet instance.");
 
             return (MCCommPacket)packet;

@@ -12,7 +12,7 @@ namespace VoiceCraft.Core
         public bool LogOutboundMCCommPackets { get; set; } = false;
         public List<VoiceCraftPacketTypes> InboundPacketFilter { get; set; } = new List<VoiceCraftPacketTypes>();
         public List<VoiceCraftPacketTypes> OutboundPacketFilter { get; set; } = new List<VoiceCraftPacketTypes>();
-        public List<MCCommPacketTypes> InboundMCCommFilter { get; set; } = new List<MCCommPacketTypes>();
-        public List<MCCommPacketTypes> OutboundMCCommFilter { get; set; } = new List<MCCommPacketTypes>();
+        public List<MCCommPacketId> InboundMCCommFilter { get; set; } = new List<MCCommPacketId>();
+        public List<MCCommPacketId> OutboundMCCommFilter { get; set; } = new List<MCCommPacketId>();
     }
 }

@@ -5,6 +5,7 @@ namespace VoiceCraft.Core.Packets
     public abstract class MCCommPacket
     {
         public abstract byte PacketId { get; }
+        public string Token { get; set; } = string.Empty;
 
         public virtual string SerializePacket(MCCommPacket packet)
         {
@@ -23,7 +24,6 @@ namespace VoiceCraft.Core.Packets
         GetSettings,
         RemoveParticipant,
         ChannelMove,
-        AcceptUpdate,
-        Null
+        AckUpdate
     }
 }
