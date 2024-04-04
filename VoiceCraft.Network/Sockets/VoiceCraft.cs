@@ -266,10 +266,10 @@ namespace VoiceCraft.Network.Sockets
                 if(notifyPeer && State == VoiceCraftSocketState.Started)
                     await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty }, peer.EP); //Send immediately.
                 peer.OnPacketReceived -= HandlePacketReceived;
-                peer.Dispose();
 
-                if(peer.Connected)
+                if (peer.Connected)
                     OnPeerDisconnected?.Invoke(peer, reason);
+                peer.Dispose();
             }
         }
 

@@ -167,6 +167,7 @@ namespace VoiceCraft.Network
                 SendQueue.Clear();
                 ReliabilityQueue.Clear();
                 ReceiveBuffer.Clear();
+                Connected = false;
                 OnPacketReceived = null;
             }
         }
