@@ -1,6 +1,5 @@
 ﻿using Fleck;
 using System.Numerics;
-using System;
 using System.Diagnostics;
 using VoiceCraft.Core.Packets.MCWSS;
 using VoiceCraft.Core.Packets;

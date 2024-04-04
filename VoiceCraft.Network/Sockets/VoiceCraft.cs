@@ -1,9 +1,9 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using VoiceCraft.Core;
-using VoiceCraft.Network.Packets;
+using VoiceCraft.Core.Packets;
 using System.Collections.Concurrent;
-using VoiceCraft.Network.Packets.VoiceCraft;
+using VoiceCraft.Core.Packets.VoiceCraft;
 using System.Diagnostics;
 
 namespace VoiceCraft.Network.Sockets

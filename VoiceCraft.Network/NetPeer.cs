@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using VoiceCraft.Core;
-using VoiceCraft.Network.Packets;
-using VoiceCraft.Network.Packets.VoiceCraft;
+using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.VoiceCraft;
 
 namespace VoiceCraft.Network
 {

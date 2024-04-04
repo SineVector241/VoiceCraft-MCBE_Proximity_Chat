@@ -159,7 +159,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\VoiceCraft.Client\VoiceCraft.Client.csproj" />
 	  <ProjectReference Include="..\VoiceCraft.Core\VoiceCraft.Core.csproj" />
 	</ItemGroup>
 
