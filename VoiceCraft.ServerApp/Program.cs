@@ -2,6 +2,7 @@
 
 try
 {
+    Console.WriteLine(short.MinValue + short.MaxValue + 1);
     socket.OnDisconnected += Socket_OnDisconnected;
     Console.WriteLine("Connecting...");
     await socket.ConnectAsync("127.0.0.1", 9050, 0, VoiceCraft.Core.PositioningTypes.ServerSided, "v1.0.4");

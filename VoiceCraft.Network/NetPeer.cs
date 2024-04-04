@@ -21,7 +21,12 @@ namespace VoiceCraft.Network
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
 
         /// <summary>
-        /// Endpoint of the NetPeer
+        /// Defines wether the client is sucessfully connected and accepted.
+        /// </summary>
+        public bool Connected { get; private set; }
+
+        /// <summary>
+        /// Endpoint of the NetPeer.
         /// </summary>
         public EndPoint EP { get; set; }
 
@@ -116,9 +121,28 @@ namespace VoiceCraft.Network
             }
         }
 
+        public void AcceptLogin()
+        {
+            if (!Connected)
+            {
+                Connected = true;
+                AddToSendBuffer(new Accept() { Id = ID, Key = Key });
+            }
+        }
+
+        public void AcknowledgePacket(uint packetId)
+        {
+            ReliabilityQueue.TryRemove(packetId, out var _);
+        }
+
         public static long GenerateId()
         {
-            return Random.Shared.NextInt64(long.MaxValue, long.MinValue + 1); //long.MinValue is used to specify no Id. Used when sending from server > client.
+            return Random.Shared.NextInt64(long.MaxValue, long.MinValue + 1); //long.MinValue is used to specify no Id.
+        }
+
+        public static short GenerateKey()
+        {
+            return (short)Random.Shared.Next(short.MaxValue, short.MinValue + 1); //short.MinValue is used to specify no Key.
         }
 
         public void Reset()
@@ -134,14 +158,17 @@ namespace VoiceCraft.Network
 
         protected override void Dispose(bool disposing)
         {
-            if(!CTS.IsCancellationRequested)
-                CTS.Cancel();
+            if (disposing)
+            {
+                if (!CTS.IsCancellationRequested)
+                    CTS.Cancel();
 
-            CTS.Dispose();
-            SendQueue.Clear();
-            ReliabilityQueue.Clear();
-            ReceiveBuffer.Clear();
-            OnPacketReceived = null;
+                CTS.Dispose();
+                SendQueue.Clear();
+                ReliabilityQueue.Clear();
+                ReceiveBuffer.Clear();
+                OnPacketReceived = null;
+            }
         }
     }
 }

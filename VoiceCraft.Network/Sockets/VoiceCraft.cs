@@ -130,6 +130,7 @@ namespace VoiceCraft.Network.Sockets
             OnAcceptReceived += OnAccept;
             OnDenyReceived += OnDeny;
             OnLogoutReceived += OnLogout;
+            OnAckReceived += OnAck;
 
             try
             {
@@ -170,6 +171,7 @@ namespace VoiceCraft.Network.Sockets
             OnAcceptReceived -= OnAccept;
             OnDenyReceived -= OnDeny;
             OnLogoutReceived -= OnLogout;
+            OnAckReceived -= OnAck;
 
             CTS.Cancel();
             CTS.Dispose();
@@ -191,6 +193,11 @@ namespace VoiceCraft.Network.Sockets
 
             State = VoiceCraftSocketState.Starting;
             CTS = new CancellationTokenSource();
+
+            OnLoginReceived += OnClientLogin;
+            OnLogoutReceived += OnClientLogout;
+            OnAckReceived += OnAck;
+
             try
             {
                 RemoteEndpoint = new IPEndPoint(IPAddress.Any, Port);
@@ -221,6 +228,10 @@ namespace VoiceCraft.Network.Sockets
             if (State == VoiceCraftSocketState.Stopped) return;
 
             State = VoiceCraftSocketState.Stopping;
+            OnLoginReceived -= OnClientLogin;
+            OnLogoutReceived -= OnClientLogout;
+            OnAckReceived -= OnAck;
+
             await DisconnectPeers();
             CTS.Cancel();
             CTS.Dispose();
@@ -256,7 +267,9 @@ namespace VoiceCraft.Network.Sockets
                     await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty }, peer.EP); //Send immediately.
                 peer.OnPacketReceived -= HandlePacketReceived;
                 peer.Dispose();
-                OnPeerDisconnected?.Invoke(peer, reason);
+
+                if(peer.Connected)
+                    OnPeerDisconnected?.Invoke(peer, reason);
             }
         }
 
@@ -384,7 +397,7 @@ namespace VoiceCraft.Network.Sockets
                 var dist = Environment.TickCount64 - ClientNetpeer?.LastActive;
                 if (dist > Timeout)
                 {
-                    await DisconnectAsync($"Signalling timed out!\nTime since last active {Environment.TickCount - ClientNetpeer?.LastActive}ms.", false);
+                    await DisconnectAsync($"Connection timed out!\nTime since last active {Environment.TickCount - ClientNetpeer?.LastActive}ms.", false);
                     break;
                 }
                 ClientNetpeer?.ResendPackets();
@@ -431,8 +444,6 @@ namespace VoiceCraft.Network.Sockets
                     VoiceCraftPacket? packet = null;
                     while (peer.Value.SendQueue.TryDequeue(out packet) && Environment.TickCount64 < maxSendTime && !CTS.IsCancellationRequested)
                     {
-                        Debug.WriteLine("Sending packet");
-
                         await SocketSendToAsync(packet, peer.Value.EP);
                     }
                 }
@@ -448,13 +459,51 @@ namespace VoiceCraft.Network.Sockets
                 VoiceCraftPacket? packet = null;
                 while (ClientNetpeer.SendQueue.TryDequeue(out packet) && !CTS.IsCancellationRequested)
                 {
-                    Debug.WriteLine("Sending packet");
+                    Debug.WriteLine($"Sending packet: {packet.ResendTime}, {packet.PacketId}");
 
                     await SocketSendAsync(packet);
                 }
 
                 await Task.Delay(1); //1ms to not destroy the CPU.
             }
+        }
+
+        private long GetAvailableId()
+        {
+            var Id = NetPeer.GenerateId();
+            while(!IdExists(Id))
+            {
+                Id = NetPeer.GenerateId();
+            }
+            return Id;
+        }
+
+        private bool IdExists(long id)
+        {
+            foreach(var peer in NetPeers)
+            {
+                if(peer.Value.ID == id) return true;
+            }
+            return false;
+        }
+
+        private short GetAvailableKey()
+        {
+            var Key = NetPeer.GenerateKey();
+            while (!KeyExists(Key))
+            {
+                Key = NetPeer.GenerateKey();
+            }
+            return Key;
+        }
+
+        private bool KeyExists(short key)
+        {
+            foreach (var peer in NetPeers)
+            {
+                if (peer.Value.Key == key) return true;
+            }
+            return false;
         }
 
         private void HandlePacketReceived(NetPeer peer, VoiceCraftPacket packet)
@@ -486,11 +535,16 @@ namespace VoiceCraft.Network.Sockets
 
         protected override void Dispose(bool disposing)
         {
-            if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting)
-                StopAsync().Wait();
+            if (disposing)
+            {
+                if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting)
+                    StopAsync().Wait();
 
-            if (State == VoiceCraftSocketState.Connected || State == VoiceCraftSocketState.Connecting)
-                DisconnectAsync().Wait();
+                if (State == VoiceCraftSocketState.Connected || State == VoiceCraftSocketState.Connecting)
+                    DisconnectAsync().Wait();
+
+                Socket.Dispose();
+            }
         }
         #endregion
 
@@ -512,7 +566,38 @@ namespace VoiceCraft.Network.Sockets
 
         private void OnLogout(Logout data, NetPeer peer)
         {
-            DisconnectAsync(data.Reason, false).Wait();
+            if(data.Id == peer.ID)
+                DisconnectAsync(data.Reason, false).Wait();
+        }
+        #endregion
+
+        #region Server Event Methods
+        private void OnClientLogin(Login data, NetPeer peer)
+        {
+            var Id = GetAvailableId();
+            var key = data.Key;
+            if (KeyExists(key))
+                key = GetAvailableKey();
+
+            peer.ID = Id;
+            peer.Key = key;
+            OnPeerConnected?.Invoke(peer); //Leave wether the client should be accepted or denied by the application.
+        }
+
+        private void OnClientLogout(Logout data, NetPeer peer)
+        {
+            if (data.Id == peer.ID)
+            {
+                var key = NetPeers.FirstOrDefault(x => x.Value == peer).Key;
+                DisconnectPeer(key, false).Wait();
+            }
+        }
+        #endregion
+
+        #region Global Event Methods
+        private void OnAck(Ack data, NetPeer peer)
+        {
+            peer.AcknowledgePacket(data.PacketSequence);
         }
         #endregion
     }
