@@ -10,6 +10,7 @@ namespace VoiceCraft.Network
     {
         public const int ResendTime = 200;
         public const int RetryResendTime = 500;
+        public const int MaxSendRetries = 20;
         public const int MaxRecvBufferSize = 30; //30 packets.
 
         public delegate void PacketReceived(NetPeer peer, VoiceCraftPacket packet);
@@ -84,6 +85,8 @@ namespace VoiceCraft.Network
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
 
+            LastActive = Environment.TickCount64;
+
             if(ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
                 return false; //We can reset the connection because of too many incorrect packets, however that is up to the application.
 
@@ -94,6 +97,7 @@ namespace VoiceCraft.Network
             }
 
             ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
+            Console.WriteLine($"Adding Acknowledgement For {packet.Sequence}");
             AddToSendBuffer(new Ack() { Id = ID, PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
 
             foreach(var p in ReceiveBuffer)
@@ -137,12 +141,12 @@ namespace VoiceCraft.Network
 
         public static long GenerateId()
         {
-            return Random.Shared.NextInt64(long.MaxValue, long.MinValue + 1); //long.MinValue is used to specify no Id.
+            return Random.Shared.NextInt64(long.MinValue + 1, long.MaxValue); //long.MinValue is used to specify no Id.
         }
 
         public static short GenerateKey()
         {
-            return (short)Random.Shared.Next(short.MaxValue, short.MinValue + 1); //short.MinValue is used to specify no Key.
+            return (short)Random.Shared.Next(short.MinValue + 1, short.MaxValue); //short.MinValue is used to specify no Key.
         }
 
         public void Reset()

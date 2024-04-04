@@ -9,6 +9,7 @@ namespace VoiceCraft.Core.Packets
         public abstract bool IsReliable { get; }
         public uint Sequence { get; set; }
         public long ResendTime { get; set; }
+        public int Retries { get; set; }
 
         public virtual int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
