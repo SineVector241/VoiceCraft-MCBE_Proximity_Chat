@@ -53,7 +53,7 @@ Constant Encapsulated Packet Size: 5 bytes.
 |Variable         |Data Type      |Description                                    |
 |-----------------|---------------|-----------------------------------------------|
 |X                |float (4 bytes)|Defines the player X coordinate.               |
-|Y                |float (4 bytes)|Defines the player Z coordinate.               |
+|Y                |float (4 bytes)|Defines the player Y coordinate.               |
 |Z                |float (4 bytes)|Defines the player Z coordinate.               |
 |Rotation         |float (4 bytes)|Defines the player's head rotation in radians. |
 |CaveDensity      |float (4 bytes)|Defines how surrounded the player is in a cave, This is basically used as an echo factor, Server calculation uses this like so... `Math.Max(player.CaveDensity, otherPlayer.Value.CaveDensity) * (1.0f - volume) : 0.0f;`|
