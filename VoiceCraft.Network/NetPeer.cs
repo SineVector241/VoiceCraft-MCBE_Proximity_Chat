@@ -97,7 +97,6 @@ namespace VoiceCraft.Network
             }
 
             ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
-            Console.WriteLine($"Adding Acknowledgement For {packet.Sequence}");
             AddToSendBuffer(new Ack() { Id = ID, PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
 
             foreach(var p in ReceiveBuffer)
@@ -120,6 +119,7 @@ namespace VoiceCraft.Network
                 if (packet.Value.ResendTime <= Environment.TickCount64)
                 {
                     packet.Value.ResendTime = Environment.TickCount64 + RetryResendTime; //More delay.
+                    packet.Value.Retries++;
                     SendQueue.Enqueue(packet.Value);
                 }
             }

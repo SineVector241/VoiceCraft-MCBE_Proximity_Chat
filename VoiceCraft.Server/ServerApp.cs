@@ -40,7 +40,7 @@ namespace VoiceCraft.Server
         #region Server Event Methods
         private void OnFailed(Exception ex)
         {
-            Logger.LogToConsole(LogType.Error, $"Server Failed: {ex.Message}", nameof(ServerApp));
+            Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}", nameof(ServerApp));
         }
 
         private void VoiceCraftOnStarted()
@@ -55,7 +55,7 @@ namespace VoiceCraft.Server
 
         private void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null)
         {
-            Logger.LogToConsole(LogType.Warn, "Participant Disconnected!", nameof(VoiceCraft));
+            Logger.LogToConsole(LogType.Warn, $"Participant Disconnected - Reason: {reason}", nameof(VoiceCraft));
         }
         #endregion
     }

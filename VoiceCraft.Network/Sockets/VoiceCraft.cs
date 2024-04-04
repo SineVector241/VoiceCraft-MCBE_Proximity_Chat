@@ -424,7 +424,11 @@ namespace VoiceCraft.Network.Sockets
                     VoiceCraftPacket? packet = null;
                     while (peer.Value.SendQueue.TryDequeue(out packet) && Environment.TickCount64 < maxSendTime && !CTS.IsCancellationRequested)
                     {
-                        Console.WriteLine($"Sending {packet.PacketId}");
+                        if(packet.Retries > NetPeer.MaxSendRetries)
+                        {
+                            await DisconnectPeer(peer.Key, true, "Unstable Connection.");
+                            continue;
+                        }
                         await SocketSendToAsync(packet, peer.Value.EP);
                     }
                 }
@@ -440,7 +444,11 @@ namespace VoiceCraft.Network.Sockets
                 VoiceCraftPacket? packet = null;
                 while (ClientNetpeer.SendQueue.TryDequeue(out packet) && !CTS.IsCancellationRequested)
                 {
-                    Console.WriteLine($"Sending {packet.PacketId}");
+                    if (packet.Retries > NetPeer.MaxSendRetries)
+                    {
+                        await DisconnectAsync("Unstable Connection.");
+                        continue;
+                    }
                     await SocketSendAsync(packet);
                 }
 
