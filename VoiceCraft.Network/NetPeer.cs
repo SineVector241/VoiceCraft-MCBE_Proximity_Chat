@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
-using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.VoiceCraft;
 
@@ -86,18 +85,17 @@ namespace VoiceCraft.Network
                 return true; //Not reliable, We can just say it's received.
             }
 
-            ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
             AddToSendBuffer(new Ack() { Id = ID, PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
+            if (packet.Sequence < NextSequence) return true; //Likely to be a duplicate packet.
 
-            foreach(var p in ReceiveBuffer)
+            ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
+            foreach (var p in ReceiveBuffer)
             {
                 if (p.Key == NextSequence && ReceiveBuffer.TryRemove(p)) //Remove packet and notify listeners.
                 {
                     NextSequence++; //Update next expected packet.
                     OnPacketReceived?.Invoke(this, p.Value);
                 }
-                else if (p.Key < NextSequence)
-                    ReceiveBuffer.TryRemove(p); //Remove old packet.
             }
             return true;
         }
@@ -122,6 +120,11 @@ namespace VoiceCraft.Network
                 Connected = true;
                 AddToSendBuffer(new Accept() { Id = ID, Key = Key });
             }
+        }
+
+        public void DenyLogin(string? reason = null)
+        {
+            AddToSendBuffer(new Deny() { Reason = reason ?? string.Empty });
         }
 
         public void AcknowledgePacket(uint packetId)
