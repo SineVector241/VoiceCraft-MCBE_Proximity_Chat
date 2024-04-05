@@ -9,7 +9,7 @@ namespace VoiceCraft.Server
 
         public ServerApp()
         {
-            Server = new VoiceCraftServer(ServerProperties);
+            Server = new VoiceCraftServer(ServerProperties, new List<string>());
 
             Server.OnFailed += OnFailed;
             Server.VoiceCraftSocket.OnStarted += VoiceCraftOnStarted;

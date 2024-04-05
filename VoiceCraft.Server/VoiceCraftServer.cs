@@ -1,4 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Net;
+using VoiceCraft.Core;
+using VoiceCraft.Core.Packets.VoiceCraft;
 using VoiceCraft.Network;
 using VoiceCraft.Server.Data;
 
@@ -11,6 +14,7 @@ namespace VoiceCraft.Server
         public Network.Sockets.VoiceCraft VoiceCraftSocket { get; set; }
         public Network.Sockets.MCComm MCComm { get; set; }
         public Properties ServerProperties { get; set; }
+        public List<string> Banlist { get; set; }
 
         #region Delegates
         public delegate void ParticipantJoined(VoiceCraftParticipant participant);
@@ -24,9 +28,10 @@ namespace VoiceCraft.Server
         public event Failed? OnFailed;
         #endregion
 
-        public VoiceCraftServer(Properties properties)
+        public VoiceCraftServer(Properties properties, List<string> banlist)
         {
             ServerProperties = properties;
+            Banlist = banlist;
             VoiceCraftSocket = new Network.Sockets.VoiceCraft();
             MCComm = new Network.Sockets.MCComm();
 
@@ -53,8 +58,30 @@ namespace VoiceCraft.Server
         }
 
         #region VoiceCraft Event Methods
-        private void OnPeerConnected(NetPeer peer)
+        private void OnPeerConnected(NetPeer peer, Login packet)
         {
+            if (Version != packet.Version)
+            {
+                peer.DenyLogin("Versions do not match!");
+                return;
+            }
+            if (Banlist.Exists(x => x == ((IPEndPoint)peer.EP).Address.ToString()))
+            {
+                peer.DenyLogin("You have been banned from the server!");
+                return;
+            }
+            if (packet.PositioningType != PositioningTypes.ClientSided &&
+                (ServerProperties.ConnectionType == ConnectionTypes.Client || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
+            {
+                peer.DenyLogin("Server only accepts client sided positioning!");
+                return;
+            }
+            else if (packet.PositioningType != PositioningTypes.ServerSided &&
+                (ServerProperties.ConnectionType == ConnectionTypes.Server || ServerProperties.ConnectionType == ConnectionTypes.Hybrid))
+            {
+                peer.DenyLogin("Server only accepts server sided positioning!");
+                return;
+            }
             peer.AcceptLogin();
             var participant = new VoiceCraftParticipant(string.Empty, peer);
             Participants.TryAdd(peer, participant);

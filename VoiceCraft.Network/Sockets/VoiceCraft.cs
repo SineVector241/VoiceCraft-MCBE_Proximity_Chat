@@ -65,7 +65,7 @@ namespace VoiceCraft.Network.Sockets
 
         public delegate void Started();
         public delegate void Stopped(string? reason = null);
-        public delegate void PeerConnected(NetPeer peer);
+        public delegate void PeerConnected(NetPeer peer, Login packet);
         public delegate void PeerDisconnected(NetPeer peer, string? reason = null);
 
         public delegate void PacketData<T>(T data, NetPeer peer);
@@ -610,7 +610,7 @@ namespace VoiceCraft.Network.Sockets
 
             peer.ID = Id;
             peer.Key = key;
-            OnPeerConnected?.Invoke(peer); //Leave wether the client should be accepted or denied by the application.
+            OnPeerConnected?.Invoke(peer, data); //Leave wether the client should be accepted or denied by the application.
         }
 
         private void OnClientLogout(Logout data, NetPeer peer)
