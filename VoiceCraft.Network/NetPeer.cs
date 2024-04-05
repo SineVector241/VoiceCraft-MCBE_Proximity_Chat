@@ -20,6 +20,11 @@ namespace VoiceCraft.Network
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
 
         /// <summary>
+        /// Defines wether the client was denied.
+        /// </summary>
+        public bool Denied { get; private set; }
+
+        /// <summary>
         /// Defines wether the client is sucessfully connected and accepted.
         /// </summary>
         public bool Connected { get; private set; }
@@ -124,7 +129,11 @@ namespace VoiceCraft.Network
 
         public void DenyLogin(string? reason = null)
         {
-            AddToSendBuffer(new Deny() { Reason = reason ?? string.Empty });
+            if (!Connected)
+            {
+                AddToSendBuffer(new Deny() { Reason = reason ?? string.Empty });
+                Denied = true;
+            }
         }
 
         public void AcknowledgePacket(uint packetId)

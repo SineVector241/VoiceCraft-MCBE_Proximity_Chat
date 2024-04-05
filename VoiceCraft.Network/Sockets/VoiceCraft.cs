@@ -453,10 +453,17 @@ namespace VoiceCraft.Network.Sockets
                             await DisconnectPeer(peer.Key, true, "Unstable Connection.");
                             continue;
                         }
+
+                        Console.WriteLine($"Sending {(VoiceCraftPacketTypes)packet.PacketId}");
                         await SocketSendToAsync(packet, peer.Value.EP);
 
                         if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
                             OnOutboundPacket?.Invoke(packet, peer.Value);
+                    }
+
+                    if (peer.Value.Denied)
+                    {
+                        await DisconnectPeer(peer.Key, false, "Login Denied.");
                     }
                 }
 
@@ -476,6 +483,9 @@ namespace VoiceCraft.Network.Sockets
                         await DisconnectAsync("Unstable Connection.");
                         continue;
                     }
+
+                    Console.WriteLine($"Sending {(VoiceCraftPacketTypes)packet.PacketId}");
+
                     await SocketSendAsync(packet);
 
                     if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
