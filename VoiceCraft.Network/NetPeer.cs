@@ -7,7 +7,7 @@ namespace VoiceCraft.Network
 {
     public class NetPeer
     {
-        public const int ResendTime = 200;
+        public const int ResendTime = 300;
         public const int RetryResendTime = 500;
         public const int MaxSendRetries = 20;
         public const int MaxRecvBufferSize = 30; //30 packets.

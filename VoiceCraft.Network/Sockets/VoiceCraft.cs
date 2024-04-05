@@ -408,7 +408,7 @@ namespace VoiceCraft.Network.Sockets
 
                 if (Environment.TickCount64 - time >= 1000) //1 second ping interval.
                 {
-                    Send(new Ping() { Id = ClientNetPeer?.ID ?? long.MinValue });
+                    Send(new Ping());
                     time = Environment.TickCount64;
                 }
                 await Task.Delay(1).ConfigureAwait(false);
@@ -453,8 +453,6 @@ namespace VoiceCraft.Network.Sockets
                             await DisconnectPeer(peer.Key, true, "Unstable Connection.");
                             continue;
                         }
-
-                        Console.WriteLine($"Sending {(VoiceCraftPacketTypes)packet.PacketId}");
                         await SocketSendToAsync(packet, peer.Value.EP);
 
                         if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
@@ -483,9 +481,6 @@ namespace VoiceCraft.Network.Sockets
                         await DisconnectAsync("Unstable Connection.");
                         continue;
                     }
-
-                    Console.WriteLine($"Sending {(VoiceCraftPacketTypes)packet.PacketId}");
-
                     await SocketSendAsync(packet);
 
                     if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
@@ -629,14 +624,15 @@ namespace VoiceCraft.Network.Sockets
 
         private void OnPing(Ping data, NetPeer peer)
         {
-            peer.AddToSendBuffer(new Ping() { Id = peer.ID });
+            peer.AddToSendBuffer(new Ping());
         }
         #endregion
 
         #region Global Event Methods
         private void OnAck(Ack data, NetPeer peer)
         {
-            peer.AcknowledgePacket(data.PacketSequence);
+            if(data.Id == peer.ID)
+                peer.AcknowledgePacket(data.PacketSequence);
         }
         #endregion
     }
