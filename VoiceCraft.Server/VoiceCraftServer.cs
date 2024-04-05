@@ -56,7 +56,7 @@ namespace VoiceCraft.Server
         private void OnPeerConnected(NetPeer peer)
         {
             peer.AcceptLogin();
-            var participant = new VoiceCraftParticipant(string.Empty);
+            var participant = new VoiceCraftParticipant(string.Empty, peer);
             Participants.TryAdd(peer, participant);
             OnParticipantJoined?.Invoke(participant);
         }

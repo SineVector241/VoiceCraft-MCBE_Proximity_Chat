@@ -6,7 +6,7 @@ using VoiceCraft.Core.Packets.VoiceCraft;
 
 namespace VoiceCraft.Network
 {
-    public class NetPeer : Disposable
+    public class NetPeer
     {
         public const int ResendTime = 200;
         public const int RetryResendTime = 500;
@@ -17,7 +17,6 @@ namespace VoiceCraft.Network
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
-        private CancellationTokenSource CTS { get; } = new CancellationTokenSource();
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue { get; set; }
         private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
 
@@ -30,11 +29,6 @@ namespace VoiceCraft.Network
         /// Endpoint of the NetPeer.
         /// </summary>
         public EndPoint EP { get; set; }
-
-        /// <summary>
-        /// The cancellation token used to stop listening on the socket for this peer.
-        /// </summary>
-        public CancellationToken Token { get => CTS.Token; }
 
         /// <summary>
         /// When the client was last active.
@@ -68,8 +62,6 @@ namespace VoiceCraft.Network
 
         public void AddToSendBuffer(VoiceCraftPacket packet)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
-
             if (packet.IsReliable)
             {
                 packet.Sequence = Sequence;
@@ -83,8 +75,6 @@ namespace VoiceCraft.Network
 
         public bool AddToReceiveBuffer(VoiceCraftPacket packet)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
-
             LastActive = Environment.TickCount64;
 
             if(ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
@@ -151,29 +141,11 @@ namespace VoiceCraft.Network
 
         public void Reset()
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(NetPeer));
-
             SendQueue.Clear();
             ReliabilityQueue.Clear();
             ReceiveBuffer.Clear();
             NextSequence = 0;
             Sequence = 0;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (!CTS.IsCancellationRequested)
-                    CTS.Cancel();
-
-                CTS.Dispose();
-                SendQueue.Clear();
-                ReliabilityQueue.Clear();
-                ReceiveBuffer.Clear();
-                Connected = false;
-                OnPacketReceived = null;
-            }
         }
     }
 }

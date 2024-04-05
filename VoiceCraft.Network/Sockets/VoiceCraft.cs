@@ -4,7 +4,6 @@ using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using System.Collections.Concurrent;
 using VoiceCraft.Core.Packets.VoiceCraft;
-using System.Diagnostics;
 
 namespace VoiceCraft.Network.Sockets
 {
@@ -23,7 +22,7 @@ namespace VoiceCraft.Network.Sockets
         //Private Variables
         private CancellationTokenSource CTS { get; set; } = new CancellationTokenSource();
         private ConcurrentDictionary<SocketAddress, NetPeer> NetPeers { get; set; } = new ConcurrentDictionary<SocketAddress, NetPeer>(); //Server Variable
-        private NetPeer? ClientNetpeer { get; set; } //Client Variable
+        private NetPeer? ClientNetPeer { get; set; } //Client Variable
         private Task? ActivityChecker { get; set; }
         private Task? Sender { get; set; }
         #endregion
@@ -71,7 +70,9 @@ namespace VoiceCraft.Network.Sockets
 
         public delegate void PacketData<T>(T data, NetPeer peer);
 
-        //Error events
+        //Error and Debug Events
+        public delegate void OutboundPacket(VoiceCraftPacket packet, NetPeer peer);
+        public delegate void InboundPacket(VoiceCraftPacket packet, NetPeer peer);
         public delegate void ExceptionError(Exception error);
         #endregion
 
@@ -108,7 +109,9 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<ClientAudio>? OnClientAudioReceived;
         public event PacketData<ServerAudio>? OnServerAudioReceived;
 
-        //Error Events
+        //Error and Debug Events
+        public event OutboundPacket? OnOutboundPacket;
+        public event InboundPacket? OnInboundPacket;
         public event ExceptionError? OnExceptionError;
         #endregion
 
@@ -125,8 +128,8 @@ namespace VoiceCraft.Network.Sockets
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
             CTS = new CancellationTokenSource();
-            ClientNetpeer = new NetPeer(RemoteEndpoint, long.MinValue, preferredKey);
-            ClientNetpeer.OnPacketReceived += HandlePacketReceived;
+            ClientNetPeer = new NetPeer(RemoteEndpoint, long.MinValue, preferredKey);
+            ClientNetPeer.OnPacketReceived += HandlePacketReceived;
             Socket.Bind(new IPEndPoint(IPAddress.Any, 0));
             Sender = Task.Run(ClientSender);
 
@@ -169,7 +172,7 @@ namespace VoiceCraft.Network.Sockets
             //We don't need to wait until we are connected because the Cancellation Token already takes care of cancelling other thread related requests.
 
             if (notifyServer && State == VoiceCraftSocketState.Connected) //Only send if we are connected.
-                await SocketSendAsync(new Logout() { Id = ClientNetpeer?.ID ?? long.MinValue });
+                await SocketSendAsync(new Logout() { Id = ClientNetPeer?.ID ?? long.MinValue });
 
             State = VoiceCraftSocketState.Disconnecting;
             //Deregister the Events
@@ -177,15 +180,14 @@ namespace VoiceCraft.Network.Sockets
             OnDenyReceived -= OnDeny;
             OnLogoutReceived -= OnLogout;
             OnAckReceived -= OnAck;
-            if(ClientNetpeer != null)
-                ClientNetpeer.OnPacketReceived -= HandlePacketReceived;
+            if(ClientNetPeer != null)
+                ClientNetPeer.OnPacketReceived -= HandlePacketReceived;
 
             CTS.Cancel();
             CTS.Dispose();
-            ClientNetpeer?.Dispose();
             Socket.Close();
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            ClientNetpeer = null;
+            ClientNetPeer = null;
             ActivityChecker = null;
             Sender = null;
             State = VoiceCraftSocketState.Stopped;
@@ -243,7 +245,7 @@ namespace VoiceCraft.Network.Sockets
             OnLogoutReceived -= OnClientLogout;
             OnAckReceived -= OnAck;
 
-            await DisconnectPeers();
+            await DisconnectPeers("Server Shutdown.");
             CTS.Cancel();
             CTS.Dispose();
             Socket.Close();
@@ -259,9 +261,9 @@ namespace VoiceCraft.Network.Sockets
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected)
             {
-                if (ClientNetpeer != null)
+                if (ClientNetPeer != null)
                 {
-                    ClientNetpeer.AddToSendBuffer(packet);
+                    ClientNetPeer.AddToSendBuffer(packet);
                 }
             }
             else
@@ -280,15 +282,14 @@ namespace VoiceCraft.Network.Sockets
 
                 if (peer.Connected)
                     OnPeerDisconnected?.Invoke(peer, reason);
-                peer.Dispose();
             }
         }
 
-        private async Task DisconnectPeers()
+        private async Task DisconnectPeers(string? reason = null)
         {
             foreach(var peerSocket in NetPeers.Keys)
             {
-                await DisconnectPeer(peerSocket, true, null);
+                await DisconnectPeer(peerSocket, true, reason);
             }
         }
 
@@ -306,20 +307,16 @@ namespace VoiceCraft.Network.Sockets
             await Socket.SendToAsync(buffer.ToArray(), RemoteEndpoint, CTS.Token);
         }
 
-        private NetPeer GetOrCreateNetPeer(SocketAddress receivedAddress)
+        private NetPeer CreateNetPeer(SocketAddress receivedAddress)
         {
-            if (!NetPeers.TryGetValue(receivedAddress, out var netPeer))
-            {
-                // Create an EndPoint from the SocketAddress
-                netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), long.MinValue, short.MinValue);
-                netPeer.OnPacketReceived += HandlePacketReceived;
+            // Create an EndPoint from the SocketAddress
+            var netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), long.MinValue, short.MinValue);
+            netPeer.OnPacketReceived += HandlePacketReceived;
 
-                var lookupCopy = new SocketAddress(receivedAddress.Family, receivedAddress.Size);
-                receivedAddress.Buffer.CopyTo(lookupCopy.Buffer);
+            var lookupCopy = new SocketAddress(receivedAddress.Family, receivedAddress.Size);
+            receivedAddress.Buffer.CopyTo(lookupCopy.Buffer);
 
-                NetPeers[lookupCopy] = netPeer;
-            }
-
+            NetPeers.TryAdd(lookupCopy, netPeer);
             return netPeer;
         }
 
@@ -334,15 +331,34 @@ namespace VoiceCraft.Network.Sockets
                 try
                 {
                     var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, receivedAddress, CTS.Token);
-                    var netPeer = GetOrCreateNetPeer(receivedAddress);
                     var packet = PacketRegistry.GetPacketFromDataStream(bufferMem.ToArray());
 
-                    netPeer.AddToReceiveBuffer(packet);
+                    NetPeers.TryGetValue(receivedAddress, out var netPeer);
+                    if (netPeer != null && netPeer.Connected)
+                    {
+                        netPeer.AddToReceiveBuffer(packet); //Only add packets if the client was accepted.
+
+                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
+                            OnInboundPacket?.Invoke(packet, netPeer);
+                    }
+                    else if(packet.PacketId == (byte)VoiceCraftPacketTypes.Login) //Null or not connected, we only accept the login packet to try an prevent overload spam.
+                    {
+                        var peer = netPeer ?? CreateNetPeer(receivedAddress);
+                        peer.AddToReceiveBuffer(packet);
+
+                        if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
+                            OnInboundPacket?.Invoke(packet, peer);
+                    }
                 }
                 catch (SocketException ex)
                 {
                     await StopAsync(ex.Message);
                     return;
+                }
+                catch(Exception ex)
+                {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
                 }
             }
         }
@@ -359,12 +375,20 @@ namespace VoiceCraft.Network.Sockets
                     var receivedBytes = await Socket.ReceiveFromAsync(bufferMem, SocketFlags.None, RemoteEndpoint, CTS.Token);
                     var packet = PacketRegistry.GetPacketFromDataStream(bufferMem.ToArray());
 
-                    ClientNetpeer?.AddToReceiveBuffer(packet);
+                    ClientNetPeer?.AddToReceiveBuffer(packet); //We don't care about wether the client is connected or not, We'll just accept the packet into the buffer.
+
+                    if (ClientNetPeer != null && LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
+                        OnInboundPacket?.Invoke(packet, ClientNetPeer);
                 }
                 catch (SocketException ex)
                 {
                     await DisconnectAsync(ex.Message, false); //Socket is basically closed at this point, We can't send a message.
                     return;
+                }
+                catch (Exception ex)
+                {
+                    if (LogExceptions)
+                        OnExceptionError?.Invoke(ex);
                 }
             }
         }
@@ -374,17 +398,17 @@ namespace VoiceCraft.Network.Sockets
             var time = Environment.TickCount64;
             while (!CTS.IsCancellationRequested)
             {
-                var dist = Environment.TickCount64 - ClientNetpeer?.LastActive;
+                var dist = Environment.TickCount64 - ClientNetPeer?.LastActive;
                 if (dist > Timeout)
                 {
-                    await DisconnectAsync($"Connection timed out!\nTime since last active {Environment.TickCount - ClientNetpeer?.LastActive}ms.", false);
+                    await DisconnectAsync($"Connection timed out!\nTime since last active {Environment.TickCount - ClientNetPeer?.LastActive}ms.", false);
                     break;
                 }
-                ClientNetpeer?.ResendPackets();
+                ClientNetPeer?.ResendPackets();
 
                 if (Environment.TickCount64 - time >= 1000) //1 second ping interval.
                 {
-                    Send(new Ping() { Id = ClientNetpeer?.ID ?? long.MinValue });
+                    Send(new Ping() { Id = ClientNetPeer?.ID ?? long.MinValue });
                     time = Environment.TickCount64;
                 }
                 await Task.Delay(1).ConfigureAwait(false);
@@ -430,6 +454,9 @@ namespace VoiceCraft.Network.Sockets
                             continue;
                         }
                         await SocketSendToAsync(packet, peer.Value.EP);
+
+                        if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
+                            OnOutboundPacket?.Invoke(packet, peer.Value);
                     }
                 }
 
@@ -439,10 +466,10 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task ClientSender()
         {
-            while (!CTS.IsCancellationRequested && ClientNetpeer != null)
+            while (!CTS.IsCancellationRequested && ClientNetPeer != null)
             {
                 VoiceCraftPacket? packet = null;
-                while (ClientNetpeer.SendQueue.TryDequeue(out packet) && !CTS.IsCancellationRequested)
+                while (ClientNetPeer.SendQueue.TryDequeue(out packet) && !CTS.IsCancellationRequested)
                 {
                     if (packet.Retries > NetPeer.MaxSendRetries)
                     {
@@ -450,6 +477,9 @@ namespace VoiceCraft.Network.Sockets
                         continue;
                     }
                     await SocketSendAsync(packet);
+
+                    if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
+                        OnOutboundPacket?.Invoke(packet, ClientNetPeer);
                 }
 
                 await Task.Delay(1); //1ms to not destroy the CPU.
@@ -539,10 +569,10 @@ namespace VoiceCraft.Network.Sockets
         #region Client Event Methods
         private void OnAccept(Accept data, NetPeer peer)
         {
-            if(ClientNetpeer != null)
+            if(ClientNetPeer != null)
             {
-                ClientNetpeer.ID = data.Id;
-                ClientNetpeer.Key = data.Key;
+                ClientNetPeer.ID = data.Id;
+                ClientNetPeer.Key = data.Key;
             }
             OnConnected?.Invoke();
         }
@@ -562,6 +592,12 @@ namespace VoiceCraft.Network.Sockets
         #region Server Event Methods
         private void OnClientLogin(Login data, NetPeer peer)
         {
+            if (peer.Connected)
+            {
+                peer.AddToSendBuffer(new Accept() { Id = peer.ID, Key = peer.Key });
+                return; //Already Connected
+            }
+
             var Id = GetAvailableId();
             var key = data.Key;
             if (KeyExists(key))

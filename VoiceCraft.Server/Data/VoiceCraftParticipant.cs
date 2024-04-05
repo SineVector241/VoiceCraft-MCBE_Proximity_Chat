@@ -1,11 +1,14 @@
 ﻿using VoiceCraft.Core;
+using VoiceCraft.Network;
 
 namespace VoiceCraft.Server.Data
 {
     public class VoiceCraftParticipant : Participant
     {
-        public VoiceCraftParticipant(string name) : base(name)
+        public NetPeer NetPeer { get; }
+        public VoiceCraftParticipant(string name, NetPeer peer) : base(name)
         {
+            NetPeer = peer;
         }
     }
 }

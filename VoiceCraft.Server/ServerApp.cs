@@ -50,12 +50,12 @@ namespace VoiceCraft.Server
 
         private void ParticipantJoined(VoiceCraftParticipant participant)
         {
-            Logger.LogToConsole(LogType.Success, "Participant Connected!", nameof(VoiceCraft));
+            Logger.LogToConsole(LogType.Success, $"Participant Connected - Key: {participant.NetPeer.Key}", nameof(VoiceCraft));
         }
 
         private void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null)
         {
-            Logger.LogToConsole(LogType.Warn, $"Participant Disconnected - Reason: {reason}", nameof(VoiceCraft));
+            Logger.LogToConsole(LogType.Warn, $"Participant Disconnected - Key: {participant.NetPeer.Key}, Reason: {reason}", nameof(VoiceCraft));
         }
         #endregion
     }
