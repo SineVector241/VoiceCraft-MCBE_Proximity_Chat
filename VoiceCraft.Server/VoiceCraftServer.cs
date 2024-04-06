@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Numerics;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.VoiceCraft;
@@ -306,18 +307,81 @@ namespace VoiceCraft.Server
 
         private void OnUpdatePosition(UpdatePosition data, NetPeer peer)
         {
-            if(Participants.TryGetValue(peer,out var client) && client.Binded && client.ClientSided)
+            if(Participants.TryGetValue(peer, out var client) && client.Binded && client.ClientSided)
             {
-                //Minecraft data update
+                client.Position = data.Position;
+                client.EnvironmentId = data.EnvironmentId;
             }
         }
 
         private void OnClientAudio(ClientAudio data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.Binded)
-            {
-                //Audio Sending...
-            }
+            _ = Task.Run(() => {
+                if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted)
+                {
+                    client.LastSpoke = Environment.TickCount64;
+                    var proximityToggle = client.Channel?.ChannelOverride?.ProximityToggle ?? ServerProperties.ProximityToggle;
+                    if (proximityToggle)
+                    {
+                        if (client.Dead || string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
+                        var proximityDistance = client.Channel?.ChannelOverride?.ProximityDistance ?? ServerProperties.ProximityDistance;
+                        var voiceEffects = client.Channel?.ChannelOverride?.VoiceEffects ?? ServerProperties.VoiceEffects;
+
+                        var list = Participants.Where(x =>
+                        x.Value != client &&
+                        x.Value.Binded &&
+                        !x.Value.Deafened &&
+                        !x.Value.Dead &&
+                        x.Value.Channel == client.Channel &&
+                        !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
+                        x.Value.EnvironmentId == client.EnvironmentId &&
+                        Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance); //Get Participants
+
+                        for (ushort i = 0; i < list.Count(); i++)
+                        {
+                            var participant = list.ElementAt(i);
+                            var volume = 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
+                            var echo = voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f;
+                            var muffled = voiceEffects && (participant.Value.InWater || client.InWater);
+                            var rotation = (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
+
+                            participant.Key.AddToSendBuffer(new ServerAudio()
+                            { 
+                                Key = client.Key, 
+                                PacketCount = data.PacketCount, 
+                                Volume = volume, 
+                                EchoFactor = echo, 
+                                Rotation = rotation, 
+                                Muffled = muffled, 
+                                Audio = data.Audio 
+                            });
+                        }
+                    }
+                    else
+                    {
+                        var list = Participants.Where(x =>
+                        x.Value != client &&
+                        x.Value.Binded &&
+                        !x.Value.Deafened &&
+                        x.Value.Channel == client.Channel);
+
+                        for (ushort i = 0; i < list.Count(); i++)
+                        {
+                            var participant = list.ElementAt(i);
+                            participant.Key.AddToSendBuffer(new ServerAudio()
+                            {
+                                Key = client.Key,
+                                PacketCount = data.PacketCount,
+                                Volume = 1.0f,
+                                EchoFactor = 0.0f,
+                                Rotation = 1.5f,
+                                Muffled = false,
+                                Audio = data.Audio
+                            });
+                        }
+                    }
+                }
+            });
         }
         #endregion
     }
