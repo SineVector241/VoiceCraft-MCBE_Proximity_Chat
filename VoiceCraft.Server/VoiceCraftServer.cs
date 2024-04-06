@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.VoiceCraft;
@@ -51,6 +50,8 @@ namespace VoiceCraft.Server
             VoiceCraftSocket.OnUndeafenReceived += OnUndeafen;
             VoiceCraftSocket.OnJoinChannelReceived += OnJoinChannel;
             VoiceCraftSocket.OnLeaveChannelReceived += OnLeaveChannel;
+            VoiceCraftSocket.OnUpdatePositionReceived += OnUpdatePosition;
+            VoiceCraftSocket.OnClientAudioReceived += OnClientAudio;
         }
 
         #region Methods
@@ -72,9 +73,9 @@ namespace VoiceCraft.Server
             });
         }
 
-        public void Broadcast(VoiceCraftPacket packet, bool bindedOnly = true, VoiceCraftParticipant? excludeParticipant = null)
+        public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
         {
-            var list = Participants.Where(x => x.Value != excludeParticipant);
+            var list = Participants.Where(x => !excludes.Contains(x.Value) && x.Value.Channel == inChannel);
             foreach (var participant in list)
             {
                 if(participant.Value.Binded && bindedOnly || !bindedOnly)
@@ -82,6 +83,43 @@ namespace VoiceCraft.Server
                     participant.Key.AddToSendBuffer(packet);
                 }
             }
+        }
+
+        public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel? channel = null)
+        {
+            if (client.Channel == channel) return; //Client is already in the channel.
+
+            if(client.Channel != null)
+                peer.AddToSendBuffer(new LeaveChannel()); //Tell the client to leave the previous channel
+
+            Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() 
+            { 
+                Key = client.Key 
+            }, [client], client.Channel);
+            client.Channel = channel;
+
+            if (client.Channel != null)
+                peer.AddToSendBuffer(new JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel)}); //Tell the client to join the channel
+
+            Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined()
+            {
+                IsDeafened = client.Deafened,
+                IsMuted = client.Muted,
+                Key = client.Key,
+                Name = client.Name
+            }, [client], client.Channel);
+
+            var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
+            foreach (var participant in list)
+            {
+                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
+                {
+                    IsDeafened = participant.Value.Deafened,
+                    IsMuted = participant.Value.Muted,
+                    Key = participant.Value.Key,
+                    Name = participant.Value.Name
+                });
+            } //Send participants back to binded client.
         }
 
         private short GetAvailableKey(short preferredKey)
@@ -154,9 +192,13 @@ namespace VoiceCraft.Server
 
         private void OnPeerDisconnected(NetPeer peer, string? reason = null)
         {
-            if(Participants.TryRemove(peer, out var participant))
+            if(Participants.TryRemove(peer, out var client))
             {
-                OnParticipantLeft?.Invoke(participant, reason);
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
+                { 
+                    Key = client.Key 
+                }, [], client.Channel); //Broadcast to all other participants.
+                OnParticipantLeft?.Invoke(client, reason);
             }
         }
 
@@ -173,12 +215,12 @@ namespace VoiceCraft.Server
                     IsMuted = client.Muted,
                     Key = client.Key,
                     Name = client.Name
-                }); //Broadcast to all other participants.
+                }, [client], client.Channel); //Broadcast to all other participants.
 
-                var list = Participants.Where(x => x.Value != client);
+                var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
                 foreach (var participant in list)
                 {
-                    participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
+                    peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
                     {
                         IsDeafened = participant.Value.Deafened,
                         IsMuted = participant.Value.Muted,
@@ -187,7 +229,14 @@ namespace VoiceCraft.Server
                     });
                 } //Send participants back to binded client.
 
-                //Send channels to client...
+                foreach(var channel in ServerProperties.Channels)
+                {
+                    peer.AddToSendBuffer(new AddChannel()
+                    {
+                        Name = channel.Name,
+                        RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password)
+                    });
+                } //Send channel list back to binded client.
 
                 OnParticipantBinded?.Invoke(client);
             }
@@ -199,7 +248,7 @@ namespace VoiceCraft.Server
             {
                 if (!client.Binded) return;
 
-                Broadcast(new Mute() { Key = client.Key }, true, client);
+                Broadcast(new Mute() { Key = client.Key }, [client], client.Channel);
             }
         }
 
@@ -209,7 +258,7 @@ namespace VoiceCraft.Server
             {
                 if (!client.Binded) return;
 
-                Broadcast(new Unmute() { Key = client.Key }, true, client);
+                Broadcast(new Unmute() { Key = client.Key }, [client], client.Channel);
             }
         }
 
@@ -219,7 +268,7 @@ namespace VoiceCraft.Server
             {
                 if (!client.Binded) return;
 
-                Broadcast(new Deafen() { Key = client.Key }, true, client);
+                Broadcast(new Deafen() { Key = client.Key }, [client], client.Channel);
             }
         }
 
@@ -229,26 +278,46 @@ namespace VoiceCraft.Server
             {
                 if (!client.Binded) return;
 
-                Broadcast(new Undeafen() { Key = client.Key }, true, client);
+                Broadcast(new Undeafen() { Key = client.Key }, [client], client.Channel);
             }
         }
 
         private void OnJoinChannel(JoinChannel data, NetPeer peer)
         {
             var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId);
-            if (channel != null)
+            if (Participants.TryGetValue(peer, out var client) && client.Binded && channel != null)
             {
-
-            }
-            else
-            {
-                peer.AddToSendBuffer(new Deny() { Reason = "Invalid Channel Id" });
+                if(channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password))
+                {
+                    peer.AddToSendBuffer(new Deny() { Reason = "Invalid Channel Password!" });
+                    return;
+                }
+                MoveParticipantToChannel(peer, client, channel);
             }
         }
 
         private void OnLeaveChannel(LeaveChannel data, NetPeer peer)
         {
-            throw new NotImplementedException();
+            if (Participants.TryGetValue(peer, out var client) && client.Binded && client.Channel != null)
+            {
+                MoveParticipantToChannel(peer, client, null);
+            }
+        }
+
+        private void OnUpdatePosition(UpdatePosition data, NetPeer peer)
+        {
+            if(Participants.TryGetValue(peer,out var client) && client.Binded && client.ClientSided)
+            {
+                //Minecraft data update
+            }
+        }
+
+        private void OnClientAudio(ClientAudio data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.Binded)
+            {
+                //Audio Sending...
+            }
         }
         #endregion
     }

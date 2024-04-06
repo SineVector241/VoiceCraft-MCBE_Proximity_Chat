@@ -10,7 +10,7 @@ namespace VoiceCraft.Server.Data
         public bool Deafened { get; set; }
         public bool Muted { get; set; }
         public short Key { get; set; }
-        Channel? Channel { get; set; }
+        public Channel? Channel { get; set; }
         public VoiceCraftParticipant(string name) : base(name)
         {
         }
