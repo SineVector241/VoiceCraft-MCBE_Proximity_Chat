@@ -2,7 +2,7 @@
 {
     public class Login : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.Login;
+        public override byte PacketId => (byte)MCCommPacketTypes.Login;
         public string LoginKey { get; set; } = string.Empty;
     }
 }

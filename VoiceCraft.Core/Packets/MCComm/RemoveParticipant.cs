@@ -2,7 +2,7 @@
 {
     public class RemoveParticipant : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.RemoveParticipant;
+        public override byte PacketId => (byte)MCCommPacketTypes.RemoveParticipant;
         public string PlayerId { get; set; } = string.Empty;
     }
 }

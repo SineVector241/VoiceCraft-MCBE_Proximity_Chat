@@ -2,7 +2,7 @@
 {
     public class Bind : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.Bind;
+        public override byte PacketId => (byte)MCCommPacketTypes.Bind;
 
         public string PlayerId { get; set; } = string.Empty;
         public ushort PlayerKey { get; set; }

@@ -2,6 +2,6 @@
 {
     public class GetSettings : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.GetSettings;
+        public override byte PacketId => (byte)MCCommPacketTypes.GetSettings;
     }
 }

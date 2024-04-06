@@ -1,4 +1,5 @@
-﻿using VoiceCraft.Server.Data;
+﻿using VoiceCraft.Network.Sockets;
+using VoiceCraft.Server.Data;
 
 namespace VoiceCraft.Server
 {
@@ -11,8 +12,11 @@ namespace VoiceCraft.Server
         {
             Server = new VoiceCraftServer(ServerProperties, new List<string>());
 
-            Server.OnFailed += OnFailed;
+            Server.OnStopped += OnStopped;
             Server.VoiceCraftSocket.OnStarted += VoiceCraftOnStarted;
+            Server.MCComm.OnStarted += MCCommOnStarted;
+            Server.MCComm.OnServerConnected += MCCommServerConnected;
+            Server.MCComm.OnServerDisconnected += MCCommServerDisconnected;
             Server.OnParticipantJoined += ParticipantJoined;
             Server.OnParticipantLeft += ParticipantLeft;
         }
@@ -38,14 +42,29 @@ namespace VoiceCraft.Server
         }
 
         #region Server Event Methods
-        private void OnFailed(Exception ex)
+        private void OnStopped(string? reason = null)
         {
-            Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}", nameof(ServerApp));
+            Logger.LogToConsole(LogType.Error, $"Server Stopped - Reason: {reason}", nameof(ServerApp));
         }
 
         private void VoiceCraftOnStarted()
         {
             Logger.LogToConsole(LogType.Success, "VoiceCraft Server Started", nameof(VoiceCraft));
+        }
+
+        private void MCCommOnStarted()
+        {
+            Logger.LogToConsole(LogType.Success, $"MCComm Server Started - LoginKey: {Server.MCComm.LoginKey}", nameof(MCComm));
+        }
+
+        private void MCCommServerConnected(string token, string address)
+        {
+            Logger.LogToConsole(LogType.Success, $"MCComm Server Connected - Token: {token}, Address: {address}", nameof(MCComm));
+        }
+
+        private void MCCommServerDisconnected(int timeoutDiff, string token)
+        {
+            Logger.LogToConsole(LogType.Warn, $"MCComm Server Disconnected - Token: {token}, Timeout: {timeoutDiff}", nameof(MCComm));
         }
 
         private void ParticipantJoined(VoiceCraftParticipant participant)

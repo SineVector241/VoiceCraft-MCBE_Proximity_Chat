@@ -2,6 +2,6 @@
 {
     public class Accept : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.Accept;
+        public override byte PacketId => (byte)MCCommPacketTypes.Accept;
     }
 }

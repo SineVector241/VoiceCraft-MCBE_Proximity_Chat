@@ -5,7 +5,7 @@ namespace VoiceCraft.Core.Packets.MCComm
 {
     public class Update : MCCommPacket
     {
-        public override byte PacketId => (byte)MCCommPacketId.Update;
+        public override byte PacketId => (byte)MCCommPacketTypes.Update;
         public List<Player> Players { get; set; } = new List<Player>();
     }
 

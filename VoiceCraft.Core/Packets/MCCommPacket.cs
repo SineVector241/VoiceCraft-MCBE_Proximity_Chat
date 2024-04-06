@@ -7,13 +7,13 @@ namespace VoiceCraft.Core.Packets
         public abstract byte PacketId { get; }
         public string Token { get; set; } = string.Empty;
 
-        public virtual string SerializePacket(MCCommPacket packet)
+        public virtual string SerializePacket()
         {
             return JsonConvert.SerializeObject(this);
         }
     }
 
-    public enum MCCommPacketId : byte
+    public enum MCCommPacketTypes : byte
     {
         Login,
         Accept,
