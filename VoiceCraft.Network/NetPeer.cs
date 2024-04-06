@@ -45,20 +45,14 @@ namespace VoiceCraft.Network
         public long Id { get; set; } //Not secure enough but it'll do.
 
         /// <summary>
-        /// The key for the NetPeer, Used as a public shareable Id.
-        /// </summary>
-        public short Key { get; set; }
-
-        /// <summary>
         /// Send Queue.
         /// </summary>
         public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
 
-        public NetPeer(EndPoint ep, long Id, short key)
+        public NetPeer(EndPoint ep, long Id)
         {
             RemoteEndPoint = ep;
             this.Id = Id;
-            Key = key;
             SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
             ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
             ReceiveBuffer = new ConcurrentDictionary<uint, VoiceCraftPacket>();
@@ -121,11 +115,11 @@ namespace VoiceCraft.Network
             }
         }
 
-        public void AcceptLogin()
+        public void AcceptLogin(short key)
         {
             if (!Connected)
             {
-                AddToSendBuffer(new Accept() { Key = Key });
+                AddToSendBuffer(new Accept() { Key = key });
                 Connected = true;
             }
         }
@@ -147,11 +141,6 @@ namespace VoiceCraft.Network
         public static long GenerateId()
         {
             return Random.Shared.NextInt64(long.MinValue + 1, long.MaxValue); //long.MinValue is used to specify no Id.
-        }
-
-        public static short GenerateKey()
-        {
-            return (short)Random.Shared.Next(short.MinValue + 1, short.MaxValue); //short.MinValue is used to specify no Key.
         }
 
         public void Reset()

@@ -36,6 +36,7 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Ack, typeof(Ack));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Ping, typeof(Ping));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Binded, typeof(Binded));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantJoined, typeof(ParticipantJoined));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantLeft, typeof(ParticipantLeft));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Mute, typeof(Mute));
@@ -60,7 +61,7 @@ namespace VoiceCraft.Network.Sockets
         #endregion
 
         #region Delegates
-        public delegate void Connected();
+        public delegate void Connected(short key);
         public delegate void Disconnected(string? reason = null);
 
         public delegate void Started();
@@ -95,6 +96,7 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<Ack>? OnAckReceived;
         public event PacketData<Ping>? OnPingReceived;
         public event PacketData<PingInfo>? OnPingInfoReceived;
+        public event PacketData<Binded>? OnBindedReceived;
         public event PacketData<ParticipantJoined>? OnParticipantJoinedReceived;
         public event PacketData<ParticipantLeft>? OnParticipantLeftReceived;
         public event PacketData<Mute>? OnMuteReceived;
@@ -128,7 +130,7 @@ namespace VoiceCraft.Network.Sockets
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
             CTS = new CancellationTokenSource();
-            ClientNetPeer = new NetPeer(RemoteEndpoint, long.MinValue, preferredKey);
+            ClientNetPeer = new NetPeer(RemoteEndpoint, long.MinValue);
             ClientNetPeer.OnPacketReceived += HandlePacketReceived;
             Socket.Bind(new IPEndPoint(IPAddress.Any, 0));
             Sender = Task.Run(ClientSender);
@@ -310,7 +312,7 @@ namespace VoiceCraft.Network.Sockets
         private NetPeer CreateNetPeer(SocketAddress receivedAddress)
         {
             // Create an EndPoint from the SocketAddress
-            var netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), long.MinValue, short.MinValue);
+            var netPeer = new NetPeer(RemoteEndpoint.Create(receivedAddress), long.MinValue);
             netPeer.OnPacketReceived += HandlePacketReceived;
 
             var lookupCopy = new SocketAddress(receivedAddress.Family, receivedAddress.Size);
@@ -510,25 +512,6 @@ namespace VoiceCraft.Network.Sockets
             return false;
         }
 
-        private short GetAvailableKey()
-        {
-            var Key = NetPeer.GenerateKey();
-            while (KeyExists(Key))
-            {
-                Key = NetPeer.GenerateKey();
-            }
-            return Key;
-        }
-
-        private bool KeyExists(short key)
-        {
-            foreach (var peer in NetPeers)
-            {
-                if (peer.Value.Key == key) return true;
-            }
-            return false;
-        }
-
         private void HandlePacketReceived(NetPeer peer, VoiceCraftPacket packet)
         {
             switch ((VoiceCraftPacketTypes)packet.PacketId)
@@ -540,6 +523,7 @@ namespace VoiceCraft.Network.Sockets
                 case VoiceCraftPacketTypes.Ack: OnAckReceived?.Invoke((Ack)packet, peer); break;
                 case VoiceCraftPacketTypes.Ping: OnPingReceived?.Invoke((Ping)packet, peer); break;
                 case VoiceCraftPacketTypes.PingInfo: OnPingInfoReceived?.Invoke((PingInfo)packet, peer); break;
+                case VoiceCraftPacketTypes.Binded: OnBindedReceived?.Invoke((Binded)packet, peer); break;
                 case VoiceCraftPacketTypes.ParticipantJoined: OnParticipantJoinedReceived?.Invoke((ParticipantJoined)packet, peer); break;
                 case VoiceCraftPacketTypes.ParticipantLeft: OnParticipantLeftReceived?.Invoke((ParticipantLeft)packet, peer); break;
                 case VoiceCraftPacketTypes.Mute: OnMuteReceived?.Invoke((Mute)packet, peer); break;
@@ -577,10 +561,9 @@ namespace VoiceCraft.Network.Sockets
             if(ClientNetPeer != null)
             {
                 ClientNetPeer.Id = data.Id;
-                ClientNetPeer.Key = data.Key;
                 ClientNetPeer.Connected = true;
             }
-            OnConnected?.Invoke();
+            OnConnected?.Invoke(data.Key);
         }
 
         private void OnDeny(Deny data, NetPeer peer)
@@ -599,17 +582,13 @@ namespace VoiceCraft.Network.Sockets
         {
             if (peer.Connected)
             {
-                peer.AddToSendBuffer(new Accept() { Key = peer.Key });
+                peer.AddToSendBuffer(new Accept());
                 return; //Already Connected
             }
 
             var Id = GetAvailableId();
-            var key = data.Key;
-            if (KeyExists(key))
-                key = GetAvailableKey();
 
             peer.Id = Id;
-            peer.Key = key;
             OnPeerConnected?.Invoke(peer, data); //Leave wether the client should be accepted or denied by the application.
         }
 

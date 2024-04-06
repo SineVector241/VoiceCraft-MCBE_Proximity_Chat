@@ -48,6 +48,7 @@ namespace VoiceCraft.Core.Packets
         PingInfo,
 
         //USER PACKETS
+        Binded,
         ParticipantJoined,
         ParticipantLeft,
         Mute,

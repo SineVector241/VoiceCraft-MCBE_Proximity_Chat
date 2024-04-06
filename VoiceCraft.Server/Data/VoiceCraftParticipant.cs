@@ -5,10 +5,18 @@ namespace VoiceCraft.Server.Data
 {
     public class VoiceCraftParticipant : Participant
     {
-        public NetPeer NetPeer { get; }
-        public VoiceCraftParticipant(string name, NetPeer peer) : base(name)
+        public bool Binded { get; set; }
+        public bool ClientSided { get; set; }
+        public bool Deafened { get; set; }
+        public bool Muted { get; set; }
+        public short Key { get; set; }
+        public VoiceCraftParticipant(string name) : base(name)
         {
-            NetPeer = peer;
+        }
+
+        public static short GenerateKey()
+        {
+            return (short)Random.Shared.Next(short.MinValue + 1, short.MaxValue); //short.MinValue is used to specify no Key.
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Sockets;
 using VoiceCraft.Core;
+using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.VoiceCraft;
 using VoiceCraft.Network;
 using VoiceCraft.Server.Data;
@@ -19,12 +21,14 @@ namespace VoiceCraft.Server
         #region Delegates
         public delegate void ParticipantJoined(VoiceCraftParticipant participant);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null);
+        public delegate void ParticipantBinded(VoiceCraftParticipant participant);
         public delegate void Failed(Exception ex);
         #endregion
 
         #region Events
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
+        public event ParticipantBinded? OnParticipantBinded;
         public event Failed? OnFailed;
         #endregion
 
@@ -37,8 +41,10 @@ namespace VoiceCraft.Server
 
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
             VoiceCraftSocket.OnPeerDisconnected += OnPeerDisconnected;
+            VoiceCraftSocket.OnBindedReceived += OnBinded;
         }
 
+        #region Methods
         public void Start()
         {
             _ = Task.Run(async () => {
@@ -56,6 +62,37 @@ namespace VoiceCraft.Server
                 }
             });
         }
+
+        public void Broadcast(VoiceCraftPacket packet, bool bindedOnly = true, VoiceCraftParticipant? excludeParticipant = null)
+        {
+            var list = Participants.Where(x => x.Value != excludeParticipant);
+            foreach (var participant in list)
+            {
+                if(participant.Value.Binded && bindedOnly || !bindedOnly)
+                {
+                    participant.Key.AddToSendBuffer(packet);
+                }
+            }
+        }
+
+        private short GetAvailableKey(short preferredKey)
+        {
+            while (KeyExists(preferredKey))
+            {
+                preferredKey = VoiceCraftParticipant.GenerateKey();
+            }
+            return preferredKey;
+        }
+
+        private bool KeyExists(short key)
+        {
+            foreach (var participant in Participants)
+            {
+                if (participant.Value.Key == key) return true;
+            }
+            return false;
+        }
+        #endregion
 
         #region VoiceCraft Event Methods
         private void OnPeerConnected(NetPeer peer, Login packet)
@@ -82,8 +119,10 @@ namespace VoiceCraft.Server
                 peer.DenyLogin("Server only accepts server sided positioning!");
                 return;
             }
-            peer.AcceptLogin();
-            var participant = new VoiceCraftParticipant(string.Empty, peer);
+            var participant = new VoiceCraftParticipant(string.Empty);
+            participant.ClientSided = PositioningTypes.ClientSided == packet.PositioningType;
+            participant.Key = GetAvailableKey(packet.Key);
+            peer.AcceptLogin(participant.Key);
             Participants.TryAdd(peer, participant);
             OnParticipantJoined?.Invoke(participant);
         }
@@ -93,6 +132,34 @@ namespace VoiceCraft.Server
             if(Participants.TryRemove(peer, out var participant))
             {
                 OnParticipantLeft?.Invoke(participant, reason);
+            }
+        }
+
+        private void OnBinded(Binded data, NetPeer peer)
+        {
+            if(Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            {
+                client.Name = data.Name;
+                client.Binded = true;
+
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined() { 
+                    IsDeafened = client.Deafened, 
+                    IsMuted = client.Muted, 
+                    Key = client.Key, 
+                    Name = client.Name 
+                }); //Broadcast to all other participants.
+
+                var list = Participants.Where(x => x.Value != client);
+                foreach (var participant in list)
+                {
+                    participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
+                    {
+                        IsDeafened = participant.Value.Deafened,
+                        IsMuted = participant.Value.Muted,
+                        Key = participant.Value.Key,
+                        Name = participant.Value.Name
+                    });
+                } //Send participants back to binded client.
             }
         }
         #endregion
