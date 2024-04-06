@@ -343,7 +343,7 @@ namespace VoiceCraft.Network.Sockets
                         if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
                             OnInboundPacket?.Invoke(packet, netPeer);
                     }
-                    else if(packet.PacketId == (byte)VoiceCraftPacketTypes.Login) //Null or not connected, we only accept the login packet to try an prevent overload spam.
+                    else if(packet.PacketId == (byte)VoiceCraftPacketTypes.Login || packet.PacketId == (byte)VoiceCraftPacketTypes.PingInfo) //Null or not connected, we only accept the login or pinginfo packets to try an prevent unauthorized overload spam.
                     {
                         var peer = netPeer ?? CreateNetPeer(receivedAddress);
                         peer.AddToReceiveBuffer(packet);
@@ -568,7 +568,8 @@ namespace VoiceCraft.Network.Sockets
 
         private void OnDeny(Deny data, NetPeer peer)
         {
-            DisconnectAsync(data.Reason, false).Wait();
+            if(ClientNetPeer != null && !ClientNetPeer.Connected)
+                DisconnectAsync(data.Reason, false).Wait();
         }
 
         private void OnLogout(Logout data, NetPeer peer)

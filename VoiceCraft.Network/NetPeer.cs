@@ -110,6 +110,7 @@ namespace VoiceCraft.Network
                 {
                     packet.Value.ResendTime = Environment.TickCount64 + RetryResendTime; //More delay.
                     packet.Value.Retries++;
+                    packet.Value.Id = Id; //Update Id since this might change on login.
                     SendQueue.Enqueue(packet.Value);
                 }
             }

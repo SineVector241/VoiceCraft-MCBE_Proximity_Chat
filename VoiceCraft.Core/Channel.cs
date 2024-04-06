@@ -1,12 +1,16 @@
 ﻿namespace VoiceCraft.Core
 {
-    public abstract class Channel
+    public class Channel
     {
-        public string Name { get; }
+        public string Name { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public ChannelOverride? ChannelOverride { get; set; }
+    }
 
-        public Channel(string name)
-        {
-            Name = name;
-        }
+    public class ChannelOverride
+    {
+        public int ProximityDistance { get; set; } = 30;
+        public bool ProximityToggle { get; set; } = true;
+        public bool VoiceEffects { get; set; } = true;
     }
 }

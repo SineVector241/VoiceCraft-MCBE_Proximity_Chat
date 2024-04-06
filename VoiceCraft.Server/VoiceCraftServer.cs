@@ -9,6 +9,8 @@ using VoiceCraft.Server.Data;
 
 namespace VoiceCraft.Server
 {
+    //Client - Requesting Participant
+    //Participant - Receiving Participant
     public class VoiceCraftServer
     {
         public const string Version = "v1.0.4";
@@ -39,9 +41,16 @@ namespace VoiceCraft.Server
             VoiceCraftSocket = new Network.Sockets.VoiceCraft();
             MCComm = new Network.Sockets.MCComm();
 
+            VoiceCraftSocket.OnPingInfoReceived += OnPingInfo;
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
             VoiceCraftSocket.OnPeerDisconnected += OnPeerDisconnected;
             VoiceCraftSocket.OnBindedReceived += OnBinded;
+            VoiceCraftSocket.OnMuteReceived += OnMute;
+            VoiceCraftSocket.OnUnmuteReceived += OnUnmute;
+            VoiceCraftSocket.OnDeafenReceived += OnDeafen;
+            VoiceCraftSocket.OnUndeafenReceived += OnUndeafen;
+            VoiceCraftSocket.OnJoinChannelReceived += OnJoinChannel;
+            VoiceCraftSocket.OnLeaveChannelReceived += OnLeaveChannel;
         }
 
         #region Methods
@@ -95,6 +104,22 @@ namespace VoiceCraft.Server
         #endregion
 
         #region VoiceCraft Event Methods
+        private void OnPingInfo(PingInfo data, NetPeer peer)
+        {
+            var connType = PositioningTypes.Unknown;
+
+            switch (ServerProperties.ConnectionType)
+            {
+                case ConnectionTypes.Server:
+                    connType = PositioningTypes.ServerSided;
+                    break;
+                case ConnectionTypes.Client:
+                    connType = PositioningTypes.ClientSided;
+                    break;
+            }
+            peer.AddToSendBuffer(new PingInfo() { ConnectedParticipants = Participants.Count, MOTD = ServerProperties.ServerMOTD, PositioningType = connType});
+        }
+
         private void OnPeerConnected(NetPeer peer, Login packet)
         {
             if (Version != packet.Version)
@@ -137,16 +162,17 @@ namespace VoiceCraft.Server
 
         private void OnBinded(Binded data, NetPeer peer)
         {
-            if(Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
             {
                 client.Name = data.Name;
                 client.Binded = true;
 
-                Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined() { 
-                    IsDeafened = client.Deafened, 
-                    IsMuted = client.Muted, 
-                    Key = client.Key, 
-                    Name = client.Name 
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined()
+                {
+                    IsDeafened = client.Deafened,
+                    IsMuted = client.Muted,
+                    Key = client.Key,
+                    Name = client.Name
                 }); //Broadcast to all other participants.
 
                 var list = Participants.Where(x => x.Value != client);
@@ -160,7 +186,69 @@ namespace VoiceCraft.Server
                         Name = participant.Value.Name
                     });
                 } //Send participants back to binded client.
+
+                //Send channels to client...
+
+                OnParticipantBinded?.Invoke(client);
             }
+        }
+
+        private void OnMute(Mute data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            {
+                if (!client.Binded) return;
+
+                Broadcast(new Mute() { Key = client.Key }, true, client);
+            }
+        }
+
+        private void OnUnmute(Unmute data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            {
+                if (!client.Binded) return;
+
+                Broadcast(new Unmute() { Key = client.Key }, true, client);
+            }
+        }
+
+        private void OnDeafen(Deafen data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            {
+                if (!client.Binded) return;
+
+                Broadcast(new Deafen() { Key = client.Key }, true, client);
+            }
+        }
+
+        private void OnUndeafen(Undeafen data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            {
+                if (!client.Binded) return;
+
+                Broadcast(new Undeafen() { Key = client.Key }, true, client);
+            }
+        }
+
+        private void OnJoinChannel(JoinChannel data, NetPeer peer)
+        {
+            var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId);
+            if (channel != null)
+            {
+
+            }
+            else
+            {
+                peer.AddToSendBuffer(new Deny() { Reason = "Invalid Channel Id" });
+            }
+        }
+
+        private void OnLeaveChannel(LeaveChannel data, NetPeer peer)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

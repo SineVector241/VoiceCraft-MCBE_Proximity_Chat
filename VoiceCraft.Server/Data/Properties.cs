@@ -12,7 +12,7 @@ namespace VoiceCraft.Server.Data
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
         public int ExternalServerTimeoutMS { get; set; } = 5000;
         public int ClientTimeoutMS { get; set; } = 8000;
-        //public List<VoiceCraftChannel> Channels { get; set; } = new List<VoiceCraftChannel>();
+        public List<Channel> Channels { get; set; } = new List<Channel>();
 
         //Changeable Settings
         public int ProximityDistance { get; set; } = 30;
