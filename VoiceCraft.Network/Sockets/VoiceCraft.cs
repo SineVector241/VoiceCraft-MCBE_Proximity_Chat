@@ -172,7 +172,7 @@ namespace VoiceCraft.Network.Sockets
             //We don't need to wait until we are connected because the Cancellation Token already takes care of cancelling other thread related requests.
 
             if (notifyServer && State == VoiceCraftSocketState.Connected) //Only send if we are connected.
-                await SocketSendAsync(new Logout() { Id = ClientNetPeer?.ID ?? long.MinValue });
+                await SocketSendAsync(new Logout() { Id = ClientNetPeer?.Id ?? long.MinValue });
 
             State = VoiceCraftSocketState.Disconnecting;
             //Deregister the Events
@@ -277,7 +277,7 @@ namespace VoiceCraft.Network.Sockets
             if (NetPeers.TryRemove(Address, out var peer))
             {
                 if(notifyPeer && State == VoiceCraftSocketState.Started)
-                    await SocketSendToAsync(new Logout() { Id = peer.ID, Reason = reason ?? string.Empty }, peer.EP); //Send immediately.
+                    await SocketSendToAsync(new Logout() { Id = peer.Id, Reason = reason ?? string.Empty }, peer.RemoteEndPoint); //Send immediately.
                 peer.OnPacketReceived -= HandlePacketReceived;
 
                 if (peer.Connected)
@@ -453,7 +453,7 @@ namespace VoiceCraft.Network.Sockets
                             await DisconnectPeer(peer.Key, true, "Unstable Connection.");
                             continue;
                         }
-                        await SocketSendToAsync(packet, peer.Value.EP);
+                        await SocketSendToAsync(packet, peer.Value.RemoteEndPoint);
 
                         if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
                             OnOutboundPacket?.Invoke(packet, peer.Value);
@@ -505,7 +505,7 @@ namespace VoiceCraft.Network.Sockets
         {
             foreach(var peer in NetPeers)
             {
-                if(peer.Value.ID == id) return true;
+                if(peer.Value.Id == id) return true;
             }
             return false;
         }
@@ -576,8 +576,9 @@ namespace VoiceCraft.Network.Sockets
         {
             if(ClientNetPeer != null)
             {
-                ClientNetPeer.ID = data.Id;
+                ClientNetPeer.Id = data.Id;
                 ClientNetPeer.Key = data.Key;
+                ClientNetPeer.Connected = true;
             }
             OnConnected?.Invoke();
         }
@@ -589,8 +590,7 @@ namespace VoiceCraft.Network.Sockets
 
         private void OnLogout(Logout data, NetPeer peer)
         {
-            if(data.Id == peer.ID)
-                DisconnectAsync(data.Reason, false).Wait();
+            DisconnectAsync(data.Reason, false).Wait();
         }
         #endregion
 
@@ -599,7 +599,7 @@ namespace VoiceCraft.Network.Sockets
         {
             if (peer.Connected)
             {
-                peer.AddToSendBuffer(new Accept() { Id = peer.ID, Key = peer.Key });
+                peer.AddToSendBuffer(new Accept() { Key = peer.Key });
                 return; //Already Connected
             }
 
@@ -608,18 +608,15 @@ namespace VoiceCraft.Network.Sockets
             if (KeyExists(key))
                 key = GetAvailableKey();
 
-            peer.ID = Id;
+            peer.Id = Id;
             peer.Key = key;
             OnPeerConnected?.Invoke(peer, data); //Leave wether the client should be accepted or denied by the application.
         }
 
         private void OnClientLogout(Logout data, NetPeer peer)
         {
-            if (data.Id == peer.ID)
-            {
-                var key = NetPeers.FirstOrDefault(x => x.Value == peer).Key;
-                DisconnectPeer(key, false).Wait();
-            }
+            var key = NetPeers.FirstOrDefault(x => x.Value == peer).Key;
+            DisconnectPeer(key, false).Wait();
         }
 
         private void OnPing(Ping data, NetPeer peer)
@@ -631,8 +628,7 @@ namespace VoiceCraft.Network.Sockets
         #region Global Event Methods
         private void OnAck(Ack data, NetPeer peer)
         {
-            if(data.Id == peer.ID)
-                peer.AcknowledgePacket(data.PacketSequence);
+            peer.AcknowledgePacket(data.PacketSequence);
         }
         #endregion
     }

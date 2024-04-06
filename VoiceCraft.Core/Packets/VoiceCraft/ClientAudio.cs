@@ -8,16 +8,12 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override byte PacketId => (byte)VoiceCraftPacketTypes.ClientAudio;
         public override bool IsReliable => false;
 
-        public long Id { get; set; } = long.MinValue;
         public uint PacketCount { get; set; }
         public byte[] Audio { get; set; } = Array.Empty<byte>();
 
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
             offset = base.ReadPacket(ref dataStream, offset);
-
-            Id = BitConverter.ToInt64(dataStream, offset); //Read Id - 8 bytes.
-            offset += sizeof(long);
 
             PacketCount = BitConverter.ToUInt32(dataStream, offset); //Read Packet Count - 4 bytes.
             offset += sizeof(uint);
@@ -39,7 +35,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override void WritePacket(ref List<byte> dataStream)
         {
             base.WritePacket(ref dataStream);
-            dataStream.AddRange(BitConverter.GetBytes(Id));
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
             dataStream.AddRange(BitConverter.GetBytes(Audio.Length));
             dataStream.AddRange(Audio);

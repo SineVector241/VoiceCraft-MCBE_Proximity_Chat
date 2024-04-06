@@ -65,7 +65,7 @@ namespace VoiceCraft.Server
                 peer.DenyLogin("Versions do not match!");
                 return;
             }
-            if (Banlist.Exists(x => x == ((IPEndPoint)peer.EP).Address.ToString()))
+            if (Banlist.Exists(x => x == ((IPEndPoint)peer.RemoteEndPoint).Address.ToString()))
             {
                 peer.DenyLogin("You have been banned from the server!");
                 return;

@@ -27,12 +27,12 @@ namespace VoiceCraft.Network
         /// <summary>
         /// Defines wether the client is sucessfully connected and accepted.
         /// </summary>
-        public bool Connected { get; private set; }
+        public bool Connected { get; set; }
 
         /// <summary>
         /// Endpoint of the NetPeer.
         /// </summary>
-        public EndPoint EP { get; set; }
+        public EndPoint RemoteEndPoint { get; set; }
 
         /// <summary>
         /// When the client was last active.
@@ -42,7 +42,7 @@ namespace VoiceCraft.Network
         /// <summary>
         /// The ID of the NetPeer, Used to update the endpoint if invalid.
         /// </summary>
-        public long ID { get; set; } //Not secure enough but it'll do.
+        public long Id { get; set; } //Not secure enough but it'll do.
 
         /// <summary>
         /// The key for the NetPeer, Used as a public shareable Id.
@@ -56,8 +56,8 @@ namespace VoiceCraft.Network
 
         public NetPeer(EndPoint ep, long Id, short key)
         {
-            EP = ep;
-            ID = Id;
+            RemoteEndPoint = ep;
+            this.Id = Id;
             Key = key;
             SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
             ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
@@ -74,6 +74,7 @@ namespace VoiceCraft.Network
                 Sequence++;
             }
 
+            packet.Id = Id;
             SendQueue.Enqueue(packet);
         }
 
@@ -81,8 +82,10 @@ namespace VoiceCraft.Network
         {
             LastActive = Environment.TickCount64;
 
+            if (Connected && packet.Id != Id) return false; //Invalid Id.
+
             if(ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
-                return false; //We can reset the connection because of too many incorrect packets, however that is up to the application.
+                return false; //make sure it doesn't overload the receive buffer and cause a memory overflow.
 
             if(!packet.IsReliable)
             {
@@ -90,7 +93,7 @@ namespace VoiceCraft.Network
                 return true; //Not reliable, We can just say it's received.
             }
 
-            AddToSendBuffer(new Ack() { Id = ID, PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
+            AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
             if (packet.Sequence < NextSequence) return true; //Likely to be a duplicate packet.
 
             ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
@@ -122,8 +125,8 @@ namespace VoiceCraft.Network
         {
             if (!Connected)
             {
+                AddToSendBuffer(new Accept() { Key = Key });
                 Connected = true;
-                AddToSendBuffer(new Accept() { Id = ID, Key = Key });
             }
         }
 

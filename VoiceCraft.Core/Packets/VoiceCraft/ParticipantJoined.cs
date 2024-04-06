@@ -9,7 +9,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override byte PacketId => (byte)VoiceCraftPacketTypes.ParticipantJoined;
         public override bool IsReliable => true;
 
-        public long Id { get; set; } = long.MinValue;
         public short Key { get; set; }
         public bool IsDeafened { get; set; }
         public bool IsMuted { get; set; }
@@ -18,9 +17,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
             offset = base.ReadPacket(ref dataStream, offset);
-
-            Id = BitConverter.ToInt64(dataStream, offset); //Read Id - 8 bytes.
-            offset += sizeof(long);
 
             Key = BitConverter.ToInt16(dataStream, offset); //Read Key - 2 bytes.
             offset += sizeof(short);
@@ -45,7 +41,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override void WritePacket(ref List<byte> dataStream)
         {
             base.WritePacket(ref dataStream);
-            dataStream.AddRange(BitConverter.GetBytes(Id));
             dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(IsDeafened));
             dataStream.AddRange(BitConverter.GetBytes(IsMuted));

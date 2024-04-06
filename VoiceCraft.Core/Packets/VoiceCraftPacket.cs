@@ -8,17 +8,20 @@ namespace VoiceCraft.Core.Packets
         public abstract byte PacketId { get; }
         public abstract bool IsReliable { get; }
         public uint Sequence { get; set; }
+        public long Id { get; set; } = long.MinValue;
         public long ResendTime { get; set; }
         public int Retries { get; set; }
 
         public virtual int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
+            Id = BitConverter.ToInt64(dataStream, offset);
+            offset += sizeof(long);
+
             if (IsReliable)
             {
                 Sequence = BitConverter.ToUInt32(dataStream, offset);
                 offset += sizeof(uint);
             }
-
             return offset; //Returns the amount of data read.
         }
 
@@ -26,8 +29,10 @@ namespace VoiceCraft.Core.Packets
         {
             dataStream.Clear(); //Clear the packet stream.
             dataStream.Add(PacketId);
+            dataStream.AddRange(BitConverter.GetBytes(Id));
             if(IsReliable)
                 dataStream.AddRange(BitConverter.GetBytes(Sequence));
+
         }
     }
 

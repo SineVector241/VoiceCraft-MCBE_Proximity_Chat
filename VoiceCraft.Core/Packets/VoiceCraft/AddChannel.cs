@@ -9,7 +9,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override byte PacketId => (byte)VoiceCraftPacketTypes.AddChannel;
         public override bool IsReliable => true;
 
-        public long Id { get; set; } = long.MinValue;
         public bool RequiresPassword { get; set; }
         public byte ChannelId { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -17,9 +16,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
             offset = base.ReadPacket(ref dataStream, offset);
-
-            Id = BitConverter.ToInt64(dataStream, offset); //Read Id - 8 bytes.
-            offset += sizeof(long);
 
             RequiresPassword = BitConverter.ToBoolean(dataStream, offset); //Read Password Requirement - 1 byte.
             offset += sizeof(bool);
@@ -41,7 +37,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public override void WritePacket(ref List<byte> dataStream)
         {
             base.WritePacket(ref dataStream);
-            dataStream.AddRange(BitConverter.GetBytes(Id));
             dataStream.AddRange(BitConverter.GetBytes(RequiresPassword));
             dataStream.Add(ChannelId);
             dataStream.AddRange(BitConverter.GetBytes(Name.Length));
