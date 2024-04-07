@@ -2,8 +2,10 @@
 using NAudio.Wave.SampleProviders;
 using OpusSharp;
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
+using VoiceCraft.Core.Packets.VoiceCraft;
 
 namespace VoiceCraft.Maui.VoiceCraft
 {
@@ -11,11 +13,8 @@ namespace VoiceCraft.Maui.VoiceCraft
     {
         //Private Variables
         public const string Version = "v1.0.4";
-        private string IP = string.Empty;
-        private ushort Port = 9050;
         private bool IsConnected;
         private uint PacketCount;
-        private PositioningTypes PositioningType;
         private OpusEncoder Encoder;
         private int FrameSizeMS;
 
@@ -24,9 +23,10 @@ namespace VoiceCraft.Maui.VoiceCraft
         public ConcurrentDictionary<byte, Channel> Channels { get; set; } = new ConcurrentDictionary<byte, Channel>();
         public Network.Sockets.VoiceCraft VoiceCraftSocket { get; set; } = new Network.Sockets.VoiceCraft();
         //MCWSS Socket Here
-        public ushort MCWSSPort { get; set; } = 8080;
+        public int MCWSSPort { get; set; } = 8080;
         public short Key { get; private set; }
         public Channel? JoinedChannel { get; private set; }
+        public PositioningTypes PositioningType { get; private set; }
 
         //Audio Variables
         public bool Muted { get; private set; }
@@ -40,25 +40,35 @@ namespace VoiceCraft.Maui.VoiceCraft
         #region Delegates
         public delegate void Connected();
         public delegate void Disconnected(string? reason = null);
+        public delegate void Deny(string? reason = null);
         public delegate void Failed(Exception ex);
 
         public delegate void Binded(string name);
+        public delegate void Unbinded();
         public delegate void ParticipantJoined(VoiceCraftParticipant participant);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant);
+        public delegate void ParticipantUpdated(VoiceCraftParticipant participant);
         public delegate void ChannelAdded(Channel channel);
         public delegate void ChannelRemoved(Channel channel);
+        public delegate void ChannelJoined(Channel channel);
+        public delegate void ChannelLeft(Channel channel);
         #endregion
 
         #region Events
         public event Connected? OnConnected;
         public event Disconnected? OnDisconnected;
+        public event Deny? OnDeny;
         public event Failed? OnFailed;
 
         public event Binded? OnBinded;
+        public event Unbinded? OnUnbinded;
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
+        public event ParticipantUpdated? OnParticipantUpdated;
         public event ChannelAdded? OnChannelAdded;
         public event ChannelRemoved? OnChannelRemoved;
+        public event ChannelJoined? OnChannelJoined;
+        public event ChannelLeft? OnChannelLeft;
         #endregion
 
         public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20)
@@ -75,6 +85,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             AudioOutput = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
 
             VoiceCraftSocket.OnConnected += VoiceCraftSocketConnected;
+            VoiceCraftSocket.OnDisconnected += VoiceCraftSocketDisconnected;
             VoiceCraftSocket.OnBindedReceived += VoiceCraftSocketBinded;
             VoiceCraftSocket.OnParticipantLeftReceived += VoiceCraftSocketParticipantLeft;
             VoiceCraftSocket.OnParticipantJoinedReceived += VoiceCraftSocketParticipantJoined;
@@ -86,8 +97,11 @@ namespace VoiceCraft.Maui.VoiceCraft
             VoiceCraftSocket.OnUndeafenReceived += VoiceCraftSocketUndeafen;
             VoiceCraftSocket.OnJoinChannelReceived += VoiceCraftSocketJoinChannel;
             VoiceCraftSocket.OnLeaveChannelReceived += VoiceCraftSocketLeaveChannel;
+            VoiceCraftSocket.OnServerAudioReceived += VoiceCraftSocketServerAudio;
+            VoiceCraftSocket.OnDenyReceived += VoiceCraftSocketDenyReceived;
         }
 
+        #region Methods
         public void Connect(string ip, ushort port, short key, PositioningTypes positioningType)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
@@ -111,13 +125,88 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         public void Disconnect(string? reason = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (IsDisposed && !IsConnected) throw new ObjectDisposedException(nameof(VoiceCraftClient));
 
             VoiceCraftSocket.DisconnectAsync().Wait();
+            ClearParticipants();
 
             if (!IsConnected) OnDisconnected?.Invoke(reason);
             IsConnected = false;
         }
+
+        public void SetMute(bool mute)
+        {
+            if(mute != Muted)
+            {
+                VoiceCraftPacket packet = mute ? new Core.Packets.VoiceCraft.Mute() : new Core.Packets.VoiceCraft.Unmute();
+                VoiceCraftSocket.Send(packet);
+                Muted = mute;
+            }
+        }
+
+        public void SetDeafen(bool deafen)
+        {
+            if (deafen != Deafened)
+            {
+                Deafened = deafen;
+                VoiceCraftPacket packet = deafen ? new Core.Packets.VoiceCraft.Deafen() : new Core.Packets.VoiceCraft.Undeafen();
+                VoiceCraftSocket.Send(packet);
+            }
+        }
+
+        public void JoinChannel(Channel channel, string password = "")
+        {
+            var c = Channels.FirstOrDefault(x => x.Value == channel);
+            if (c.Value != null && JoinedChannel != channel)
+            {
+                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = c.Key, Password = password });
+            }
+        }
+
+        public void LeaveChannel()
+        {
+            var c = Channels.FirstOrDefault(x => x.Value == JoinedChannel);
+            if (c.Value != null && JoinedChannel != null)
+            {
+                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.LeaveChannel());
+            }
+        }
+
+        public void SendAudio(byte[] audio, int bytesRecorded)
+        {
+            if (Deafened || Muted || !IsConnected) return;
+            PacketCount++;
+
+            byte[] audioEncodeBuffer = new byte[1000];
+            var encodedBytes = Encoder.Encode(audio, bytesRecorded, audioEncodeBuffer);
+            byte[] audioTrimmed = audioEncodeBuffer.SkipLast(1000 - encodedBytes).ToArray();
+
+            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.ClientAudio() { Audio = audioTrimmed, PacketCount = PacketCount });
+        }
+
+        private void ClearParticipants()
+        {
+            foreach (var participant in Participants)
+            {
+                participant.Value.Dispose();
+            }
+            Participants.Clear();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                if (IsConnected)
+                    Disconnect();
+
+                VoiceCraftSocket.Dispose();
+                Encoder.Dispose();
+                Channels.Clear();
+                Participants.Clear();
+            }
+        }
+        #endregion
 
         #region Event Methods
         private void VoiceCraftSocketConnected(short key)
@@ -125,6 +214,11 @@ namespace VoiceCraft.Maui.VoiceCraft
             Key = key;
             IsConnected = true;
             OnConnected?.Invoke();
+        }
+        
+        private void VoiceCraftSocketDisconnected(string? reason = null)
+        {
+            OnDisconnected?.Invoke(reason);
         }
 
         private void VoiceCraftSocketBinded(Core.Packets.VoiceCraft.Binded data, Network.NetPeer peer)
@@ -134,7 +228,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketParticipantJoined(Core.Packets.VoiceCraft.ParticipantJoined data, Network.NetPeer peer)
         {
-            var participant = new VoiceCraftParticipant(data.Name) { Deafened = data.IsDeafened, Muted = data.IsMuted };
+            var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS) { Deafened = data.IsDeafened, Muted = data.IsMuted };
             if (Participants.TryAdd(data.Key, participant))
             {
                 OnParticipantJoined?.Invoke(participant);
@@ -171,6 +265,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if(Participants.TryGetValue(data.Key, out var participant) && !participant.Muted)
             {
                 participant.Muted = true;
+                OnParticipantUpdated?.Invoke(participant);
             }
         }
 
@@ -179,6 +274,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (Participants.TryGetValue(data.Key, out var participant) && participant.Muted)
             {
                 participant.Muted = false;
+                OnParticipantUpdated?.Invoke(participant);
             }
         }
 
@@ -187,6 +283,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (Participants.TryGetValue(data.Key, out var participant) && !participant.Deafened)
             {
                 participant.Deafened = true;
+                OnParticipantUpdated?.Invoke(participant);
             }
         }
 
@@ -195,6 +292,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (Participants.TryGetValue(data.Key, out var participant) && participant.Deafened)
             {
                 participant.Deafened = false;
+                OnParticipantUpdated?.Invoke(participant);
             }
         }
 
@@ -203,6 +301,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if(Channels.TryGetValue(data.ChannelId, out var channel) && channel != JoinedChannel)
             {
                 JoinedChannel = channel;
+                OnChannelJoined?.Invoke(channel);
             }
         }
 
@@ -210,9 +309,84 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if (JoinedChannel != null)
             {
+                OnChannelLeft?.Invoke(JoinedChannel);
                 JoinedChannel = null;
             }
         }
+
+        private void VoiceCraftSocketServerAudio(Core.Packets.VoiceCraft.ServerAudio data, Network.NetPeer peer)
+        {
+            if (Participants.TryGetValue(data.Key, out var participant))
+            {
+                participant.ProximityVolume = LinearProximity ? (float)((Math.Exp(data.Volume) - 1) / (Math.E - 1)) : data.Volume;
+                participant.EchoFactor = data.EchoFactor;
+                participant.Muffled = data.Muffled;
+                if (PositioningType != PositioningTypes.ClientSided && DirectionalHearing)
+                {
+                    participant.RightVolume = (float)Math.Max(0.5 + Math.Cos(data.Rotation) * 0.5, 0.2);
+                    participant.LeftVolume = (float)Math.Max(0.5 - Math.Cos(data.Rotation) * 0.5, 0.2);
+                }
+                participant.AddSamples(data.Audio, data.PacketCount);
+            }
+        }
+
+        private void VoiceCraftSocketDenyReceived(Core.Packets.VoiceCraft.Deny data, Network.NetPeer peer)
+        {
+            if(IsConnected)
+            {
+                OnDeny?.Invoke(data.Reason);
+            }
+        }
         #endregion
+
+        public static async Task<string> PingAsync(string IP, int Port)
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            var pingTime = DateTime.UtcNow;
+            byte[] packetBuffer = new byte[250];
+            string message = string.Empty;
+
+            var PacketRegistry = new PacketRegistry();
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
+
+            try
+            {
+                socket.Connect(IP, Port);
+
+                var buffer = new List<byte>();
+                var ping = new PingInfo();
+                ping.WritePacket(ref buffer);
+                await socket.SendAsync(buffer.ToArray());
+
+                if (socket.ReceiveAsync(packetBuffer).Wait(5000))
+                {
+                    var packet = (PingInfo)PacketRegistry.GetPacketFromDataStream(packetBuffer);
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+
+                    var positioningType = string.Empty;
+                    switch(packet.PositioningType)
+                    {
+                        case PositioningTypes.ServerSided: positioningType = "Server"; break;
+                        case PositioningTypes.ClientSided: positioningType = "Client"; break;
+                        case PositioningTypes.Unknown: positioningType = "Hybrid"; break;
+                    }
+
+                    message = $"MOTD: {packet.MOTD}\n Connected Participants: {packet.ConnectedParticipants}\n Positioning Type: {positioningType}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+                else
+                {
+                    var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
+                    message = $"Timed out\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                }
+
+                socket.Dispose();
+            }
+            catch (Exception ex)
+            {
+                message = $"Error: {ex.Message}";
+            }
+
+            return message;
+        }
     }
 }

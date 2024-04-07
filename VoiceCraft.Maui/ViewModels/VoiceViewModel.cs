@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
-using VoiceCraft.Client;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
 
@@ -49,27 +48,42 @@ namespace VoiceCraft.Maui.ViewModels
                 return;
             }
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, StatusMessageUpdatedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, StatusUpdatedMSG message) =>
             {
                 StatusText = message.Value;
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, SpeakingStatusChangedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, StartedSpeakingMSG message) =>
             {
-                IsSpeaking = message.Value;
+                IsSpeaking = true;
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, MutedStatusChangedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, StoppedSpeakingMSG message) =>
             {
-                IsMuted = message.Value;
+                IsSpeaking = false;
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, DeafenedStatusChangedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, MutedMSG message) =>
             {
-                IsDeafened = message.Value;
+                IsMuted = true;
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantAddedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, UnmutedMSG message) =>
+            {
+                IsMuted = false;
+            });
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, DeafenedMSG message) =>
+            {
+                IsDeafened = true;
+            });
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, UndeafenedMSG message) =>
+            {
+                IsDeafened = false;
+            });
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantJoinedMSG message) =>
             {
                 if (Participants.FirstOrDefault(x => x.Participant == message.Value) == null)
                 {
@@ -77,7 +91,7 @@ namespace VoiceCraft.Maui.ViewModels
                 }
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantRemovedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantLeftMSG message) =>
             {
                 var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
                 if (displayParticipant != null)
@@ -86,7 +100,7 @@ namespace VoiceCraft.Maui.ViewModels
                 }
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantChangedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantUpdatedMSG message) =>
             {
                 var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
                 if (displayParticipant != null)
@@ -96,17 +110,25 @@ namespace VoiceCraft.Maui.ViewModels
                 }
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantSpeakingStatusChangedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantStartedSpeakingMSG message) =>
             {
-                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value.Participant);
+                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
                 if (displayParticipant != null)
                 {
-                    displayParticipant.IsSpeaking = message.Value.Status;
+                    displayParticipant.IsSpeaking = true;
                 }
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ChannelCreatedMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ParticipantStoppedSpeakingMSG message) =>
+            {
+                var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
+                if (displayParticipant != null)
+                {
+                    displayParticipant.IsSpeaking = false;
+                }
+            });
 
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ChannelAddedMSG message) =>
             {
                 if (Channels.FirstOrDefault(x => x.Channel == message.Value) == null)
                 {
@@ -114,7 +136,16 @@ namespace VoiceCraft.Maui.ViewModels
                 }
             });
 
-            WeakReferenceMessenger.Default.Register(this, (object recipient, ChannelEnteredMSG message) =>
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ChannelRemovedMSG message) =>
+            {
+                var channel = Channels.FirstOrDefault(x => x.Channel == message.Value);
+                if (channel != null)
+                {
+                    Channels.Remove(channel);
+                }
+            });
+
+            WeakReferenceMessenger.Default.Register(this, (object recipient, ChannelJoinedMSG message) =>
             {
                 var displayChannel = Channels.FirstOrDefault(x => x.Channel == message.Value);
                 if (displayChannel != null)
@@ -146,7 +177,6 @@ namespace VoiceCraft.Maui.ViewModels
             });
 
             WeakReferenceMessenger.Default.Register(this, (object recipient, ResponseDataMSG message) =>
-
             {
                 StatusText = message.Value.StatusMessage;
                 IsMuted = message.Value.IsMuted;
@@ -176,13 +206,19 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public void MuteUnmute()
         {
-            WeakReferenceMessenger.Default.Send(new MuteUnmuteMSG());
+            if(IsMuted)
+                WeakReferenceMessenger.Default.Send(new UnmuteMSG());
+            else
+                WeakReferenceMessenger.Default.Send(new MuteMSG());
         }
 
         [RelayCommand]
         public void DeafenUndeafen()
         {
-            WeakReferenceMessenger.Default.Send(new DeafenUndeafenMSG());
+            if (IsDeafened)
+                WeakReferenceMessenger.Default.Send(new UndeafenMSG());
+            else
+                WeakReferenceMessenger.Default.Send(new DeafenMSG());
         }
 
         [RelayCommand]
@@ -205,11 +241,11 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public async Task JoinChannel(VoiceCraftChannel channel)
+        public async Task JoinChannel(ChannelModel channel)
         {
             if (channel.Joined)
             {
-                WeakReferenceMessenger.Default.Send(new LeaveChannelMSG(new LeaveChannel(channel)));
+                WeakReferenceMessenger.Default.Send(new LeaveChannelMSG());
             }
             else
             {
@@ -218,12 +254,12 @@ namespace VoiceCraft.Maui.ViewModels
                     var res = await Shell.Current.DisplayPromptAsync("Password", "Please input a password for the channel.", maxLength: 12);
                     if(!string.IsNullOrWhiteSpace(res))
                     {
-                        WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel) { Password = res }));
+                        WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel.Channel) { Password = res }));
                     }
                 }
                 else
                 {
-                    WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel)));
+                    WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel.Channel)));
                 }
             }
         }

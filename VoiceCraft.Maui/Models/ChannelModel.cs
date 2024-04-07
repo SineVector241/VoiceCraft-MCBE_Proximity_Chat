@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Client;
+using VoiceCraft.Core;
 
 namespace VoiceCraft.Maui.Models
 {
@@ -12,14 +12,13 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         bool joined;
         [ObservableProperty]
-        VoiceCraftChannel channel;
+        Channel channel;
 
-        public ChannelModel(VoiceCraftChannel channel)
+        public ChannelModel(Channel channel)
         {
             this.channel = channel;
             name = channel.Name;
-            requiresPassword = channel.RequiresPassword;
-            joined = channel.Joined;
+            requiresPassword = !string.IsNullOrWhiteSpace(channel.Password);
         }
     }
 }

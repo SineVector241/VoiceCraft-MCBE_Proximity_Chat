@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VoiceCraft.Client;
 using VoiceCraft.Maui.Services;
 using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Maui.Models;
 using CommunityToolkit.Mvvm.Messaging;
+using VoiceCraft.Maui.VoiceCraft;
 using NAudio.Wave;
 
 namespace VoiceCraft.Maui.ViewModels

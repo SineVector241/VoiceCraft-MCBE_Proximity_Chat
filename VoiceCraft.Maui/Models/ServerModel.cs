@@ -11,7 +11,7 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         int port = 9050;
         [ObservableProperty]
-        ushort key = 0;
+        short key = 0;
 
         public object Clone()
         {

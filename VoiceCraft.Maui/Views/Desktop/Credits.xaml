@@ -4,7 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:app="clr-namespace:VoiceCraft.Maui"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
-             xmlns:vc="clr-namespace:VoiceCraft.Client;assembly=VoiceCraft.Client"
+             xmlns:vc="clr-namespace:VoiceCraft.Maui.VoiceCraft"
              Title="Credits">
     <Grid>
         <Image Aspect="AspectFill" Source="{AppThemeBinding Default='bgdark.png', Dark='bgdark.png', Light='bglight.png'}" />

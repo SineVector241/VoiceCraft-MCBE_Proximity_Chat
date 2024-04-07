@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using VoiceCraft.Client;
+using VoiceCraft.Maui.VoiceCraft;
 
 namespace VoiceCraft.Maui.Models
 {

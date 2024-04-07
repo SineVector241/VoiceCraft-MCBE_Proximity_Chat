@@ -51,8 +51,8 @@ public partial class EditServer : ContentPage
                 var cleaned = new string(entry.Text.Where(char.IsDigit).ToArray());
                 if (int.TryParse(cleaned, out var res))
                 {
-                    var clamped = Math.Clamp(res, 0, 65535);
-                    viewModel.UnsavedServer.Key = (ushort)clamped;
+                    var clamped = Math.Clamp(res, short.MinValue, short.MaxValue);
+                    viewModel.UnsavedServer.Key = (short)clamped;
                     entry.Text = clamped.ToString();
                 }
                 else
@@ -60,10 +60,10 @@ public partial class EditServer : ContentPage
                     viewModel.UnsavedServer.Key = 0;
                 }
             }
-            else if (result > 65535 || result < 0)
+            else if (result > short.MaxValue || result < short.MinValue)
             {
-                var clamped = Math.Clamp(result, 0, 65535);
-                viewModel.UnsavedServer.Key = (ushort)clamped;
+                var clamped = Math.Clamp(result, short.MinValue, short.MaxValue);
+                viewModel.UnsavedServer.Key = (short)clamped;
             }
         }
     }

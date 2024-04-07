@@ -1,82 +1,118 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using VoiceCraft.Client;
+using VoiceCraft.Core;
 using VoiceCraft.Maui.Models;
+using VoiceCraft.Maui.VoiceCraft;
 
 namespace VoiceCraft.Maui.Services
 {
-    public class StatusMessageUpdatedMSG : ValueChangedMessage<string>
+    public class StatusUpdatedMSG : ValueChangedMessage<string>
     {
-        public StatusMessageUpdatedMSG(string value) : base(value)
+        public StatusUpdatedMSG(string value) : base(value)
         {
         }
     }
 
-    public class SpeakingStatusChangedMSG : ValueChangedMessage<bool>
+    public class StartedSpeakingMSG : ValueChangedMessage<string?>
     {
-        public SpeakingStatusChangedMSG(bool value) : base(value)
+        public StartedSpeakingMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class MutedStatusChangedMSG : ValueChangedMessage<bool>
+    public class StoppedSpeakingMSG : ValueChangedMessage<string?>
     {
-        public MutedStatusChangedMSG(bool value) : base(value)
+        public StoppedSpeakingMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class DeafenedStatusChangedMSG : ValueChangedMessage<bool>
+    public class MutedMSG : ValueChangedMessage<string?>
     {
-        public DeafenedStatusChangedMSG(bool value) : base(value)
+        public MutedMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class ParticipantAddedMSG : ValueChangedMessage<VoiceCraftParticipant>
+    public class UnmutedMSG : ValueChangedMessage<string?>
     {
-        public ParticipantAddedMSG(VoiceCraftParticipant value) : base(value)
+        public UnmutedMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class ParticipantRemovedMSG : ValueChangedMessage<VoiceCraftParticipant>
+    public class DeafenedMSG : ValueChangedMessage<string?>
     {
-        public ParticipantRemovedMSG(VoiceCraftParticipant value) : base(value)
+        public DeafenedMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class ParticipantChangedMSG : ValueChangedMessage<VoiceCraftParticipant>
+    public class UndeafenedMSG : ValueChangedMessage<string?>
     {
-        public ParticipantChangedMSG(VoiceCraftParticipant value) : base(value)
+        public UndeafenedMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class ParticipantSpeakingStatusChangedMSG : ValueChangedMessage<ParticipantSpeakingStatusChanged>
+    public class ParticipantJoinedMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public ParticipantSpeakingStatusChangedMSG(ParticipantSpeakingStatusChanged value) : base(value)
+        public ParticipantJoinedMSG(VoiceCraftParticipant value) : base(value)
         {
         }
     }
 
-    public class ChannelCreatedMSG : ValueChangedMessage<VoiceCraftChannel>
+    public class ParticipantLeftMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public ChannelCreatedMSG(VoiceCraftChannel value) : base(value)
+        public ParticipantLeftMSG(VoiceCraftParticipant value) : base(value)
         {
         }
     }
 
-    public class ChannelEnteredMSG : ValueChangedMessage<VoiceCraftChannel>
+    public class ParticipantUpdatedMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public ChannelEnteredMSG(VoiceCraftChannel value) : base(value)
+        public ParticipantUpdatedMSG(VoiceCraftParticipant value) : base(value)
         {
         }
     }
 
-    public class ChannelLeftMSG : ValueChangedMessage<VoiceCraftChannel>
+    public class ParticipantStartedSpeakingMSG : ValueChangedMessage<VoiceCraftParticipant>
     {
-        public ChannelLeftMSG(VoiceCraftChannel value) : base(value)
+        public ParticipantStartedSpeakingMSG(VoiceCraftParticipant value) : base(value)
+        {
+        }
+    }
+
+    public class ParticipantStoppedSpeakingMSG : ValueChangedMessage<VoiceCraftParticipant>
+    {
+        public ParticipantStoppedSpeakingMSG(VoiceCraftParticipant value) : base(value)
+        {
+        }
+    }
+
+    public class ChannelAddedMSG : ValueChangedMessage<Channel>
+    {
+        public ChannelAddedMSG(Channel value) : base(value)
+        {
+        }
+    }
+
+    public class ChannelRemovedMSG : ValueChangedMessage<Channel>
+    {
+        public ChannelRemovedMSG(Channel value) : base(value)
+        {
+        }
+    }
+
+    public class ChannelJoinedMSG : ValueChangedMessage<Channel>
+    {
+        public ChannelJoinedMSG(Channel value) : base(value)
+        {
+        }
+    }
+
+    public class ChannelLeftMSG : ValueChangedMessage<Channel>
+    {
+        public ChannelLeftMSG(Channel value) : base(value)
         {
         }
     }
@@ -111,16 +147,30 @@ namespace VoiceCraft.Maui.Services
     }
 
     //UI Control Updates
-    public class MuteUnmuteMSG : ValueChangedMessage<string?>
+    public class MuteMSG : ValueChangedMessage<string?>
     {
-        public MuteUnmuteMSG(string? value = null) : base(value)
+        public MuteMSG(string? value = null) : base(value)
         {
         }
     }
 
-    public class DeafenUndeafenMSG : ValueChangedMessage<string?>
+    public class UnmuteMSG : ValueChangedMessage<string?>
     {
-        public DeafenUndeafenMSG(string? value = null) : base(value)
+        public UnmuteMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class DeafenMSG : ValueChangedMessage<string?>
+    {
+        public DeafenMSG(string? value = null) : base(value)
+        {
+        }
+    }
+
+    public class UndeafenMSG : ValueChangedMessage<string?>
+    {
+        public UndeafenMSG(string? value = null) : base(value)
         {
         }
     }
@@ -132,9 +182,9 @@ namespace VoiceCraft.Maui.Services
         }
     }
 
-    public class LeaveChannelMSG : ValueChangedMessage<LeaveChannel>
+    public class LeaveChannelMSG : ValueChangedMessage<string?>
     {
-        public LeaveChannelMSG(LeaveChannel value) : base(value)
+        public LeaveChannelMSG(string? value = null) : base(value)
         {
         }
     }
@@ -183,32 +233,11 @@ namespace VoiceCraft.Maui.Services
 
     public class JoinChannel
     {
-        public VoiceCraftChannel Channel { get; set; }
+        public Channel Channel { get; set; }
         public string Password { get; set; } = string.Empty;
-        public JoinChannel(VoiceCraftChannel channel)
+        public JoinChannel(Channel channel)
         {
             Channel = channel;
-        }
-    }
-
-    public class LeaveChannel
-    {
-        public VoiceCraftChannel Channel { get; set; }
-        public LeaveChannel(VoiceCraftChannel channel)
-        {
-            Channel = channel;
-        }
-    }
-
-    public class ParticipantSpeakingStatusChanged
-    {
-        public VoiceCraftParticipant Participant { get; set; }
-        public bool Status { get; set; }
-
-        public ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status)
-        {
-            Participant = participant;
-            Status = status;
         }
     }
 }
