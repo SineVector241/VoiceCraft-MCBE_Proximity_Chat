@@ -100,8 +100,8 @@
                                 <mtoolkit:NumericValidationBehavior Flags="ValidateOnValueChanged"
                                                                     InvalidStyle="{StaticResource InvalidEntryStyle}"
                                                                     MaximumDecimalPlaces="0"
-                                                                    MaximumValue="65535"
-                                                                    MinimumValue="0" />
+                                                                    MaximumValue="32767"
+                                                                    MinimumValue="-32768" />
                             </Entry.Behaviors>
                         </Entry>
                         <Button Grid.Row="9"
