@@ -55,6 +55,7 @@ namespace VoiceCraft.Server
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
             VoiceCraftSocket.OnPeerDisconnected += OnPeerDisconnected;
             VoiceCraftSocket.OnBindedReceived += OnBinded;
+            VoiceCraftSocket.OnUnbindedReceived += VoiceCraftSocketUnbinded;
             VoiceCraftSocket.OnMuteReceived += OnMute;
             VoiceCraftSocket.OnUnmuteReceived += OnUnmute;
             VoiceCraftSocket.OnDeafenReceived += OnDeafen;
@@ -323,6 +324,16 @@ namespace VoiceCraft.Server
                 } //Send channel list back to binded client.
 
                 OnParticipantBinded?.Invoke(client);
+            }
+        }
+
+        private void VoiceCraftSocketUnbinded(Core.Packets.VoiceCraft.Unbinded data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided && client.Binded) //data.Binded is the client requesting to unbind.
+            {
+                client.Binded = false;
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() { Key = client.Key }, [client], client.Channel);
+                OnParticipantLeft?.Invoke(client, "Unbinded.");
             }
         }
 

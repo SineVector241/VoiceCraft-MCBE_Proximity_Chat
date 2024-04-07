@@ -49,6 +49,7 @@ namespace VoiceCraft.Core.Packets
 
         //USER PACKETS
         Binded,
+        Unbinded,
         ParticipantJoined,
         ParticipantLeft,
         Mute,

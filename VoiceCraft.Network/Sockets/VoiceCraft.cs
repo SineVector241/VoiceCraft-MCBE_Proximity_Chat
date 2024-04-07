@@ -37,6 +37,7 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Ping, typeof(Ping));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Binded, typeof(Binded));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Unbinded, typeof(Unbinded));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantJoined, typeof(ParticipantJoined));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ParticipantLeft, typeof(ParticipantLeft));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.Mute, typeof(Mute));
@@ -98,6 +99,7 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<Ping>? OnPingReceived;
         public event PacketData<PingInfo>? OnPingInfoReceived;
         public event PacketData<Binded>? OnBindedReceived;
+        public event PacketData<Unbinded>? OnUnbindedReceived;
         public event PacketData<ParticipantJoined>? OnParticipantJoinedReceived;
         public event PacketData<ParticipantLeft>? OnParticipantLeftReceived;
         public event PacketData<Mute>? OnMuteReceived;
