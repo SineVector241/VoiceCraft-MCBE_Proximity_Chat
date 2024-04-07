@@ -29,8 +29,8 @@ namespace VoiceCraft.Maui.VoiceCraft
         public Channel? JoinedChannel { get; private set; }
 
         //Audio Variables
-        public bool IsMuted { get; private set; }
-        public bool IsDeafened { get; private set; }
+        public bool Muted { get; private set; }
+        public bool Deafened { get; private set; }
         public bool LinearProximity { get; set; }
         public bool DirectionalHearing { get; set; }
         public MixingSampleProvider AudioOutput { get; }
