@@ -203,7 +203,7 @@ namespace VoiceCraft.Server
             {
                 var participant = Server.Participants.ElementAt(i);
                 if (participant.Value != null)
-                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}, Location: {participant.Value.Position}", "Commands");
+                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}", "Commands");
             }
         }
 

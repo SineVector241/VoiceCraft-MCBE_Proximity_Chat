@@ -339,40 +339,36 @@ namespace VoiceCraft.Server
 
         private void OnMute(Core.Packets.VoiceCraft.Mute data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            if (Participants.TryGetValue(peer, out var client) && !client.Muted)
             {
-                if (!client.Binded) return;
-
+                client.Muted = true;
                 Broadcast(new Core.Packets.VoiceCraft.Mute() { Key = client.Key }, [client], client.Channel);
             }
         }
 
         private void OnUnmute(Core.Packets.VoiceCraft.Unmute data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            if (Participants.TryGetValue(peer, out var client) && client.Muted)
             {
-                if (!client.Binded) return;
-
+                client.Muted = false;
                 Broadcast(new Core.Packets.VoiceCraft.Unmute() { Key = client.Key }, [client], client.Channel);
             }
         }
 
         private void OnDeafen(Core.Packets.VoiceCraft.Deafen data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            if (Participants.TryGetValue(peer, out var client) && !client.Deafened)
             {
-                if (!client.Binded) return;
-
+                client.Deafened = true;
                 Broadcast(new Core.Packets.VoiceCraft.Deafen() { Key = client.Key }, [client], client.Channel);
             }
         }
 
         private void OnUndeafen(Core.Packets.VoiceCraft.Undeafen data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided)
+            if (Participants.TryGetValue(peer, out var client) && client.Deafened)
             {
-                if (!client.Binded) return;
-
+                client.Deafened = false;
                 Broadcast(new Core.Packets.VoiceCraft.Undeafen() { Key = client.Key }, [client], client.Channel);
             }
         }
