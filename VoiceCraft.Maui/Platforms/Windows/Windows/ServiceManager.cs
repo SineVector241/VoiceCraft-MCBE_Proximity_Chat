@@ -251,6 +251,7 @@ namespace VoiceCraft.Maui
             {
                 WeakReferenceMessenger.Default.Send(new DisconnectedMSG(reason ?? string.Empty));
             });
+            Cts?.Cancel();
         }
 
         private void Deny(string? reason = null)

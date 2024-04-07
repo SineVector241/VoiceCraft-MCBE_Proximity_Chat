@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using VoiceCraft.Maui.Interfaces;
 using VoiceCraft.Maui.Models;
 using VoiceCraft.Maui.Services;
-using VoiceCraft.Client;
+using VoiceCraft.Maui.VoiceCraft;
 
 namespace VoiceCraft.Maui
 {
@@ -105,42 +105,86 @@ namespace VoiceCraft.Maui
                 {
                     StartVoiceCraftService();
                     VoipService = new VoipService(Navigator.GetNavigationData<ServerModel>());
+
                     VoipService.OnStatusUpdated += StatusUpdated;
-                    VoipService.OnSpeakingStatusChanged += SpeakingStatusChanged;
-                    VoipService.OnMutedStatusChanged += MutedStatusChanged;
-                    VoipService.OnDeafenedStatusChanged += DeafenedStatusChanged;
-                    VoipService.OnParticipantAdded += ParticipantAdded;
-                    VoipService.OnParticipantRemoved += ParticipantRemoved;
-                    VoipService.OnParticipantSpeakingStatusChanged += ParticipantSpeakingStatusChanged;
-                    VoipService.OnParticipantChanged += ParticipantChanged;
-                    VoipService.OnChannelCreated += ChannelCreated;
-                    VoipService.OnChannelEntered += ChannelEntered;
-                    VoipService.OnChannelLeave += ChannelLeave;
-                    VoipService.OnServiceDisconnected += OnServiceDisconnected;
-                    VoipService.Network.Signalling.OnDeny += OnDeny;
+                    VoipService.OnSpeakingStarted += SpeakingStarted;
+                    VoipService.OnSpeakingStopped += SpeakingStopped;
+                    VoipService.OnParticipantJoined += ParticipantJoined;
+                    VoipService.OnParticipantLeft += ParticipantLeft;
+                    VoipService.OnParticipantUpdated += ParticipantUpdated;
+                    VoipService.OnParticipantStartedSpeaking += ParticipantStartedSpeaking;
+                    VoipService.OnParticipantStoppedSpeaking += ParticipantStoppedSpeaking;
+                    VoipService.OnChannelAdded += ChannelAdded;
+                    VoipService.OnChannelRemoved += ChannelRemoved;
+                    VoipService.OnChannelJoined += ChannelJoined;
+                    VoipService.OnChannelLeft += ChannelLeft;
+                    VoipService.OnStopped += Stopped;
+                    VoipService.OnDeny += Deny;
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, RequestDataMSG message) =>
                     {
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             WeakReferenceMessenger.Default.Send(new ResponseDataMSG(new ResponseData(
-                            VoipService.Network.Participants.Select(x => new ParticipantModel(x.Value)).ToList(),
-                            VoipService.Network.Channels.Select(x => new ChannelModel(x)).ToList(),
-                            false,
-                            VoipService.Network.IsMuted,
-                            VoipService.Network.IsDeafened,
-                            VoipService.StatusMessage)));
+                                VoipService.Client.Participants.Select(x => new ParticipantModel(x.Value)).ToList(),
+                                VoipService.Client.Channels.Select(x => new ChannelModel(x.Value) { Joined = x.Value == VoipService.Client.JoinedChannel }).ToList(),
+                                false,
+                                VoipService.Client.Muted,
+                                VoipService.Client.Deafened,
+                                VoipService.StatusMessage)));
                         });
                     });
 
-                    WeakReferenceMessenger.Default.Register(this, (object recipient, MuteUnmuteMSG message) =>
+                    WeakReferenceMessenger.Default.Register(this, (object recipient, MuteMSG message) =>
                     {
-                        _ = VoipService.Network.SetMute();
+                        try
+                        {
+                            VoipService.Client.SetMute(true);
+                            WeakReferenceMessenger.Default.Send(new MutedMSG());
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            return;
+                        }
                     });
 
-                    WeakReferenceMessenger.Default.Register(this, (object recipient, DeafenUndeafenMSG message) =>
+                    WeakReferenceMessenger.Default.Register(this, (object recipient, UnmuteMSG message) =>
                     {
-                        _ = VoipService.Network.SetDeafen();
+                        try
+                        {
+                            VoipService.Client.SetMute(false);
+                            WeakReferenceMessenger.Default.Send(new UnmutedMSG());
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            return;
+                        }
+                    });
+
+                    WeakReferenceMessenger.Default.Register(this, (object recipient, DeafenMSG message) =>
+                    {
+                        try
+                        {
+                            VoipService.Client.SetDeafen(true);
+                            WeakReferenceMessenger.Default.Send(new DeafenedMSG());
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            return;
+                        }
+                    });
+
+                    WeakReferenceMessenger.Default.Register(this, (object recipient, UndeafenMSG message) =>
+                    {
+                        try
+                        {
+                            VoipService.Client.SetDeafen(false);
+                            WeakReferenceMessenger.Default.Send(new UndeafenedMSG());
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            return;
+                        }
                     });
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, DisconnectMSG message) =>
@@ -150,12 +194,12 @@ namespace VoiceCraft.Maui
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, JoinChannelMSG message) =>
                     {
-                        _ = VoipService.Network.JoinChannel(message.Value.Channel, message.Value.Password);
+                        VoipService.Client.JoinChannel(message.Value.Channel, message.Value.Password);
                     });
 
                     WeakReferenceMessenger.Default.Register(this, (object recipient, LeaveChannelMSG message) =>
                     {
-                        _ = VoipService.Network.LeaveChannel(message.Value.Channel);
+                        VoipService.Client.LeaveChannel();
                     });
 
                     easterEggLoop = Task.Run(async () => {
@@ -175,7 +219,8 @@ namespace VoiceCraft.Maui
                             }
                         }
                     }, Cts.Token);
-                    VoipService.Start(Cts.Token).Wait();
+
+                    VoipService.StartAsync(Cts.Token).Wait();
                 }
                 catch (System.OperationCanceledException)
                 {
@@ -185,18 +230,19 @@ namespace VoiceCraft.Maui
                     if (VoipService != null)
                     {
                         VoipService.OnStatusUpdated -= StatusUpdated;
-                        VoipService.OnSpeakingStatusChanged -= SpeakingStatusChanged;
-                        VoipService.OnMutedStatusChanged -= MutedStatusChanged;
-                        VoipService.OnDeafenedStatusChanged -= DeafenedStatusChanged;
-                        VoipService.OnParticipantAdded -= ParticipantAdded;
-                        VoipService.OnParticipantRemoved -= ParticipantRemoved;
-                        VoipService.OnParticipantSpeakingStatusChanged -= ParticipantSpeakingStatusChanged;
-                        VoipService.OnParticipantChanged -= ParticipantChanged;
-                        VoipService.OnChannelCreated -= ChannelCreated;
-                        VoipService.OnChannelEntered -= ChannelEntered;
-                        VoipService.OnChannelLeave -= ChannelLeave;
-                        VoipService.OnServiceDisconnected -= OnServiceDisconnected;
-                        VoipService.Network.Signalling.OnDeny -= OnDeny;
+                        VoipService.OnSpeakingStarted -= SpeakingStarted;
+                        VoipService.OnSpeakingStopped -= SpeakingStopped;
+                        VoipService.OnParticipantJoined -= ParticipantJoined;
+                        VoipService.OnParticipantLeft -= ParticipantLeft;
+                        VoipService.OnParticipantUpdated -= ParticipantUpdated;
+                        VoipService.OnParticipantStartedSpeaking -= ParticipantStartedSpeaking;
+                        VoipService.OnParticipantStoppedSpeaking -= ParticipantStoppedSpeaking;
+                        VoipService.OnChannelAdded -= ChannelAdded;
+                        VoipService.OnChannelRemoved -= ChannelRemoved;
+                        VoipService.OnChannelJoined -= ChannelJoined;
+                        VoipService.OnChannelLeft -= ChannelLeft;
+                        VoipService.OnStopped -= Stopped;
+                        VoipService.OnDeny -= Deny;
                     }
 
                     WeakReferenceMessenger.Default.UnregisterAll(this);
@@ -233,91 +279,105 @@ namespace VoiceCraft.Maui
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
                 if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(status).SetContentText("Idling...").Build());
 
-                WeakReferenceMessenger.Default.Send(new StatusMessageUpdatedMSG(status));
+                WeakReferenceMessenger.Default.Send(new StatusUpdatedMSG(status));
             });
         }
 
-        private void SpeakingStatusChanged(bool status)
+        private void SpeakingStarted()
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new SpeakingStatusChangedMSG(status));
+                WeakReferenceMessenger.Default.Send(new StartedSpeakingMSG());
             });
         }
 
-        private void MutedStatusChanged(bool status)
+        private void SpeakingStopped()
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new MutedStatusChangedMSG(status));
+                WeakReferenceMessenger.Default.Send(new StoppedSpeakingMSG());
             });
         }
 
-        private void DeafenedStatusChanged(bool status)
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                WeakReferenceMessenger.Default.Send(new DeafenedStatusChangedMSG(status));
-            });
-        }
-
-        private void ParticipantAdded(VoiceCraftParticipant participant)
+        private void ParticipantJoined(VoiceCraftParticipant participant)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
                 if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has connected!").Build());
 
-                WeakReferenceMessenger.Default.Send(new ParticipantAddedMSG(participant));
+                WeakReferenceMessenger.Default.Send(new ParticipantJoinedMSG(participant));
             });
         }
 
-        private void ParticipantRemoved(VoiceCraftParticipant participant)
+        private void ParticipantLeft(VoiceCraftParticipant participant)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
                 if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has disconnected!").Build());
 
-                WeakReferenceMessenger.Default.Send(new ParticipantRemovedMSG(participant));
+                WeakReferenceMessenger.Default.Send(new ParticipantLeftMSG(participant));
             });
         }
-        private void ParticipantSpeakingStatusChanged(VoiceCraftParticipant participant, bool status)
+
+        private void ParticipantUpdated(VoiceCraftParticipant participant)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new ParticipantSpeakingStatusChangedMSG(new ParticipantSpeakingStatusChanged(participant, status)));
+                WeakReferenceMessenger.Default.Send(new ParticipantUpdatedMSG(participant));
             });
         }
-        private void ParticipantChanged(VoiceCraftParticipant participant)
+
+        private void ParticipantStartedSpeaking(VoiceCraftParticipant participant)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new ParticipantChangedMSG(participant));
+                WeakReferenceMessenger.Default.Send(new ParticipantStartedSpeakingMSG(participant));
             });
         }
-        private void ChannelCreated(VoiceCraftChannel channel)
+
+        private void ParticipantStoppedSpeaking(VoiceCraftParticipant participant)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new ChannelCreatedMSG(channel));
+                WeakReferenceMessenger.Default.Send(new ParticipantStoppedSpeakingMSG(participant));
             });
         }
-        private void ChannelEntered(VoiceCraftChannel channel)
+
+        private void ChannelAdded(Core.Channel channel)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                WeakReferenceMessenger.Default.Send(new ChannelEnteredMSG(channel));
+                WeakReferenceMessenger.Default.Send(new ChannelAddedMSG(channel));
             });
         }
-        private void ChannelLeave(VoiceCraftChannel channel)
+
+        private void ChannelRemoved(Core.Channel channel)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                WeakReferenceMessenger.Default.Send(new ChannelRemovedMSG(channel));
+            });
+        }
+
+        private void ChannelJoined(Core.Channel channel)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                WeakReferenceMessenger.Default.Send(new ChannelJoinedMSG(channel));
+            });
+        }
+
+        private void ChannelLeft(Core.Channel channel)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 WeakReferenceMessenger.Default.Send(new ChannelLeftMSG(channel));
             });
         }
-        private void OnServiceDisconnected(string? reason)
+
+        private void Stopped(string? reason = null)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
@@ -325,15 +385,13 @@ namespace VoiceCraft.Maui
             });
             Cts?.Cancel();
         }
-        private void OnDeny(Core.Packets.Signalling.Deny data, System.Net.Sockets.Socket socket)
+
+        private void Deny(string? reason = null)
         {
-            if (VoipService?.Network.Signalling.IsConnected ?? false)
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    WeakReferenceMessenger.Default.Send(new DenyMSG(data.Reason));
-                });
-            }
+                WeakReferenceMessenger.Default.Send(new DenyMSG(reason ?? string.Empty));
+            });
         }
     }
 }
