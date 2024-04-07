@@ -8,11 +8,8 @@ namespace VoiceCraft.Server.Data
         public short Key { get; set; }
         public bool Binded { get; set; }
         public bool ClientSided { get; set; }
-        public bool Deafened { get; set; }
-        public bool Muted { get; set; }
         public bool ServerMuted { get; set; }
         public Channel? Channel { get; set; }
-        public long LastSpoke { get; set; }
 
         //Minecraft Data
         public Vector3 Position { get; set; }
