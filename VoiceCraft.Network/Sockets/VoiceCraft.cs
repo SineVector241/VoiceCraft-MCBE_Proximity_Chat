@@ -169,7 +169,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task DisconnectAsync(string? reason = null, bool notifyServer = true)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            if (IsDisposed && State == VoiceCraftSocketState.Stopped) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Starting || State == VoiceCraftSocketState.Started) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Disconnecting) throw new InvalidOperationException("Already disconnecting.");
             if (State == VoiceCraftSocketState.Stopped) return;
@@ -235,7 +235,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task StopAsync(string? reason = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            if (IsDisposed && State == VoiceCraftSocketState.Stopped) throw new ObjectDisposedException(nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Stopping) throw new InvalidOperationException("Already stopping.");
 
@@ -373,6 +373,10 @@ namespace VoiceCraft.Network.Sockets
                     await StopAsync(ex.Message);
                     return;
                 }
+                catch(OperationCanceledException)
+                {
+                    return;
+                }
                 catch(Exception ex)
                 {
                     if (LogExceptions)
@@ -401,6 +405,10 @@ namespace VoiceCraft.Network.Sockets
                 catch (SocketException ex)
                 {
                     await DisconnectAsync(ex.Message, false); //Socket is basically closed at this point, We can't send a message.
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
                     return;
                 }
                 catch (Exception ex)

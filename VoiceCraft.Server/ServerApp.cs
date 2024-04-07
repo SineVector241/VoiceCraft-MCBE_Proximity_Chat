@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Net;
 using VoiceCraft.Network.Sockets;
 using VoiceCraft.Server.Data;
 
@@ -27,6 +28,11 @@ namespace VoiceCraft.Server
             var banlist = Properties.LoadBanlist();
             Server = new VoiceCraftServer(properties, banlist);
 
+            foreach (var channel in Server.ServerProperties.Channels)
+            {
+                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+            }
+
             //Server Events
             Server.OnStarted += ServerStarted;
             Server.OnSocketStarted += ServerSocketStarted;
@@ -42,17 +48,49 @@ namespace VoiceCraft.Server
             //Debug Stuff
             Server.VoiceCraftSocket.OnInboundPacket += VoiceCraftSocketInbound;
             Server.VoiceCraftSocket.OnOutboundPacket += VoiceCraftSocketOutbound;
-            Server.VoiceCraftSocket.OnExceptionError += ExceptionError; ;
+            Server.VoiceCraftSocket.OnExceptionError += ExceptionError;
             Server.MCComm.OnInboundPacket += MCCommInbound;
             Server.MCComm.OnOutboundPacket += MCCommOutbound;
             Server.MCComm.OnExceptionError += ExceptionError;
+
+            //Command Register
+            CommandHandler.RegisterCommand("help", HelpCommand);
+            CommandHandler.RegisterCommand("exit", ExitCommand);
+            CommandHandler.RegisterCommand("list", ListCommand);
+            CommandHandler.RegisterCommand("mute", MuteCommand);
+            CommandHandler.RegisterCommand("unmute", UnmuteCommand);
+            CommandHandler.RegisterCommand("kick", KickCommand);
+            CommandHandler.RegisterCommand("ban", BanCommand);
+            CommandHandler.RegisterCommand("unban", UnbanCommand);
+            CommandHandler.RegisterCommand("banlist", BanlistCommand);
+            CommandHandler.RegisterCommand("setproximity", SetProximityCommand);
+            CommandHandler.RegisterCommand("toggleproximity", ToggleProximityCommand);
+            CommandHandler.RegisterCommand("setmotd", SetMotdCommand);
+            CommandHandler.RegisterCommand("toggleeffects", ToggleEffectsCommand);
+            CommandHandler.RegisterCommand("debug", DebugCommand);
         }
 
         public void Start()
         {
             Server.Start();
 
-            Console.ReadLine();
+            while (true)
+            {
+                try
+                {
+                    var input = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(input))
+                        CommandHandler.ParseCommand(input.ToLower());
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Logger.LogToConsole(LogType.Error, ex.ToString(), "Commands");
+#else
+                        Logger.LogToConsole(LogType.Error, ex.Message.ToString(), "Socket");
+#endif
+                }
+            }
         }
 
         #region Server Event Methods
@@ -69,6 +107,9 @@ namespace VoiceCraft.Server
         private void ServerFailed(Exception ex)
         {
             Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}, Exception Type: {ex.GetType().Name}", nameof(VoiceCraftServer));
+            Logger.LogToConsole(LogType.Error, "Shutting down server in 10 seconds...", nameof(VoiceCraftServer));
+            Task.Delay(10000).Wait();
+            ExitCommand([]);
         }
 
         private void OnStopped(string? reason = null)
@@ -127,5 +168,289 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Warn, error.Message.ToString(), "DEBUG_EXCEPTION");
 #endif
         }
+
+        #region Commands
+        void HelpCommand(string[] args)
+        {
+            Logger.LogToConsole(LogType.Info, "Help - Shows a list of available commands.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Exit - Shuts down the server.", "Commands");
+            Logger.LogToConsole(LogType.Info, "List - Lists the connected participants", "Commands");
+            Logger.LogToConsole(LogType.Info, "Mute [key: ushort] - Mutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Unmute [key: ushort] - Unmutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Kick [key: ushort] - Kicks a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Ban [key: ushort] - Bans a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans an IP address.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Banlist - Shows a list of banned IP addresses.", "Commands");
+            Logger.LogToConsole(LogType.Info, "SetProximity [Distance: int] - Sets the proximity distance.", "Commands");
+            Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");
+            Logger.LogToConsole(LogType.Info, "SetMotd [Message: string] - Sets the server MOTD.", "Commands");
+            Logger.LogToConsole(LogType.Info, "ToggleEffects [Toggle: boolean] - Toggles the voice effect on or off.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - VoiceCraftInbound, 1 - VoiceCraftOutbound, 2 - MCCommInbound, 3 - MCCommOutbound", "Commands");
+        }
+
+        void ExitCommand(string[] args)
+        {
+            Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
+            Server.Stop("Shutdown.");
+            Server.Dispose();
+            Environment.Exit(0);
+        }
+
+        void ListCommand(string[] args)
+        {
+            Logger.LogToConsole(LogType.Info, $"Connected participants: {Server.Participants.Count}", "Commands");
+            for (ushort i = 0; i < Server.Participants.Count; i++)
+            {
+                var participant = Server.Participants.ElementAt(i);
+                if (participant.Value != null)
+                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}, Location: {participant.Value.Position}", "Commands");
+            }
+        }
+
+        void MuteCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: mute <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.ServerMuted = true;
+                    Logger.LogToConsole(LogType.Success, $"Muted participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void UnmuteCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: unmute <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.Muted = false;
+                    Logger.LogToConsole(LogType.Success, $"Unmuted participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void KickCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: kick <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    Server.VoiceCraftSocket.DisconnectPeer(participant.Key, true, "Server Kick").Wait();
+                    Logger.LogToConsole(LogType.Success, $"Kicked participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void BanCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: ban <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    Server.Banlist.Add(((IPEndPoint)participant.Key.RemoteEndPoint).Address.ToString());
+                    Properties.SaveBanlist(Server.Banlist);
+                    Server.VoiceCraftSocket.DisconnectPeer(participant.Key, true, "Server Banned").Wait();
+                    Logger.LogToConsole(LogType.Success, $"Banned participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void UnbanCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: unban <ipaddress: string>");
+            }
+
+            if (Server.Banlist.Contains(args[0]))
+            {
+                Server.Banlist.Remove(args[0]);
+                Properties.SaveBanlist(Server.Banlist);
+                Logger.LogToConsole(LogType.Success, $"Unbanned IP address: {args[0]}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Could not find IP Address!");
+            }
+        }
+
+        void BanlistCommand(string[] args)
+        {
+            Logger.LogToConsole(LogType.Info, $"Banned IP Addresses: {Server.Banlist.Count}", "Commands");
+            for (int i = 0; i < Server.Banlist.Count; i++)
+            {
+                Logger.LogToConsole(LogType.Info, Server.Banlist[i], "Commands");
+            }
+        }
+
+        void SetProximityCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: setproximity <distance: int>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                if (value > 120 || value < 1)
+                    throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
+                Server.ServerProperties.ProximityDistance = value;
+                Logger.LogToConsole(LogType.Success, $"Set proximity distance: {value}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void ToggleProximityCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: toggleproximity <toggle: boolean>");
+            }
+
+            if (bool.TryParse(args[0], out bool value))
+            {
+                Server.ServerProperties.ProximityToggle = value;
+                Logger.LogToConsole(LogType.Success, $"Set proximity toggle: {value}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void SetMotdCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: setmotd <message: string>");
+            }
+
+            if (!string.IsNullOrWhiteSpace(args[0]))
+            {
+                Server.ServerProperties.ServerMOTD = args[0];
+                Logger.LogToConsole(LogType.Success, $"Set MOTD: {args[0]}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Argument cannot be null whitespace!");
+            }
+        }
+
+        void ToggleEffectsCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: toggleeffects <toggle: boolean>");
+            }
+
+            if (bool.TryParse(args[0], out bool value))
+            {
+                Server.ServerProperties.VoiceEffects = value;
+                Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void DebugCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: debug <type: int>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                switch (value)
+                {
+                    case 0:
+                        Server.VoiceCraftSocket.LogInbound = !Server.VoiceCraftSocket.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voicecraft inbound debug: {Server.VoiceCraftSocket.LogInbound}", "Commands");
+                        break;
+                    case 1:
+                        Server.VoiceCraftSocket.LogOutbound = !Server.VoiceCraftSocket.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set voicecraft outbound debug: {Server.VoiceCraftSocket.LogOutbound}", "Commands");
+                        break;
+                    case 2:
+                        Server.MCComm.LogInbound = !Server.MCComm.LogInbound;
+                        Logger.LogToConsole(LogType.Success, $"Set mccomm inbound debug: {Server.MCComm.LogInbound}", "Commands");
+                        break;
+                    case 3:
+                        Server.MCComm.LogOutbound = !Server.MCComm.LogOutbound;
+                        Logger.LogToConsole(LogType.Success, $"Set mccomm outbound debug: {Server.MCComm.LogOutbound}", "Commands");
+                        break;
+                    default:
+                        throw new Exception("Invalid type specified!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
     }
+    #endregion
 }

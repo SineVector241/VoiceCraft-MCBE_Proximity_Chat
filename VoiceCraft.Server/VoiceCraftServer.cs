@@ -10,7 +10,7 @@ namespace VoiceCraft.Server
 {
     //Client - Requesting Participant
     //Participant - Receiving Participant
-    public class VoiceCraftServer
+    public class VoiceCraftServer : Disposable
     {
         public const string Version = "v1.0.4";
         public ConcurrentDictionary<NetPeer, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<NetPeer, VoiceCraftParticipant>();
@@ -50,7 +50,6 @@ namespace VoiceCraft.Server
             MCComm = new Network.Sockets.MCComm();
 
             VoiceCraftSocket.OnStarted += VoiceCraftSocketStarted;
-            VoiceCraftSocket.OnStopped += VoiceCraftSocketStopped;
             VoiceCraftSocket.OnFailed += VoiceCraftSocketFailed;
             VoiceCraftSocket.OnPingInfoReceived += OnPingInfo;
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
@@ -66,7 +65,6 @@ namespace VoiceCraft.Server
             VoiceCraftSocket.OnClientAudioReceived += OnClientAudio;
 
             MCComm.OnStarted += MCCommStarted;
-            MCComm.OnStopped += MCCommStopped;
             MCComm.OnFailed += MCCommFailed;
             MCComm.OnBindReceived += MCCommBind;
             MCComm.OnUpdateReceived += MCCommUpdate;
@@ -79,6 +77,8 @@ namespace VoiceCraft.Server
         #region Methods
         public void Start()
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+
             _ = Task.Run(async () => {
                 try
                 {
@@ -104,14 +104,19 @@ namespace VoiceCraft.Server
 
         public void Stop(string? reason = null)
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+
             VoiceCraftSocket.StopAsync().Wait();
             MCComm.Stop();
             
             if(!IsStarted) OnStopped?.Invoke(reason);
+            IsStarted = false;
         }
 
         public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+
             var list = Participants.Where(x => !excludes.Contains(x.Value) && x.Value.Channel == inChannel);
             foreach (var participant in list)
             {
@@ -124,6 +129,8 @@ namespace VoiceCraft.Server
 
         public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel? channel = null)
         {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+
             if (client.Channel == channel) return; //Client is already in the channel.
 
             if(client.Channel != null)
@@ -212,11 +219,6 @@ namespace VoiceCraft.Server
                     OnFailed?.Invoke(ex);
                 }
             });
-        }
-
-        private void VoiceCraftSocketStopped(string? reason = null)
-        {
-            OnStopped?.Invoke(reason);
         }
 
         private void VoiceCraftSocketFailed(Exception ex)
@@ -475,11 +477,6 @@ namespace VoiceCraft.Server
             OnStarted?.Invoke();
         }
 
-        private void MCCommStopped(string? reason = null)
-        {
-            OnStopped?.Invoke(reason);
-        }
-
         private void MCCommFailed(Exception ex)
         {
             OnFailed?.Invoke(ex);
@@ -629,5 +626,14 @@ namespace VoiceCraft.Server
              MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
         #endregion
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                VoiceCraftSocket.Dispose();
+                MCComm.Dispose();
+            }
+        }
     }
 }
