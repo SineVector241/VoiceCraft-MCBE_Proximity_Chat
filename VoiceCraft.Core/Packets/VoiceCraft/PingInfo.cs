@@ -7,7 +7,7 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
     public class PingInfo : VoiceCraftPacket
     {
         public override byte PacketId => (byte)VoiceCraftPacketTypes.PingInfo;
-        public override bool IsReliable => true;
+        public override bool IsReliable => false;
 
         public PositioningTypes PositioningType { get; set; }
         public int ConnectedParticipants { get; set; }

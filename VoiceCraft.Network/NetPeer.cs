@@ -75,17 +75,16 @@ namespace VoiceCraft.Network
         public bool AddToReceiveBuffer(VoiceCraftPacket packet)
         {
             LastActive = Environment.TickCount64;
-
             if (Connected && packet.Id != Id) return false; //Invalid Id.
-
-            if(ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
-                return false; //make sure it doesn't overload the receive buffer and cause a memory overflow.
 
             if(!packet.IsReliable)
             {
                 OnPacketReceived?.Invoke(this, packet);
                 return true; //Not reliable, We can just say it's received.
             }
+
+            if (ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
+                return false; //make sure it doesn't overload the receive buffer and cause a memory overflow.
 
             AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
             if (packet.Sequence < NextSequence) return true; //Likely to be a duplicate packet.

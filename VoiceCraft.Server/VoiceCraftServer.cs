@@ -18,10 +18,13 @@ namespace VoiceCraft.Server
         public Network.Sockets.MCComm MCComm { get; set; }
         public Properties ServerProperties { get; set; }
         public List<string> Banlist { get; set; }
+        public bool IsStarted { get; private set; }
 
         #region Delegates
         public delegate void Started();
+        public delegate void SocketStarted(Type socket);
         public delegate void Stopped(string? reason = null);
+        public delegate void Failed(Exception ex);
 
         public delegate void ParticipantJoined(VoiceCraftParticipant participant);
         public delegate void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null);
@@ -30,7 +33,9 @@ namespace VoiceCraft.Server
 
         #region Events
         public event Started? OnStarted;
+        public event SocketStarted? OnSocketStarted;
         public event Stopped? OnStopped;
+        public event Failed? OnFailed;
 
         public event ParticipantJoined? OnParticipantJoined;
         public event ParticipantLeft? OnParticipantLeft;
@@ -46,6 +51,7 @@ namespace VoiceCraft.Server
 
             VoiceCraftSocket.OnStarted += VoiceCraftSocketStarted;
             VoiceCraftSocket.OnStopped += VoiceCraftSocketStopped;
+            VoiceCraftSocket.OnFailed += VoiceCraftSocketFailed;
             VoiceCraftSocket.OnPingInfoReceived += OnPingInfo;
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
             VoiceCraftSocket.OnPeerDisconnected += OnPeerDisconnected;
@@ -61,8 +67,13 @@ namespace VoiceCraft.Server
 
             MCComm.OnStarted += MCCommStarted;
             MCComm.OnStopped += MCCommStopped;
+            MCComm.OnFailed += MCCommFailed;
             MCComm.OnBindReceived += MCCommBind;
             MCComm.OnUpdateReceived += MCCommUpdate;
+            MCComm.OnGetSettingsReceived += MCCommGetSettings;
+            MCComm.OnUpdateSettingsReceived += MCCommUpdateSettings;
+            MCComm.OnRemoveParticipantReceived += MCCommRemoveParticipant;
+            MCComm.OnChannelMoveReceived += MCCommChannelMove;
         }
 
         #region Methods
@@ -71,6 +82,12 @@ namespace VoiceCraft.Server
             _ = Task.Run(async () => {
                 try
                 {
+                    VoiceCraftSocket.LogExceptions = ServerProperties.Debugger.LogExceptions;
+                    VoiceCraftSocket.LogInbound = ServerProperties.Debugger.LogInboundPackets;
+                    VoiceCraftSocket.LogOutbound = ServerProperties.Debugger.LogOutboundPackets;
+                    VoiceCraftSocket.InboundFilter = ServerProperties.Debugger.InboundPacketFilter;
+                    VoiceCraftSocket.OutboundFilter = ServerProperties.Debugger.OutboundPacketFilter;
+                    VoiceCraftSocket.Timeout = ServerProperties.ClientTimeoutMS;
                     await VoiceCraftSocket.HostAsync(ServerProperties.VoiceCraftPortUDP);
                 }
                 catch (ObjectDisposedException)
@@ -79,9 +96,18 @@ namespace VoiceCraft.Server
                 }
                 catch (Exception ex)
                 {
-                    OnStopped?.Invoke(ex.Message);
+                    Stop(ex.Message);
+                    OnFailed?.Invoke(ex);
                 }
             });
+        }
+
+        public void Stop(string? reason = null)
+        {
+            VoiceCraftSocket.StopAsync().Wait();
+            MCComm.Stop();
+            
+            if(!IsStarted) OnStopped?.Invoke(reason);
         }
 
         public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
@@ -155,11 +181,26 @@ namespace VoiceCraft.Server
         #region VoiceCraft Event Methods
         private void VoiceCraftSocketStarted()
         {
+            OnSocketStarted?.Invoke(typeof(Network.Sockets.VoiceCraft));
+
+            if(ServerProperties.ConnectionType == ConnectionTypes.Client)
+            {
+                IsStarted = true;
+                OnStarted?.Invoke();
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await MCComm.Start(ServerProperties.MCCommPortTCP, Guid.NewGuid().ToString());
+                    MCComm.LogExceptions = ServerProperties.Debugger.LogExceptions;
+                    MCComm.LogInbound = ServerProperties.Debugger.LogInboundMCCommPackets;
+                    MCComm.LogOutbound = ServerProperties.Debugger.LogOutboundMCCommPackets;
+                    MCComm.InboundFilter = ServerProperties.Debugger.InboundMCCommFilter;
+                    MCComm.OutboundFilter = ServerProperties.Debugger.OutboundMCCommFilter;
+                    MCComm.Timeout = ServerProperties.ExternalServerTimeoutMS;
+                    await MCComm.Start(ServerProperties.MCCommPortTCP, ServerProperties.PermanentServerKey);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -167,7 +208,8 @@ namespace VoiceCraft.Server
                 }
                 catch (Exception ex)
                 {
-                    OnStopped?.Invoke(ex.Message);
+                    Stop(ex.Message);
+                    OnFailed?.Invoke(ex);
                 }
             });
         }
@@ -175,6 +217,11 @@ namespace VoiceCraft.Server
         private void VoiceCraftSocketStopped(string? reason = null)
         {
             OnStopped?.Invoke(reason);
+        }
+
+        private void VoiceCraftSocketFailed(Exception ex)
+        {
+            OnFailed?.Invoke(ex);
         }
 
         private void OnPingInfo(Core.Packets.VoiceCraft.PingInfo data, NetPeer peer)
@@ -354,12 +401,12 @@ namespace VoiceCraft.Server
                 if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted)
                 {
                     client.LastSpoke = Environment.TickCount64;
-                    var proximityToggle = client.Channel?.ChannelOverride?.ProximityToggle ?? ServerProperties.ProximityToggle;
+                    var proximityToggle = client.Channel?.OverrideSettings?.ProximityToggle ?? ServerProperties.ProximityToggle;
                     if (proximityToggle)
                     {
                         if (client.Dead || string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
-                        var proximityDistance = client.Channel?.ChannelOverride?.ProximityDistance ?? ServerProperties.ProximityDistance;
-                        var voiceEffects = client.Channel?.ChannelOverride?.VoiceEffects ?? ServerProperties.VoiceEffects;
+                        var proximityDistance = client.Channel?.OverrideSettings?.ProximityDistance ?? ServerProperties.ProximityDistance;
+                        var voiceEffects = client.Channel?.OverrideSettings?.VoiceEffects ?? ServerProperties.VoiceEffects;
 
                         var list = Participants.Where(x =>
                         x.Value != client &&
@@ -422,12 +469,20 @@ namespace VoiceCraft.Server
         #region MCComm Event Methods
         private void MCCommStarted()
         {
+            OnSocketStarted?.Invoke(typeof(Network.Sockets.MCComm));
+
+            IsStarted = true;
             OnStarted?.Invoke();
         }
 
         private void MCCommStopped(string? reason = null)
         {
             OnStopped?.Invoke(reason);
+        }
+
+        private void MCCommFailed(Exception ex)
+        {
+            OnFailed?.Invoke(ex);
         }
 
         private void MCCommBind(Core.Packets.MCComm.Bind packet, HttpListenerContext ctx)
@@ -511,6 +566,67 @@ namespace VoiceCraft.Server
             }
 
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate());
+        }
+
+        private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
+        {
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.UpdateSettings()
+            { 
+                ProximityDistance = ServerProperties.ProximityDistance, 
+                ProximityToggle = ServerProperties.ProximityToggle, 
+                VoiceEffects = ServerProperties.VoiceEffects 
+            });
+        }
+
+        private void MCCommUpdateSettings(Core.Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
+        {
+            if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Proximity distance must be between 1 and 120!" });
+                return;
+            }
+
+            ServerProperties.ProximityDistance = packet.ProximityDistance;
+            ServerProperties.ProximityToggle = packet.ProximityToggle;
+            ServerProperties.VoiceEffects = packet.VoiceEffects;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+        }
+
+        private void MCCommRemoveParticipant(Core.Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
+        {
+            var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (participant.Value != null)
+            {
+                VoiceCraftSocket.DisconnectPeer(participant.Key, true, "MCComm server kicked.").Wait();
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommChannelMove(Core.Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId);
+
+            if (client.Value == null)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+                return;
+            }
+            else if (channel == null && packet.ChannelId != -1)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
+            else if (channel == client.Value.Channel)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Participant is already in the channel!" });
+                return;
+            }
+
+             MoveParticipantToChannel(client.Key, client.Value, channel);
+             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
         #endregion
     }

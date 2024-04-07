@@ -4,6 +4,6 @@
     {
         public override byte PacketId => (byte)MCCommPacketTypes.ChannelMove;
         public string PlayerId { get; set; } = string.Empty;
-        public byte ChannelId { get; set; } = 0; //Set to 0 to disconnect the participant from the channel.
+        public int ChannelId { get; set; } = 0; //Set to -1 to disconnect the participant from the channel.
     }
 }

@@ -4,7 +4,7 @@
     {
         public string Name { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public ChannelOverride? ChannelOverride { get; set; }
+        public ChannelOverride? OverrideSettings { get; set; }
     }
 
     public class ChannelOverride

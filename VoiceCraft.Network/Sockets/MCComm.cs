@@ -1,12 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
+using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.MCComm;
 
 namespace VoiceCraft.Network.Sockets
 {
-    public class MCComm
+    public class MCComm : Disposable
     {
         #region Variables
         private HttpListener WebServer = new HttpListener();
@@ -35,6 +36,7 @@ namespace VoiceCraft.Network.Sockets
         public delegate void InboundPacket(MCCommPacket packet);
         public delegate void OutboundPacket(MCCommPacket packet);
         public delegate void ExceptionError(Exception error);
+        public delegate void Failed(Exception ex);
         #endregion
 
         #region Events
@@ -57,6 +59,7 @@ namespace VoiceCraft.Network.Sockets
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
         public event ExceptionError? OnExceptionError;
+        public event Failed? OnFailed;
         #endregion
 
         public MCComm()
@@ -87,7 +90,7 @@ namespace VoiceCraft.Network.Sockets
             }
             catch (Exception ex)
             {
-                OnStopped?.Invoke(ex.Message);
+                OnFailed?.Invoke(ex);
             }
         }
 
@@ -99,6 +102,7 @@ namespace VoiceCraft.Network.Sockets
                 OnLoginReceived -= LoginReceived;
                 Sessions.Clear();
                 ActivityChecker = null;
+                OnStopped?.Invoke();
             }
         }
 
@@ -206,6 +210,16 @@ namespace VoiceCraft.Network.Sockets
                 }
 
                 await Task.Delay(1); //1ms to not destroy the cpu.
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                if (WebServer.IsListening)
+                    Stop();
+                WebServer.Close();
             }
         }
     }

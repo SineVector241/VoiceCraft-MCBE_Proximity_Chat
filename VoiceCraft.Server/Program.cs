@@ -1,3 +1,3 @@
 ﻿using VoiceCraft.Server;
 
-await new ServerApp().Start();
+new ServerApp().Start();

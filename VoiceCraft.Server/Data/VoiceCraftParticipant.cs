@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using VoiceCraft.Core;
-using VoiceCraft.Network;
 
 namespace VoiceCraft.Server.Data
 {

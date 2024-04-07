@@ -75,6 +75,7 @@ namespace VoiceCraft.Network.Sockets
         public delegate void OutboundPacket(VoiceCraftPacket packet, NetPeer peer);
         public delegate void InboundPacket(VoiceCraftPacket packet, NetPeer peer);
         public delegate void ExceptionError(Exception error);
+        public delegate void Failed(Exception ex);
         #endregion
 
         #region Events
@@ -115,6 +116,7 @@ namespace VoiceCraft.Network.Sockets
         public event OutboundPacket? OnOutboundPacket;
         public event InboundPacket? OnInboundPacket;
         public event ExceptionError? OnExceptionError;
+        public event Failed? OnFailed;
         #endregion
 
         #region Methods
@@ -160,6 +162,7 @@ namespace VoiceCraft.Network.Sockets
             }
             catch (Exception ex)
             {
+                OnFailed?.Invoke(ex);
                 await DisconnectAsync(ex.Message, false);
             }
         }
@@ -225,6 +228,7 @@ namespace VoiceCraft.Network.Sockets
             }
             catch (Exception ex)
             {
+                OnFailed?.Invoke(ex);
                 await StopAsync(ex.Message);
             }
         }
@@ -287,6 +291,17 @@ namespace VoiceCraft.Network.Sockets
             }
         }
 
+        public async Task DisconnectPeer(NetPeer peer, bool notifyPeer = false, string? reason = null)
+        {
+            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+
+            var socket = NetPeers.FirstOrDefault(x => x.Value == peer);
+            if(socket.Value != null)
+            {
+                await DisconnectPeer(socket.Key, notifyPeer, reason);
+            }
+        }
+
         private async Task DisconnectPeers(string? reason = null)
         {
             foreach(var peerSocket in NetPeers.Keys)
@@ -338,18 +353,19 @@ namespace VoiceCraft.Network.Sockets
                     NetPeers.TryGetValue(receivedAddress, out var netPeer);
                     if (netPeer != null && netPeer.Connected)
                     {
-                        netPeer.AddToReceiveBuffer(packet); //Only add packets if the client was accepted.
-
                         if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
                             OnInboundPacket?.Invoke(packet, netPeer);
+
+                        netPeer.AddToReceiveBuffer(packet); //Only add packets if the client was accepted.
                     }
                     else if(packet.PacketId == (byte)VoiceCraftPacketTypes.Login || packet.PacketId == (byte)VoiceCraftPacketTypes.PingInfo) //Null or not connected, we only accept the login or pinginfo packets to try an prevent unauthorized overload spam.
                     {
                         var peer = netPeer ?? CreateNetPeer(receivedAddress);
-                        peer.AddToReceiveBuffer(packet);
 
                         if (LogInbound && (InboundFilter.Count == 0 || InboundFilter.Contains((VoiceCraftPacketTypes)packet.PacketId)))
                             OnInboundPacket?.Invoke(packet, peer);
+
+                        peer.AddToReceiveBuffer(packet);
                     }
                 }
                 catch (SocketException ex)
