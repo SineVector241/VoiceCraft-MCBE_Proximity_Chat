@@ -122,9 +122,11 @@ namespace VoiceCraft.Network.Sockets
         {
             while (WebServer.IsListening)
             {
-                var ctx = await WebServer.GetContextAsync();
+                HttpListenerContext? ctx = null;
                 try
                 {
+                    ctx = await WebServer.GetContextAsync();
+
                     if (ctx.Request.HttpMethod == HttpMethod.Post.Method)
                     {
                         var content = new StreamReader(ctx.Request.InputStream).ReadToEnd();
@@ -136,12 +138,17 @@ namespace VoiceCraft.Network.Sockets
                         HandlePacket(packet, ctx);
                     }
                 }
+                catch(HttpListenerException)
+                {
+                    return; //Done with the socket.
+                }
                 catch (Exception ex)
                 {
                     if (LogExceptions)
                         OnExceptionError?.Invoke(ex);
 
-                    SendResponse(ctx, HttpStatusCode.BadRequest, new Deny() { Reason = "Invalid Data!" });
+                    if(ctx != null)
+                        SendResponse(ctx, HttpStatusCode.BadRequest, new Deny() { Reason = "Invalid Data!" });
                 }
             }
         }
