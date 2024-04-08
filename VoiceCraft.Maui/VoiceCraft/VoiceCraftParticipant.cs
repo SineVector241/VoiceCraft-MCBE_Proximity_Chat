@@ -11,8 +11,6 @@ namespace VoiceCraft.Maui.VoiceCraft
         public bool IsDisposed { get; private set; }
         public WaveFormat AudioFormat { get; }
         public int FrameSizeMS { get; }
-        public bool IsMuted { get; set; }
-        public bool IsDeafened { get; set; }
         public bool Muffled { get => LowpassProvider.Enabled; set => LowpassProvider.Enabled = value; }
         public float EchoFactor { get => EchoProvider.EchoFactor; set => EchoProvider.EchoFactor = value; }
         public float RightVolume { get => AudioOutput.RightVolume; set => AudioOutput.RightVolume = value; }
@@ -45,8 +43,8 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             AudioFormat = audioFormat;
             FrameSizeMS = frameSizeMS;
-            IsMuted = false;
-            IsDeafened = false;
+            Muted = false;
+            Deafened = false;
             LastSpoke = 0;
 
             //Setup and wire everything up.

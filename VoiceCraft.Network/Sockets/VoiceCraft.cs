@@ -589,6 +589,7 @@ namespace VoiceCraft.Network.Sockets
                 ClientNetPeer.Id = data.Id;
                 ClientNetPeer.Connected = true;
             }
+            State = VoiceCraftSocketState.Connected;
             OnConnected?.Invoke(data.Key);
         }
 

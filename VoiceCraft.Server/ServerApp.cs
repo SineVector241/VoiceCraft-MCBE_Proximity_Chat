@@ -11,7 +11,7 @@ namespace VoiceCraft.Server
 
         public ServerApp()
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Starting...";
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Loading...";
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(@"__     __    _           ____            __ _");
             Console.WriteLine(@"\ \   / /__ (_) ___ ___ / ___|_ __ __ _ / _| |_");
@@ -72,6 +72,7 @@ namespace VoiceCraft.Server
 
         public void Start()
         {
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Starting...";
             Server.Start();
 
             while (true)
@@ -96,7 +97,8 @@ namespace VoiceCraft.Server
         #region Server Event Methods
         private void ServerStarted()
         {
-            Logger.LogToConsole(LogType.Success, "Server Started", nameof(VoiceCraftServer));
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Started.";
+            Logger.LogToConsole(LogType.Success, $"Server Started - Key: {Server.ServerProperties.PermanentServerKey}", nameof(VoiceCraftServer));
         }
 
         private void ServerSocketStarted(Type socket)
@@ -106,6 +108,7 @@ namespace VoiceCraft.Server
 
         private void ServerFailed(Exception ex)
         {
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Failed.";
             Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}, Exception Type: {ex.GetType().Name}", nameof(VoiceCraftServer));
             Logger.LogToConsole(LogType.Error, "Shutting down server in 10 seconds...", nameof(VoiceCraftServer));
             Task.Delay(10000).Wait();
@@ -190,6 +193,7 @@ namespace VoiceCraft.Server
 
         void ExitCommand(string[] args)
         {
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
             Server.Stop("Shutdown.");
             Server.Dispose();

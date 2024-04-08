@@ -122,10 +122,9 @@ namespace VoiceCraft.Network.Sockets
         {
             while (WebServer.IsListening)
             {
+                var ctx = await WebServer.GetContextAsync();
                 try
                 {
-                    var ctx = await WebServer.GetContextAsync();
-
                     if (ctx.Request.HttpMethod == HttpMethod.Post.Method)
                     {
                         var content = new StreamReader(ctx.Request.InputStream).ReadToEnd();
@@ -141,6 +140,8 @@ namespace VoiceCraft.Network.Sockets
                 {
                     if (LogExceptions)
                         OnExceptionError?.Invoke(ex);
+
+                    SendResponse(ctx, HttpStatusCode.BadRequest, new Deny() { Reason = "Invalid Data!" });
                 }
             }
         }
@@ -165,6 +166,7 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.Login: OnLoginReceived?.Invoke((Login)packet, ctx); break;
                     case MCCommPacketTypes.Accept: OnAcceptReceived?.Invoke((Accept)packet, ctx); break;
                     case MCCommPacketTypes.Deny: OnDenyReceived?.Invoke((Deny)packet, ctx); break;
+                    case MCCommPacketTypes.Bind: OnBindReceived?.Invoke((Bind)packet, ctx); break;
                     case MCCommPacketTypes.Update: OnUpdateReceived?.Invoke((Update)packet, ctx); break;
                     case MCCommPacketTypes.UpdateSettings: OnUpdateSettingsReceived?.Invoke((UpdateSettings)packet, ctx); break;
                     case MCCommPacketTypes.GetSettings: OnGetSettingsReceived?.Invoke((GetSettings)packet, ctx); break;

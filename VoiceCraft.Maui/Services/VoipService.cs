@@ -106,6 +106,9 @@ namespace VoiceCraft.Maui.Services
                 }
                 AudioRecorder = audioManager.CreateRecorder(Client.AudioFormat, FrameSizeMS);
 
+                AudioRecorder.DataAvailable += DataAvailable;
+                AudioRecorder.RecordingStopped += RecordingStopped;
+
                 try
                 {
                     Client.Connect(Server.IP, (ushort)Server.Port, Server.Key, Settings.ClientSidedPositioning ? Core.PositioningTypes.ClientSided : Core.PositioningTypes.ServerSided);
@@ -171,23 +174,18 @@ namespace VoiceCraft.Maui.Services
                     }
 
                     //Participant Talking Logic.
-                    foreach (var participant in talkingParticipants)
+                    var oldPart = talkingParticipants.Where(x => Environment.TickCount64 - x.LastSpoke >= 500).ToArray();
+                    foreach (var participant in oldPart)
                     {
-                        if (participant.LastSpoke >= 500)
-                        {
-                            talkingParticipants.Remove(participant);
-                            OnParticipantStoppedSpeaking?.Invoke(participant);
-
-                        }
+                        talkingParticipants.Remove(participant);
+                        OnParticipantStoppedSpeaking?.Invoke(participant);
                     }
 
-                    foreach (var participant in Client.Participants)
+                    var newPart = Client.Participants.Where(x => Environment.TickCount64 - x.Value.LastSpoke < 500);
+                    foreach (var participant in newPart)
                     {
-                        if (participant.Value.LastSpoke < 500)
-                        {
-                            talkingParticipants.Add(participant.Value);
-                            OnParticipantStartedSpeaking?.Invoke(participant.Value);
-                        }
+                        talkingParticipants.Add(participant.Value);
+                        OnParticipantStartedSpeaking?.Invoke(participant.Value);
                     }
                 }
                 catch (Exception ex)

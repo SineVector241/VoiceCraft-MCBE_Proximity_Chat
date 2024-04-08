@@ -105,8 +105,8 @@ namespace VoiceCraft.Maui.ViewModels
                 var displayParticipant = Participants.FirstOrDefault(x => x.Participant == message.Value);
                 if (displayParticipant != null)
                 {
-                    displayParticipant.IsMuted = message.Value.IsMuted;
-                    displayParticipant.IsDeafened = message.Value.IsDeafened;
+                    displayParticipant.IsMuted = message.Value.Muted;
+                    displayParticipant.IsDeafened = message.Value.Deafened;
                 }
             });
 

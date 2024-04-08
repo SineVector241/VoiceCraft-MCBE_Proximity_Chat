@@ -231,6 +231,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS) { Deafened = data.IsDeafened, Muted = data.IsMuted };
             if (Participants.TryAdd(data.Key, participant))
             {
+                AudioOutput.AddMixerInput(participant.AudioOutput);
                 OnParticipantJoined?.Invoke(participant);
             }
         }
@@ -239,6 +240,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if(Participants.TryRemove(data.Key, out var participant))
             {
+                AudioOutput.RemoveMixerInput(participant.AudioOutput);
                 OnParticipantLeft?.Invoke(participant);
             }
         }

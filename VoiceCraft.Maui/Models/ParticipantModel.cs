@@ -19,8 +19,8 @@ namespace VoiceCraft.Maui.Models
         public ParticipantModel(VoiceCraftParticipant participant)
         {
             this.participant = participant;
-            isMuted = participant.IsMuted;
-            isDeafened = participant.IsDeafened;
+            isMuted = participant.Muted;
+            isDeafened = participant.Deafened;
             volume = participant.Volume;
         }
 
