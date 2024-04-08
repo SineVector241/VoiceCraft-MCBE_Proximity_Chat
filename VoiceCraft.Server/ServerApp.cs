@@ -98,7 +98,11 @@ namespace VoiceCraft.Server
         private void ServerStarted()
         {
             Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Started.";
-            Logger.LogToConsole(LogType.Success, $"Server Started - Key: {Server.ServerProperties.PermanentServerKey}", nameof(VoiceCraftServer));
+
+            if(Server.ServerProperties.ConnectionType == ConnectionTypes.Server || Server.ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
+                Logger.LogToConsole(LogType.Success, $"Server Started - Key: {Server.ServerProperties.PermanentServerKey}", nameof(VoiceCraftServer));
+            else
+                Logger.LogToConsole(LogType.Success, $"Server Started!", nameof(VoiceCraftServer));
         }
 
         private void ServerSocketStarted(Type socket)
