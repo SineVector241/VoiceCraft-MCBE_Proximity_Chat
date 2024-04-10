@@ -1,6 +1,6 @@
 ﻿namespace VoiceCraft.Core.Packets.MCWSS
 {
-    public class PlayerTravelledEvent
+    public class PlayerTravelled
     {
         public bool isUnderwater { get; set; }
         public float metersTravelled { get; set; }

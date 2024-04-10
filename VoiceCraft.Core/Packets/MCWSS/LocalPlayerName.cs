@@ -1,6 +1,6 @@
 ﻿namespace VoiceCraft.Core.Packets.MCWSS
 {
-    public class LocalPlayerNameResponse
+    public class LocalPlayerName
     {
         public string localplayername { get; set; } = string.Empty;
         public int statusCode { get; set; }

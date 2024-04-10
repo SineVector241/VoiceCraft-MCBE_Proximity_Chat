@@ -67,10 +67,9 @@ namespace VoiceCraft.Maui.Services
             Settings = Database.Instance.Settings;
             Server = server;
 
-            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS)
+            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.WebsocketPort)
             {
                 LinearProximity = Settings.LinearVolume,
-                MCWSSPort = Settings.WebsocketPort,
                 DirectionalHearing = Settings.DirectionalAudioEnabled
             };
 

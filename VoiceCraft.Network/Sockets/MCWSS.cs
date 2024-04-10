@@ -1,9 +1,8 @@
 ﻿using Fleck;
-using System.Numerics;
 using System.Diagnostics;
-using VoiceCraft.Core.Packets.MCWSS;
+using System.Numerics;
 using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Builders;
+using VoiceCraft.Core.Packets.MCWSS;
 
 namespace VoiceCraft.Network.Sockets
 {
@@ -14,6 +13,7 @@ namespace VoiceCraft.Network.Sockets
         private IWebSocketConnection? ConnectedSocket;
         private readonly string[] Dimensions;
         private int Port;
+        private MCPacketRegistry MCPacketReg;
 
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
@@ -29,6 +29,9 @@ namespace VoiceCraft.Network.Sockets
 
         public MCWSS(int Port)
         {
+            MCPacketReg = new MCPacketRegistry();
+            MCPacketReg.RegisterPacket(new Header() { messagePurpose = "event", eventName = nameof(Core.Packets.MCWSS.PlayerTravelled) }, typeof(MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled>));
+            MCPacketReg.RegisterPacket(new Header() { messagePurpose = "commandResponse" }, typeof(MCWSSPacket<LocalPlayerName>));
             this.Port = Port;
             Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");
             Dimensions = new string[] { "minecraft:overworld", "minecraft:nether", "minecraft:end" };
@@ -42,8 +45,9 @@ namespace VoiceCraft.Network.Sockets
                 {
                     if (ConnectedSocket == null)
                     {
-                        socket.Send(new CommandBuilder().SetCommand("/getlocalplayername").Build());
-                        socket.Send(new EventBuilder().SetEventType(EventType.PlayerTravelled).Build());
+                        //https://gist.github.com/jocopa3/5f718f4198f1ea91a37e3a9da468675c
+                        socket.Send(new MCWSSPacket<Command>() { header = { messagePurpose = "commandRequest", requestId = Guid.NewGuid().ToString() }, body = { commandLine = "/getlocalplayername" } }.SerializePacket());
+                        socket.Send(new MCWSSPacket<Event> { header = { requestId = Guid.NewGuid().ToString(), messagePurpose = "subscribe" }, body = { eventName = "PlayerTravelled" } }.SerializePacket());
                         ConnectedSocket = socket;
                         IsConnected = true;
                     }
@@ -63,22 +67,22 @@ namespace VoiceCraft.Network.Sockets
 
                 socket.OnMessage = message =>
                 {
-                    var packet = new MCWSSPacket(message);
+                    var packet = MCPacketReg.GetPacketFromJsonString(message);
 
-                    if (packet.Header.messagePurpose == "commandResponse")
+                    if (packet is MCWSSPacket<LocalPlayerName>)
                     {
-                        var data = (LocalPlayerNameResponse)packet.Body;
-                        var name = data.localplayername;
+                        var data = (MCWSSPacket<LocalPlayerName>)packet;
+                        var name = data.body.localplayername;
                         OnConnect?.Invoke(name);
                     }
 
-                    else if (packet.Header.messagePurpose == "event" && packet.Header.eventName == "PlayerTravelled")
+                    else if (packet is MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled>)
                     {
-                        var data = (PlayerTravelledEvent)packet.Body;
-                        var x = data.player.position.x;
-                        var y = data.player.position.y;
-                        var z = data.player.position.z;
-                        var dimensionInt = data.player.dimension;
+                        var data = (MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled>)packet;
+                        var x = data.body.player.position.x;
+                        var y = data.body.player.position.y;
+                        var z = data.body.player.position.z;
+                        var dimensionInt = data.body.player.dimension;
 
                         OnPlayerTravelled?.Invoke(new Vector3(x, y, z), Dimensions[dimensionInt]);
 #if DEBUG
