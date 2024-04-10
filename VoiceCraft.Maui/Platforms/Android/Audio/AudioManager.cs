@@ -5,6 +5,8 @@ namespace VoiceCraft.Maui;
 
 public class AudioManager : IAudioManager
 {
+    public static AudioManager Instance { get; } = new AudioManager();
+
     public IWavePlayer CreatePlayer(ISampleProvider waveProvider)
     {
         var Player = new AudioTrackOut();

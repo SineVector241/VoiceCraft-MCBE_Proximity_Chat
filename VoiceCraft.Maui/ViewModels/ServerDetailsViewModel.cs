@@ -5,7 +5,6 @@ using VoiceCraft.Maui.Views.Desktop;
 using VoiceCraft.Maui.Models;
 using CommunityToolkit.Mvvm.Messaging;
 using VoiceCraft.Maui.VoiceCraft;
-using NAudio.Wave;
 
 namespace VoiceCraft.Maui.ViewModels
 {
@@ -29,20 +28,19 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task Connect()
         {
-            var manager = new AudioManager();
             var settings = Database.Instance.Settings;
-            if (!manager.RequestInputPermissions()) return;
+            if (!AudioManager.Instance.RequestInputPermissions()) return;
             if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
             {
                 settings.WebsocketPort = 8080;
                 await Database.Instance.SaveSettings();
             }
 
-            if (Settings.InputDevice > manager.GetInputDeviceCount())
+            if (Settings.InputDevice > AudioManager.Instance.GetInputDeviceCount())
             {
                 Settings.InputDevice = 0;
             }
-            if (Settings.OutputDevice > manager.GetOutputDeviceCount())
+            if (Settings.OutputDevice > AudioManager.Instance.GetOutputDeviceCount())
             {
                 Settings.OutputDevice = 0;
             }

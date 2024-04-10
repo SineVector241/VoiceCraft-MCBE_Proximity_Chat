@@ -29,18 +29,17 @@ namespace VoiceCraft.Maui.ViewModels
 
         public SettingsViewModel()
         {
-            var manager = new AudioManager();
-            foreach(var device in manager.GetInputDevices())
+            foreach(var device in AudioManager.Instance.GetInputDevices())
                 InputDevices.Add(device);
 
-            foreach (var device in manager.GetOutputDevices())
+            foreach (var device in AudioManager.Instance.GetOutputDevices())
                 OutputDevices.Add(device);
 
-            if (Settings.InputDevice > manager.GetInputDeviceCount())
+            if (Settings.InputDevice > AudioManager.Instance.GetInputDeviceCount())
             {
                 Settings.InputDevice = 0;
             }
-            if (Settings.OutputDevice > manager.GetOutputDeviceCount())
+            if (Settings.OutputDevice > AudioManager.Instance.GetOutputDeviceCount())
             {
                 Settings.OutputDevice = 0;
             }
@@ -66,9 +65,8 @@ namespace VoiceCraft.Maui.ViewModels
         {
             if (Microphone == null)
             {
-                var manager = new AudioManager();
-                if (!manager.RequestInputPermissions()) return;
-                Microphone = manager.CreateRecorder(AudioFormat, 20);
+                if (!AudioManager.Instance.RequestInputPermissions()) return;
+                Microphone = AudioManager.Instance.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
                 Microphone.StartRecording();
                 IsRecording = true;

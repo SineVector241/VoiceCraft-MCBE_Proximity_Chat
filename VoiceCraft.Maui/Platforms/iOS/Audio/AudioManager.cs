@@ -5,6 +5,8 @@ namespace VoiceCraft.Maui
 {
     public class AudioManager : IAudioManager
     {
+        public static AudioManager Instance { get; } = new AudioManager();
+
         public IWavePlayer CreatePlayer(ISampleProvider waveProvider)
         {
             var Player = new AVAudioEngineOut();
@@ -14,7 +16,37 @@ namespace VoiceCraft.Maui
             return Player;
         }
 
-        public IWaveIn CreateRecorder(WaveFormat waveFormat, int bufferMS)
+        public IWaveIn CreateRecorder(WaveFormat AudioFormat, int bufferMS)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetInputDevices()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetOutputDevices()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetInputDeviceCount()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetOutputDeviceCount()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RequestInputPermissions()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RequestOutputPermissions()
         {
             throw new NotImplementedException();
         }
