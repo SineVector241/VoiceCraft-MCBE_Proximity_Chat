@@ -14,7 +14,7 @@ namespace VoiceCraft.Server.Data
 
         #region Properties
         public ushort VoiceCraftPortUDP { get; set; } = 9050;
-        public ushort MCCommPortTCP { get; set; } = 9051;
+        public ushort MCCommPortTCP { get; set; } = 9050;
 
         //Unchangeable Settings
         public string PermanentServerKey { get; set; } = "";
