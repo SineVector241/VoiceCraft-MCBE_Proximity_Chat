@@ -13,7 +13,7 @@ namespace VoiceCraft.Maui.VoiceCraft
     {
         //Private Variables
         public const string Version = "v1.0.4";
-        private bool IsConnected;
+        private ConnectionState State;
         private uint PacketCount;
         private OpusEncoder Encoder;
         private int FrameSizeMS;
@@ -110,8 +110,10 @@ namespace VoiceCraft.Maui.VoiceCraft
         public void Connect(string ip, ushort port, short key, PositioningTypes positioningType)
         {
             if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (State ==  ConnectionState.Connected || State == ConnectionState.Connecting) return;
 
             PositioningType = positioningType;
+            State = ConnectionState.Connecting;
             _ = Task.Run(async () =>
             {
                 try
@@ -131,14 +133,19 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         public void Disconnect(string? reason = null)
         {
-            if (IsDisposed && !IsConnected) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (IsDisposed && State == ConnectionState.Disconnected) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            if (State == ConnectionState.Disconnected) return;
 
             VoiceCraftSocket.DisconnectAsync().Wait();
             MCWSS?.Stop();
             ClearParticipants();
+            ClearChannels();
 
-            if (IsConnected) OnDisconnected?.Invoke(reason);
-            IsConnected = false;
+            if (State == ConnectionState.Connected || State == ConnectionState.Connecting)
+            {
+                State = ConnectionState.Disconnected;
+                OnDisconnected?.Invoke(reason);
+            }
         }
 
         public void SetMute(bool mute)
@@ -181,7 +188,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         public void SendAudio(byte[] audio, int bytesRecorded)
         {
-            if (Deafened || Muted || !IsConnected) return;
+            if (Deafened || Muted || State != ConnectionState.Connected) return;
             PacketCount++;
 
             byte[] audioEncodeBuffer = new byte[1000];
@@ -195,16 +202,26 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             foreach (var participant in Participants)
             {
+                OnParticipantLeft?.Invoke(participant.Value);
                 participant.Value.Dispose();
             }
             Participants.Clear();
+        }
+
+        private void ClearChannels()
+        {
+            foreach(var channel in Channels)
+            {
+                OnChannelRemoved?.Invoke(channel.Value);
+            }
+            Channels.Clear();
         }
 
         protected override void Dispose(bool disposing)
         {
             if(disposing)
             {
-                if (IsConnected)
+                if (State == ConnectionState.Connected)
                     Disconnect();
 
                 VoiceCraftSocket.Dispose();
@@ -220,7 +237,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         private void VoiceCraftSocketConnected(short key)
         {
             Key = key;
-            IsConnected = true;
+            State = ConnectionState.Connected;
             OnConnected?.Invoke();
 
             if (PositioningType == PositioningTypes.ClientSided) MCWSS.Start();
@@ -346,7 +363,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketDenyReceived(Core.Packets.VoiceCraft.Deny data, Network.NetPeer peer)
         {
-            if(IsConnected)
+            if(State == ConnectionState.Connected)
             {
                 OnDeny?.Invoke(data.Reason);
             }
@@ -356,7 +373,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         #region MCWSS
         private void MCWSSConnected(string Username)
         {
-            if (!IsConnected) return;
+            if (State != ConnectionState.Connected) return;
 
             VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.Binded() { Name = Username });
             OnBinded?.Invoke(Username);
@@ -364,18 +381,18 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void MCWSSPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
         {
-            if (!IsConnected) return;
+            if (State != ConnectionState.Connected) return;
 
             VoiceCraftSocket.Send(new UpdatePosition() { Position = position, EnvironmentId = Dimension });
         }
 
         private void MCWSSDisconnected()
         {
-            if (!IsConnected) return;
+            if (State != ConnectionState.Connected) return;
 
             VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.Unbinded());
             ClearParticipants(); //Clear the entire list
-            Channels.Clear();
+            ClearChannels();
             OnUnbinded?.Invoke();
         }
         #endregion
@@ -428,6 +445,13 @@ namespace VoiceCraft.Maui.VoiceCraft
             }
 
             return message;
+        }
+
+        private enum ConnectionState
+        {
+            Disconnected,
+            Connecting,
+            Connected
         }
     }
 }

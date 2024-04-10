@@ -24,7 +24,7 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             offset += sizeof(int);
 
             if(environmentIdLength > 0)
-                Encoding.UTF8.GetString(dataStream, offset, environmentIdLength); //Read Environment Id.
+                EnvironmentId = Encoding.UTF8.GetString(dataStream, offset, environmentIdLength); //Read Environment Id.
 
             offset += environmentIdLength;
 

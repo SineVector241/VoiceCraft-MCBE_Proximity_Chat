@@ -423,7 +423,7 @@
                                             </toolkit:Icon>
                                             <toolkit:ContentButton Grid.Column="2"
                                                                    Command="{Binding Source={x:Reference voice}, Path=BindingContext.JoinChannelCommand}"
-                                                                   CommandParameter="{Binding Channel}"
+                                                                   CommandParameter="{Binding}"
                                                                    HeightRequest="45"
                                                                    HorizontalOptions="EndAndExpand"
                                                                    WidthRequest="45">

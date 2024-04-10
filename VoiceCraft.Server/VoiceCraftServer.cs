@@ -378,7 +378,7 @@ namespace VoiceCraft.Server
             var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId);
             if (Participants.TryGetValue(peer, out var client) && client.Binded && channel != null)
             {
-                if(channel.Password == data.Password || string.IsNullOrWhiteSpace(channel.Password))
+                if(channel.Password != data.Password && !string.IsNullOrWhiteSpace(channel.Password))
                 {
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.Deny() { Reason = "Invalid Channel Password!" });
                     return;
