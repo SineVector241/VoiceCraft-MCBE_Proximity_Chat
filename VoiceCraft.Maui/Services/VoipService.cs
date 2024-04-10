@@ -191,9 +191,7 @@ namespace VoiceCraft.Maui.Services
                 }
                 catch (Exception ex)
                 {
-#if DEBUG
                     Debug.WriteLine(ex);
-#endif
                 }
             }
         }
