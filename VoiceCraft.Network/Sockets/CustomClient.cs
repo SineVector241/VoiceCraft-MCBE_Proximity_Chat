@@ -131,6 +131,7 @@ namespace VoiceCraft.Network.Sockets
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             ActivityChecker = null;
             State = CustomClientSocketState.Stopped;
+            OnStopped?.Invoke(reason);
         }
 
         private async Task SocketSendToAsync(CustomClientPacket packet, SocketAddress address)
@@ -138,6 +139,9 @@ namespace VoiceCraft.Network.Sockets
             var buffer = new List<byte>();
             packet.WritePacket(ref buffer);
             await Socket.SendToAsync(buffer.ToArray(),SocketFlags.None, address, CTS.Token);
+
+            if (LogOutbound && (OutboundFilter.Count == 0 || OutboundFilter.Contains((CustomClientTypes)packet.PacketId)))
+                OnOutboundPacket?.Invoke(packet);
         }
 
         private async Task ReceiveAsync()
@@ -225,6 +229,7 @@ namespace VoiceCraft.Network.Sockets
             LastActive = Environment.TickCount64;
             RemoteAddress = new SocketAddress(address.Family, address.Size);
             SocketSendToAsync(new Accept(), address).Wait();
+            OnConnect?.Invoke(data.Name);
         }
 
         private void LogoutReceived(Logout data, SocketAddress address)
