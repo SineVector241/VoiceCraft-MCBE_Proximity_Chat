@@ -70,6 +70,8 @@ namespace VoiceCraft.Maui.Services
             Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.WebsocketPort)
             {
                 LinearProximity = Settings.LinearVolume,
+                UseCustomProtocol = Settings.CustomClientProtocol,
+                AllowAccurateEnvironmentId = Settings.AllowAccurateEnvironmentId,
                 DirectionalHearing = Settings.DirectionalAudioEnabled
             };
 
@@ -234,7 +236,18 @@ namespace VoiceCraft.Maui.Services
         #region Event Methods
         private void ClientConnected()
         {
-            StatusMessage = Client.PositioningType == Core.PositioningTypes.ServerSided ? $"Connected! Key - {Client.Key}\nWaiting for binding..." : $"Connected! Key\nWaiting for MCWSS connection...";
+            if(Client.PositioningType == PositioningTypes.ServerSided)
+            {
+                StatusMessage = $"Connected! Key - {Client.Key}\nWaiting for binding...";
+            }
+            else if(Settings.CustomClientProtocol)
+            {
+                StatusMessage = $"Connected! Key\nWaiting for connection...";
+            }
+            else
+            {
+                StatusMessage = $"Connected! Key\nWaiting for MCWSS connection...";
+            }
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 
@@ -251,7 +264,7 @@ namespace VoiceCraft.Maui.Services
         private void ClientBinded(string name)
         {
             Username = name ?? "<N.A.>";
-            StatusMessage = $"Connected - Key: {Client.Key}\n{Username}";
+            StatusMessage = Client.PositioningType == PositioningTypes.ServerSided? $"Connected - Key: {Client.Key}\n{Username}" : $"Connected\n{Username}";
 
             //Last step of verification. We start sending data and playing any received data.
             try
@@ -268,7 +281,14 @@ namespace VoiceCraft.Maui.Services
 
         private void ClientUnbinded()
         {
-            StatusMessage = $"Connected\nUnbinded. MCWSS Disconnected";
+            if (Settings.CustomClientProtocol)
+            {
+                StatusMessage = $"Connected! Key\nDisconnected connection!";
+            }
+            else
+            {
+                StatusMessage = $"Connected! Key\nMCWSS Disconnected!";
+            }
             OnStatusUpdated?.Invoke(StatusMessage);
         }
 

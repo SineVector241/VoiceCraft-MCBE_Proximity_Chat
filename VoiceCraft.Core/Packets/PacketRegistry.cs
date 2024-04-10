@@ -17,13 +17,13 @@ namespace VoiceCraft.Core.Packets
         /// <param name="IsReliable"></param>
         public void RegisterPacket(byte Id, Type PacketType)
         {
-            if (typeof(VoiceCraftPacket).IsAssignableFrom(PacketType) || typeof(MCCommPacket).IsAssignableFrom(PacketType))
+            if (typeof(VoiceCraftPacket).IsAssignableFrom(PacketType) || typeof(MCCommPacket).IsAssignableFrom(PacketType) || typeof(CustomClientPacket).IsAssignableFrom(PacketType))
             {
                 RegisteredPackets.AddOrUpdate(Id, PacketType, (key, old) => old = PacketType);
             }
             else
             {
-                throw new ArgumentException($"PacketType needs to inherit from {nameof(VoiceCraftPacket)} or {nameof(MCComm)}", nameof(PacketType));
+                throw new ArgumentException($"PacketType needs to inherit from {nameof(VoiceCraftPacket)}, {nameof(MCCommPacket)} or {nameof(CustomClientPacket)}", nameof(PacketType));
             }
         }
 
@@ -66,6 +66,25 @@ namespace VoiceCraft.Core.Packets
         }
 
         /// <summary>
+        /// Convert's a packet from a byte array to the object.
+        /// </summary>
+        /// <param name="dataStream">The raw data.</param>
+        /// <returns>The packet.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public CustomClientPacket GetCustomPacketFromDataStream(byte[] dataStream)
+        {
+            var PacketId = dataStream[0]; //This is the ID.
+
+            if (!RegisteredPackets.TryGetValue(PacketId, out var packetType))
+                throw new InvalidOperationException($"Invalid packet id {PacketId}");
+
+            CustomClientPacket packet = GetCustomPacketFromType(packetType);
+            packet.ReadPacket(ref dataStream, 1); //Offset by 1 byte so we completely remove reading the Id.
+
+            return packet;
+        }
+
+        /// <summary>
         /// Converts a packet from a json string to the object.
         /// </summary>
         /// <param name="data">The raw data.</param>
@@ -98,6 +117,24 @@ namespace VoiceCraft.Core.Packets
             if (packet == null) throw new Exception("Could not create packet instance.");
 
             return (VoiceCraftPacket)packet;
+        }
+
+        /// <summary>
+        /// Create's a packet from the type.
+        /// </summary>
+        /// <param name="PacketType">The packet type.</param>
+        /// <returns>The packet.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="Exception"></exception>
+        public static CustomClientPacket GetCustomPacketFromType(Type PacketType)
+        {
+            if (!typeof(CustomClientPacket).IsAssignableFrom(PacketType))
+                throw new ArgumentException($"PacketType needs to inherit from {nameof(CustomClientPacket)}", nameof(PacketType));
+
+            var packet = Activator.CreateInstance(PacketType);
+            if (packet == null) throw new Exception("Could not create packet instance.");
+
+            return (CustomClientPacket)packet;
         }
 
         /// <summary>

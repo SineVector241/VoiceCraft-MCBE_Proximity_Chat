@@ -49,6 +49,7 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.AddChannel, typeof(AddChannel));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.RemoveChannel, typeof(RemoveChannel));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.UpdatePosition, typeof(UpdatePosition));
+            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.FullUpdatePosition, typeof(FullUpdatePosition));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ClientAudio, typeof(ClientAudio));
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.ServerAudio, typeof(ServerAudio));
         }
@@ -111,6 +112,7 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<AddChannel>? OnAddChannelReceived;
         public event PacketData<RemoveChannel>? OnRemoveChannelReceived;
         public event PacketData<UpdatePosition>? OnUpdatePositionReceived;
+        public event PacketData<FullUpdatePosition>? OnFullUpdatePositionReceived;
         public event PacketData<ClientAudio>? OnClientAudioReceived;
         public event PacketData<ServerAudio>? OnServerAudioReceived;
 
@@ -562,6 +564,7 @@ namespace VoiceCraft.Network.Sockets
                 case VoiceCraftPacketTypes.AddChannel: OnAddChannelReceived?.Invoke((AddChannel)packet, peer); break;
                 case VoiceCraftPacketTypes.RemoveChannel: OnRemoveChannelReceived?.Invoke((RemoveChannel)packet, peer); break;
                 case VoiceCraftPacketTypes.UpdatePosition: OnUpdatePositionReceived?.Invoke((UpdatePosition)packet, peer); break;
+                case VoiceCraftPacketTypes.FullUpdatePosition: OnFullUpdatePositionReceived?.Invoke((FullUpdatePosition)packet, peer); break;
                 case VoiceCraftPacketTypes.ClientAudio: OnClientAudioReceived?.Invoke((ClientAudio)packet, peer); break;
                 case VoiceCraftPacketTypes.ServerAudio: OnServerAudioReceived?.Invoke((ServerAudio)packet, peer); break;
             }

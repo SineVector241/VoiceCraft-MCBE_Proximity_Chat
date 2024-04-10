@@ -19,6 +19,10 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         bool clientSidedPositioning;
         [ObservableProperty]
+        bool customClientProtocol;
+        [ObservableProperty]
+        bool allowAccurateEnvironmentId;
+        [ObservableProperty]
         bool linearVolume = true;
         [ObservableProperty]
         bool softLimiterEnabled = true;
