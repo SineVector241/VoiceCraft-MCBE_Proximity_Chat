@@ -550,6 +550,7 @@ namespace VoiceCraft.Network.Sockets
                 case VoiceCraftPacketTypes.Ping: OnPingReceived?.Invoke((Ping)packet, peer); break;
                 case VoiceCraftPacketTypes.PingInfo: OnPingInfoReceived?.Invoke((PingInfo)packet, peer); break;
                 case VoiceCraftPacketTypes.Binded: OnBindedReceived?.Invoke((Binded)packet, peer); break;
+                case VoiceCraftPacketTypes.Unbinded: OnUnbindedReceived?.Invoke((Unbinded)packet, peer); break;
                 case VoiceCraftPacketTypes.ParticipantJoined: OnParticipantJoinedReceived?.Invoke((ParticipantJoined)packet, peer); break;
                 case VoiceCraftPacketTypes.ParticipantLeft: OnParticipantLeftReceived?.Invoke((ParticipantLeft)packet, peer); break;
                 case VoiceCraftPacketTypes.Mute: OnMuteReceived?.Invoke((Mute)packet, peer); break;
