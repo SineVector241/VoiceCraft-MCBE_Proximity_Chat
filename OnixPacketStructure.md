@@ -59,10 +59,10 @@ Constant Encapsulated Packet Size: 5 bytes.
 |CaveDensity      |float (4 bytes)|Defines how surrounded the player is in a cave, This is basically used as an echo factor, Server calculation uses this like so... `Math.Max(player.CaveDensity, otherPlayer.Value.CaveDensity) * (1.0f - volume) : 0.0f;`|
 |IsUnderwater     |bool (1 byte)  |Defines wether the player's head is underwater.|
 |DimensionIdLength|int (4 bytes)  |Defines the length of the DimensionId variable.|
-|LevelIdLength    |int (4 bytes)  |Defines the length of the LevelId variable.    |
-|ServerIdLength   |int (4 bytes)  |Defines the length of the ServerId variable.   |
 |DimensionId      |char[]         |The dimension the player is currently in.      |
+|LevelIdLength    |int (4 bytes)  |Defines the length of the LevelId variable.    |
 |LevelId          |char[]         |The world Id the player is currently in.       |
+|ServerIdLength   |int (4 bytes)  |Defines the length of the ServerId variable.   |
 |ServerId         |char[]         |The server the player is connected to. Can be IP and Port in string notation e.g. 127.0.0.1:19132|
 
 Constant Packet Size: 33 bytes.
