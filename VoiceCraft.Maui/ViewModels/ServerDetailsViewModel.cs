@@ -29,30 +29,24 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task Connect()
         {
+            var manager = new AudioManager();
             var settings = Database.Instance.Settings;
+            if (!manager.RequestInputPermissions()) return;
             if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
             {
                 settings.WebsocketPort = 8080;
                 await Database.Instance.SaveSettings();
             }
-#if ANDROID
-            var status = await Permissions.RequestAsync<Permissions.Microphone>();
-            if (Permissions.ShouldShowRationale<Permissions.Microphone>())
-            {
-                await Shell.Current.DisplayAlert("Error", "VoiceCraft requires the microphone to communicate with other users!", "OK");
-                return;
-            }
-            if (status != PermissionStatus.Granted) return;
-#elif WINDOWS
-            if (Settings.InputDevice > WaveIn.DeviceCount)
+
+            if (Settings.InputDevice > manager.GetInputDeviceCount())
             {
                 Settings.InputDevice = 0;
             }
-            if (Settings.OutputDevice > WaveOut.DeviceCount)
+            if (Settings.OutputDevice > manager.GetOutputDeviceCount())
             {
                 Settings.OutputDevice = 0;
             }
-#endif
+
             WeakReferenceMessenger.Default.Send(new StartServiceMSG());
             await Navigator.NavigateTo(nameof(Voice), Server);
         }

@@ -28,4 +28,44 @@ public class AudioManager : IAudioManager
         Recorder.DeviceNumber = settings.InputDevice - 1;
         return Recorder;
     }
+
+    public string[] GetInputDevices()
+    {
+        var inputDevices = new List<string>();
+
+        for (int i = 0; i < WaveIn.DeviceCount; i++)
+            inputDevices.Add(WaveIn.GetCapabilities(i).ProductName);
+
+        return inputDevices.ToArray();
+    }
+
+    public string[] GetOutputDevices()
+    {
+        var outputDevices = new List<string>();
+
+        for (int i = 0; i < WaveOut.DeviceCount; i++)
+            outputDevices.Add(WaveOut.GetCapabilities(i).ProductName);
+
+        return outputDevices.ToArray();
+    }
+
+    public int GetInputDeviceCount()
+    {
+        return WaveIn.DeviceCount;
+    }
+
+    public int GetOutputDeviceCount()
+    {
+        return WaveOut.DeviceCount;
+    }
+
+    public bool RequestInputPermissions()
+    {
+        return true;
+    }
+
+    public bool RequestOutputPermissions()
+    {
+        return true;
+    }
 }

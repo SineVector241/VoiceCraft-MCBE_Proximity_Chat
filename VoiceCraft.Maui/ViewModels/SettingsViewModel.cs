@@ -29,22 +29,21 @@ namespace VoiceCraft.Maui.ViewModels
 
         public SettingsViewModel()
         {
-#if WINDOWS
-            for (int i = 0; i < WaveIn.DeviceCount; i++)
-                inputDevices.Add(WaveIn.GetCapabilities(i).ProductName);
+            var manager = new AudioManager();
+            foreach(var device in manager.GetInputDevices())
+                InputDevices.Add(device);
 
-            for (int i = 0; i < WaveOut.DeviceCount; i++)
-                outputDevices.Add(WaveOut.GetCapabilities(i).ProductName);
+            foreach (var device in manager.GetOutputDevices())
+                OutputDevices.Add(device);
 
-            if (settings.InputDevice > WaveIn.DeviceCount)
+            if (Settings.InputDevice > manager.GetInputDeviceCount())
             {
                 Settings.InputDevice = 0;
             }
-            if (settings.OutputDevice > WaveOut.DeviceCount)
+            if (Settings.OutputDevice > manager.GetOutputDeviceCount())
             {
                 Settings.OutputDevice = 0;
             }
-#endif
         }
 
         [RelayCommand]
@@ -63,25 +62,12 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-#if ANDROID
-        public async Task OpenCloseMicrophone()
-#else
         public void OpenCloseMicrophone()
-#endif
         {
             if (Microphone == null)
             {
-#if ANDROID
-                var status = await Permissions.RequestAsync<Permissions.Microphone>();
-                if (Permissions.ShouldShowRationale<Permissions.Microphone>())
-                {
-                    await Shell.Current.DisplayAlert("Error", "VoiceCraft requires the microphone to communicate with other users!", "OK");
-                    return;
-                }
-                if (status != PermissionStatus.Granted) return;
-#endif
-
                 var manager = new AudioManager();
+                if (!manager.RequestInputPermissions()) return;
                 Microphone = manager.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
                 Microphone.StartRecording();
