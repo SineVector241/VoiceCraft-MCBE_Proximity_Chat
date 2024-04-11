@@ -4,7 +4,7 @@ namespace VoiceCraft.Maui.Views.Desktop;
 
 public partial class Settings : ContentPage
 {
-    SettingsViewModel viewModel;
+    readonly SettingsViewModel viewModel;
 	public Settings()
 	{
 		InitializeComponent();
@@ -12,30 +12,29 @@ public partial class Settings : ContentPage
         viewModel = (SettingsViewModel)BindingContext;
     }
 
-    private void WebsocketEntryUnfocused(object sender, FocusEventArgs e)
+    private void ClientEntryUnfocused(object sender, FocusEventArgs e)
     {
-        if (sender is Entry)
+        if (sender is Entry entry)
         {
-            var entry = (Entry)sender;
             var valid = int.TryParse(entry.Text, out var result);
             if (!valid)
             {
                 var cleaned = new string(entry.Text.Where(char.IsDigit).ToArray());
-                if(int.TryParse(cleaned, out var res))
+                if (int.TryParse(cleaned, out var res))
                 {
                     var clamped = Math.Clamp(res, 1025, 65535);
-                    viewModel.Settings.WebsocketPort = clamped;
+                    viewModel.Settings.ClientPort = clamped;
                     entry.Text = clamped.ToString();
                 }
                 else
                 {
-                    viewModel.Settings.WebsocketPort = 1025;
+                    viewModel.Settings.ClientPort = 1025;
                 }
             }
-            else if(result > 65535 || result < 1025)
+            else if (result > 65535 || result < 1025)
             {
                 var clamped = Math.Clamp(result, 1025, 65535);
-                viewModel.Settings.WebsocketPort = clamped;
+                viewModel.Settings.ClientPort = clamped;
             }
         }
     }

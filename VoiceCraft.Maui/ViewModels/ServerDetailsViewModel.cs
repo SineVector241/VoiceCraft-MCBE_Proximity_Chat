@@ -30,9 +30,9 @@ namespace VoiceCraft.Maui.ViewModels
         {
             var settings = Database.Instance.Settings;
             if (!AudioManager.Instance.RequestInputPermissions()) return;
-            if (settings.WebsocketPort < 1025 || settings.WebsocketPort > 65535)
+            if (settings.ClientPort < 1025 || settings.ClientPort > 65535)
             {
-                settings.WebsocketPort = 8080;
+                settings.ClientPort = 8080;
                 await Database.Instance.SaveSettings();
             }
 

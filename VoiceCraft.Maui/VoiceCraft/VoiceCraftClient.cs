@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
 using VoiceCraft.Core.Packets.VoiceCraft;
+using VoiceCraft.Network.Sockets;
 
 namespace VoiceCraft.Maui.VoiceCraft
 {
@@ -15,9 +16,9 @@ namespace VoiceCraft.Maui.VoiceCraft
         public const string Version = "v1.0.4";
         private ConnectionState State;
         private uint PacketCount;
-        private OpusEncoder Encoder;
-        private int FrameSizeMS;
-        private int ClientPort;
+        private readonly OpusEncoder Encoder;
+        private readonly int FrameSizeMS;
+        private readonly int ClientPort;
 
         //Variables
         public ConcurrentDictionary<short, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<short, VoiceCraftParticipant>();
@@ -119,7 +120,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         #region Methods
         public void Connect(string ip, ushort port, short key, PositioningTypes positioningType)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftClient));
             if (State ==  ConnectionState.Connected || State == ConnectionState.Connecting) return;
 
             PositioningType = positioningType;
@@ -143,7 +144,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         public void Disconnect(string? reason = null)
         {
-            if (IsDisposed && State == ConnectionState.Disconnected) throw new ObjectDisposedException(nameof(VoiceCraftClient));
+            ObjectDisposedException.ThrowIf(IsDisposed && State == ConnectionState.Disconnected, nameof(VoiceCraftClient));
             if (State == ConnectionState.Disconnected) return;
 
             VoiceCraftSocket.DisconnectAsync().Wait();
@@ -452,11 +453,10 @@ namespace VoiceCraft.Maui.VoiceCraft
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var pingTime = DateTime.UtcNow;
             byte[] packetBuffer = new byte[250];
-            string message = string.Empty;
-
             var PacketRegistry = new PacketRegistry();
             PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
 
+            string message;
             try
             {
                 socket.Connect(IP, Port);
@@ -472,14 +472,14 @@ namespace VoiceCraft.Maui.VoiceCraft
                     var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
 
                     var positioningType = string.Empty;
-                    switch(packet.PositioningType)
+                    switch (packet.PositioningType)
                     {
                         case PositioningTypes.ServerSided: positioningType = "Server"; break;
                         case PositioningTypes.ClientSided: positioningType = "Client"; break;
                         case PositioningTypes.Unknown: positioningType = "Hybrid"; break;
                     }
 
-                    message = $"MOTD: {packet.MOTD}\n Connected Participants: {packet.ConnectedParticipants}\n Positioning Type: {positioningType}\nPing Time: {Math.Floor(pingTimeMS)}ms";
+                    message = $"MOTD: {packet.MOTD}\nConnected Participants: {packet.ConnectedParticipants}\nPositioning Type: {positioningType}\nPing Time: {Math.Floor(pingTimeMS)}ms";
                 }
                 else
                 {

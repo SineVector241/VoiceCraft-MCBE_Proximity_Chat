@@ -171,13 +171,13 @@
                         <Label Grid.Column="0"
                                FontAttributes="Bold"
                                FontSize="Small"
-                               Text="Websocket Port"
+                               Text="Client Port"
                                VerticalTextAlignment="Center" />
 
                         <Entry Grid.Column="1"
                                Keyboard="Numeric"
-                               Text="{Binding Settings.WebsocketPort}"
-                               Unfocused="WebsocketEntryUnfocused">
+                               Text="{Binding Settings.ClientPort}"
+                               Unfocused="ClientEntryUnfocused">
                             <Entry.Behaviors>
                                 <mtoolkit:NumericValidationBehavior Flags="ValidateOnValueChanged"
                                                                     InvalidStyle="{StaticResource InvalidEntryStyle}"

@@ -58,8 +58,8 @@ namespace VoiceCraft.Network.Sockets
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;
         public bool LogOutbound { get; set; } = false;
-        public List<VoiceCraftPacketTypes> InboundFilter { get; set; } = new List<VoiceCraftPacketTypes>();
-        public List<VoiceCraftPacketTypes> OutboundFilter { get; set; } = new List<VoiceCraftPacketTypes>();
+        public List<VoiceCraftPacketTypes> InboundFilter { get; set; } = [];
+        public List<VoiceCraftPacketTypes> OutboundFilter { get; set; } = [];
         #endregion
 
         #region Delegates
@@ -126,7 +126,7 @@ namespace VoiceCraft.Network.Sockets
         #region Methods
         public async Task ConnectAsync(string IP, int port, short preferredKey, PositioningTypes positioningType, string version)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting) throw new Exception("Cannot start connection as socket is in a hosting state!");
             if (State != VoiceCraftSocketState.Stopped) throw new Exception("You must disconnect before reconnecting!");
 
@@ -173,7 +173,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task DisconnectAsync(string? reason = null, bool notifyServer = true)
         {
-            if (IsDisposed && State == VoiceCraftSocketState.Stopped) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed && State == VoiceCraftSocketState.Stopped, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Starting || State == VoiceCraftSocketState.Started) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Disconnecting) throw new InvalidOperationException("Already disconnecting.");
             if (State == VoiceCraftSocketState.Stopped) return;
@@ -205,7 +205,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task HostAsync(int Port)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connected || State == VoiceCraftSocketState.Connecting) throw new Exception("Cannot start hosting as socket is in a connection state!");
             if (State != VoiceCraftSocketState.Stopped) throw new Exception("You must stop hosting before starting a host!");
 
@@ -239,7 +239,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task StopAsync(string? reason = null)
         {
-            if (IsDisposed && State == VoiceCraftSocketState.Stopped) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed && State == VoiceCraftSocketState.Stopped, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
             if (State == VoiceCraftSocketState.Stopping) throw new InvalidOperationException("Already stopping.");
 
@@ -268,13 +268,10 @@ namespace VoiceCraft.Network.Sockets
 
         public void Send(VoiceCraftPacket packet)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected)
             {
-                if (ClientNetPeer != null)
-                {
-                    ClientNetPeer.AddToSendBuffer(packet);
-                }
+                ClientNetPeer?.AddToSendBuffer(packet);
             }
             else
                 throw new InvalidOperationException("Socket must be in a connecting or connected state to send packets!");
@@ -282,7 +279,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task DisconnectPeer(SocketAddress Address, bool notifyPeer = false, string? reason = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
 
             if (NetPeers.TryRemove(Address, out var peer))
             {
@@ -297,7 +294,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task DisconnectPeer(NetPeer peer, bool notifyPeer = false, string? reason = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
 
             var socket = NetPeers.FirstOrDefault(x => x.Value == peer);
             if(socket.Value != null)
@@ -475,10 +472,9 @@ namespace VoiceCraft.Network.Sockets
                 foreach (var peer in NetPeers)
                 {
                     var maxSendTime = Environment.TickCount64 + MaxSendTime;
-                    VoiceCraftPacket? packet = null;
-                    while (peer.Value.SendQueue.TryDequeue(out packet) && Environment.TickCount64 < maxSendTime && !CTS.IsCancellationRequested)
+                    while (peer.Value.SendQueue.TryDequeue(out VoiceCraftPacket? packet) && Environment.TickCount64 < maxSendTime && !CTS.IsCancellationRequested)
                     {
-                        if(packet.Retries > NetPeer.MaxSendRetries)
+                        if (packet.Retries > NetPeer.MaxSendRetries)
                         {
                             await DisconnectPeer(peer.Key, true, "Unstable Connection.");
                             continue;
@@ -503,8 +499,7 @@ namespace VoiceCraft.Network.Sockets
         {
             while (!CTS.IsCancellationRequested && ClientNetPeer != null)
             {
-                VoiceCraftPacket? packet = null;
-                while (ClientNetPeer.SendQueue.TryDequeue(out packet) && !CTS.IsCancellationRequested)
+                while (ClientNetPeer.SendQueue.TryDequeue(out VoiceCraftPacket? packet) && !CTS.IsCancellationRequested)
                 {
                     if (packet.Retries > NetPeer.MaxSendRetries)
                     {

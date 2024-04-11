@@ -67,7 +67,7 @@ namespace VoiceCraft.Maui.Services
             Settings = Database.Instance.Settings;
             Server = server;
 
-            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.WebsocketPort)
+            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.ClientPort)
             {
                 LinearProximity = Settings.LinearVolume,
                 UseCustomProtocol = Settings.CustomClientProtocol,
@@ -159,10 +159,9 @@ namespace VoiceCraft.Maui.Services
             bool previousSpeakingState = false;
             while (true)
             {
-                CT.ThrowIfCancellationRequested();
                 try
                 {
-                    await Task.Delay(200);
+                    await Task.Delay(200, CT);
 
                     var currentSpeakingState = Environment.TickCount - (long)RecordDetection < 500;
                     if (previousSpeakingState != currentSpeakingState)
@@ -240,11 +239,11 @@ namespace VoiceCraft.Maui.Services
             }
             else if(Settings.CustomClientProtocol)
             {
-                StatusMessage = $"Connected! Key\nWaiting for connection...";
+                StatusMessage = $"Connected! Key\nWaiting for client on port {Settings.ClientPort}";
             }
             else
             {
-                StatusMessage = $"Connected! Key\nWaiting for MCWSS connection...";
+                StatusMessage = $"Connected! Key\nWaiting for MCWSS on port {Settings.ClientPort}.";
             }
             OnStatusUpdated?.Invoke(StatusMessage);
         }

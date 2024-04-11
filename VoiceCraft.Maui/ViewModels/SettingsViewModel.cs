@@ -13,10 +13,10 @@ namespace VoiceCraft.Maui.ViewModels
         SettingsModel settings = Database.Instance.Settings;
 
         [ObservableProperty]
-        ObservableCollection<string> inputDevices = new ObservableCollection<string>() { "Default" };
+        ObservableCollection<string> inputDevices = ["Default"];
         
         [ObservableProperty]
-        ObservableCollection<string> outputDevices = new ObservableCollection<string>() { "Default" };
+        ObservableCollection<string> outputDevices = ["Default"];
 
         [ObservableProperty]
         float microphoneDetection;
@@ -25,7 +25,7 @@ namespace VoiceCraft.Maui.ViewModels
         bool isRecording = false;
 
         private IWaveIn? Microphone;
-        private WaveFormat AudioFormat = new WaveFormat(48000, 1);
+        private readonly WaveFormat AudioFormat = new(48000, 1);
 
         public SettingsViewModel()
         {

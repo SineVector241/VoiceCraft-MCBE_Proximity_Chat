@@ -34,10 +34,10 @@ namespace VoiceCraft.Maui.ViewModels
         bool showParticipantVolume = false;
 
         [ObservableProperty]
-        ObservableCollection<ParticipantModel> participants = new ObservableCollection<ParticipantModel>();
+        ObservableCollection<ParticipantModel> participants = [];
 
         [ObservableProperty]
-        ObservableCollection<ChannelModel> channels = new ObservableCollection<ChannelModel>();
+        ObservableCollection<ChannelModel> channels = [];
 
         [RelayCommand]
         public async Task OnPageAppearing()
@@ -196,7 +196,7 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public async Task Disconnect()
+        public static async Task Disconnect()
         {
             WeakReferenceMessenger.Default.Send(new DisconnectMSG());
             Preferences.Set("VoipServiceRunning", false);
@@ -241,7 +241,7 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public async Task JoinChannel(ChannelModel channel)
+        public static async Task JoinChannel(ChannelModel channel)
         {
             if (channel.Joined)
             {

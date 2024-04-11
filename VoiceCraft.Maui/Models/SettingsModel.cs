@@ -9,7 +9,7 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         int outputDevice = 0;
         [ObservableProperty]
-        int websocketPort = 8080;
+        int clientPort = 8080;
         [ObservableProperty]
         float softLimiterGain = 5.0f;
         [ObservableProperty]

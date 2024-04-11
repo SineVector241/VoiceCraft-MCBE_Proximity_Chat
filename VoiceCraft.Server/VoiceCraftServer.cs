@@ -79,7 +79,7 @@ namespace VoiceCraft.Server
         #region Methods
         public void Start()
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
             _ = Task.Run(async () => {
                 try
@@ -106,7 +106,7 @@ namespace VoiceCraft.Server
 
         public void Stop(string? reason = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
             VoiceCraftSocket.StopAsync().Wait();
             MCComm.Stop();
@@ -117,7 +117,7 @@ namespace VoiceCraft.Server
 
         public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
             var list = Participants.Where(x => !excludes.Contains(x.Value) && x.Value.Channel == inChannel);
             foreach (var participant in list)
@@ -131,7 +131,7 @@ namespace VoiceCraft.Server
 
         public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel? channel = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraftServer));
+            ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
             if (client.Channel == channel) return; //Client is already in the channel.
 
@@ -268,9 +268,11 @@ namespace VoiceCraft.Server
                 peer.DenyLogin("Server only accepts server sided positioning!");
                 return;
             }
-            var participant = new VoiceCraftParticipant(string.Empty);
-            participant.ClientSided = PositioningTypes.ClientSided == packet.PositioningType;
-            participant.Key = GetAvailableKey(packet.Key);
+            var participant = new VoiceCraftParticipant(string.Empty)
+            {
+                ClientSided = PositioningTypes.ClientSided == packet.PositioningType,
+                Key = GetAvailableKey(packet.Key)
+            };
             peer.AcceptLogin(participant.Key);
             Participants.TryAdd(peer, participant);
             OnParticipantJoined?.Invoke(participant);
@@ -315,13 +317,16 @@ namespace VoiceCraft.Server
                     });
                 } //Send participants back to binded client.
 
+                byte channelId = 0;
                 foreach(var channel in ServerProperties.Channels)
                 {
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                     {
                         Name = channel.Name,
-                        RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password)
+                        RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
+                        ChannelId = channelId
                     });
+                    channelId++;
                 } //Send channel list back to binded client.
 
                 OnParticipantBinded?.Invoke(client);
@@ -554,13 +559,16 @@ namespace VoiceCraft.Server
                 });
             } //Send participants back to binded client.
 
+            byte channelId = 0;
             foreach (var channel in ServerProperties.Channels)
             {
                 client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                 {
                     Name = channel.Name,
-                    RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password)
+                    RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
+                    ChannelId = channelId
                 });
+                channelId++;
             } //Send channel list back to binded client.
 
             OnParticipantBinded?.Invoke(client.Value);
