@@ -159,10 +159,9 @@ namespace VoiceCraft.Maui.Services
             bool previousSpeakingState = false;
             while (true)
             {
+                await Task.Delay(200, CT);
                 try
                 {
-                    await Task.Delay(200, CT);
-
                     var currentSpeakingState = Environment.TickCount - (long)RecordDetection < 500;
                     if (previousSpeakingState != currentSpeakingState)
                     {
