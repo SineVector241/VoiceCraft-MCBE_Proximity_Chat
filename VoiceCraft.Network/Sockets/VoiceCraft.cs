@@ -139,7 +139,7 @@ namespace VoiceCraft.Network.Sockets
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
             CTS = new CancellationTokenSource();
-            ClientNetPeer = new NetPeer(RemoteEndpoint, long.MinValue, NetPeerState.Disconnected);
+            ClientNetPeer = new NetPeer(RemoteEndpoint, long.MinValue);
             ClientNetPeer.OnPacketReceived += HandlePacketReceived;
             Socket.Bind(new IPEndPoint(IPAddress.Any, 0));
             Sender = Task.Run(ClientSender);

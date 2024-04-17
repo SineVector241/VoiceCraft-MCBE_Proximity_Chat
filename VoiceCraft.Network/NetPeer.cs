@@ -49,7 +49,7 @@ namespace VoiceCraft.Network
         /// </summary>
         public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
 
-        public NetPeer(EndPoint ep, long Id, NetPeerState initialState)
+        public NetPeer(EndPoint ep, long Id, NetPeerState initialState = NetPeerState.Disconnected)
         {
             RemoteEndPoint = ep;
             this.Id = Id;
