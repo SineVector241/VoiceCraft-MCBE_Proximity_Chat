@@ -406,7 +406,6 @@ namespace VoiceCraft.Server
             if(Participants.TryGetValue(peer, out var client) && client.Binded && client.ClientSided)
             {
                 client.Position = data.Position;
-                client.EnvironmentId = data.EnvironmentId;
             }
         }
 
@@ -419,7 +418,6 @@ namespace VoiceCraft.Server
                 client.CaveDensity = data.CaveDensity;
                 client.Dead = data.IsDead;
                 client.InWater = data.InWater;
-                client.EnvironmentId = data.EnvironmentId;
             }
         }
 
@@ -623,7 +621,7 @@ namespace VoiceCraft.Server
             var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (participant.Value != null)
             {
-                VoiceCraftSocket.DisconnectPeer(participant.Key, true, "MCComm server kicked.").Wait();
+                participant.Key.Disconnect("MCComm server kicked.", true);
                 return;
             }
 

@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using System.Text;
 using System;
 using System.Collections.Generic;
 
@@ -15,7 +14,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public float CaveDensity { get; set; }
         public bool IsDead { get; set; }
         public bool InWater { get; set; }
-        public string EnvironmentId { get; set; } = string.Empty;
 
         //26 byte overhead
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
@@ -37,14 +35,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             InWater = BitConverter.ToBoolean(dataStream, offset);
             offset += sizeof(bool);
 
-            var environmentIdLength = BitConverter.ToInt32(dataStream, offset); //Read Environment Id Length - 4 bytes.
-            offset += sizeof(int);
-
-            if (environmentIdLength > 0)
-                EnvironmentId = Encoding.UTF8.GetString(dataStream, offset, environmentIdLength); //Read Environment Id.
-
-            offset += environmentIdLength;
-
             return offset;
         }
 
@@ -58,9 +48,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             dataStream.AddRange(BitConverter.GetBytes(CaveDensity));
             dataStream.AddRange(BitConverter.GetBytes(IsDead));
             dataStream.AddRange(BitConverter.GetBytes(InWater));
-            dataStream.AddRange(BitConverter.GetBytes(EnvironmentId.Length));
-            if (EnvironmentId.Length > 0)
-                dataStream.AddRange(Encoding.UTF8.GetBytes(EnvironmentId));
         }
     }
 }

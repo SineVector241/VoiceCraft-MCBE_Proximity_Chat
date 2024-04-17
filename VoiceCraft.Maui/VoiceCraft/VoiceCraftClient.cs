@@ -4,9 +4,6 @@ using OpusSharp;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using VoiceCraft.Core;
-using VoiceCraft.Core.Packets;
-using VoiceCraft.Core.Packets.VoiceCraft;
-using VoiceCraft.Network.Sockets;
 
 namespace VoiceCraft.Maui.VoiceCraft
 {
@@ -19,6 +16,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         private readonly OpusEncoder Encoder;
         private readonly int FrameSizeMS;
         private readonly int ClientPort;
+        private string EnvironmentId = string.Empty;
 
         //Variables
         public ConcurrentDictionary<short, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<short, VoiceCraftParticipant>();
@@ -164,7 +162,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if(mute != Muted)
             {
-                VoiceCraftPacket packet = mute ? new Core.Packets.VoiceCraft.Mute() : new Core.Packets.VoiceCraft.Unmute();
+                Core.Packets.VoiceCraftPacket packet = mute ? new Core.Packets.VoiceCraft.Mute() : new Core.Packets.VoiceCraft.Unmute();
                 VoiceCraftSocket.Send(packet);
                 Muted = mute;
             }
@@ -175,7 +173,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (deafen != Deafened)
             {
                 Deafened = deafen;
-                VoiceCraftPacket packet = deafen ? new Core.Packets.VoiceCraft.Deafen() : new Core.Packets.VoiceCraft.Undeafen();
+                Core.Packets.VoiceCraftPacket packet = deafen ? new Core.Packets.VoiceCraft.Deafen() : new Core.Packets.VoiceCraft.Undeafen();
                 VoiceCraftSocket.Send(packet);
             }
         }
@@ -371,7 +369,7 @@ namespace VoiceCraft.Maui.VoiceCraft
                 participant.ProximityVolume = LinearProximity ? (float)((Math.Exp(data.Volume) - 1) / (Math.E - 1)) : data.Volume;
                 participant.EchoFactor = data.EchoFactor;
                 participant.Muffled = data.Muffled;
-                if (PositioningType != PositioningTypes.ClientSided && DirectionalHearing)
+                if ((PositioningType != PositioningTypes.ClientSided || UseCustomProtocol) && DirectionalHearing)
                 {
                     participant.RightVolume = (float)Math.Max(0.5 + Math.Cos(data.Rotation) * 0.5, 0.2);
                     participant.LeftVolume = (float)Math.Max(0.5 - Math.Cos(data.Rotation) * 0.5, 0.2);
@@ -402,7 +400,12 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if (State != ConnectionState.Connected) return;
 
-            VoiceCraftSocket.Send(new UpdatePosition() { Position = position, EnvironmentId = Dimension });
+            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.UpdatePosition() { Position = position });
+            if(EnvironmentId != Dimension)
+            {
+                EnvironmentId = Dimension;
+                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.UpdateEnvironmentId() { EnvironmentId = Dimension });
+            }
         }
 
         private void MCWSSDisconnected()
@@ -444,7 +447,13 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (AllowAccurateEnvironmentId)
                 envId = string.Concat(serverId, levelId, dimensionId);
 
-            VoiceCraftSocket.Send(new FullUpdatePosition() { Position = position, Rotation = rotation, CaveDensity = caveDensity, InWater = isUnderwater, EnvironmentId = envId });
+            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, CaveDensity = caveDensity, InWater = isUnderwater });
+
+            if (EnvironmentId != envId)
+            {
+                EnvironmentId = envId;
+                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.UpdateEnvironmentId() { EnvironmentId = envId });
+            }
         }
         #endregion
 
@@ -453,8 +462,8 @@ namespace VoiceCraft.Maui.VoiceCraft
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var pingTime = DateTime.UtcNow;
             byte[] packetBuffer = new byte[250];
-            var PacketRegistry = new PacketRegistry();
-            PacketRegistry.RegisterPacket((byte)VoiceCraftPacketTypes.PingInfo, typeof(PingInfo));
+            var PacketRegistry = new Core.Packets.PacketRegistry();
+            PacketRegistry.RegisterPacket((byte)Core.Packets.VoiceCraftPacketTypes.PingInfo, typeof(Core.Packets.VoiceCraft.PingInfo));
 
             string message;
             try
@@ -462,13 +471,13 @@ namespace VoiceCraft.Maui.VoiceCraft
                 socket.Connect(IP, Port);
 
                 var buffer = new List<byte>();
-                var ping = new PingInfo();
+                var ping = new Core.Packets.VoiceCraft.PingInfo();
                 ping.WritePacket(ref buffer);
                 await socket.SendAsync(buffer.ToArray());
 
                 if (socket.ReceiveAsync(packetBuffer).Wait(5000))
                 {
-                    var packet = (PingInfo)PacketRegistry.GetPacketFromDataStream(packetBuffer);
+                    var packet = (Core.Packets.VoiceCraft.PingInfo)PacketRegistry.GetPacketFromDataStream(packetBuffer);
                     var pingTimeMS = DateTime.UtcNow.Subtract(pingTime).TotalMilliseconds;
 
                     var positioningType = string.Empty;

@@ -64,6 +64,7 @@ namespace VoiceCraft.Core.Packets
         //VOICE PACKETS
         UpdatePosition,
         FullUpdatePosition,
+        UpdateEnvironmentId,
         ClientAudio,
         ServerAudio
     }

@@ -16,18 +16,18 @@ namespace VoiceCraft.Network
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
-        private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue { get; set; }
-        private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer { get; set; }
+        private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue;
+        private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer;
 
         /// <summary>
-        /// Defines wether the client was denied.
+        /// Reason for disconnection.
         /// </summary>
-        public bool Denied { get; private set; }
+        public string? DisconnectReason { get; private set; }
 
         /// <summary>
-        /// Defines wether the client is sucessfully connected and accepted.
+        /// Defines wether the client is sucessfully requesting, connected or disconnected.
         /// </summary>
-        public bool Connected { get; set; }
+        public NetPeerState State { get; private set; }
 
         /// <summary>
         /// Endpoint of the NetPeer.
@@ -49,13 +49,14 @@ namespace VoiceCraft.Network
         /// </summary>
         public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
 
-        public NetPeer(EndPoint ep, long Id)
+        public NetPeer(EndPoint ep, long Id, NetPeerState initialState)
         {
             RemoteEndPoint = ep;
             this.Id = Id;
             SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
             ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
             ReceiveBuffer = new ConcurrentDictionary<uint, VoiceCraftPacket>();
+            State = initialState;
         }
 
         public void AddToSendBuffer(VoiceCraftPacket packet)
@@ -75,7 +76,7 @@ namespace VoiceCraft.Network
         public bool AddToReceiveBuffer(VoiceCraftPacket packet)
         {
             LastActive = Environment.TickCount64;
-            if (Connected && packet.Id != Id) return false; //Invalid Id.
+            if (State == NetPeerState.Connected && packet.Id != Id) return false; //Invalid Id.
 
             if(!packet.IsReliable)
             {
@@ -117,19 +118,31 @@ namespace VoiceCraft.Network
 
         public void AcceptLogin(short key)
         {
-            if (!Connected)
+            if (State == NetPeerState.Requesting)
             {
                 AddToSendBuffer(new Accept() { Key = key });
-                Connected = true;
+                State = NetPeerState.Connected;
             }
         }
 
         public void DenyLogin(string? reason = null)
         {
-            if (!Connected)
+            if (State == NetPeerState.Requesting)
             {
                 AddToSendBuffer(new Deny() { Reason = reason ?? string.Empty });
-                Denied = true;
+                DisconnectReason = reason;
+                State = NetPeerState.Disconnected;
+            }
+        }
+
+        public void Disconnect(string? reason = null, bool notify = true)
+        {
+            if (State == NetPeerState.Connected)
+            {
+                if(notify)
+                    AddToSendBuffer(new Logout() { Reason = reason ?? string.Empty });
+                DisconnectReason = reason;
+                State = NetPeerState.Disconnected;
             }
         }
 
@@ -151,5 +164,12 @@ namespace VoiceCraft.Network
             NextSequence = 0;
             Sequence = 0;
         }
+    }
+
+    public enum NetPeerState
+    {
+        Disconnected,
+        Requesting,
+        Connected
     }
 }

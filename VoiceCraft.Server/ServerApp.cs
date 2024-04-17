@@ -279,7 +279,7 @@ namespace VoiceCraft.Server
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
                 {
-                    Server.VoiceCraftSocket.DisconnectPeer(participant.Key, true, "Server Kick").Wait();
+                    participant.Key.Disconnect("Server Kick", true);
                     Logger.LogToConsole(LogType.Success, $"Kicked participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
                 }
                 else
@@ -307,7 +307,7 @@ namespace VoiceCraft.Server
                 {
                     Server.Banlist.Add(((IPEndPoint)participant.Key.RemoteEndPoint).Address.ToString());
                     Properties.SaveBanlist(Server.Banlist);
-                    Server.VoiceCraftSocket.DisconnectPeer(participant.Key, true, "Server Banned").Wait();
+                    participant.Key.Disconnect("Server Banned", true);
                     Logger.LogToConsole(LogType.Success, $"Banned participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
                 }
                 else
