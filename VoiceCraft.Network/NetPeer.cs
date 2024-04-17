@@ -16,8 +16,8 @@ namespace VoiceCraft.Network
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
-        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue = new();
-        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer = new();
+        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
+        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer = new ConcurrentDictionary<uint, VoiceCraftPacket>();
 
         /// <summary>
         /// Reason for disconnection.

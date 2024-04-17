@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VoiceCraft.Core
+﻿namespace VoiceCraft.Core
 {
     public abstract class Participant
     {
