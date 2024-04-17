@@ -143,7 +143,7 @@
                         <Label Grid.Column="0"
                                FontAttributes="Bold"
                                FontSize="Small"
-                               Text="Custom Protocol (Requires Client Positioning)"
+                               Text="Custom Client (Requires Client Sided Positioning)"
                                VerticalTextAlignment="Center" />
 
                         <Switch Grid.Column="1"
@@ -158,7 +158,7 @@
                         <Label Grid.Column="0"
                                FontAttributes="Bold"
                                FontSize="Small"
-                               Text="Detailed Environment Id (Requires Custom Client)"
+                               Text="Accurate Environment Id (Requires Custom Client)"
                                VerticalTextAlignment="Center" />
 
                         <Switch Grid.Column="1"

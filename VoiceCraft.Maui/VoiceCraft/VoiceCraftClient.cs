@@ -116,7 +116,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         }
 
         #region Methods
-        public void Connect(string ip, ushort port, short key, PositioningTypes positioningType)
+        public void Connect(string ip, ushort port, short key, PositioningTypes positioningType, bool noICMP = true)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftClient));
             if (State ==  ConnectionState.Connected || State == ConnectionState.Connecting) return;
@@ -127,7 +127,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             {
                 try
                 {
-                    await VoiceCraftSocket.ConnectAsync(ip, port, key, positioningType, Version);
+                    await VoiceCraftSocket.ConnectAsync(ip, port, key, positioningType, Version, noICMP);
                 }
                 catch (ObjectDisposedException)
                 {

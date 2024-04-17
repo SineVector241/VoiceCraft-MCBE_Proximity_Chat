@@ -8,8 +8,8 @@ namespace VoiceCraft.Maui
 {
     public class ServiceManager : IServiceManager
     {
-        private CancellationTokenSource Cts;
-        private VoipService VoipService;
+        private readonly CancellationTokenSource Cts;
+        private readonly VoipService VoipService;
 
         public ServiceManager()
         {

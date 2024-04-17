@@ -9,25 +9,29 @@ public class AudioManager : IAudioManager
 
     public IWavePlayer CreatePlayer(ISampleProvider waveProvider)
     {
-        var Player = new AudioTrackOut();
-        Player.DesiredLatency = 50;
-        Player.NumberOfBuffers = 3;
+        var Player = new AudioTrackOut
+        {
+            DesiredLatency = 50,
+            NumberOfBuffers = 3
+        };
         Player.Init(waveProvider);
         return Player;
     }
 
     public IWaveIn CreateRecorder(WaveFormat waveFormat, int bufferMS)
     {
-        var Recorder = new AudioRecorder();
-        Recorder.WaveFormat = waveFormat;
-        Recorder.BufferMilliseconds = bufferMS;
-        Recorder.audioSource = Android.Media.AudioSource.VoiceCommunication;
+        var Recorder = new AudioRecorder
+        {
+            WaveFormat = waveFormat,
+            BufferMilliseconds = bufferMS,
+            audioSource = Android.Media.AudioSource.VoiceCommunication
+        };
         return Recorder;
     }
 
     public string[] GetInputDevices()
     {
-        return new string[0];
+        return [];
     }
 
     public string[] GetOutputDevices()
@@ -37,7 +41,7 @@ public class AudioManager : IAudioManager
             "Phone",
             "Speaker"
         };
-        return outputDevices.ToArray();
+        return [.. outputDevices];
     }
 
     public int GetInputDeviceCount()
@@ -59,7 +63,7 @@ public class AudioManager : IAudioManager
             return false;
         }
         
-        return status != PermissionStatus.Granted;
+        return status == PermissionStatus.Granted;
     }
 
     public bool RequestOutputPermissions()

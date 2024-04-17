@@ -18,11 +18,11 @@ namespace VoiceCraft.Maui
         private VoipService? VoipService;
         private Task? easterEggLoop;
 
-        private string NOTIFICATION_CHANNEL_ID = "1000";
-        private int NOTIFICATION_ID = 1;
-        private string NOTIFICATION_CHANNEL_NAME = "Voice";
+        const string NOTIFICATION_CHANNEL_ID = "1000";
+        const int NOTIFICATION_ID = 1;
+        const string NOTIFICATION_CHANNEL_NAME = "Voice";
 
-        string[] splashEasterEggs = {
+        readonly string[] splashEasterEggs = [
             "1+1 = window.",
             "creeper, aww man.", 
             "ANDROID FTW.",
@@ -35,7 +35,7 @@ namespace VoiceCraft.Maui
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
             $"{Math.PI}",
             "Baby shark do doo do doo do do"
-        };
+        ];
 
         public void StartService()
         {
@@ -51,7 +51,7 @@ namespace VoiceCraft.Maui
             }
         }
 
-        public void Stop() 
+        public static void Stop() 
         {
             try
             {
@@ -84,9 +84,7 @@ namespace VoiceCraft.Maui
 
         private void StartVoiceCraftService()
         {
-            var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-            if (notificationManager == null) throw new Exception("Notification manager was null");
-
+            var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager ?? throw new Exception("Notification manager was null");
             StartForeground(NOTIFICATION_ID, CreateNotification(notificationManager).Build());
         }
 
@@ -211,7 +209,7 @@ namespace VoiceCraft.Maui
                             if (!Cts.IsCancellationRequested && VoipService != null)
                             {
                                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-                                if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService.StatusMessage).SetContentText(splashEasterEggs[random.Next(0, splashEasterEggs.Length - 1)]).Build());
+                                notificationManager?.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService.StatusMessage).SetContentText(splashEasterEggs[random.Next(0, splashEasterEggs.Length - 1)]).Build());
                             }
                             else
                             {
@@ -220,7 +218,7 @@ namespace VoiceCraft.Maui
                         }
                     }, Cts.Token);
 
-                    VoipService.StartAsync(Cts.Token).Wait();
+                    VoipService.StartAsync(Cts.Token, false).Wait();
                 }
                 catch (System.OperationCanceledException)
                 {
@@ -277,7 +275,7 @@ namespace VoiceCraft.Maui
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-                if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(status).SetContentText("Idling...").Build());
+                notificationManager?.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(status).SetContentText("Idling...").Build());
 
                 WeakReferenceMessenger.Default.Send(new StatusUpdatedMSG(status));
             });
@@ -304,7 +302,7 @@ namespace VoiceCraft.Maui
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-                if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has connected!").Build());
+                notificationManager?.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has connected!").Build());
 
                 WeakReferenceMessenger.Default.Send(new ParticipantJoinedMSG(participant));
             });
@@ -315,7 +313,7 @@ namespace VoiceCraft.Maui
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-                if (notificationManager != null) notificationManager.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has disconnected!").Build());
+                notificationManager?.Notify(NOTIFICATION_ID, CreateNotification(notificationManager).SetContentTitle(VoipService?.StatusMessage ?? "Disconnected").SetContentText($"{participant.Name} has disconnected!").Build());
 
                 WeakReferenceMessenger.Default.Send(new ParticipantLeftMSG(participant));
             });

@@ -20,7 +20,7 @@ namespace VoiceCraft.Server.Data
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
         public int ExternalServerTimeoutMS { get; set; } = 8000;
         public int ClientTimeoutMS { get; set; } = 8000;
-        public List<Channel> Channels { get; set; } = new List<Channel>();
+        public List<Channel> Channels { get; set; } = [];
 
         //Changeable Settings
         public int ProximityDistance { get; set; } = 30;

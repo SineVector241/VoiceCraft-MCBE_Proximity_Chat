@@ -89,7 +89,7 @@ namespace VoiceCraft.Maui.Services
             Client.OnParticipantUpdated += ClientParticipantUpdated;
         }
 
-        public async Task StartAsync(CancellationToken CT)
+        public async Task StartAsync(CancellationToken CT, bool noICMP = true)
         {
             await Task.Run(async () =>
             {
@@ -112,7 +112,7 @@ namespace VoiceCraft.Maui.Services
 
                 try
                 {
-                    Client.Connect(Server.IP, (ushort)Server.Port, Server.Key, Settings.ClientSidedPositioning ? Core.PositioningTypes.ClientSided : Core.PositioningTypes.ServerSided);
+                    Client.Connect(Server.IP, (ushort)Server.Port, Server.Key, Settings.ClientSidedPositioning ? Core.PositioningTypes.ClientSided : Core.PositioningTypes.ServerSided, noICMP);
                     await StartLogicLoop(CT);
                     if (AudioPlayer.PlaybackState != PlaybackState.Playing) AudioPlayer.Play();
                 }

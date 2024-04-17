@@ -5,7 +5,7 @@ using VoiceCraft.Core.Packets.VoiceCraft;
 
 namespace VoiceCraft.Network
 {
-    public class NetPeer
+    public class NetPeer(EndPoint ep, long Id, NetPeerState initialState = NetPeerState.Disconnected)
     {
         public const int ResendTime = 300;
         public const int RetryResendTime = 500;
@@ -16,8 +16,8 @@ namespace VoiceCraft.Network
         public event PacketReceived? OnPacketReceived;
         private uint Sequence;
         private uint NextSequence;
-        private ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue;
-        private ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer;
+        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReliabilityQueue = new();
+        private readonly ConcurrentDictionary<uint, VoiceCraftPacket> ReceiveBuffer = new();
 
         /// <summary>
         /// Reason for disconnection.
@@ -27,12 +27,12 @@ namespace VoiceCraft.Network
         /// <summary>
         /// Defines wether the client is sucessfully requesting, connected or disconnected.
         /// </summary>
-        public NetPeerState State { get; private set; }
+        public NetPeerState State { get; private set; } = initialState;
 
         /// <summary>
         /// Endpoint of the NetPeer.
         /// </summary>
-        public EndPoint RemoteEndPoint { get; set; }
+        public EndPoint RemoteEndPoint { get; set; } = ep;
 
         /// <summary>
         /// When the client was last active.
@@ -42,22 +42,12 @@ namespace VoiceCraft.Network
         /// <summary>
         /// The ID of the NetPeer, Used to update the endpoint if invalid.
         /// </summary>
-        public long Id { get; set; } //Not secure enough but it'll do.
+        public long Id { get; set; } = Id;
 
         /// <summary>
         /// Send Queue.
         /// </summary>
-        public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; }
-
-        public NetPeer(EndPoint ep, long Id, NetPeerState initialState = NetPeerState.Disconnected)
-        {
-            RemoteEndPoint = ep;
-            this.Id = Id;
-            SendQueue = new ConcurrentQueue<VoiceCraftPacket>();
-            ReliabilityQueue = new ConcurrentDictionary<uint, VoiceCraftPacket>();
-            ReceiveBuffer = new ConcurrentDictionary<uint, VoiceCraftPacket>();
-            State = initialState;
-        }
+        public ConcurrentQueue<VoiceCraftPacket> SendQueue { get; set; } = new ConcurrentQueue<VoiceCraftPacket>();
 
         public void AddToSendBuffer(VoiceCraftPacket packet)
         {

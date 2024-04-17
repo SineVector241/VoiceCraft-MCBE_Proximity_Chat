@@ -8,7 +8,7 @@ namespace VoiceCraft.Maui
     [Application]
     public class MainApplication : MauiApplication
     {
-        ServiceManager serviceManager;
+        readonly ServiceManager serviceManager;
         public MainApplication(IntPtr handle, JniHandleOwnership ownership)
             : base(handle, ownership)
         {
@@ -21,7 +21,7 @@ namespace VoiceCraft.Maui
 
             WeakReferenceMessenger.Default.Register(this, (object recipient, StopServiceMSG message) =>
             {
-                serviceManager.Stop();
+                ServiceManager.Stop();
             });
         }
 

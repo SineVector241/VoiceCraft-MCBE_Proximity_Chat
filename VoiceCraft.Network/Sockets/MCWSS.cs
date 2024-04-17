@@ -6,14 +6,14 @@ using VoiceCraft.Core.Packets.MCWSS;
 
 namespace VoiceCraft.Network.Sockets
 {
-    public class MCWSS
+    public class MCWSS : IDisposable
     {
         //Variables
         private WebSocketServer Socket;
         private IWebSocketConnection? ConnectedSocket;
         private readonly string[] Dimensions;
-        private int Port;
-        private MCPacketRegistry MCPacketReg;
+        private readonly int Port;
+        private readonly MCPacketRegistry MCPacketReg;
 
         public bool IsConnected { get; private set; }
         public bool IsDisposed { get; private set; }
@@ -34,7 +34,7 @@ namespace VoiceCraft.Network.Sockets
             MCPacketReg.RegisterPacket(new Header() { messagePurpose = "commandResponse" }, typeof(MCWSSPacket<LocalPlayerName>));
             this.Port = Port;
             Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");
-            Dimensions = new string[] { "minecraft:overworld", "minecraft:nether", "minecraft:end" };
+            Dimensions = ["minecraft:overworld", "minecraft:nether", "minecraft:end"];
         }
 
         public void Start()
@@ -76,9 +76,8 @@ namespace VoiceCraft.Network.Sockets
                         OnConnect?.Invoke(name);
                     }
 
-                    else if (packet is MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled>)
+                    else if (packet is MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled> data)
                     {
-                        var data = (MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled>)packet;
                         var x = data.body.player.position.x;
                         var y = data.body.player.position.y;
                         var z = data.body.player.position.z;
@@ -95,7 +94,7 @@ namespace VoiceCraft.Network.Sockets
 
         public void Stop()
         {
-            if (ConnectedSocket != null) ConnectedSocket.Close();
+            ConnectedSocket?.Close();
             ConnectedSocket = null;
             Socket.Dispose();
             Socket = new WebSocketServer($"ws://0.0.0.0:{Port}");

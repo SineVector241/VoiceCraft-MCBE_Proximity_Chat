@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using VoiceCraft.Core;
@@ -29,8 +28,8 @@ namespace VoiceCraft.Network.Sockets
         public bool LogExceptions { get; set; } = false;
         public bool LogInbound { get; set; } = false;
         public bool LogOutbound { get; set; } = false;
-        public List<CustomClientTypes> InboundFilter { get; set; } = new List<CustomClientTypes>();
-        public List<CustomClientTypes> OutboundFilter { get; set; } = new List<CustomClientTypes>();
+        public List<CustomClientTypes> InboundFilter { get; set; } = [];
+        public List<CustomClientTypes> OutboundFilter { get; set; } = [];
         #endregion
 
         #region Delegates
@@ -80,7 +79,8 @@ namespace VoiceCraft.Network.Sockets
         #region Methods
         public async Task HostAsync(int Port)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed, this);
+
             if (State != CustomClientSocketState.Stopped) throw new Exception("You must stop hosting before starting a host!");
 
             CTS.Dispose(); //Prevent memory leak for startup.
@@ -111,7 +111,7 @@ namespace VoiceCraft.Network.Sockets
 
         public async Task StopAsync(string? reason = null)
         {
-            if (IsDisposed && State == CustomClientSocketState.Stopped) throw new ObjectDisposedException(nameof(VoiceCraft));
+            ObjectDisposedException.ThrowIf(IsDisposed && State == CustomClientSocketState.Stopped, this);
             if (State == CustomClientSocketState.Stopping) throw new InvalidOperationException("Already stopping.");
 
             while (State == CustomClientSocketState.Starting) //Wait until started then we stop.

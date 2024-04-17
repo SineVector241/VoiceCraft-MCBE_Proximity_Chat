@@ -42,7 +42,7 @@
                     Margin="5"
                     HorizontalOptions="Fill"
                     VerticalOptions="StartAndExpand">
-                <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="290, *">
                         <Label Grid.Column="0"
                                FontAttributes="Bold"
@@ -107,13 +107,40 @@
                                 IsToggled="{Binding Settings.HideAddress}"
                                 VerticalOptions="Center" />
                     </Grid>
-                    <Label Grid.Row="5"
+
+                    <Grid Grid.Row="5" ColumnDefinitions="290, *">
+                        <Label Grid.Column="0"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="Custom Client (Requires Client Sided Positioning)"
+                               VerticalTextAlignment="Center" />
+
+                        <Switch Grid.Column="1"
+                                Margin="10,0,0,0"
+                                IsToggled="{Binding Settings.CustomClientProtocol}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <Grid Grid.Row="6" ColumnDefinitions="290, *">
+                        <Label Grid.Column="0"
+                               FontAttributes="Bold"
+                               FontSize="Small"
+                               Text="Accurate Environment Id (Requires Custom Client)"
+                               VerticalTextAlignment="Center" />
+
+                        <Switch Grid.Column="1"
+                                Margin="10,0,0,0"
+                                IsToggled="{Binding Settings.AllowAccurateEnvironmentId}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <Label Grid.Row="7"
                            Margin="0,10,0,0"
                            FontAttributes="Bold"
                            FontSize="Small"
                            Text="Client Port:"
                            VerticalTextAlignment="Center" />
-                    <Entry Grid.Row="6"
+                    <Entry Grid.Row="8"
                            Margin="0,10,0,0"
                            Keyboard="Numeric"
                            Text="{Binding Settings.ClientPort}"
@@ -126,28 +153,28 @@
                                                                 MinimumValue="1025" />
                         </Entry.Behaviors>
                     </Entry>
-                    <Label Grid.Row="7"
+                    <Label Grid.Row="9"
                            Margin="0,10,0,0"
                            FontAttributes="Bold"
                            FontSize="Small"
                            Text="{Binding Settings.SoftLimiterGain, StringFormat='SoftLimiter Gain(DB): {0:F2}'}"
                            VerticalTextAlignment="Center" />
 
-                    <Slider Grid.Row="8"
+                    <Slider Grid.Row="10"
                             Margin="0,10"
                             Maximum="20.0"
                             Minimum="1.0"
                             VerticalOptions="Center"
                             Value="{Binding Settings.SoftLimiterGain}" />
 
-                    <Label Grid.Row="9"
+                    <Label Grid.Row="11"
                            Margin="0,10,0,0"
                            FontAttributes="Bold"
                            FontSize="Small"
                            Text="{Binding Settings.MicrophoneDetectionPercentage, StringFormat='Microphone Detection: {0:P2}'}"
                            VerticalTextAlignment="Center" />
 
-                    <Grid Grid.Row="10"
+                    <Grid Grid.Row="12"
                           Margin="0,10"
                           RowDefinitions="0, Auto">
                         <ahKit:ProgressBar Grid.Row="0"
@@ -164,7 +191,7 @@
                                 Minimum="0.0"
                                 Value="{Binding Settings.MicrophoneDetectionPercentage}" />
                     </Grid>
-                    <Button Grid.Row="11"
+                    <Button Grid.Row="13"
                             Margin="0,10,0,0"
                             BackgroundColor="#2fFFFFFF"
                             Command="{Binding OpenCloseMicrophoneCommand}"
