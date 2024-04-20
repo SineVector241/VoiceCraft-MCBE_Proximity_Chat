@@ -1,5 +1,5 @@
 ﻿using NAudio.Wave;
-using OpusSharp;
+using OpusSharp.Core;
 using System;
 using System.Linq;
 

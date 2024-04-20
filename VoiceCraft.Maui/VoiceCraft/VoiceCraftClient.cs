@@ -1,13 +1,14 @@
 ﻿using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using OpusSharp;
+using OpusSharp.Core;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Sockets;
 using VoiceCraft.Core;
 
 namespace VoiceCraft.Maui.VoiceCraft
 {
-    public class VoiceCraftClient : Disposable
+    public class VoiceCraftClient : Core.Disposable
     {
         //Private Variables
         public const string Version = "v1.0.4";
@@ -83,7 +84,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
             FrameSizeMS = frameSizeMS;
 
-            Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Enums.Application.VOIP)
+            Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Core.Enums.PreDefCtl.OPUS_APPLICATION_VOIP)
             {
                 Bitrate = 32000,
                 PacketLossPerc = 50

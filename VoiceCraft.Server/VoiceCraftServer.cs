@@ -64,6 +64,7 @@ namespace VoiceCraft.Server
             VoiceCraftSocket.OnLeaveChannelReceived += OnLeaveChannel;
             VoiceCraftSocket.OnUpdatePositionReceived += OnUpdatePosition;
             VoiceCraftSocket.OnFullUpdatePositionReceived += OnFullUpdatePosition;
+            VoiceCraftSocket.OnUpdateEnvironmentIdReceived += OnUpdateEnvironmentIdReceived;
             VoiceCraftSocket.OnClientAudioReceived += OnClientAudio;
 
             MCComm.OnStarted += MCCommStarted;
@@ -418,6 +419,14 @@ namespace VoiceCraft.Server
                 client.CaveDensity = data.CaveDensity;
                 client.Dead = data.IsDead;
                 client.InWater = data.InWater;
+            }
+        }
+
+        private void OnUpdateEnvironmentIdReceived(Core.Packets.VoiceCraft.UpdateEnvironmentId data, NetPeer peer)
+        {
+            if (Participants.TryGetValue(peer, out var client) && client.Binded && client.ClientSided)
+            {
+                client.EnvironmentId = data.EnvironmentId;
             }
         }
 
