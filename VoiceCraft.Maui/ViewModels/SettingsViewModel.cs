@@ -61,11 +61,11 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public void OpenCloseMicrophone()
+        public async Task OpenCloseMicrophone()
         {
             if (Microphone == null)
             {
-                if (!AudioManager.Instance.RequestInputPermissions()) return;
+                if (!await AudioManager.Instance.RequestInputPermissions()) return;
                 Microphone = AudioManager.Instance.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
                 Microphone.StartRecording();

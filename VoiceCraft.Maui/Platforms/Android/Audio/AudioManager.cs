@@ -54,9 +54,9 @@ public class AudioManager : IAudioManager
         return 2;
     }
 
-    public bool RequestInputPermissions()
+    public async Task<bool> RequestInputPermissions()
     {
-        var status = Permissions.RequestAsync<Permissions.Microphone>().GetAwaiter().GetResult();
+        var status = await Permissions.RequestAsync<Permissions.Microphone>();
         if (Permissions.ShouldShowRationale<Permissions.Microphone>())
         {
             Shell.Current.DisplayAlert("Error", "VoiceCraft requires the microphone to communicate with other users!", "OK").Wait();
@@ -64,10 +64,5 @@ public class AudioManager : IAudioManager
         }
         
         return status == PermissionStatus.Granted;
-    }
-
-    public bool RequestOutputPermissions()
-    {
-        return true;
     }
 }

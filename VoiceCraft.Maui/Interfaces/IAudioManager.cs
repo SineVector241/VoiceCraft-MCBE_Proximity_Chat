@@ -46,12 +46,6 @@ namespace VoiceCraft.Maui.Interfaces
         /// Requests permissions to record.
         /// </summary>
         /// <returns></returns>
-        bool RequestInputPermissions();
-
-        /// <summary>
-        /// Requests permissions to play back audio.
-        /// </summary>
-        /// <returns></returns>
-        bool RequestOutputPermissions(); //Probably won't be used, but it exists.
+        Task<bool> RequestInputPermissions();
     }
 }

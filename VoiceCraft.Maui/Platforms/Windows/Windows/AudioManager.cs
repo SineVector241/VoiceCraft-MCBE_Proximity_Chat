@@ -61,13 +61,15 @@ public class AudioManager : IAudioManager
         return WaveOut.DeviceCount;
     }
 
-    public bool RequestInputPermissions()
+    public async Task<bool> RequestInputPermissions()
     {
-        return true;
-    }
+        var status = await Permissions.RequestAsync<Permissions.Microphone>();
+        if (Permissions.ShouldShowRationale<Permissions.Microphone>())
+        {
+            Shell.Current.DisplayAlert("Error", "VoiceCraft requires the microphone to communicate with other users!", "OK").Wait();
+            return false;
+        }
 
-    public bool RequestOutputPermissions()
-    {
-        return true;
+        return status == PermissionStatus.Granted;
     }
 }

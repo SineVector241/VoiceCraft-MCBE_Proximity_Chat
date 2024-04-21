@@ -29,7 +29,7 @@ namespace VoiceCraft.Maui.ViewModels
         public async Task Connect()
         {
             var settings = Database.Instance.Settings;
-            if (!AudioManager.Instance.RequestInputPermissions()) return;
+            if (!await AudioManager.Instance.RequestInputPermissions()) return;
             if (settings.ClientPort < 1025 || settings.ClientPort > 65535)
             {
                 settings.ClientPort = 8080;
