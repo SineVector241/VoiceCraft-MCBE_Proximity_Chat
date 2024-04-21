@@ -218,7 +218,7 @@ namespace VoiceCraft.Maui
                         }
                     }, Cts.Token);
 
-                    VoipService.StartAsync(Cts.Token, false).Wait();
+                    VoipService.StartAsync(Cts.Token).Wait();
                 }
                 catch (System.OperationCanceledException)
                 {

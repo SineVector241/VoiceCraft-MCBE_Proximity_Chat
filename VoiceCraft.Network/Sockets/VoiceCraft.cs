@@ -127,15 +127,14 @@ namespace VoiceCraft.Network.Sockets
         #endregion
 
         #region Methods
-        public async Task ConnectAsync(string IP, int port, short preferredKey, PositioningTypes positioningType, string version, bool noICMP = true)
+        public async Task ConnectAsync(string IP, int port, short preferredKey, PositioningTypes positioningType, string version)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Started || State == VoiceCraftSocketState.Starting) throw new Exception("Cannot start connection as socket is in a hosting state!");
             if (State != VoiceCraftSocketState.Stopped) throw new Exception("You must disconnect before reconnecting!");
 
             CTS.Dispose(); //Prevent memory leak for startup.
-            if(noICMP)
-                Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this
+            //Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this Windows Only
 
             //Reset/Setup
             State = VoiceCraftSocketState.Connecting;
@@ -213,7 +212,7 @@ namespace VoiceCraft.Network.Sockets
             if (State != VoiceCraftSocketState.Stopped) throw new Exception("You must stop hosting before starting a host!");
 
             CTS.Dispose(); //Prevent memory leak for startup.
-            Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this
+            //Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this Windows Only
 
             State = VoiceCraftSocketState.Starting;
             CTS = new CancellationTokenSource();
