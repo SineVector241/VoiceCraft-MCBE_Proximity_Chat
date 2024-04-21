@@ -425,8 +425,8 @@ namespace VoiceCraft.Network.Sockets
                 for (int i = NetPeers.Count - 1; i >= 0; i--)
                 {
                     var peer = NetPeers.ElementAt(i);
-
-                    if (Environment.TickCount64 - peer.Value.LastActive > Timeout && peer.Value.State == NetPeerState.Connected)
+                    var diff = Environment.TickCount64 - peer.Value.LastActive;
+                    if ((diff > Timeout || diff < 0) && peer.Value.State == NetPeerState.Connected) //Negative values are pretty much invalid.
                     {
                         peer.Value.Disconnect($"Timeout - Last Active: {Environment.TickCount64 - peer.Value.LastActive}ms", true);
                     }
