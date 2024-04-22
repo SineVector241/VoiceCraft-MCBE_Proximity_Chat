@@ -243,14 +243,7 @@ namespace VoiceCraft.Network.Sockets
         {
             ObjectDisposedException.ThrowIf(IsDisposed && State == VoiceCraftSocketState.Stopped, nameof(VoiceCraft));
             if (State == VoiceCraftSocketState.Connecting || State == VoiceCraftSocketState.Connected) throw new InvalidOperationException("Cannot stop hosting as the socket is in a connection state.");
-            if (State == VoiceCraftSocketState.Stopping) return;
-
-            while (State == VoiceCraftSocketState.Starting) //Wait until started then we stop.
-            {
-                await Task.Delay(1); //1ms delay so we don't destroy the CPU.
-            }
-
-            if (State == VoiceCraftSocketState.Stopped) return;
+            if (State == VoiceCraftSocketState.Stopping || State == VoiceCraftSocketState.Stopped) return;
 
             State = VoiceCraftSocketState.Stopping;
             OnLoginReceived -= OnClientLogin;
@@ -258,6 +251,12 @@ namespace VoiceCraft.Network.Sockets
             OnAckReceived -= OnAck;
 
             DisconnectPeers("Server Shutdown.");
+
+            while(NetPeers.Count > 0)
+            {
+                await Task.Delay(1); //Wait until all peers are disconnected.
+            }
+
             CTS.Cancel();
             CTS.Dispose();
             Socket.Close();
@@ -316,7 +315,7 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task ReceiveAsync()
         {
-            byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
+            byte[] buffer = GC.AllocateArray<byte>(length: 500, pinned: true);
             Memory<byte> bufferMem = buffer.AsMemory();
             var receivedAddress = new SocketAddress(Socket.AddressFamily);
 
@@ -347,6 +346,7 @@ namespace VoiceCraft.Network.Sockets
                 }
                 catch (SocketException ex)
                 {
+                    if (ex.SocketErrorCode == SocketError.ConnectionReset || ex.SocketErrorCode == SocketError.ConnectionAborted || ex.SocketErrorCode == SocketError.TimedOut) continue;
                     await StopAsync(ex.Message);
                     return;
                 }
@@ -364,7 +364,7 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task ClientReceiveAsync()
         {
-            byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
+            byte[] buffer = GC.AllocateArray<byte>(length: 500, pinned: true);
             Memory<byte> bufferMem = buffer.AsMemory();
 
             while (!CTS.IsCancellationRequested)
@@ -426,7 +426,7 @@ namespace VoiceCraft.Network.Sockets
                 {
                     var peer = NetPeers.ElementAt(i);
                     var diff = Environment.TickCount64 - peer.Value.LastActive;
-                    if ((diff > Timeout || diff < 0) && peer.Value.State == NetPeerState.Connected) //Negative values are pretty much invalid.
+                    if ((diff > Timeout || diff < 0) && peer.Value.State != NetPeerState.Disconnected) //Negative values are pretty much invalid.
                     {
                         peer.Value.Disconnect($"Timeout - Last Active: {Environment.TickCount64 - peer.Value.LastActive}ms", true);
                     }

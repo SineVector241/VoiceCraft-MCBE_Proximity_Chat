@@ -7,8 +7,14 @@ using VoiceCraft.Maui.Services;
 
 namespace VoiceCraft.Maui.ViewModels
 {
+    [QueryProperty(nameof(StartMode), "startMode")]
     public partial class VoiceViewModel : ObservableObject
     {
+        public string StartMode { set => Start = bool.Parse(value); }
+
+        [ObservableProperty]
+        bool start = false;
+
         [ObservableProperty]
         string statusText = "Connecting...";
 
@@ -42,7 +48,7 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public async Task OnPageAppearing()
         {
-            if (Preferences.Get("VoipServiceRunning", false) == false)
+            if (!Start && Preferences.Get("VoipServiceRunning", false) == false)
             {
                 await Navigator.GoBack();
                 return;
@@ -186,7 +192,15 @@ namespace VoiceCraft.Maui.ViewModels
                 Channels = new ObservableCollection<ChannelModel>(message.Value.Channels);
             });
 
-            WeakReferenceMessenger.Default.Send(new RequestDataMSG());
+            if (Start)
+            {
+                WeakReferenceMessenger.Default.Send(new StartServiceMSG());
+                Start = false;
+            }
+            else
+            {
+                WeakReferenceMessenger.Default.Send(new RequestDataMSG());
+            }
         }
 
         [RelayCommand]

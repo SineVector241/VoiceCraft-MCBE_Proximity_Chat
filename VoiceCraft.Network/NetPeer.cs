@@ -127,9 +127,9 @@ namespace VoiceCraft.Network
 
         public void Disconnect(string? reason = null, bool notify = true)
         {
-            if (State == NetPeerState.Connected)
+            if (State != NetPeerState.Disconnected)
             {
-                if(notify)
+                if (notify)
                     AddToSendBuffer(new Logout() { Reason = reason ?? string.Empty });
                 DisconnectReason = reason;
                 State = NetPeerState.Disconnected;

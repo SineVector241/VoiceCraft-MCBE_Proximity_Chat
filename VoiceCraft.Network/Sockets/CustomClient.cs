@@ -35,8 +35,8 @@ namespace VoiceCraft.Network.Sockets
         #region Delegates
         public delegate void Started();
         public delegate void Stopped(string? reason = null);
-        public delegate void Connect(string name);
-        public delegate void Disconnect();
+        public delegate void Connected(string name);
+        public delegate void Disconnected();
         public delegate void Updated(Vector3 position, float rotation, float caveDensity, bool isUnderwater, string dimensionId, string levelId, string serverId);
         public delegate void PacketData<T>(T data, SocketAddress address);
 
@@ -50,8 +50,8 @@ namespace VoiceCraft.Network.Sockets
         #region Events
         public event Started? OnStarted;
         public event Stopped? OnStopped;
-        public event Connect? OnConnect;
-        public event Disconnect? OnDisconnect;
+        public event Connected? OnConnected;
+        public event Disconnected? OnDisconnected;
         public event Updated? OnUpdated;
 
         public event PacketData<Login>? OnLoginReceived;
@@ -84,7 +84,7 @@ namespace VoiceCraft.Network.Sockets
             if (State != CustomClientSocketState.Stopped) throw new Exception("You must stop hosting before starting a host!");
 
             CTS.Dispose(); //Prevent memory leak for startup.
-            Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this
+            //Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, [0, 0, 0, 0], null); //I fucking hate this
 
             State = CustomClientSocketState.Starting;
             CTS = new CancellationTokenSource();
@@ -112,14 +112,7 @@ namespace VoiceCraft.Network.Sockets
         public async Task StopAsync(string? reason = null)
         {
             ObjectDisposedException.ThrowIf(IsDisposed && State == CustomClientSocketState.Stopped, this);
-            if (State == CustomClientSocketState.Stopping) throw new InvalidOperationException("Already stopping.");
-
-            while (State == CustomClientSocketState.Starting) //Wait until started then we stop.
-            {
-                await Task.Delay(1); //1ms delay so we don't destroy the CPU.
-            }
-
-            if (State == CustomClientSocketState.Stopped) return;
+            if (State == CustomClientSocketState.Stopped || State == CustomClientSocketState.Stopping) return;
             State = CustomClientSocketState.Stopping;
 
             if(RemoteAddress != null)
@@ -146,7 +139,7 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task ReceiveAsync()
         {
-            byte[] buffer = GC.AllocateArray<byte>(length: 250, pinned: true);
+            byte[] buffer = GC.AllocateArray<byte>(length: 65527, pinned: true);
             Memory<byte> bufferMem = buffer.AsMemory();
             var receivedAddress = new SocketAddress(Socket.AddressFamily);
 
@@ -191,7 +184,7 @@ namespace VoiceCraft.Network.Sockets
             }
         }
 
-        private void CheckerLoop()
+        private async Task CheckerLoop()
         {
             while (!CTS.IsCancellationRequested)
             {
@@ -199,9 +192,11 @@ namespace VoiceCraft.Network.Sockets
                 if (RemoteAddress != null && dist > Timeout)
                 {
                     RemoteAddress = null;
-                    OnDisconnect?.Invoke();
+                    OnDisconnected?.Invoke();
                     break;
                 }
+
+                await Task.Delay(1).ConfigureAwait(false);
             }
         }
 
@@ -229,7 +224,7 @@ namespace VoiceCraft.Network.Sockets
             LastActive = Environment.TickCount64;
             RemoteAddress = new SocketAddress(address.Family, address.Size);
             SocketSendToAsync(new Accept(), address).Wait();
-            OnConnect?.Invoke(data.Name);
+            OnConnected?.Invoke(data.Name);
         }
 
         private void LogoutReceived(Logout data, SocketAddress address)
@@ -238,7 +233,7 @@ namespace VoiceCraft.Network.Sockets
             {
                 RemoteAddress = null;
                 SocketSendToAsync(new Accept(), address).Wait();
-                OnDisconnect?.Invoke();
+                OnDisconnected?.Invoke();
             }
             return;
         }

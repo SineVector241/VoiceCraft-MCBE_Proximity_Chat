@@ -1,7 +1,6 @@
 using VoiceCraft.Maui.ViewModels;
 
 namespace VoiceCraft.Maui.Views.Mobile;
-
 public partial class Voice : ContentPage
 {
     VoiceViewModel viewModel;

@@ -77,6 +77,7 @@ namespace VoiceCraft.Maui.Services
 
             Client.OnConnected += ClientConnected;
             Client.OnDisconnected += ClientDisconnected;
+            Client.OnFailed += ClientFailed;
             Client.OnDeny += ClientDeny;
             Client.OnBinded += ClientBinded;
             Client.OnUnbinded += ClientUnbinded;
@@ -238,11 +239,11 @@ namespace VoiceCraft.Maui.Services
             }
             else if(Settings.CustomClientProtocol)
             {
-                StatusMessage = $"Connected! Key\nWaiting for client on port {Settings.ClientPort}";
+                StatusMessage = $"Connected!\nWaiting for client on port {Settings.ClientPort}";
             }
             else
             {
-                StatusMessage = $"Connected! Key\nWaiting for MCWSS on port {Settings.ClientPort}.";
+                StatusMessage = $"Connected!\nWaiting for MCWSS on port {Settings.ClientPort}";
             }
             OnStatusUpdated?.Invoke(StatusMessage);
         }
@@ -250,6 +251,11 @@ namespace VoiceCraft.Maui.Services
         private void ClientDisconnected(string? reason = null)
         {
             OnStopped?.Invoke(reason);
+        }
+
+        private void ClientFailed(Exception ex)
+        {
+            OnStopped?.Invoke(ex.Message);
         }
 
         private void ClientDeny(string? reason = null)

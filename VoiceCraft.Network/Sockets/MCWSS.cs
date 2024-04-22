@@ -19,13 +19,15 @@ namespace VoiceCraft.Network.Sockets
         public bool IsDisposed { get; private set; }
 
         //Events
-        public delegate void Connect(string Username);
+        public delegate void Connected(string Username);
+        public delegate void Failed(Exception ex);
         public delegate void PlayerTravelled(Vector3 position, string Dimension);
-        public delegate void Disconnect();
+        public delegate void Disconnected();
 
-        public event Connect? OnConnect;
+        public event Connected? OnConnected;
+        public event Failed? OnFailed;
         public event PlayerTravelled? OnPlayerTravelled;
-        public event Disconnect? OnDisconnect;
+        public event Disconnected? OnDisconnected;
 
         public MCWSS(int Port)
         {
@@ -39,57 +41,64 @@ namespace VoiceCraft.Network.Sockets
 
         public void Start()
         {
-            Socket.Start(socket =>
+            try
             {
-                socket.OnOpen = () =>
+                Socket.Start(socket =>
                 {
-                    if (ConnectedSocket == null)
+                    socket.OnOpen = () =>
                     {
-                        //https://gist.github.com/jocopa3/5f718f4198f1ea91a37e3a9da468675c
-                        socket.Send(new MCWSSPacket<Command>() { header = { messagePurpose = "commandRequest", requestId = Guid.NewGuid().ToString() }, body = { commandLine = "/getlocalplayername" } }.SerializePacket());
-                        socket.Send(new MCWSSPacket<Event> { header = { requestId = Guid.NewGuid().ToString(), messagePurpose = "subscribe" }, body = { eventName = "PlayerTravelled" } }.SerializePacket());
-                        ConnectedSocket = socket;
-                        IsConnected = true;
-                    }
-                    else
-                        socket.Close();
-                };
+                        if (ConnectedSocket == null)
+                        {
+                            //https://gist.github.com/jocopa3/5f718f4198f1ea91a37e3a9da468675c
+                            socket.Send(new MCWSSPacket<Command>() { header = { messagePurpose = "commandRequest", requestId = Guid.NewGuid().ToString() }, body = { commandLine = "/getlocalplayername" } }.SerializePacket());
+                            socket.Send(new MCWSSPacket<Event> { header = { requestId = Guid.NewGuid().ToString(), messagePurpose = "subscribe" }, body = { eventName = "PlayerTravelled" } }.SerializePacket());
+                            ConnectedSocket = socket;
+                            IsConnected = true;
+                        }
+                        else
+                            socket.Close();
+                    };
 
-                socket.OnClose = () =>
-                {
-                    if (socket == ConnectedSocket)
+                    socket.OnClose = () =>
                     {
-                        ConnectedSocket = null;
-                        IsConnected = false;
-                        OnDisconnect?.Invoke();
-                    }
-                };
+                        if (socket == ConnectedSocket)
+                        {
+                            ConnectedSocket = null;
+                            IsConnected = false;
+                            OnDisconnected?.Invoke();
+                        }
+                    };
 
-                socket.OnMessage = message =>
-                {
-                    var packet = MCPacketReg.GetPacketFromJsonString(message);
-
-                    if (packet is MCWSSPacket<LocalPlayerName>)
+                    socket.OnMessage = message =>
                     {
-                        var data = (MCWSSPacket<LocalPlayerName>)packet;
-                        var name = data.body.localplayername;
-                        OnConnect?.Invoke(name);
-                    }
+                        var packet = MCPacketReg.GetPacketFromJsonString(message);
 
-                    else if (packet is MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled> data)
-                    {
-                        var x = data.body.player.position.x;
-                        var y = data.body.player.position.y;
-                        var z = data.body.player.position.z;
-                        var dimensionInt = data.body.player.dimension;
+                        if (packet is MCWSSPacket<LocalPlayerName>)
+                        {
+                            var data = (MCWSSPacket<LocalPlayerName>)packet;
+                            var name = data.body.localplayername;
+                            OnConnected?.Invoke(name);
+                        }
 
-                        OnPlayerTravelled?.Invoke(new Vector3(x, y, z), Dimensions[dimensionInt]);
+                        else if (packet is MCWSSPacket<Core.Packets.MCWSS.PlayerTravelled> data)
+                        {
+                            var x = data.body.player.position.x;
+                            var y = data.body.player.position.y;
+                            var z = data.body.player.position.z;
+                            var dimensionInt = data.body.player.dimension;
+
+                            OnPlayerTravelled?.Invoke(new Vector3(x, y, z), Dimensions[dimensionInt]);
 #if DEBUG
-                        Debug.WriteLine($"PlayerTravelled: {x}, {y}, {z}, {Dimensions[dimensionInt]}");
+                            Debug.WriteLine($"PlayerTravelled: {x}, {y}, {z}, {Dimensions[dimensionInt]}");
 #endif
-                    }
-                };
-            });
+                        }
+                    };
+                });
+            } 
+            catch(Exception ex)
+            {
+                OnFailed?.Invoke(ex);
+            }
         }
 
         public void Stop()

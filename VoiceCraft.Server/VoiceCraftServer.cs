@@ -51,6 +51,7 @@ namespace VoiceCraft.Server
 
             VoiceCraftSocket.OnStarted += VoiceCraftSocketStarted;
             VoiceCraftSocket.OnFailed += VoiceCraftSocketFailed;
+            VoiceCraftSocket.OnStopped += VoiceCraftSocketStopped;
             VoiceCraftSocket.OnPingInfoReceived += OnPingInfo;
             VoiceCraftSocket.OnPeerConnected += OnPeerConnected;
             VoiceCraftSocket.OnPeerDisconnected += OnPeerDisconnected;
@@ -111,9 +112,12 @@ namespace VoiceCraft.Server
 
             VoiceCraftSocket.StopAsync().Wait();
             MCComm.Stop();
-            
-            if(!IsStarted) OnStopped?.Invoke(reason);
-            IsStarted = false;
+
+            if (IsStarted)
+            {
+                IsStarted = false;
+                OnStopped?.Invoke(reason);
+            }
         }
 
         public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
@@ -229,6 +233,11 @@ namespace VoiceCraft.Server
             OnFailed?.Invoke(ex);
         }
 
+        private void VoiceCraftSocketStopped(string? reason = null)
+        {
+            Stop(reason);
+        }
+
         private void OnPingInfo(Core.Packets.VoiceCraft.PingInfo data, NetPeer peer)
         {
             var connType = PositioningTypes.Unknown;
@@ -243,6 +252,7 @@ namespace VoiceCraft.Server
                     break;
             }
             peer.AddToSendBuffer(new Core.Packets.VoiceCraft.PingInfo() { ConnectedParticipants = Participants.Count, MOTD = ServerProperties.ServerMOTD, PositioningType = connType});
+            peer.Disconnect(notify: false);
         }
 
         private void OnPeerConnected(NetPeer peer, Core.Packets.VoiceCraft.Login packet)

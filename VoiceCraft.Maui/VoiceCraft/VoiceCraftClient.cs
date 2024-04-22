@@ -2,7 +2,6 @@
 using NAudio.Wave.SampleProviders;
 using OpusSharp.Core;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net.Sockets;
 using VoiceCraft.Core;
 
@@ -91,12 +90,14 @@ namespace VoiceCraft.Maui.VoiceCraft
             };
             AudioOutput = new MixingSampleProvider(PlaybackFormat) { ReadFully = true };
 
-            MCWSS.OnConnect += MCWSSConnected;
-            MCWSS.OnDisconnect += MCWSSDisconnected;
+            MCWSS.OnConnected += MCWSSConnected;
+            MCWSS.OnFailed += MCWSSFailed;
+            MCWSS.OnDisconnected += MCWSSDisconnected;
             MCWSS.OnPlayerTravelled += MCWSSPlayerTravelled;
 
-            CustomClient.OnConnect += CustomClientConnect;
-            CustomClient.OnDisconnect += CustomClientDisconnect;
+            CustomClient.OnConnected += CustomClientConnected;
+            CustomClient.OnDisconnected += CustomClientDisconnected;
+            CustomClient.OnFailed += CustomClientFailed;
             CustomClient.OnUpdated += CustomClientUpdated;
 
             VoiceCraftSocket.OnConnected += VoiceCraftSocketConnected;
@@ -144,19 +145,16 @@ namespace VoiceCraft.Maui.VoiceCraft
         public void Disconnect(string? reason = null)
         {
             ObjectDisposedException.ThrowIf(IsDisposed && State == ConnectionState.Disconnected, nameof(VoiceCraftClient));
-            if (State == ConnectionState.Disconnected) return;
+            if (State == ConnectionState.Disconnected || State == ConnectionState.Disconnecting) return;
+            State = ConnectionState.Disconnecting;
 
             VoiceCraftSocket.DisconnectAsync().Wait();
             CustomClient.StopAsync().Wait();
             MCWSS.Stop();
             ClearParticipants();
             ClearChannels();
-
-            if (State == ConnectionState.Connected || State == ConnectionState.Connecting)
-            {
-                State = ConnectionState.Disconnected;
-                OnDisconnected?.Invoke(reason);
-            }
+            State = ConnectionState.Disconnected;
+            OnDisconnected?.Invoke(reason);
         }
 
         public void SetMute(bool mute)
@@ -397,6 +395,13 @@ namespace VoiceCraft.Maui.VoiceCraft
             OnBinded?.Invoke(Username);
         }
 
+        private void MCWSSFailed(Exception ex)
+        {
+            if (State != ConnectionState.Connected) return;
+
+            Disconnect(ex.Message);
+        }
+
         private void MCWSSPlayerTravelled(System.Numerics.Vector3 position, string Dimension)
         {
             if (State != ConnectionState.Connected) return;
@@ -421,7 +426,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         #endregion
 
         #region CustomClient
-        private void CustomClientConnect(string name)
+        private void CustomClientConnected(string name)
         {
             if (State != ConnectionState.Connected) return;
 
@@ -429,7 +434,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             OnBinded?.Invoke(name);
         }
 
-        private void CustomClientDisconnect()
+        private void CustomClientDisconnected()
         {
             if (State != ConnectionState.Connected) return;
 
@@ -439,21 +444,30 @@ namespace VoiceCraft.Maui.VoiceCraft
             OnUnbinded?.Invoke();
         }
 
+        private void CustomClientFailed(Exception ex)
+        {
+            if (State != ConnectionState.Connected) return;
+
+            Disconnect(ex.Message);
+        }
 
         private void CustomClientUpdated(System.Numerics.Vector3 position, float rotation, float caveDensity, bool isUnderwater, string dimensionId, string levelId, string serverId)
         {
             if (State != ConnectionState.Connected) return;
 
-            var envId = dimensionId;
+            var envId = dimensionId.Truncate(30, string.Empty);
             if (AllowAccurateEnvironmentId)
-                envId = string.Concat(serverId, levelId, dimensionId);
+            {
+                envId = string.Concat(envId, serverId.Truncate(30, string.Empty));
+                envId = string.Concat(envId, levelId.Truncate(30, string.Empty));
+            }
 
             VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, CaveDensity = caveDensity, InWater = isUnderwater });
 
             if (EnvironmentId != envId)
             {
-                EnvironmentId = envId;
-                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.UpdateEnvironmentId() { EnvironmentId = envId });
+                EnvironmentId = envId ?? string.Empty;
+                VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.UpdateEnvironmentId() { EnvironmentId = envId ?? string.Empty });
             }
         }
         #endregion
@@ -510,8 +524,19 @@ namespace VoiceCraft.Maui.VoiceCraft
         private enum ConnectionState
         {
             Disconnected,
+            Disconnecting,
             Connecting,
             Connected
+        }
+    }
+
+    public static class StringExt
+    {
+        public static string? Truncate(this string? value, int maxLength, string truncationSuffix = "…")
+        {
+            return value?.Length > maxLength
+                ? value.Substring(0, maxLength) + truncationSuffix
+                : value;
         }
     }
 }

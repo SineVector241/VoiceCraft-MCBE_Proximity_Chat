@@ -122,6 +122,10 @@ namespace VoiceCraft.Server
         private void OnStopped(string? reason = null)
         {
             Logger.LogToConsole(LogType.Warn, $"Server Stopped - Reason: {reason}", nameof(VoiceCraftServer));
+            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
+            Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
+            Server.Dispose();
+            Environment.Exit(0);
         }
 
         private void ParticipantJoined(VoiceCraftParticipant participant)

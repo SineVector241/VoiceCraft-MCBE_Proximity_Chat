@@ -45,8 +45,7 @@ namespace VoiceCraft.Maui.ViewModels
                 Settings.OutputDevice = 0;
             }
 
-            WeakReferenceMessenger.Default.Send(new StartServiceMSG());
-            await Navigator.NavigateTo(nameof(Voice), Server);
+            await Navigator.NavigateTo(nameof(Voice), Server, $"startMode={true}");
         }
     }
 }
