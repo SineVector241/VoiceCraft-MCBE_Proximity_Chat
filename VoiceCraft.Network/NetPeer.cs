@@ -75,10 +75,10 @@ namespace VoiceCraft.Network
                 OnPacketReceived?.Invoke(this, packet);
                 return true; //Not reliable, We can just say it's received.
             }
-            AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
 
             if (ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
                 return false; //make sure it doesn't overload the receive buffer and cause a memory overflow.
+            AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
 
             if (packet.Sequence < NextSequence) return true; //Likely to be a duplicate packet.
 
