@@ -32,7 +32,11 @@ namespace VoiceCraft.Core.Packets
             dataStream.AddRange(BitConverter.GetBytes(Id));
             if(IsReliable)
                 dataStream.AddRange(BitConverter.GetBytes(Sequence));
+        }
 
+        public VoiceCraftPacket Clone()
+        {
+            return (VoiceCraftPacket)MemberwiseClone();
         }
     }
 

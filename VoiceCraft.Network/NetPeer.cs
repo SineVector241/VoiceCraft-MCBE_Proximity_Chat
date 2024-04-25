@@ -51,16 +51,18 @@ namespace VoiceCraft.Network
 
         public void AddToSendBuffer(VoiceCraftPacket packet)
         {
-            if (packet.IsReliable)
+            var p = packet.Clone();
+            p.Id = Id;
+
+            if (p.IsReliable)
             {
-                packet.Sequence = Sequence;
-                packet.ResendTime = Environment.TickCount64 + ResendTime;
-                ReliabilityQueue.TryAdd(packet.Sequence, packet); //If reliable, Add to reliability queue. ResendTime is determined by the application.
+                p.Sequence = Sequence;
+                p.ResendTime = Environment.TickCount64 + ResendTime;
+                ReliabilityQueue.TryAdd(p.Sequence, p); //If reliable, Add to reliability queue. ResendTime is determined by the application.
                 Sequence++;
             }
 
-            packet.Id = Id;
-            SendQueue.Enqueue(packet);
+            SendQueue.Enqueue(p);
         }
 
         public bool AddToReceiveBuffer(VoiceCraftPacket packet)
@@ -68,16 +70,16 @@ namespace VoiceCraft.Network
             LastActive = Environment.TickCount64;
             if (State == NetPeerState.Connected && packet.Id != Id) return false; //Invalid Id.
 
-            if(!packet.IsReliable)
+            if (!packet.IsReliable)
             {
                 OnPacketReceived?.Invoke(this, packet);
                 return true; //Not reliable, We can just say it's received.
             }
+            AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
 
             if (ReceiveBuffer.Count >= MaxRecvBufferSize && packet.Sequence != NextSequence)
                 return false; //make sure it doesn't overload the receive buffer and cause a memory overflow.
 
-            AddToSendBuffer(new Ack() { PacketSequence = packet.Sequence }); //Acknowledge packet by sending the Ack packet.
             if (packet.Sequence < NextSequence) return true; //Likely to be a duplicate packet.
 
             ReceiveBuffer.TryAdd(packet.Sequence, packet); //Add it in, TryAdd does not replace an old packet.
