@@ -129,7 +129,7 @@ namespace VoiceCraft.Server
             {
                 if(participant.Value.Binded && bindedOnly || !bindedOnly)
                 {
-                    participant.Key.AddToSendBuffer(packet);
+                    participant.Key.AddToSendBuffer(packet.Clone());
                 }
             }
         }

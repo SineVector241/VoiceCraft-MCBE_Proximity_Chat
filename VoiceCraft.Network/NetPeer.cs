@@ -51,18 +51,17 @@ namespace VoiceCraft.Network
 
         public void AddToSendBuffer(VoiceCraftPacket packet)
         {
-            var p = packet.Clone();
-            p.Id = Id;
+            packet.Id = Id;
 
-            if (p.IsReliable)
+            if (packet.IsReliable)
             {
-                p.Sequence = Sequence;
-                p.ResendTime = Environment.TickCount64 + ResendTime;
-                ReliabilityQueue.TryAdd(p.Sequence, p); //If reliable, Add to reliability queue. ResendTime is determined by the application.
+                packet.Sequence = Sequence;
+                packet.ResendTime = Environment.TickCount64 + ResendTime;
+                ReliabilityQueue.TryAdd(packet.Sequence, packet); //If reliable, Add to reliability queue. ResendTime is determined by the application.
                 Sequence++;
             }
 
-            SendQueue.Enqueue(p);
+            SendQueue.Enqueue(packet);
         }
 
         public bool AddToReceiveBuffer(VoiceCraftPacket packet)
