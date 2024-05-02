@@ -1,19 +1,9 @@
-﻿using VoiceCraft.Core.Packets.Interfaces;
-
-namespace VoiceCraft.Core.Packets.MCComm
+﻿namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class ChannelMove : IMCCommPacketData
+    public class ChannelMove : MCCommPacket
     {
+        public override byte PacketId => (byte)MCCommPacketTypes.ChannelMove;
         public string PlayerId { get; set; } = string.Empty;
-        public byte ChannelId { get; set; } = 0; //Set to 0 to disconnect the participant from the channel.
-
-        public static MCCommPacket Create(string playerId, byte channelId)
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.ChannelMove,
-                PacketData = new ChannelMove() { PlayerId = playerId, ChannelId = channelId }
-            };
-        }
+        public int ChannelId { get; set; } = 0; //Set to -1 to disconnect the participant from the channel.
     }
 }

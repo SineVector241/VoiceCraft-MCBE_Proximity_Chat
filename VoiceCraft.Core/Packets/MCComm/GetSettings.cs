@@ -1,16 +1,7 @@
-﻿using VoiceCraft.Core.Packets.Interfaces;
-
-namespace VoiceCraft.Core.Packets.MCComm
+﻿namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class GetSettings : IMCCommPacketData
+    public class GetSettings : MCCommPacket
     {
-        public static MCCommPacket Create()
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.GetSettings,
-                PacketData = new GetSettings()
-            };
-        }
+        public override byte PacketId => (byte)MCCommPacketTypes.GetSettings;
     }
 }

@@ -1,16 +1,7 @@
-﻿using VoiceCraft.Core.Packets.Interfaces;
-
-namespace VoiceCraft.Core.Packets.MCComm
+﻿namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class Accept : IMCCommPacketData
+    public class Accept : MCCommPacket
     {
-        public static MCCommPacket Create()
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.Accept,
-                PacketData = new Accept()
-            };
-        }
+        public override byte PacketId => (byte)MCCommPacketTypes.Accept;
     }
 }

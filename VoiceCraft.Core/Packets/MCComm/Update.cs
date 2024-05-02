@@ -1,24 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using VoiceCraft.Core.Packets.Interfaces;
 
 namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class Update : IMCCommPacketData
+    public class Update : MCCommPacket
     {
+        public override byte PacketId => (byte)MCCommPacketTypes.Update;
         public List<Player> Players { get; set; } = new List<Player>();
-
-        public static MCCommPacket Create(List<Player> players)
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.Update,
-                PacketData = new Update()
-                {
-                    Players = players
-                }
-            };
-        }
     }
 
     public class Player

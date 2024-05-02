@@ -4,14 +4,14 @@
     {
         public static void LogToConsole(LogType logType, string message, string tag)
         {
-            switch(logType)
+            switch (logType)
             {
                 case LogType.Info:
                     Console.ResetColor();
                     Console.WriteLine($"[{DateTime.Now}] [{tag}]: {message}");
                     break;
 
-                case LogType.Error: 
+                case LogType.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"[{DateTime.Now}] [Error] [{tag}]: {message}");
                     Console.ResetColor();

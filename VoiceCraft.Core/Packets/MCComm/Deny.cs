@@ -1,21 +1,8 @@
-﻿using VoiceCraft.Core.Packets.Interfaces;
-
-namespace VoiceCraft.Core.Packets.MCComm
+﻿namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class Deny : IMCCommPacketData
+    public class Deny : MCCommPacket
     {
+        public override byte PacketId => (byte)MCCommPacketTypes.Deny;
         public string Reason { get; set; } = string.Empty;
-
-        public static MCCommPacket Create(string reason)
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.Deny,
-                PacketData = new Deny()
-                {
-                    Reason = reason
-                }
-            };
-        }
     }
 }

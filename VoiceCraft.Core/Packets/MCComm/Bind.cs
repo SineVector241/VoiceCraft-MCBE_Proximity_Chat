@@ -1,24 +1,11 @@
-﻿using VoiceCraft.Core.Packets.Interfaces;
-
-namespace VoiceCraft.Core.Packets.MCComm
+﻿namespace VoiceCraft.Core.Packets.MCComm
 {
-    public class Bind : IMCCommPacketData
+    public class Bind : MCCommPacket
     {
-        public string PlayerId { get; set; } = string.Empty;
-        public ushort PlayerKey { get; set; }
-        public string Gamertag { get; set; } = string.Empty;
+        public override byte PacketId => (byte)MCCommPacketTypes.Bind;
 
-        public static MCCommPacket Create(string playerId, ushort playerKey, string gamertag)
-        {
-            return new MCCommPacket()
-            {
-                PacketType = MCCommPacketTypes.Bind,
-                PacketData = new Bind() {
-                    PlayerId = playerId,
-                    PlayerKey = playerKey,
-                    Gamertag = gamertag
-                }
-            };
-        }
+        public string PlayerId { get; set; } = string.Empty;
+        public short PlayerKey { get; set; }
+        public string Gamertag { get; set; } = string.Empty;
     }
 }
