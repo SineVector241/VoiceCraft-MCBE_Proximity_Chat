@@ -27,6 +27,13 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/appicon.appiconset</string>
+	<string>Assets.xcassets/vc.appiconset</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Your app requires microphone access for voice chat functionality.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>VoIP</string>
+	</array>
 </dict>
 </plist>

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationId>com.sine.voicecraft.core</ApplicationId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 ﻿using NAudio.Wave;
 using VoiceCraft.Maui.Interfaces;
-
 namespace VoiceCraft.Maui
 {
     public class AudioManager : IAudioManager

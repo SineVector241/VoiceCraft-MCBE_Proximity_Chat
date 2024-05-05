@@ -14,7 +14,7 @@ namespace VoiceCraft.Maui.ViewModels
 
         [ObservableProperty]
         ObservableCollection<string> inputDevices = new ObservableCollection<string>() { "Default" };
-        
+
         [ObservableProperty]
         ObservableCollection<string> outputDevices = new ObservableCollection<string>() { "Default" };
 
@@ -50,7 +50,7 @@ namespace VoiceCraft.Maui.ViewModels
         [RelayCommand]
         public void SaveSettings()
         {
-            if(Microphone != null)
+            if (Microphone != null)
             {
                 Microphone.StopRecording();
                 Microphone.DataAvailable -= Microphone_DataAvailable;
@@ -63,11 +63,11 @@ namespace VoiceCraft.Maui.ViewModels
         }
 
         [RelayCommand]
-        public void OpenCloseMicrophone()
+        public async Task OpenCloseMicrophone()
         {
             if (Microphone == null)
             {
-#if ANDROID
+#if ANDROID || MACCATALYST || IOS
                 var status = await Permissions.RequestAsync<Permissions.Microphone>();
                 if (Permissions.ShouldShowRationale<Permissions.Microphone>())
                 {
@@ -78,6 +78,7 @@ namespace VoiceCraft.Maui.ViewModels
 #endif
 
                 var manager = new AudioManager();
+
                 Microphone = manager.CreateRecorder(AudioFormat, 20);
                 Microphone.DataAvailable += Microphone_DataAvailable;
                 Microphone.StartRecording();
