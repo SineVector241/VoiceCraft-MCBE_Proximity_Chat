@@ -51,7 +51,7 @@
                         <Label Grid.Row="4"
                                FontAttributes="Bold"
                                FontSize="Small"
-                               Text="Codec: Opus - v1.5.1" />
+                               Text="{Binding Source={x:Static app:App.OpusVersion}, StringFormat='Codec: {0}'}" />
                     </Grid>
                 </Border>
             </Grid>

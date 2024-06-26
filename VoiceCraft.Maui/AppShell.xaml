@@ -8,6 +8,9 @@
        Shell.FlyoutBackdrop="#6f404040"
        Shell.FlyoutBehavior="{OnIdiom Default='Flyout',
                                       Phone='Disabled'}"
+       Shell.ForegroundColor="{AppThemeBinding Light=Black,
+                                               Dark=White,
+                                               Default=Black}"
        Shell.NavBarIsVisible="False"
        Shell.TabBarIsVisible="{OnIdiom Default='False',
                                        Phone='True'}">
