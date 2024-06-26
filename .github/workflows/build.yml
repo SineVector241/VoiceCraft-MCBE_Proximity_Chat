@@ -1,0 +1,32 @@
+name: BuildTest
+on: [push, pull_request]
+jobs:
+   build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Navigate to VoiceCraft.Core
+        run: cd ./VoiceCraft.Core
+      - name: Install Dependencies
+        run: dotnet workload restore VoiceCraft.Core.csproj
+      - name: Build VoiceCraft.Core
+        run: dotnet build VoiceCraft.Core.csproj
+
+      - name: Navigate to VoiceCraft.Network
+        run: cd ../VoiceCraft.Network
+      - name: Install Dependencies
+        run: dotnet workload restore VoiceCraft.Network.csproj
+      - name: Build VoiceCraft.Network
+        run: dotnet build VoiceCraft.Network.csproj
+
+      - name: Navigate to VoiceCraft.Server
+        run: cd ./VoiceCraft.Server
+      - name: Install Dependencies
+        run: dotnet workload restore VoiceCraft.Server.csproj
+      - name: Build VoiceCraft.Server
+        run: dotnet build VoiceCraft.Server.csproj
