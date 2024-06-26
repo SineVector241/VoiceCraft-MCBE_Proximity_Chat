@@ -608,7 +608,7 @@ namespace VoiceCraft.Server
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate());
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate() { SpeakingPlayers = Participants.Where(x => Environment.TickCount64 - x.Value.LastSpoke >= 500).Select(x => x.Value.MinecraftId).ToList() });
         }
 
         private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
