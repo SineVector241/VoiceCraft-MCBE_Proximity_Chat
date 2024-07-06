@@ -74,7 +74,7 @@ namespace VoiceCraft.Server
             MCComm.OnUpdateReceived += MCCommUpdate;
             MCComm.OnGetSettingsReceived += MCCommGetSettings;
             MCComm.OnUpdateSettingsReceived += MCCommUpdateSettings;
-            MCComm.OnRemoveParticipantReceived += MCCommRemoveParticipant;
+            MCComm.OnDisconnectParticipantReceived += MCCommRemoveParticipant;
             MCComm.OnChannelMoveReceived += MCCommChannelMove;
         }
 
@@ -120,47 +120,57 @@ namespace VoiceCraft.Server
             }
         }
 
-        public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
+        public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel[]? inChannels = null, bool bindedOnly = true)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
-            var list = Participants.Where(x => !excludes.Contains(x.Value) && x.Value.Channel == inChannel);
+            var list = Participants.Where(x => !bindedOnly || x.Value.Binded && bindedOnly && !excludes.Contains(x.Value) && (inChannels == null || x.Value.Channels.Any(x => inChannels.Contains(x))));
             foreach (var participant in list)
             {
-                if(participant.Value.Binded && bindedOnly || !bindedOnly)
-                {
-                    participant.Key.AddToSendBuffer(packet.Clone());
-                }
+                participant.Key.AddToSendBuffer(packet.Clone());
             }
         }
 
-        public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel? channel = null)
+        public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel channel)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
-            if (client.Channel == channel) return; //Client is already in the channel.
+            if (client.Channels.Count == 1 && client.Channels[0] == channel) return; //Client is already in the only channel, do nothing.
 
-            if(client.Channel != null)
-                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel()); //Tell the client to leave the previous channel
+            //Tell the client to leave the previous channels
+            var removeFromChannels = client.Channels.Where(x => x != channel);
+            foreach (var removeChannel in removeFromChannels) {
+                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(removeChannel) });
+            }
 
-            Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() 
-            { 
-                Key = client.Key 
-            }, [client], client.Channel);
-            client.Channel = channel;
+            //Tell the other clients that are not in the target channel that the participant has left those previous channels.
+            var excludeClients = Participants.Where(x => x.Value == client || x.Value.Channels.Contains(channel)).Select(x => x.Value);
+            Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
+            {
+                Key = client.Key
+            }, excludeClients.ToArray());
 
-            if (client.Channel != null)
-                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel)}); //Tell the client to join the channel
+            //Set the client channels
+            client.Channels.RemoveAll(x => removeFromChannels.Contains(x));
+            if (client.Channels.Contains(channel)) return; //Client is already in the channel.
 
+            //Client is not in the target channel, tell it to join it.
+            client.Channels.Add(channel);
+
+            //Tell the client to join the channel
+            peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(channel)});
+
+            //Tell the other clients to add the client.
             Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined()
             {
                 IsDeafened = client.Deafened,
                 IsMuted = client.Muted,
                 Key = client.Key,
                 Name = client.Name
-            }, [client], client.Channel);
+            }, [client], client.Channels.ToArray());
 
-            var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
+            //Send participants back to the client.
+            var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channels.Contains(channel));
             foreach (var participant in list)
             {
                 peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
@@ -170,7 +180,17 @@ namespace VoiceCraft.Server
                     Key = participant.Value.Key,
                     Name = participant.Value.Name
                 });
-            } //Send participants back to binded client.
+            }
+        }
+
+        public void AddParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel channel)
+        {
+
+        }
+
+        public void RemoveParticipantFromChannel(NetPeer peer, VoiceCraftParticipant client, Channel channel)
+        {
+
         }
 
         private short GetAvailableKey(short preferredKey)
@@ -635,7 +655,7 @@ namespace VoiceCraft.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
 
-        private void MCCommRemoveParticipant(Core.Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
+        private void MCCommRemoveParticipant(Core.Packets.MCComm.DisconnectParticipant packet, HttpListenerContext ctx)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (participant.Value != null)

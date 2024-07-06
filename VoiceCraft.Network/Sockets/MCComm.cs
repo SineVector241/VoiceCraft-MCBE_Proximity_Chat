@@ -50,11 +50,19 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<Deny>? OnDenyReceived;
         public event PacketData<Bind>? OnBindReceived;
         public event PacketData<Update>? OnUpdateReceived;
-        public event PacketData<UpdateSettings>? OnUpdateSettingsReceived;
-        public event PacketData<GetSettings>? OnGetSettingsReceived;
-        public event PacketData<RemoveParticipant>? OnRemoveParticipantReceived;
-        public event PacketData<ChannelMove>? OnChannelMoveReceived;
         public event PacketData<AckUpdate>? OnAckUpdateReceived;
+        public event PacketData<GetSettings>? OnGetSettingsReceived;
+        public event PacketData<UpdateSettings>? OnUpdateSettingsReceived;
+        public event PacketData<DisconnectParticipant>? OnDisconnectParticipantReceived;
+        public event PacketData<SetParticipantBitmask>? OnSetParticipantBitmaskReceived;
+        public event PacketData<GetParticipantBitmask>? OnGetParticipantBitmaskReceived;
+        public event PacketData<MuteParticipant>? OnMuteParticipantReceived;
+        public event PacketData<UnmuteParticipant>? OnUnmuteParticipantReceived;
+        public event PacketData<DeafenParticipant>? OnDeafenParticipantReceived;
+        public event PacketData<UndeafenParticipant>? OnUndeafenParticipantReceived;
+        public event PacketData<ChannelMove>? OnChannelMoveReceived;
+        public event PacketData<ChannelAdd>? OnChannelAddReceived;
+        public event PacketData<ChannelRemove>? OnChannelRemoveReceived;
 
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
@@ -69,11 +77,19 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Deny, typeof(Deny));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Bind, typeof(Bind));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Update, typeof(Update));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UpdateSettings, typeof(UpdateSettings));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetSettings, typeof(GetSettings));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.RemoveParticipant, typeof(RemoveParticipant));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelMove, typeof(ChannelMove));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.AckUpdate, typeof(AckUpdate));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetSettings, typeof(GetSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UpdateSettings, typeof(UpdateSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DisconnectParticipant, typeof(DisconnectParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetParticipantBitmask, typeof(SetParticipantBitmask));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetParticipantBitmask, typeof(GetParticipantBitmask));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.MuteParticipant, typeof(MuteParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UnmuteParticipant, typeof(UnmuteParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DeafenParticipant, typeof(DeafenParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UndeafenParticipant, typeof(UndeafenParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelMove, typeof(ChannelMove));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelAdd, typeof(ChannelAdd));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelRemove, typeof(ChannelRemove));
         }
 
         public async Task Start(ushort Port, string LoginKey)
@@ -175,11 +191,19 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.Deny: OnDenyReceived?.Invoke((Deny)packet, ctx); break;
                     case MCCommPacketTypes.Bind: OnBindReceived?.Invoke((Bind)packet, ctx); break;
                     case MCCommPacketTypes.Update: OnUpdateReceived?.Invoke((Update)packet, ctx); break;
-                    case MCCommPacketTypes.UpdateSettings: OnUpdateSettingsReceived?.Invoke((UpdateSettings)packet, ctx); break;
-                    case MCCommPacketTypes.GetSettings: OnGetSettingsReceived?.Invoke((GetSettings)packet, ctx); break;
-                    case MCCommPacketTypes.RemoveParticipant: OnRemoveParticipantReceived?.Invoke((RemoveParticipant)packet, ctx); break;
-                    case MCCommPacketTypes.ChannelMove: OnChannelMoveReceived?.Invoke((ChannelMove)packet, ctx); break;
                     case MCCommPacketTypes.AckUpdate: OnAckUpdateReceived?.Invoke((AckUpdate)packet, ctx); break;
+                    case MCCommPacketTypes.GetSettings: OnGetSettingsReceived?.Invoke((GetSettings)packet, ctx); break;
+                    case MCCommPacketTypes.UpdateSettings: OnUpdateSettingsReceived?.Invoke((UpdateSettings)packet, ctx); break;
+                    case MCCommPacketTypes.DisconnectParticipant: OnDisconnectParticipantReceived?.Invoke((DisconnectParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.SetParticipantBitmask: OnSetParticipantBitmaskReceived?.Invoke((SetParticipantBitmask)packet, ctx); break;
+                    case MCCommPacketTypes.GetParticipantBitmask: OnGetParticipantBitmaskReceived?.Invoke((GetParticipantBitmask)packet, ctx); break;
+                    case MCCommPacketTypes.MuteParticipant: OnMuteParticipantReceived?.Invoke((MuteParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.UnmuteParticipant: OnUnmuteParticipantReceived?.Invoke((UnmuteParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.DeafenParticipant: OnDeafenParticipantReceived?.Invoke((DeafenParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.UndeafenParticipant: OnUndeafenParticipantReceived?.Invoke((UndeafenParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.ChannelMove: OnChannelMoveReceived?.Invoke((ChannelMove)packet, ctx); break;
+                    case MCCommPacketTypes.ChannelAdd: OnChannelAddReceived?.Invoke((ChannelAdd)packet, ctx); break;
+                    case MCCommPacketTypes.ChannelRemove: OnChannelRemoveReceived?.Invoke((ChannelRemove)packet, ctx); break;
                 }
             }
             catch (Exception ex)
