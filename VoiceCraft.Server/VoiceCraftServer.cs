@@ -146,7 +146,7 @@ namespace VoiceCraft.Server
             }
 
             //Tell the other clients that are not in the target channel that the participant has left those previous channels.
-            var excludeClients = Participants.Where(x => x.Value == client || !x.Value.Binded || x.Value.Channels.Contains(channel)).Select(x => x.Value);
+            var excludeClients = Participants.Values.Where(x => x == client || !x.Binded || x.Channels.Contains(channel));
             Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
             {
                 Key = client.Key
@@ -156,12 +156,12 @@ namespace VoiceCraft.Server
             client.Channels.RemoveAll(x => removeFromChannels.Contains(x));
 
             //Send participants that got removed to the client.
-            var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channels.Any(x => x == channel));
+            var list = Participants.Values.Where(x => x != client && x.Binded && x.Channels.Any(x => x == channel));
             foreach (var participant in list)
             {
                 peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantLeft()
                 {
-                    Key = participant.Value.Key
+                    Key = participant.Key
                 });
             }
 
@@ -175,7 +175,7 @@ namespace VoiceCraft.Server
 
             if (client.Channels.Contains(channel)) return; //Already in the channel.
 
-            var excludeClients = Participants.Where(x => x.Value == client || !x.Value.Binded || x.Value.Channels.Any(x => client.Channels.Contains(x))).Select(x => x.Value);
+            var excludeClients = Participants.Values.Where(x => x == client || !x.Binded || x.Channels.Any(x => client.Channels.Contains(x)));
 
             //Tell client to join the channel.
             client.Channels.Add(channel);
@@ -215,7 +215,7 @@ namespace VoiceCraft.Server
             if (!channel.Hidden)
                 peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(channel) });
 
-            var excludeClients = Participants.Where(x => x.Value == client || !x.Value.Binded || x.Value.Channels.Any(x => client.Channels.Contains(x))).Select(x => x.Value);
+            var excludeClients = Participants.Values.Where(x => x == client || !x.Binded || x.Channels.Any(x => client.Channels.Contains(x)));
 
             //Tell the other clients that are not in the target channel that the participant has left the channel.
             Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
@@ -379,17 +379,17 @@ namespace VoiceCraft.Server
                     IsMuted = client.Muted,
                     Key = client.Key,
                     Name = client.Name
-                }, [client], client.Channels.ToArray()); //Broadcast to all other participants.
+                }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray()); //Broadcast to all other participants.
 
-                var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
+                var list = Participants.Values.Where(x => x != client && x.Binded && x.Channels.Any(y => client.Channels.Contains(y)));
                 foreach (var participant in list)
                 {
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
                     {
-                        IsDeafened = participant.Value.Deafened,
-                        IsMuted = participant.Value.Muted,
-                        Key = participant.Value.Key,
-                        Name = participant.Value.Name
+                        IsDeafened = participant.Deafened,
+                        IsMuted = participant.Muted,
+                        Key = participant.Key,
+                        Name = participant.Name
                     });
                 } //Send participants back to binded client.
 
@@ -411,10 +411,10 @@ namespace VoiceCraft.Server
 
         private void VoiceCraftSocketUnbinded(Core.Packets.VoiceCraft.Unbinded data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided && client.Binded) //data.Binded is the client requesting to unbind.
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided && client.Binded)
             {
                 client.Binded = false;
-                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray());
                 OnParticipantLeft?.Invoke(client, "Unbinded.");
             }
         }
@@ -424,7 +424,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && !client.Muted)
             {
                 client.Muted = true;
-                Broadcast(new Core.Packets.VoiceCraft.Mute() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Mute() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray());
             }
         }
 
@@ -433,7 +433,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && client.Muted)
             {
                 client.Muted = false;
-                Broadcast(new Core.Packets.VoiceCraft.Unmute() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Unmute() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray());
             }
         }
 
@@ -442,7 +442,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && !client.Deafened)
             {
                 client.Deafened = true;
-                Broadcast(new Core.Packets.VoiceCraft.Deafen() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Deafen() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray());
             }
         }
 
@@ -451,7 +451,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && client.Deafened)
             {
                 client.Deafened = false;
-                Broadcast(new Core.Packets.VoiceCraft.Undeafen() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Undeafen() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), client.Channels.ToArray());
             }
         }
 
@@ -471,9 +471,9 @@ namespace VoiceCraft.Server
 
         private void OnLeaveChannel(Core.Packets.VoiceCraft.LeaveChannel data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.Binded && client.Channel != null)
+            if (Participants.TryGetValue(peer, out var client) && client.Binded)
             {
-                MoveParticipantToChannel(peer, client, null);
+                RemoveParticipantFromChannel(peer, client, ServerProperties.Channels[data.ChannelId]); //NEED TO DO A CHECK IF THE CHANNEL EXISTS SO THE SERVER DOES NOT CRASH!
             }
         }
 
