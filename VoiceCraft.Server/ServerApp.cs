@@ -19,9 +19,9 @@ namespace VoiceCraft.Server
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
 #if DEBUG
-            Console.WriteLine($"[v1.0.4][{VoiceCraftServer.Version}]=========================[DEBUG]\n");
+            Console.WriteLine($"[v1.0.6][{VoiceCraftServer.Version}]=========================[DEBUG]\n");
 #else
-            Console.WriteLine($"[v1.0.4][{VoiceCraftServer.Version}]=======================[RELEASE]\n");
+            Console.WriteLine($"[v1.0.6][{VoiceCraftServer.Version}]=======================[RELEASE]\n");
 #endif
 
             var properties = Properties.LoadProperties();
@@ -215,7 +215,7 @@ namespace VoiceCraft.Server
             {
                 var participant = Server.Participants.ElementAt(i);
                 if (participant.Value != null)
-                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}", "Commands");
+                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}, Position: {participant.Value.Position}", "Commands");
             }
         }
 

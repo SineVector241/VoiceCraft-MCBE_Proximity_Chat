@@ -4,7 +4,7 @@ namespace VoiceCraft.Maui
 {
     public partial class App : Application
     {
-        public const string Version = "1.0.4";
+        public const string Version = "1.0.6";
         public static string OpusVersion = OpusInfo.Version();
         public App()
         {
