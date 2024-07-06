@@ -9,7 +9,8 @@ namespace VoiceCraft.Server.Data
         public bool Binded { get; set; }
         public bool ClientSided { get; set; }
         public bool ServerMuted { get; set; }
-        public Channel? Channel { get; set; }
+        public bool ServerDeafened { get; set; }
+        public List<Channel> Channels { get; set; } = new List<Channel>();
 
         //Minecraft Data
         public Vector3 Position { get; set; }
@@ -19,6 +20,7 @@ namespace VoiceCraft.Server.Data
         public bool InWater { get; set; }
         public string EnvironmentId { get; set; } = string.Empty;
         public string MinecraftId { get; set; } = string.Empty;
+        public byte ChecksBitmask { get; set; } = byte.MaxValue; //All bits are set. 1111 1111
 
         public VoiceCraftParticipant(string name) : base(name)
         {

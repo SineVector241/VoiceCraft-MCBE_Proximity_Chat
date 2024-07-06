@@ -20,10 +20,21 @@ namespace VoiceCraft.Core.Packets
         Deny,
         Bind,
         Update,
-        UpdateSettings,
+        AckUpdate,
         GetSettings,
-        RemoveParticipant,
+        UpdateSettings,
+
+        //Participant Stuff
+        DisconnectParticipant,
+        SetParticipantBitmask,
+        GetParticipantBitmask,
+        MuteParticipant,
+        UnmuteParticipant,
+        DeafenParticipant,
+        UndeafenParticipant,
+
         ChannelMove,
-        AckUpdate
+        ChannelAdd,
+        ChannelRemove
     }
 }

@@ -68,6 +68,8 @@ namespace VoiceCraft.Server.Data
                 Logger.LogToConsole(LogType.Success, $"Successfully created file {PropertiesDirectory}.", "Properties");
             }
 
+            ServerProperties.Channels.Insert(0, new Channel() { Name = "Main", Hidden = true }); //Adds main channel.
+
             if (ServerProperties.VoiceCraftPortUDP < 1025 || ServerProperties.MCCommPortTCP < 1025)
                 throw new Exception("One of the ports is lower than the minimum port 1025!");
             if (ServerProperties.VoiceCraftPortUDP > 65535 || ServerProperties.MCCommPortTCP > 65535)
