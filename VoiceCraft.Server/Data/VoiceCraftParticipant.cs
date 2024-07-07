@@ -10,7 +10,7 @@ namespace VoiceCraft.Server.Data
         public bool ClientSided { get; set; }
         public bool ServerMuted { get; set; }
         public bool ServerDeafened { get; set; }
-        public List<Channel> Channels { get; set; } = new List<Channel>();
+        public Channel Channel { get; set; }
 
         //Minecraft Data
         public Vector3 Position { get; set; }
@@ -20,10 +20,11 @@ namespace VoiceCraft.Server.Data
         public bool InWater { get; set; }
         public string EnvironmentId { get; set; } = string.Empty;
         public string MinecraftId { get; set; } = string.Empty;
-        public byte ChecksBitmask { get; set; } = byte.MaxValue; //All bits are set. 1111 1111
+        public ushort ChecksBitmask { get; set; } = ushort.MaxValue; //All bits are set. 1111 1111 1111 1111
 
-        public VoiceCraftParticipant(string name) : base(name)
+        public VoiceCraftParticipant(string name, Channel channel) : base(name)
         {
+            Channel = channel;
         }
 
         public static short GenerateKey()

@@ -20,12 +20,12 @@ namespace VoiceCraft.Server.Data
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
         public int ExternalServerTimeoutMS { get; set; } = 8000;
         public int ClientTimeoutMS { get; set; } = 8000;
-        public List<Channel> Channels { get; set; } = [];
+        public List<Channel> Channels { get; set; } = []; //Needs at least 1 default channel
+        
+        [JsonIgnore] //Do not write in JSON file.
+        public Channel DefaultChannel { get => Channels[0]; }
 
         //Changeable Settings
-        public int ProximityDistance { get; set; } = 30;
-        public bool ProximityToggle { get; set; } = true;
-        public bool VoiceEffects { get; set; } = true;
         public string ServerMOTD { get; set; } = "VoiceCraft Proximity Chat!";
         public DebugProperties Debugger { get; set; } = new DebugProperties();
         #endregion
@@ -44,7 +44,7 @@ namespace VoiceCraft.Server.Data
             {
                 Logger.LogToConsole(LogType.Info, $"Loading properties from {PropertiesFile}...", "Properties");
                 string jsonString = File.ReadAllText(PropertiesFile);
-                var properties = JsonConvert.DeserializeObject<Properties>(jsonString);
+                var properties = JsonConvert.DeserializeObject<Properties>(jsonString, new JsonSerializerSettings());
                 if (properties != null)
                     ServerProperties = properties;
                 else
@@ -63,12 +63,12 @@ namespace VoiceCraft.Server.Data
             else
             {
                 Logger.LogToConsole(LogType.Warn, $"{PropertiesFile} file cannot be found. Creating file at {PropertiesDirectory}...", "Properties");
+                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true, OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true } });
+
                 string jsonString = JsonConvert.SerializeObject(ServerProperties, Formatting.Indented);
                 File.WriteAllText(PropertiesDirectory, jsonString);
                 Logger.LogToConsole(LogType.Success, $"Successfully created file {PropertiesDirectory}.", "Properties");
             }
-
-            ServerProperties.Channels.Insert(0, new Channel() { Name = "Main", Hidden = true }); //Adds main channel.
 
             if (ServerProperties.VoiceCraftPortUDP < 1025 || ServerProperties.MCCommPortTCP < 1025)
                 throw new Exception("One of the ports is lower than the minimum port 1025!");
@@ -76,10 +76,8 @@ namespace VoiceCraft.Server.Data
                 throw new Exception("One of the ports is higher than the maximum port 65535!");
             if (ServerProperties.ServerMOTD.Length > 30)
                 throw new Exception("Server MOTD cannot be longer than 30 characters!");
-            if (ServerProperties.ProximityDistance > 120 || ServerProperties.ProximityDistance < 1)
-                throw new Exception("Proximity distance can only be between 1 and 120!");
             if (ServerProperties.Channels.Count >= byte.MaxValue)
-                throw new Exception($"Cannot have more than {byte.MaxValue - 1} channels!"); //Technically we can only have 254 channels since we start the channelId from 1.
+                throw new Exception($"Cannot have more than {byte.MaxValue} channels!");
             if (ServerProperties.Channels.Exists(x => x.Name.Length > 12))
                 throw new Exception("Channel name cannot be longer than 12 characters!");
             if (ServerProperties.Channels.Exists(x => string.IsNullOrWhiteSpace(x.Name)))
@@ -88,6 +86,18 @@ namespace VoiceCraft.Server.Data
                 throw new Exception("Channel password cannot be longer than 12 characters!");
             if (ServerProperties.Channels.Exists(x => x.OverrideSettings?.ProximityDistance > 120 || x.OverrideSettings?.ProximityDistance < 1))
                 throw new Exception("Channel proximity distance can only be between 1 and 120!");
+
+            if (ServerProperties.Channels.Count <= 0)
+            {
+                Logger.LogToConsole(LogType.Warn, $"No default channel set, adding default channel Main...", "Properties");
+                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true, OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true } });
+            }
+
+            if (ServerProperties.DefaultChannel.OverrideSettings == null)
+            {
+                Logger.LogToConsole(LogType.Warn, $"Default channel {ServerProperties.DefaultChannel.Name} does not have override settings, setting default override...", "Properties");
+                ServerProperties.DefaultChannel.OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true };
+            }
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))
             {

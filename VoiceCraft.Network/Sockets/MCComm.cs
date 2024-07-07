@@ -61,8 +61,6 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<DeafenParticipant>? OnDeafenParticipantReceived;
         public event PacketData<UndeafenParticipant>? OnUndeafenParticipantReceived;
         public event PacketData<ChannelMove>? OnChannelMoveReceived;
-        public event PacketData<ChannelAdd>? OnChannelAddReceived;
-        public event PacketData<ChannelRemove>? OnChannelRemoveReceived;
 
         public event InboundPacket? OnInboundPacket;
         public event OutboundPacket? OnOutboundPacket;
@@ -88,8 +86,6 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DeafenParticipant, typeof(DeafenParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UndeafenParticipant, typeof(UndeafenParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelMove, typeof(ChannelMove));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelAdd, typeof(ChannelAdd));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelRemove, typeof(ChannelRemove));
         }
 
         public async Task Start(ushort Port, string LoginKey)
@@ -202,8 +198,6 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.DeafenParticipant: OnDeafenParticipantReceived?.Invoke((DeafenParticipant)packet, ctx); break;
                     case MCCommPacketTypes.UndeafenParticipant: OnUndeafenParticipantReceived?.Invoke((UndeafenParticipant)packet, ctx); break;
                     case MCCommPacketTypes.ChannelMove: OnChannelMoveReceived?.Invoke((ChannelMove)packet, ctx); break;
-                    case MCCommPacketTypes.ChannelAdd: OnChannelAddReceived?.Invoke((ChannelAdd)packet, ctx); break;
-                    case MCCommPacketTypes.ChannelRemove: OnChannelRemoveReceived?.Invoke((ChannelRemove)packet, ctx); break;
                 }
             }
             catch (Exception ex)

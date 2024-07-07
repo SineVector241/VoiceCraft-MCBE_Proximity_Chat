@@ -10,7 +10,7 @@ namespace VoiceCraft.Maui.VoiceCraft
     public class VoiceCraftClient : Core.Disposable
     {
         //Private Variables
-        public const string Version = "v1.0.4";
+        public const string Version = "v1.0.5";
         private ConnectionState State;
         private uint PacketCount;
         private readonly OpusEncoder Encoder;

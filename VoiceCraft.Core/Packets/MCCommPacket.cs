@@ -33,8 +33,6 @@ namespace VoiceCraft.Core.Packets
         DeafenParticipant,
         UndeafenParticipant,
 
-        ChannelMove,
-        ChannelAdd,
-        ChannelRemove
+        ChannelMove
     }
 }

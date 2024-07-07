@@ -30,7 +30,7 @@ namespace VoiceCraft.Server
 
             foreach (var channel in Server.ServerProperties.Channels)
             {
-                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}, Locked: {channel.Locked}, Hidden: {channel.Hidden}", "Channel");
             }
 
             //Server Events
@@ -362,9 +362,12 @@ namespace VoiceCraft.Server
 
             if (ushort.TryParse(args[0], out ushort value))
             {
+                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
+                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
+
                 if (value > 120 || value < 1)
                     throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
-                Server.ServerProperties.ProximityDistance = value;
+                Server.ServerProperties.DefaultChannel.OverrideSettings.ProximityDistance = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity distance: {value}", "Commands");
             }
             else
@@ -382,7 +385,10 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                Server.ServerProperties.ProximityToggle = value;
+                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
+                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
+
+                Server.ServerProperties.DefaultChannel.OverrideSettings.ProximityToggle = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity toggle: {value}", "Commands");
             }
             else
@@ -418,7 +424,10 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                Server.ServerProperties.VoiceEffects = value;
+                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
+                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
+
+                Server.ServerProperties.DefaultChannel.OverrideSettings.VoiceEffects = value;
                 Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
             }
             else
