@@ -141,7 +141,7 @@ namespace VoiceCraft.Server
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
-            if (client.Channel == ServerProperties.DefaultChannel) return; //Client is already in the only channel, do nothing.
+            if (client.Channel == channel) return; //Client is already in the channel, do nothing.
 
             //Tell the client to leave the previous channel/reset if hidden.
             peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel());
@@ -463,35 +463,38 @@ namespace VoiceCraft.Server
                     Logger.LogToConsole(LogType.Error, $"Error, Default channel {ServerProperties.DefaultChannel.Name} has no override settings, voice calculations cannot execute!", nameof(VoiceCraftServer));
                     return;
                 }
-                if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted)
+                if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted && !client.ServerDeafened)
                 {
                     client.LastSpoke = Environment.TickCount64;
                     var defaultSettings = ServerProperties.DefaultChannel.OverrideSettings;
                     var proximityToggle = client.Channel.OverrideSettings?.ProximityToggle ?? defaultSettings.ProximityToggle;
                     if (proximityToggle)
                     {
-                        if (client.Dead || string.IsNullOrWhiteSpace(client.EnvironmentId)) return; //Bitmask Check
-                        var proximityDistance = client.Channel.OverrideSettings?.ProximityDistance ?? defaultSettings.ProximityDistance; //Bitmask Check
-                        var voiceEffects = client.Channel.OverrideSettings?.VoiceEffects ?? defaultSettings.VoiceEffects; //Bitmask Check
+                        if ((client.ChecksBitmask & (ushort)ParticipantBitmask.DeathEnabled) != 0 && client.Dead || (client.ChecksBitmask & (ushort)ParticipantBitmask.EnvironmentEnabled) != 0 && string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
+                        var proximityDistance = client.Channel.OverrideSettings?.ProximityDistance ?? defaultSettings.ProximityDistance;
+                        var voiceEffects = client.Channel.OverrideSettings?.VoiceEffects ?? defaultSettings.VoiceEffects;
 
                         var list = Participants.Where(x =>
                         x.Value != client &&
                         x.Value.Binded &&
                         !x.Value.Deafened &&
-                        !x.Value.Dead && //Bitmask Check Here
+                        !x.Value.ServerDeafened &&
                         x.Value.Channel == client.Channel &&
-                        !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && //Bitmask Check Here
-                        x.Value.EnvironmentId == client.EnvironmentId && //Bitmask Check Here
-                        Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance //Bitmask Check Here
+
+                        //Bitmask Checks here
+                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.DeathEnabled) == 0 || !x.Value.Dead) &&
+                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.EnvironmentEnabled) == 0 || !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId) &&
+                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.ProximityEnabled) == 0 || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance) &&
+                        (((x.Value.ChecksBitmask >> 6) & (client.ChecksBitmask >> 11)) != 0)
                         ); //Get Participants
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
                             var participant = list.ElementAt(i);
-                            var volume = 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f); //Bitmask Check Here
-                            var echo = voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f; //Bitmask Check Here
-                            var muffled = voiceEffects && (participant.Value.InWater || client.InWater); //Bitmask Check Here
-                            var rotation = (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180)); //Bitmask Check Here
+                            var volume = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.ProximityEnabled) != 0 ? 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f) : 1.0f;
+                            var echo = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.EchoEffectEnabled) != 0 && voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f;
+                            var muffled = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.WaterEffectEnabled) != 0 && voiceEffects && (participant.Value.InWater || client.InWater);
+                            var rotation = (participant.Value.ChecksBitmask & (ushort)ParticipantBitmask.DirectionalEnabled) != 0 ? (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180)) : 1.5f;
 
                             participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ServerAudio()
                             { 
@@ -507,12 +510,12 @@ namespace VoiceCraft.Server
                     }
                     else
                     {
-                        //Custom Bitmask Checks Here.
                         var list = Participants.Where(x =>
                         x.Value != client &&
                         x.Value.Binded &&
                         !x.Value.Deafened &&
-                        x.Value.Channel == client.Channel);
+                        x.Value.Channel == client.Channel &&
+                        (((x.Value.ChecksBitmask >> 6) & (client.ChecksBitmask >> 11)) != 0));
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
@@ -585,7 +588,7 @@ namespace VoiceCraft.Server
                 IsMuted = client.Value.Muted,
                 Key = client.Value.Key,
                 Name = client.Value.Name
-            }, [client.Value], [client.Value.Channel]); //Broadcast to all other participants.
+            }, Participants.Values.Where(x => x == client.Value || !x.Binded).ToArray(), [client.Value.Channel]); //Broadcast to all other participants.
 
             var list = Participants.Where(x => x.Value != client.Value && x.Value.Binded && x.Value.Channel == client.Value.Channel);
             foreach (var participant in list)

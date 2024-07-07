@@ -32,4 +32,26 @@ namespace VoiceCraft.Server.Data
             return (short)Random.Shared.Next(short.MinValue + 1, short.MaxValue); //short.MinValue is used to specify no Key.
         }
     }
+
+    public enum ParticipantBitmask : ushort
+    {
+        DeathEnabled = 1, // 0000 0000 0000 0001
+        ProximityEnabled = 2, // 0000 0000 0000 0010
+        WaterEffectEnabled = 4, // 0000 0000 0000 0100
+        EchoEffectEnabled = 8, // 0000 0000 0000 1000
+        DirectionalEnabled = 16, // 0000 0000 0001 0000
+        EnvironmentEnabled = 32, // 0000 0000 0010 0000
+
+        HearingBitmask1 = 64, // 0000 0000 0100 0000
+        HearingBitmask2 = 128, // 0000 0000 1000 0000
+        HearingBitmask3 = 256, // 0000 0001 0000 0000
+        HearingBitmask4 = 512, // 0000 0010 0000 0000
+        HearingBitmask5 = 1024, // 0000 0100 0000 0000
+
+        TalkingBitmask1 = 2048, // 0000 1000 0000 0000
+        TalkingBitmask2 = 4096, // 0001 0000 0000 0000
+        TalkingBitmask3 = 8192, // 0010 0000 0000 0000
+        TalkingBitmask4 = 16384, // 0100 0000 0000 0000
+        TalkingBitmask5 = 32768, // 1000 0000 0000 0000
+    }
 }
