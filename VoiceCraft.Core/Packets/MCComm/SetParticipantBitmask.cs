@@ -3,6 +3,7 @@
     public class SetParticipantBitmask : MCCommPacket
     {
         public override byte PacketId => (byte)MCCommPacketTypes.SetParticipantBitmask;
-        public byte Bitmask { get; set; }
+        public string PlayerId { get; set; } = string.Empty;
+        public ushort Bitmask { get; set; }
     }
 }
