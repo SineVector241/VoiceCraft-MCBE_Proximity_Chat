@@ -636,7 +636,7 @@ namespace VoiceCraft.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate() { SpeakingPlayers = Participants.Values.Where(x => Environment.TickCount64 - x.LastSpoke <= 500).Select(x => x.MinecraftId).ToList() });
         }
 
-        private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
+        private void MCCommGetSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
         {
             if (ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
             {
@@ -644,7 +644,7 @@ namespace VoiceCraft.Server
                 return;
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.UpdateSettings()
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.SetSettings()
             { 
                 ProximityDistance = ServerProperties.DefaultChannel.OverrideSettings.ProximityDistance, 
                 ProximityToggle = ServerProperties.DefaultChannel.OverrideSettings.ProximityToggle, 
@@ -652,7 +652,7 @@ namespace VoiceCraft.Server
             });
         }
 
-        private void MCCommUpdateSettings(Core.Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
+        private void MCCommUpdateSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
         {
             if (ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
             {

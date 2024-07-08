@@ -21,8 +21,9 @@ namespace VoiceCraft.Core.Packets
         Bind,
         Update,
         AckUpdate,
+        GetChannels,
         GetSettings,
-        UpdateSettings,
+        SetSettings,
 
         //Participant Stuff
         DisconnectParticipant,
