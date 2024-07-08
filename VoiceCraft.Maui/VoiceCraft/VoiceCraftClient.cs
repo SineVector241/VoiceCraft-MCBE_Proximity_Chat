@@ -345,7 +345,6 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if(Channels.TryGetValue(data.ChannelId, out var channel) && channel != JoinedChannel)
             {
-                ClearParticipants();
                 JoinedChannel = channel;
                 OnChannelJoined?.Invoke(channel);
             }

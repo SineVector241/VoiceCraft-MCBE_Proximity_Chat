@@ -35,6 +35,8 @@ namespace VoiceCraft.Server.Data
 
     public enum ParticipantBitmask : ushort
     {
+        All = ushort.MaxValue, // 1111 1111 1111 1111
+        None = 0, // 0000 0000 0000 0000
         DeathEnabled = 1, // 0000 0000 0000 0001
         ProximityEnabled = 2, // 0000 0000 0000 0010
         WaterEffectEnabled = 4, // 0000 0000 0000 0100

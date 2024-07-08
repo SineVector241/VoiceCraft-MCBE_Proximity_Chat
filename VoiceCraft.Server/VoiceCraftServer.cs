@@ -143,7 +143,7 @@ namespace VoiceCraft.Server
 
             if (client.Channel == channel) return; //Client is already in the channel, do nothing.
 
-            //Tell the client to leave the previous channel/reset if hidden.
+            //Tell the client to leave the previous channel/reset even if the channel is hidden.
             peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel());
 
             //Tell the other clients that the participant has left the channel.
@@ -488,9 +488,8 @@ namespace VoiceCraft.Server
                         (((x.Value.ChecksBitmask >> 6) & (client.ChecksBitmask >> 11)) != 0)
                         ); //Get Participants
 
-                        for (ushort i = 0; i < list.Count(); i++)
+                        foreach(var participant in list)
                         {
-                            var participant = list.ElementAt(i);
                             var volume = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.ProximityEnabled) != 0 ? 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f) : 1.0f;
                             var echo = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.EchoEffectEnabled) != 0 && voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f;
                             var muffled = ((participant.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.WaterEffectEnabled) != 0 && voiceEffects && (participant.Value.InWater || client.InWater);
