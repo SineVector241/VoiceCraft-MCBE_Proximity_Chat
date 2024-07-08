@@ -72,8 +72,9 @@ namespace VoiceCraft.Server
             MCComm.OnFailed += MCCommFailed;
             MCComm.OnBindReceived += MCCommBind;
             MCComm.OnUpdateReceived += MCCommUpdate;
+            MCComm.OnGetChannelsReceived += MCCommGetChannels;
             MCComm.OnGetSettingsReceived += MCCommGetSettings;
-            MCComm.OnUpdateSettingsReceived += MCCommUpdateSettings;
+            MCComm.OnSetSettingsReceived += MCCommSetSettings;
             MCComm.OnDisconnectParticipantReceived += MCCommDisconnectParticipant;
             MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
             MCComm.OnGetParticipantBitmaskReceived += MCCommGetParticipantBitmask;
@@ -636,39 +637,56 @@ namespace VoiceCraft.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate() { SpeakingPlayers = Participants.Values.Where(x => Environment.TickCount64 - x.LastSpoke <= 500).Select(x => x.MinecraftId).ToList() });
         }
 
-        private void MCCommGetSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
+        private void MCCommGetChannels(Core.Packets.MCComm.GetChannels packet, HttpListenerContext ctx)
         {
-            if (ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetChannels() { Channels = ServerProperties.Channels });
+        }
+
+        private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
+        {
+            if(packet.ChannelId >= ServerProperties.Channels.Count)
             {
-                Logger.LogToConsole(LogType.Error, $"Error, Default channel {ServerProperties.DefaultChannel.Name} has no override settings, mcomm calculations cannot execute!", nameof(VoiceCraftServer));
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
                 return;
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.SetSettings()
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            var mainChannelSettings = ServerProperties.DefaultChannel.OverrideSettings;
+            if (mainChannelSettings == null) //Error. Should not happen anyways.
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Fatal Error, Default/Main channel settings do not exist!" });
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetSettings()
             { 
-                ProximityDistance = ServerProperties.DefaultChannel.OverrideSettings.ProximityDistance, 
-                ProximityToggle = ServerProperties.DefaultChannel.OverrideSettings.ProximityToggle, 
-                VoiceEffects = ServerProperties.DefaultChannel.OverrideSettings.VoiceEffects 
+                ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? mainChannelSettings.ProximityDistance, 
+                ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? mainChannelSettings.ProximityToggle, 
+                VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? mainChannelSettings.VoiceEffects
             });
         }
 
-        private void MCCommUpdateSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
+        private void MCCommSetSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
         {
-            if (ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
+            if (packet.ChannelId >= ServerProperties.Channels.Count)
             {
-                Logger.LogToConsole(LogType.Error, $"Error, Default channel {ServerProperties.DefaultChannel.Name} has no override settings, mccomm calculations cannot execute!", nameof(VoiceCraftServer));
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
                 return;
             }
 
+            var channel = ServerProperties.Channels[packet.ChannelId];
             if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Proximity distance must be between 1 and 120!" });
                 return;
             }
 
-            ServerProperties.DefaultChannel.OverrideSettings.ProximityDistance = packet.ProximityDistance;
-            ServerProperties.DefaultChannel.OverrideSettings.ProximityToggle = packet.ProximityToggle;
-            ServerProperties.DefaultChannel.OverrideSettings.VoiceEffects = packet.VoiceEffects;
+            if (channel.OverrideSettings == null)
+                channel.OverrideSettings = new ChannelOverride();
+
+            channel.OverrideSettings.ProximityDistance = packet.ProximityDistance;
+            channel.OverrideSettings.ProximityToggle = packet.ProximityToggle;
+            channel.OverrideSettings.VoiceEffects = packet.VoiceEffects;
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
 
@@ -687,19 +705,20 @@ namespace VoiceCraft.Server
         private void MCCommChannelMove(Core.Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
         {
             var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
-            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId);
 
+            if (packet.ChannelId >= ServerProperties.Channels.Count)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
             if (client.Value == null)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
                 return;
             }
-            else if (channel == null)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
-                return;
-            }
-            else if (channel == client.Value.Channel)
+
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            if (channel == client.Value.Channel)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Participant is already in the channel!" });
                 return;
