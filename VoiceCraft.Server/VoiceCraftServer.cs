@@ -78,8 +78,8 @@ namespace VoiceCraft.Server
             MCComm.OnGetDefaultSettingsReceived += MCCommGetDefaultSettings;
             MCComm.OnSetDefaultSettingsReceived += MCCommSetDefaultSettings;
             MCComm.OnDisconnectParticipantReceived += MCCommDisconnectParticipant;
-            MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
             MCComm.OnGetParticipantBitmaskReceived += MCCommGetParticipantBitmask;
+            MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
             MCComm.OnMuteParticipantReceived += MCCommMuteParticipant;
             MCComm.OnUnmuteParticipantReceived += MCCommUnmuteParticipant;
             MCComm.OnDeafenParticipantReceived += MCCommDeafenParticipant;
@@ -644,7 +644,13 @@ namespace VoiceCraft.Server
 
         private void MCCommGetChannels(Core.Packets.MCComm.GetChannels packet, HttpListenerContext ctx)
         {
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetChannels() { Channels = ServerProperties.Channels });
+            packet.Channels.Clear();
+            for (ushort i = 0; i < ServerProperties.Channels.Count; i++)
+            {
+                packet.Channels.Add(i, ServerProperties.Channels[i]);
+            }
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
         }
 
         private void MCCommGetChannelSettings(Core.Packets.MCComm.GetChannelSettings packet, HttpListenerContext ctx)
@@ -656,13 +662,12 @@ namespace VoiceCraft.Server
             }
 
             var channel = ServerProperties.Channels[packet.ChannelId];
+            packet.ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? ServerProperties.DefaultSettings.ProximityDistance;
+            packet.ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? ServerProperties.DefaultSettings.ProximityToggle;
+            packet.VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? ServerProperties.DefaultSettings.VoiceEffects;
+            packet.Token = string.Empty;
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetChannelSettings()
-            { 
-                ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? ServerProperties.DefaultSettings.ProximityDistance, 
-                ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? ServerProperties.DefaultSettings.ProximityToggle, 
-                VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? ServerProperties.DefaultSettings.VoiceEffects
-            });
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
         }
 
         private void MCCommSetChannelSettings(Core.Packets.MCComm.SetChannelSettings packet, HttpListenerContext ctx)
@@ -691,11 +696,11 @@ namespace VoiceCraft.Server
 
         private void MCCommGetDefaultSettings(Core.Packets.MCComm.GetDefaultSettings packet, HttpListenerContext ctx)
         {
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetDefaultSettings() { 
-                ProximityDistance = ServerProperties.DefaultSettings.ProximityDistance,
-                ProximityToggle = ServerProperties.DefaultSettings.ProximityToggle,
-                VoiceEffects = ServerProperties.DefaultSettings.VoiceEffects
-            });
+            packet.ProximityDistance = ServerProperties.DefaultSettings.ProximityDistance;
+            packet.ProximityToggle = ServerProperties.DefaultSettings.ProximityToggle;
+            packet.VoiceEffects = ServerProperties.DefaultSettings.VoiceEffects;
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
         }
 
         private void MCCommSetDefaultSettings(Core.Packets.MCComm.SetDefaultSettings packet, HttpListenerContext ctx)
@@ -751,6 +756,20 @@ namespace VoiceCraft.Server
              MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
 
+        private void MCCommGetParticipantBitmask(Core.Packets.MCComm.GetParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                packet.Bitmask = client.Value.ChecksBitmask;
+                packet.Token = string.Empty;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
         private void MCCommSetParticipantBitmask(Core.Packets.MCComm.SetParticipantBitmask packet, HttpListenerContext ctx)
         {
             var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
@@ -758,19 +777,6 @@ namespace VoiceCraft.Server
             {
                 client.Value.ChecksBitmask = packet.Bitmask;
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
-                return;
-            }
-
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
-        }
-
-        private void MCCommGetParticipantBitmask(Core.Packets.MCComm.GetParticipantBitmask packet, HttpListenerContext ctx)
-        {
-            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
-            if (client.Value != null)
-            {
-                packet.Bitmask = client.Value.ChecksBitmask;
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
                 return;
             }
 

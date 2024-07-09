@@ -29,8 +29,8 @@ namespace VoiceCraft.Core.Packets
 
         //Participant Stuff
         DisconnectParticipant,
-        SetParticipantBitmask,
         GetParticipantBitmask,
+        SetParticipantBitmask,
         MuteParticipant,
         UnmuteParticipant,
         DeafenParticipant,

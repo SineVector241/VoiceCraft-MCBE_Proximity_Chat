@@ -57,8 +57,8 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<GetDefaultSettings>? OnGetDefaultSettingsReceived;
         public event PacketData<SetDefaultSettings>? OnSetDefaultSettingsReceived;
         public event PacketData<DisconnectParticipant>? OnDisconnectParticipantReceived;
-        public event PacketData<SetParticipantBitmask>? OnSetParticipantBitmaskReceived;
         public event PacketData<GetParticipantBitmask>? OnGetParticipantBitmaskReceived;
+        public event PacketData<SetParticipantBitmask>? OnSetParticipantBitmaskReceived;
         public event PacketData<MuteParticipant>? OnMuteParticipantReceived;
         public event PacketData<UnmuteParticipant>? OnUnmuteParticipantReceived;
         public event PacketData<DeafenParticipant>? OnDeafenParticipantReceived;
@@ -85,8 +85,8 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetDefaultSettings, typeof(GetDefaultSettings));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetDefaultSettings, typeof(SetDefaultSettings));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DisconnectParticipant, typeof(DisconnectParticipant));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetParticipantBitmask, typeof(SetParticipantBitmask));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetParticipantBitmask, typeof(GetParticipantBitmask));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetParticipantBitmask, typeof(SetParticipantBitmask));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.MuteParticipant, typeof(MuteParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UnmuteParticipant, typeof(UnmuteParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DeafenParticipant, typeof(DeafenParticipant));
@@ -200,8 +200,8 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.GetDefaultSettings: OnGetDefaultSettingsReceived?.Invoke((GetDefaultSettings)packet, ctx); break;
                     case MCCommPacketTypes.SetDefaultSettings: OnSetDefaultSettingsReceived?.Invoke((SetDefaultSettings)packet, ctx); break;
                     case MCCommPacketTypes.DisconnectParticipant: OnDisconnectParticipantReceived?.Invoke((DisconnectParticipant)packet, ctx); break;
-                    case MCCommPacketTypes.SetParticipantBitmask: OnSetParticipantBitmaskReceived?.Invoke((SetParticipantBitmask)packet, ctx); break;
                     case MCCommPacketTypes.GetParticipantBitmask: OnGetParticipantBitmaskReceived?.Invoke((GetParticipantBitmask)packet, ctx); break;
+                    case MCCommPacketTypes.SetParticipantBitmask: OnSetParticipantBitmaskReceived?.Invoke((SetParticipantBitmask)packet, ctx); break;
                     case MCCommPacketTypes.MuteParticipant: OnMuteParticipantReceived?.Invoke((MuteParticipant)packet, ctx); break;
                     case MCCommPacketTypes.UnmuteParticipant: OnUnmuteParticipantReceived?.Invoke((UnmuteParticipant)packet, ctx); break;
                     case MCCommPacketTypes.DeafenParticipant: OnDeafenParticipantReceived?.Invoke((DeafenParticipant)packet, ctx); break;
