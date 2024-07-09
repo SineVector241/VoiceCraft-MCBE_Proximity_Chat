@@ -357,7 +357,8 @@ namespace VoiceCraft.Server
                     channelId++;
                 } //Send channel list back to binded client.
 
-                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel) }); //Tell the client that it is in a channel.
+                if(!client.Channel.Hidden)
+                    peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel) }); //Tell the client that it is in a channel.
 
                 OnParticipantBinded?.Invoke(client);
             }
@@ -471,7 +472,7 @@ namespace VoiceCraft.Server
                     var proximityToggle = client.Channel.OverrideSettings?.ProximityToggle ?? defaultSettings.ProximityToggle;
                     if (proximityToggle)
                     {
-                        if ((client.ChecksBitmask & (ushort)ParticipantBitmask.DeathEnabled) != 0 && client.Dead || (client.ChecksBitmask & (ushort)ParticipantBitmask.EnvironmentEnabled) != 0 && string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
+                        if (client.TalkSettingsEnabled(BitmaskSettings.DeathEnabled) && client.Dead || client.TalkSettingsEnabled(BitmaskSettings.EnvironmentEnabled) && string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
                         var proximityDistance = client.Channel.OverrideSettings?.ProximityDistance ?? defaultSettings.ProximityDistance;
                         var voiceEffects = client.Channel.OverrideSettings?.VoiceEffects ?? defaultSettings.VoiceEffects;
 
@@ -483,9 +484,9 @@ namespace VoiceCraft.Server
                         x.Value.Channel == client.Channel &&
 
                         //Bitmask Checks here
-                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.DeathEnabled) == 0 || !x.Value.Dead) &&
-                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.EnvironmentEnabled) == 0 || !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId) &&
-                        (((x.Value.ChecksBitmask | client.ChecksBitmask) & (ushort)ParticipantBitmask.ProximityEnabled) == 0 || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance) &&
+                        (client.TalkSettingsEnabled(BitmaskSettings.DeathEnabled) || !x.Value.Dead) &&
+                        (client.TalkSettingsEnabled(BitmaskSettings.EnvironmentEnabled) || !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId) &&
+                        (client.TalkSettingsEnabled(BitmaskSettings.ProximityEnabled) || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance) &&
                         (((x.Value.ChecksBitmask >> 6) & (client.ChecksBitmask >> 11)) != 0)
                         ); //Get Participants
 
@@ -621,7 +622,8 @@ namespace VoiceCraft.Server
                 channelId++;
             } //Send channel list back to binded client.
 
-            client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Value.Channel)}); //Tell the client that it is in a channel.
+            if (!client.Value.Channel.Hidden)
+                client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Value.Channel)}); //Tell the client that it is in a channel.
 
             OnParticipantBinded?.Invoke(client.Value);
         }
