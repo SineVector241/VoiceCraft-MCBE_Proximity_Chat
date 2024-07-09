@@ -278,8 +278,11 @@ namespace VoiceCraft.Maui.ViewModels
             }
         }
 
-        private bool CanJoinChannel(ChannelModel channel)
+        private bool CanJoinChannel(ChannelModel? channel) //I HAVE NO IDEA HOW THIS CAN BE NULL BUT IT CAN AND IT SUCKS!
         {
+            if(channel == null)
+                return false;
+
             if (channel.Joined)
                 return true;
 

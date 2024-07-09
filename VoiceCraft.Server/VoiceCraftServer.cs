@@ -172,7 +172,7 @@ namespace VoiceCraft.Server
             }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
 
             //Send new participants back to the client.
-            foreach (var participant in Participants.Values.Where(x => x != client || x.Binded && x.Channel == client.Channel))
+            foreach (var participant in Participants.Values.Where(x => x != client && x.Binded && x.Channel == client.Channel))
             {
                 peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
                 {
