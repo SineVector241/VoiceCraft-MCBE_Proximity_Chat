@@ -357,6 +357,8 @@ namespace VoiceCraft.Server
                     channelId++;
                 } //Send channel list back to binded client.
 
+                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel) }); //Tell the client that it is in a channel.
+
                 OnParticipantBinded?.Invoke(client);
             }
         }
@@ -619,6 +621,8 @@ namespace VoiceCraft.Server
                 channelId++;
             } //Send channel list back to binded client.
 
+            client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Value.Channel)}); //Tell the client that it is in a channel.
+
             OnParticipantBinded?.Invoke(client.Value);
         }
 
@@ -724,6 +728,7 @@ namespace VoiceCraft.Server
             if (participant.Value != null)
             {
                 participant.Key.Disconnect("MCComm server kicked.", true);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
                 return;
             }
 
