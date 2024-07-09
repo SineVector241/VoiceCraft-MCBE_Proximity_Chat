@@ -64,7 +64,7 @@ namespace VoiceCraft.Server.Data
             else
             {
                 Logger.LogToConsole(LogType.Warn, $"{PropertiesFile} file cannot be found. Creating file at {PropertiesDirectory}...", "Properties");
-                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true, OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true } });
+                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true });
 
                 string jsonString = JsonConvert.SerializeObject(ServerProperties, Formatting.Indented);
                 File.WriteAllText(PropertiesDirectory, jsonString);

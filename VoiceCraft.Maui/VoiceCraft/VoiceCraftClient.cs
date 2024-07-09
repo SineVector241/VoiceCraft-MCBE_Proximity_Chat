@@ -348,6 +348,11 @@ namespace VoiceCraft.Maui.VoiceCraft
                 JoinedChannel = channel;
                 OnChannelJoined?.Invoke(channel);
             }
+            else if(JoinedChannel != null)
+            {
+                OnChannelLeft?.Invoke(JoinedChannel);
+                JoinedChannel = null;
+            }
         }
 
         private void VoiceCraftSocketLeaveChannel(Core.Packets.VoiceCraft.LeaveChannel data, Network.NetPeer peer)

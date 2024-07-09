@@ -3,7 +3,6 @@
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:model="clr-namespace:VoiceCraft.Maui.Models"
-             xmlns:mtoolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:toolkit="clr-namespace:SimpleToolkit.Core;assembly=SimpleToolkit.Core"
              xmlns:vm="clr-namespace:VoiceCraft.Maui.ViewModels"
              x:Name="voice"
@@ -427,7 +426,6 @@
                                                                    CommandParameter="{Binding}"
                                                                    HeightRequest="45"
                                                                    HorizontalOptions="EndAndExpand"
-                                                                   IsEnabled="{Binding Channel.Locked, Converter={mtoolkit:InvertedBoolConverter}}"
                                                                    WidthRequest="45">
                                                 <Border x:Name="channelBorder"
                                                         Padding="2"

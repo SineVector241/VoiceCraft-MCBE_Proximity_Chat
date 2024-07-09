@@ -254,7 +254,7 @@ namespace VoiceCraft.Maui.ViewModels
             ShowParticipantVolume = false;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanJoinChannel))]
         public static async Task JoinChannel(ChannelModel channel)
         {
             if (channel.Joined)
@@ -276,6 +276,17 @@ namespace VoiceCraft.Maui.ViewModels
                     WeakReferenceMessenger.Default.Send(new JoinChannelMSG(new JoinChannel(channel.Channel)));
                 }
             }
+        }
+
+        private bool CanJoinChannel(ChannelModel channel)
+        {
+            if (channel.Joined)
+                return true;
+
+            if (channel.Channel.Locked)
+                return false;
+
+            return true;
         }
     }
 }
