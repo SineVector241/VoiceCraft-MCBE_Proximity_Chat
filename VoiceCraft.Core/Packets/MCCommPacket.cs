@@ -22,8 +22,10 @@ namespace VoiceCraft.Core.Packets
         Update,
         AckUpdate,
         GetChannels,
-        GetSettings,
-        SetSettings,
+        GetChannelSettings,
+        SetChannelSettings,
+        GetDefaultSettings,
+        SetDefaultSettings,
 
         //Participant Stuff
         DisconnectParticipant,

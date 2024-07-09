@@ -73,8 +73,10 @@ namespace VoiceCraft.Server
             MCComm.OnBindReceived += MCCommBind;
             MCComm.OnUpdateReceived += MCCommUpdate;
             MCComm.OnGetChannelsReceived += MCCommGetChannels;
-            MCComm.OnGetSettingsReceived += MCCommGetSettings;
-            MCComm.OnSetSettingsReceived += MCCommSetSettings;
+            MCComm.OnGetChannelSettingsReceived += MCCommGetChannelSettings;
+            MCComm.OnSetChannelSettingsReceived += MCCommSetChannelSettings;
+            MCComm.OnGetDefaultSettingsReceived += MCCommGetDefaultSettings;
+            MCComm.OnSetDefaultSettingsReceived += MCCommSetDefaultSettings;
             MCComm.OnDisconnectParticipantReceived += MCCommDisconnectParticipant;
             MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
             MCComm.OnGetParticipantBitmaskReceived += MCCommGetParticipantBitmask;
@@ -348,6 +350,7 @@ namespace VoiceCraft.Server
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                     {
                         Name = channel.Name,
+                        Locked = channel.Locked,
                         RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
                         ChannelId = channelId
                     });
@@ -459,15 +462,10 @@ namespace VoiceCraft.Server
         private void OnClientAudio(Core.Packets.VoiceCraft.ClientAudio data, NetPeer peer)
         {
             _ = Task.Run(() => {
-                if (ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
-                {
-                    Logger.LogToConsole(LogType.Error, $"Error, Default channel {ServerProperties.DefaultChannel.Name} has no override settings, voice calculations cannot execute!", nameof(VoiceCraftServer));
-                    return;
-                }
                 if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted && !client.ServerDeafened)
                 {
                     client.LastSpoke = Environment.TickCount64;
-                    var defaultSettings = ServerProperties.DefaultChannel.OverrideSettings;
+                    var defaultSettings = ServerProperties.DefaultSettings;
                     var proximityToggle = client.Channel.OverrideSettings?.ProximityToggle ?? defaultSettings.ProximityToggle;
                     if (proximityToggle)
                     {
@@ -605,9 +603,16 @@ namespace VoiceCraft.Server
             byte channelId = 0;
             foreach (var channel in ServerProperties.Channels)
             {
+                if (channel.Hidden)
+                {
+                    channelId++;
+                    continue; //Do not send a hidden channel.
+                }
+
                 client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                 {
                     Name = channel.Name,
+                    Locked = channel.Locked,
                     RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
                     ChannelId = channelId
                 });
@@ -642,7 +647,7 @@ namespace VoiceCraft.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetChannels() { Channels = ServerProperties.Channels });
         }
 
-        private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
+        private void MCCommGetChannelSettings(Core.Packets.MCComm.GetChannelSettings packet, HttpListenerContext ctx)
         {
             if(packet.ChannelId >= ServerProperties.Channels.Count)
             {
@@ -651,22 +656,16 @@ namespace VoiceCraft.Server
             }
 
             var channel = ServerProperties.Channels[packet.ChannelId];
-            var mainChannelSettings = ServerProperties.DefaultChannel.OverrideSettings;
-            if (mainChannelSettings == null) //Error. Should not happen anyways.
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Fatal Error, Default/Main channel settings do not exist!" });
-                return;
-            }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetSettings()
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetChannelSettings()
             { 
-                ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? mainChannelSettings.ProximityDistance, 
-                ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? mainChannelSettings.ProximityToggle, 
-                VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? mainChannelSettings.VoiceEffects
+                ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? ServerProperties.DefaultSettings.ProximityDistance, 
+                ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? ServerProperties.DefaultSettings.ProximityToggle, 
+                VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? ServerProperties.DefaultSettings.VoiceEffects
             });
         }
 
-        private void MCCommSetSettings(Core.Packets.MCComm.SetSettings packet, HttpListenerContext ctx)
+        private void MCCommSetChannelSettings(Core.Packets.MCComm.SetChannelSettings packet, HttpListenerContext ctx)
         {
             if (packet.ChannelId >= ServerProperties.Channels.Count)
             {
@@ -687,6 +686,30 @@ namespace VoiceCraft.Server
             channel.OverrideSettings.ProximityDistance = packet.ProximityDistance;
             channel.OverrideSettings.ProximityToggle = packet.ProximityToggle;
             channel.OverrideSettings.VoiceEffects = packet.VoiceEffects;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+        }
+
+        private void MCCommGetDefaultSettings(Core.Packets.MCComm.GetDefaultSettings packet, HttpListenerContext ctx)
+        {
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.GetDefaultSettings() { 
+                ProximityDistance = ServerProperties.DefaultSettings.ProximityDistance,
+                ProximityToggle = ServerProperties.DefaultSettings.ProximityToggle,
+                VoiceEffects = ServerProperties.DefaultSettings.VoiceEffects
+            });
+        }
+
+        private void MCCommSetDefaultSettings(Core.Packets.MCComm.SetDefaultSettings packet, HttpListenerContext ctx)
+        {
+            if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Proximity distance must be between 1 and 120!" });
+                return;
+            }
+
+            ServerProperties.DefaultSettings.ProximityDistance = packet.ProximityDistance;
+            ServerProperties.DefaultSettings.ProximityToggle = packet.ProximityToggle;
+            ServerProperties.DefaultSettings.VoiceEffects = packet.VoiceEffects;
+
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
 

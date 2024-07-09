@@ -290,7 +290,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketAddChannel(Core.Packets.VoiceCraft.AddChannel data, Network.NetPeer peer)
         {
-            var channel = new Channel() { Name = data.Name, Password = data.RequiresPassword ? "Required" : string.Empty };
+            var channel = new Channel() { Name = data.Name, Locked = data.Locked, Password = data.RequiresPassword ? "Required" : string.Empty };
             if(Channels.TryAdd(data.ChannelId, channel))
             {
                 OnChannelAdded?.Invoke(channel);

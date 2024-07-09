@@ -52,8 +52,10 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<Update>? OnUpdateReceived;
         public event PacketData<AckUpdate>? OnAckUpdateReceived;
         public event PacketData<GetChannels>? OnGetChannelsReceived;
-        public event PacketData<GetSettings>? OnGetSettingsReceived;
-        public event PacketData<SetSettings>? OnSetSettingsReceived;
+        public event PacketData<GetChannelSettings>? OnGetChannelSettingsReceived;
+        public event PacketData<SetChannelSettings>? OnSetChannelSettingsReceived;
+        public event PacketData<GetDefaultSettings>? OnGetDefaultSettingsReceived;
+        public event PacketData<SetDefaultSettings>? OnSetDefaultSettingsReceived;
         public event PacketData<DisconnectParticipant>? OnDisconnectParticipantReceived;
         public event PacketData<SetParticipantBitmask>? OnSetParticipantBitmaskReceived;
         public event PacketData<GetParticipantBitmask>? OnGetParticipantBitmaskReceived;
@@ -78,8 +80,10 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Update, typeof(Update));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.AckUpdate, typeof(AckUpdate));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetChannels, typeof(GetChannels));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetSettings, typeof(GetSettings));
-            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetSettings, typeof(SetSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetChannelSettings, typeof(GetChannelSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetChannelSettings, typeof(SetChannelSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetDefaultSettings, typeof(GetDefaultSettings));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetDefaultSettings, typeof(SetDefaultSettings));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DisconnectParticipant, typeof(DisconnectParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.SetParticipantBitmask, typeof(SetParticipantBitmask));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.GetParticipantBitmask, typeof(GetParticipantBitmask));
@@ -191,8 +195,10 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.Update: OnUpdateReceived?.Invoke((Update)packet, ctx); break;
                     case MCCommPacketTypes.GetChannels: OnGetChannelsReceived?.Invoke((GetChannels)packet, ctx); break;
                     case MCCommPacketTypes.AckUpdate: OnAckUpdateReceived?.Invoke((AckUpdate)packet, ctx); break;
-                    case MCCommPacketTypes.GetSettings: OnGetSettingsReceived?.Invoke((GetSettings)packet, ctx); break;
-                    case MCCommPacketTypes.SetSettings: OnSetSettingsReceived?.Invoke((SetSettings)packet, ctx); break;
+                    case MCCommPacketTypes.GetChannelSettings: OnGetChannelSettingsReceived?.Invoke((GetChannelSettings)packet, ctx); break;
+                    case MCCommPacketTypes.SetChannelSettings: OnSetChannelSettingsReceived?.Invoke((SetChannelSettings)packet, ctx); break;
+                    case MCCommPacketTypes.GetDefaultSettings: OnGetDefaultSettingsReceived?.Invoke((GetDefaultSettings)packet, ctx); break;
+                    case MCCommPacketTypes.SetDefaultSettings: OnSetDefaultSettingsReceived?.Invoke((SetDefaultSettings)packet, ctx); break;
                     case MCCommPacketTypes.DisconnectParticipant: OnDisconnectParticipantReceived?.Invoke((DisconnectParticipant)packet, ctx); break;
                     case MCCommPacketTypes.SetParticipantBitmask: OnSetParticipantBitmaskReceived?.Invoke((SetParticipantBitmask)packet, ctx); break;
                     case MCCommPacketTypes.GetParticipantBitmask: OnGetParticipantBitmaskReceived?.Invoke((GetParticipantBitmask)packet, ctx); break;

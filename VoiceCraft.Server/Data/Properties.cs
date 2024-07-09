@@ -20,7 +20,8 @@ namespace VoiceCraft.Server.Data
         public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.Server;
         public int ExternalServerTimeoutMS { get; set; } = 8000;
         public int ClientTimeoutMS { get; set; } = 8000;
-        public List<Channel> Channels { get; set; } = []; //Needs at least 1 default channel
+        public ChannelOverride DefaultSettings { get; set; } = new ChannelOverride();
+        public List<Channel> Channels { get; set; } = [];
         
         [JsonIgnore] //Do not write in JSON file.
         public Channel DefaultChannel { get => Channels[0]; }
@@ -76,6 +77,8 @@ namespace VoiceCraft.Server.Data
                 throw new Exception("One of the ports is higher than the maximum port 65535!");
             if (ServerProperties.ServerMOTD.Length > 30)
                 throw new Exception("Server MOTD cannot be longer than 30 characters!");
+            if (ServerProperties.DefaultSettings.ProximityDistance > 120 || ServerProperties.DefaultSettings.ProximityDistance < 1)
+                throw new Exception("Default proximity distance can only be between 1 and 120!");
             if (ServerProperties.Channels.Count >= byte.MaxValue)
                 throw new Exception($"Cannot have more than {byte.MaxValue} channels!");
             if (ServerProperties.Channels.Exists(x => x.Name.Length > 12))
@@ -90,13 +93,7 @@ namespace VoiceCraft.Server.Data
             if (ServerProperties.Channels.Count <= 0)
             {
                 Logger.LogToConsole(LogType.Warn, $"No default channel set, adding default channel Main...", "Properties");
-                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true, OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true } });
-            }
-
-            if (ServerProperties.DefaultChannel.OverrideSettings == null)
-            {
-                Logger.LogToConsole(LogType.Warn, $"Default channel {ServerProperties.DefaultChannel.Name} does not have override settings, setting default override...", "Properties");
-                ServerProperties.DefaultChannel.OverrideSettings = new ChannelOverride() { ProximityDistance = 30, ProximityToggle = true, VoiceEffects = true };
+                ServerProperties.Channels.Add(new Channel() { Name = "Main", Hidden = true });
             }
 
             if (string.IsNullOrWhiteSpace(ServerProperties.PermanentServerKey))

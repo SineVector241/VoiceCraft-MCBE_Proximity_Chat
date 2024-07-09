@@ -362,12 +362,9 @@ namespace VoiceCraft.Server
 
             if (ushort.TryParse(args[0], out ushort value))
             {
-                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
-                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
-
                 if (value > 120 || value < 1)
                     throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
-                Server.ServerProperties.DefaultChannel.OverrideSettings.ProximityDistance = value;
+                Server.ServerProperties.DefaultSettings.ProximityDistance = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity distance: {value}", "Commands");
             }
             else
@@ -385,10 +382,7 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
-                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
-
-                Server.ServerProperties.DefaultChannel.OverrideSettings.ProximityToggle = value;
+                Server.ServerProperties.DefaultSettings.ProximityToggle = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity toggle: {value}", "Commands");
             }
             else
@@ -424,10 +418,7 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                if (Server.ServerProperties.DefaultChannel.OverrideSettings == null) //Error. Should not happen anyways.
-                    throw new Exception("Default channel does not contain override settings, cannot execute command!");
-
-                Server.ServerProperties.DefaultChannel.OverrideSettings.VoiceEffects = value;
+                Server.ServerProperties.DefaultSettings.VoiceEffects = value;
                 Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
             }
             else
