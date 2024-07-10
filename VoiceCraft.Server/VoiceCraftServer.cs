@@ -475,8 +475,8 @@ namespace VoiceCraft.Server
                     var proximityToggle = client.Channel.OverrideSettings?.ProximityToggle ?? defaultSettings.ProximityToggle;
                     if (proximityToggle)
                     {
-                        if (VoiceCraftParticipant.TalkSettingsEnabled(client.ChecksBitmask, BitmaskSettings.DeathEnabled) && client.Dead || 
-                            VoiceCraftParticipant.TalkSettingsEnabled(client.ChecksBitmask, BitmaskSettings.EnvironmentEnabled) && string.IsNullOrWhiteSpace(client.EnvironmentId)) 
+                        if (!VoiceCraftParticipant.TalkSettingsDisabled(client.ChecksBitmask, BitmaskSettings.DeathDisabled) && client.Dead || 
+                            !VoiceCraftParticipant.TalkSettingsDisabled(client.ChecksBitmask, BitmaskSettings.EnvironmentDisabled) && string.IsNullOrWhiteSpace(client.EnvironmentId)) 
                             return;
 
                         var proximityDistance = client.Channel.OverrideSettings?.ProximityDistance ?? defaultSettings.ProximityDistance;
@@ -491,17 +491,17 @@ namespace VoiceCraft.Server
 
                         //Bitmask Checks here
                         (x.Value.GetIntersectedListenBitmasks(client.ChecksBitmask) != 0) && //Matching Bitmasks
-                        (!VoiceCraftParticipant.ListenSettingsEnabled(x.Value.ChecksBitmask, BitmaskSettings.DeathEnabled) || !x.Value.Dead) &&
-                        (!VoiceCraftParticipant.ListenSettingsEnabled(x.Value.ChecksBitmask, BitmaskSettings.EnvironmentEnabled) || (!string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId)) &&
-                        (!VoiceCraftParticipant.ListenSettingsEnabled(x.Value.ChecksBitmask, BitmaskSettings.ProximityEnabled) || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance)
+                        (VoiceCraftParticipant.ListenSettingsDisabled(x.Value.ChecksBitmask, BitmaskSettings.DeathDisabled) || !x.Value.Dead) &&
+                        (VoiceCraftParticipant.ListenSettingsDisabled(x.Value.ChecksBitmask, BitmaskSettings.EnvironmentDisabled) || (!string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId)) &&
+                        (VoiceCraftParticipant.ListenSettingsDisabled(x.Value.ChecksBitmask, BitmaskSettings.ProximityDisabled) || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance)
                         ); //Get Participants
 
                         foreach(var participant in list)
                         {
-                            var volume = participant.Value.IntersectedListenSettingsEnabled(client.ChecksBitmask, BitmaskSettings.ProximityEnabled) ? 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f) : 1.0f;
-                            var echo = participant.Value.IntersectedListenSettingsEnabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsEnabled) && voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f;
-                            var muffled = participant.Value.IntersectedListenSettingsEnabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsEnabled) && voiceEffects && (participant.Value.InWater || client.InWater);
-                            var rotation = participant.Value.IntersectedListenSettingsEnabled(client.ChecksBitmask, BitmaskSettings.ProximityEnabled)? (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180)) : 1.5f;
+                            var volume = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled) ? 1.0f : 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
+                            var echo = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) && !voiceEffects ? 0.0f : Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume);
+                            var muffled = !participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) && voiceEffects && (participant.Value.InWater || client.InWater);
+                            var rotation = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled)? 1.5f : (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
 
                             participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ServerAudio()
                             { 

@@ -62,15 +62,15 @@ namespace VoiceCraft.Server.Data
 
         public uint GetIntersectedTalkBitmasks(uint otherBitmask)
         {
-            return ((ChecksBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1); //Get all enabled intersecting bits.
+            return ((ChecksBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1); //Get all disabled intersecting bits.
         }
 
         public uint GetIntersectedListenBitmasks(uint otherBitmask)
         {
-            return ((ChecksBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1); //Get all enabled intersecting bits.
+            return ((ChecksBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1); //Get all disabled intersecting bits.
         }
 
-        public bool IntersectedTalkSettingsEnabled(uint otherBitmask, params BitmaskSettings[] settings)
+        public bool IntersectedTalkSettingsDisabled(uint otherBitmask, params BitmaskSettings[] settings)
         {
             uint settingsMask = 0;
             for (int i = 0; i < settings.Length; i++)
@@ -79,14 +79,14 @@ namespace VoiceCraft.Server.Data
             }
 
             uint intersectingBits = GetIntersectedTalkBitmasks(otherBitmask);
-            uint enabledTalkMasks = intersectingBits << (int)BitmaskLocation.TalkBitmask1; //Move into the talk bitmask area.
-            uint mask = enabledTalkMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
-            uint talkSettings = GetEnabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and enabled bitmasks and get the enabled talk settings.
+            uint disabledTalkMasks = intersectingBits << (int)BitmaskLocation.TalkBitmask1; //Move into the talk bitmask area.
+            uint mask = disabledTalkMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
+            uint talkSettings = GetDisabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled talk settings.
 
             return (talkSettings & settingsMask) != 0; //check if any of the inputted settings match the combined settings.
         }
 
-        public bool IntersectedListenSettingsEnabled(uint otherBitmask, params BitmaskSettings[] settings)
+        public bool IntersectedListenSettingsDisabled(uint otherBitmask, params BitmaskSettings[] settings)
         {
             uint settingsMask = 0;
             for (int i = 0; i < settings.Length; i++)
@@ -95,14 +95,14 @@ namespace VoiceCraft.Server.Data
             }
 
             uint intersectingBits = GetIntersectedListenBitmasks(otherBitmask);
-            uint enabledListenMasks = intersectingBits << (int)BitmaskLocation.ListenBitmask1; //Move into the listen bitmask area.
-            uint mask = enabledListenMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
-            uint listenSettings = GetEnabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and enabled bitmasks and get the enabled listen settings.
+            uint disabledListenMasks = intersectingBits << (int)BitmaskLocation.ListenBitmask1; //Move into the listen bitmask area.
+            uint mask = disabledListenMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
+            uint listenSettings = GetDisabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled listen settings.
 
             return (listenSettings & settingsMask) != 0; //check if any of the inputted settings match the combined settings.
         }
 
-        public static uint GetEnabledTalkSettings(uint checksBitmask)
+        public static uint GetDisabledTalkSettings(uint checksBitmask)
         {
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask1) != 0)
@@ -123,7 +123,7 @@ namespace VoiceCraft.Server.Data
             return result;
         }
 
-        public static uint GetEnabledListenSettings(uint checksBitmask)
+        public static uint GetDisabledListenSettings(uint checksBitmask)
         {
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask1) != 0)
@@ -144,7 +144,7 @@ namespace VoiceCraft.Server.Data
             return result;
         }
 
-        public static bool TalkSettingsEnabled(uint checksBitmask, params BitmaskSettings[] settings)
+        public static bool TalkSettingsDisabled(uint checksBitmask, params BitmaskSettings[] settings)
         {
             uint settingsMask = 0;
             for (int i = 0; i < settings.Length; i++)
@@ -171,7 +171,7 @@ namespace VoiceCraft.Server.Data
             return result != 0;
         }
 
-        public static bool ListenSettingsEnabled(uint checksBitmask, params BitmaskSettings[] settings)
+        public static bool ListenSettingsDisabled(uint checksBitmask, params BitmaskSettings[] settings)
         {
             uint settingsMask = 0;
             for (int i = 0; i < settings.Length; i++)
@@ -249,10 +249,10 @@ namespace VoiceCraft.Server.Data
     {
         All = uint.MaxValue, //1111
         None = 0, //0000
-        ProximityEnabled = 1, //0001
-        DeathEnabled = 2, //0010
-        VoiceEffectsEnabled = 4, //0100
-        EnvironmentEnabled = 8, //1000
+        ProximityDisabled = 1, //0001
+        DeathDisabled = 2, //0010
+        VoiceEffectsDisabled = 4, //0100
+        EnvironmentDisabled = 8, //1000
     }
 
     public enum DataBitmask : uint
