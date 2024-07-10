@@ -77,6 +77,7 @@ namespace VoiceCraft.Server
             MCComm.OnSetChannelSettingsReceived += MCCommSetChannelSettings;
             MCComm.OnGetDefaultSettingsReceived += MCCommGetDefaultSettings;
             MCComm.OnSetDefaultSettingsReceived += MCCommSetDefaultSettings;
+            MCComm.OnGetParticipantsReceived += MCCommGetParticipants;
             MCComm.OnDisconnectParticipantReceived += MCCommDisconnectParticipant;
             MCComm.OnGetParticipantBitmaskReceived += MCCommGetParticipantBitmask;
             MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
@@ -728,6 +729,13 @@ namespace VoiceCraft.Server
             ServerProperties.DefaultSettings.VoiceEffects = packet.VoiceEffects;
 
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+        }
+
+        private void MCCommGetParticipants(Core.Packets.MCComm.GetParticipants packet, HttpListenerContext ctx)
+        {
+            packet.Players = Participants.Values.Where(x => x.Binded).Select(x => x.MinecraftId).ToList();
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
         }
 
         private void MCCommDisconnectParticipant(Core.Packets.MCComm.DisconnectParticipant packet, HttpListenerContext ctx)
