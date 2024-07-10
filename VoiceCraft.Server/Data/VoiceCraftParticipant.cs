@@ -201,7 +201,7 @@ namespace VoiceCraft.Server.Data
 
     public enum BitmaskMap : uint
     {
-        Default = TalkBitmask1 | ListenBitmask1 | Bitmask1Settings,
+        Default = TalkBitmask1 | ListenBitmask1,
         AllBitmaskSettings = Bitmask1Settings | Bitmask2Settings | Bitmask3Settings | Bitmask4Settings | Bitmask5Settings,
         AllTalkBitmasks = TalkBitmask1 | TalkBitmask2 | TalkBitmask3 | TalkBitmask4 | TalkBitmask5,
         AllListenBitmasks = ListenBitmask1 | ListenBitmask2 | ListenBitmask3 | ListenBitmask4 | ListenBitmask5,
