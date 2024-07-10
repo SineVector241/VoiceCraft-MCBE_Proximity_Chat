@@ -18,31 +18,31 @@ namespace VoiceCraft.Server.Data
         public float CaveDensity { get; set; }
         public bool Dead
         {
-            get => ((ChecksBitmask >> (int)BitmaskLocation.DataBitmask) & (uint)DataBitmask.Dead) != 0;
+            get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.Dead) != 0;
             set
             {
                 if (value)
                 {
-                    ChecksBitmask |= (uint)DataBitmask.Dead << (int)BitmaskLocation.DataBitmask;
+                    ChecksBitmask |= (uint)DataBitmask.Dead << (int)BitmaskLocations.DataBitmask;
                 }
                 else
                 {
-                    ChecksBitmask &= ~((uint)DataBitmask.Dead << (int)BitmaskLocation.DataBitmask);
+                    ChecksBitmask &= ~((uint)DataBitmask.Dead << (int)BitmaskLocations.DataBitmask);
                 }
             }
         }
         public bool InWater
         {
-            get => ((ChecksBitmask >> (int)BitmaskLocation.DataBitmask) & (uint)DataBitmask.InWater) != 0;
+            get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.InWater) != 0;
             set
             {
                 if (value)
                 {
-                    ChecksBitmask |= (uint)DataBitmask.InWater << (int)BitmaskLocation.DataBitmask;
+                    ChecksBitmask |= (uint)DataBitmask.InWater << (int)BitmaskLocations.DataBitmask;
                 }
                 else
                 {
-                    ChecksBitmask &= ~((uint)DataBitmask.InWater << (int)BitmaskLocation.DataBitmask);
+                    ChecksBitmask &= ~((uint)DataBitmask.InWater << (int)BitmaskLocations.DataBitmask);
                 }
             }
         }
@@ -62,12 +62,12 @@ namespace VoiceCraft.Server.Data
 
         public uint GetIntersectedTalkBitmasks(uint otherBitmask)
         {
-            return ((ChecksBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1); //Get all disabled intersecting bits.
+            return ((ChecksBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocations.TalkBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocations.ListenBitmask1); //Get all disabled intersecting bits.
         }
 
         public uint GetIntersectedListenBitmasks(uint otherBitmask)
         {
-            return ((ChecksBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocation.ListenBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocation.TalkBitmask1); //Get all disabled intersecting bits.
+            return ((ChecksBitmask & (uint)BitmaskMap.AllListenBitmasks) >> (int)BitmaskLocations.ListenBitmask1) & ((otherBitmask & (uint)BitmaskMap.AllTalkBitmasks) >> (int)BitmaskLocations.TalkBitmask1); //Get all disabled intersecting bits.
         }
 
         public bool IntersectedTalkSettingsDisabled(uint otherBitmask, params BitmaskSettings[] settings)
@@ -79,7 +79,7 @@ namespace VoiceCraft.Server.Data
             }
 
             uint intersectingBits = GetIntersectedTalkBitmasks(otherBitmask);
-            uint disabledTalkMasks = intersectingBits << (int)BitmaskLocation.TalkBitmask1; //Move into the talk bitmask area.
+            uint disabledTalkMasks = intersectingBits << (int)BitmaskLocations.TalkBitmask1; //Move into the talk bitmask area.
             uint mask = disabledTalkMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
             uint talkSettings = GetDisabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled talk settings.
 
@@ -95,7 +95,7 @@ namespace VoiceCraft.Server.Data
             }
 
             uint intersectingBits = GetIntersectedListenBitmasks(otherBitmask);
-            uint disabledListenMasks = intersectingBits << (int)BitmaskLocation.ListenBitmask1; //Move into the listen bitmask area.
+            uint disabledListenMasks = intersectingBits << (int)BitmaskLocations.ListenBitmask1; //Move into the listen bitmask area.
             uint mask = disabledListenMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
             uint listenSettings = GetDisabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled listen settings.
 
@@ -106,19 +106,19 @@ namespace VoiceCraft.Server.Data
         {
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask1) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask1Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask1Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask2) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask2Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask2Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask3) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask3Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask3Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask4) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask4Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask4Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask5) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask5Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask5Settings;
 
             return result;
         }
@@ -127,19 +127,19 @@ namespace VoiceCraft.Server.Data
         {
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask1) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask1Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask1Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask2) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask2Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask2Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask3) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask3Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask3Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask4) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask4Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask4Settings;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask5) != 0)
-                result |= checksBitmask >> (int)BitmaskLocation.Bitmask5Settings;
+                result |= checksBitmask >> (int)BitmaskLocations.Bitmask5Settings;
 
             return result;
         }
@@ -154,19 +154,19 @@ namespace VoiceCraft.Server.Data
 
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask1) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask1Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask1Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask2) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask2Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask2Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask3) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask3Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask3Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask4) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask4Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask4Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.TalkBitmask5) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask5Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask5Settings) & settingsMask;
 
             return result != 0;
         }
@@ -181,19 +181,19 @@ namespace VoiceCraft.Server.Data
 
             uint result = 0;
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask1) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask1Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask1Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask2) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask2Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask2Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask3) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask3Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask3Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask4) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask4Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask4Settings) & settingsMask;
 
             if ((checksBitmask & (uint)BitmaskMap.ListenBitmask5) != 0)
-                result |= (checksBitmask >> (int)BitmaskLocation.Bitmask5Settings) & settingsMask;
+                result |= (checksBitmask >> (int)BitmaskLocations.Bitmask5Settings) & settingsMask;
 
             return result != 0;
         }
@@ -224,7 +224,7 @@ namespace VoiceCraft.Server.Data
         DataBitmask = 0b11000000000000000000000000000000
     }
 
-    public enum BitmaskLocation
+    public enum BitmaskLocations
     {
         Bitmask1Settings = 0, //4 bits
         Bitmask2Settings = 4, //4 bits
