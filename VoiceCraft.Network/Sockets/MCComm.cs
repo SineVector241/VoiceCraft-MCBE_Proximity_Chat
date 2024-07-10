@@ -63,6 +63,9 @@ namespace VoiceCraft.Network.Sockets
         public event PacketData<UnmuteParticipant>? OnUnmuteParticipantReceived;
         public event PacketData<DeafenParticipant>? OnDeafenParticipantReceived;
         public event PacketData<UndeafenParticipant>? OnUndeafenParticipantReceived;
+        public event PacketData<ANDModParticipantBitmask>? OnANDModParticipantBitmaskReceived;
+        public event PacketData<ORModParticipantBitmask>? OnORModParticipantBitmaskReceived;
+        public event PacketData<XORModParticipantBitmask>? OnXORModParticipantBitmaskReceived;
         public event PacketData<ChannelMove>? OnChannelMoveReceived;
 
         public event InboundPacket? OnInboundPacket;
@@ -91,6 +94,9 @@ namespace VoiceCraft.Network.Sockets
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UnmuteParticipant, typeof(UnmuteParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.DeafenParticipant, typeof(DeafenParticipant));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.UndeafenParticipant, typeof(UndeafenParticipant));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ANDModParticipantBitmask, typeof(ANDModParticipantBitmask));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ORModParticipantBitmask, typeof(ORModParticipantBitmask));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.XORModParticipantBitmask, typeof(XORModParticipantBitmask));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.ChannelMove, typeof(ChannelMove));
         }
 
@@ -206,6 +212,9 @@ namespace VoiceCraft.Network.Sockets
                     case MCCommPacketTypes.UnmuteParticipant: OnUnmuteParticipantReceived?.Invoke((UnmuteParticipant)packet, ctx); break;
                     case MCCommPacketTypes.DeafenParticipant: OnDeafenParticipantReceived?.Invoke((DeafenParticipant)packet, ctx); break;
                     case MCCommPacketTypes.UndeafenParticipant: OnUndeafenParticipantReceived?.Invoke((UndeafenParticipant)packet, ctx); break;
+                    case MCCommPacketTypes.ANDModParticipantBitmask: OnANDModParticipantBitmaskReceived?.Invoke((ANDModParticipantBitmask)packet, ctx); break;
+                    case MCCommPacketTypes.ORModParticipantBitmask: OnORModParticipantBitmaskReceived?.Invoke((ORModParticipantBitmask)packet, ctx); break;
+                    case MCCommPacketTypes.XORModParticipantBitmask: OnXORModParticipantBitmaskReceived?.Invoke((XORModParticipantBitmask)packet, ctx); break;
                     case MCCommPacketTypes.ChannelMove: OnChannelMoveReceived?.Invoke((ChannelMove)packet, ctx); break;
                 }
             }

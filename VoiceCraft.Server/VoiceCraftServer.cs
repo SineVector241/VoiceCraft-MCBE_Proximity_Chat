@@ -84,6 +84,9 @@ namespace VoiceCraft.Server
             MCComm.OnUnmuteParticipantReceived += MCCommUnmuteParticipant;
             MCComm.OnDeafenParticipantReceived += MCCommDeafenParticipant;
             MCComm.OnUndeafenParticipantReceived += MCCommUndeafenParticipant;
+            MCComm.OnANDModParticipantBitmaskReceived += MCCommANDModParticipantBitmask;
+            MCComm.OnORModParticipantBitmaskReceived += MCCommORModParticipantBitmask;
+            MCComm.OnXORModParticipantBitmaskReceived += MCCommXORModParticipantBitmask;
             MCComm.OnChannelMoveReceived += MCCommChannelMove;
         }
 
@@ -740,32 +743,6 @@ namespace VoiceCraft.Server
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
         }
 
-        private void MCCommChannelMove(Core.Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
-        {
-            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
-
-            if (packet.ChannelId >= ServerProperties.Channels.Count)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
-                return;
-            }
-            if (client.Value == null)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
-                return;
-            }
-
-            var channel = ServerProperties.Channels[packet.ChannelId];
-            if (channel == client.Value.Channel)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Participant is already in the channel!" });
-                return;
-            }
-
-             MoveParticipantToChannel(client.Key, client.Value, channel);
-             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
-        }
-
         private void MCCommGetParticipantBitmask(Core.Packets.MCComm.GetParticipantBitmask packet, HttpListenerContext ctx)
         {
             var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
@@ -843,6 +820,71 @@ namespace VoiceCraft.Server
             }
 
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommANDModParticipantBitmask(Core.Packets.MCComm.ANDModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask &= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommORModParticipantBitmask(Core.Packets.MCComm.ORModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask |= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommXORModParticipantBitmask(Core.Packets.MCComm.XORModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask ^= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommChannelMove(Core.Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+
+            if (packet.ChannelId >= ServerProperties.Channels.Count)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
+            if (client.Value == null)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+                return;
+            }
+
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            if (channel == client.Value.Channel)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Participant is already in the channel!" });
+                return;
+            }
+
+            MoveParticipantToChannel(client.Key, client.Value, channel);
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
         #endregion
 

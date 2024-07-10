@@ -36,6 +36,10 @@ namespace VoiceCraft.Core.Packets
         DeafenParticipant,
         UndeafenParticipant,
 
+        ANDModParticipantBitmask,
+        ORModParticipantBitmask,
+        XORModParticipantBitmask,
+
         ChannelMove
     }
 }
