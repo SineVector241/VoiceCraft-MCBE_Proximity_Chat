@@ -359,9 +359,9 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketLeaveChannel(Core.Packets.VoiceCraft.LeaveChannel data, Network.NetPeer peer)
         {
+            ClearParticipants();
             if (JoinedChannel != null)
             {
-                ClearParticipants();
                 OnChannelLeft?.Invoke(JoinedChannel);
                 JoinedChannel = null;
             }

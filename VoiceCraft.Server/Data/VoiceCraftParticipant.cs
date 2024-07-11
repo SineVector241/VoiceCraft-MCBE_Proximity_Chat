@@ -97,7 +97,7 @@ namespace VoiceCraft.Server.Data
             uint intersectingBits = GetIntersectedListenBitmasks(otherBitmask);
             uint disabledListenMasks = intersectingBits << (int)BitmaskLocations.ListenBitmask1; //Move into the listen bitmask area.
             uint mask = disabledListenMasks | (uint)BitmaskMap.AllBitmaskSettings; //Create the mask.
-            uint listenSettings = GetDisabledTalkSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled listen settings.
+            uint listenSettings = GetDisabledListenSettings(ChecksBitmask & mask); //Isolate all settings and disabled bitmasks and get the disabled listen settings.
 
             return (listenSettings & settingsMask) != 0; //check if any of the inputted settings match the combined settings.
         }
