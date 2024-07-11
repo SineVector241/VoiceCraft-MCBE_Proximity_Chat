@@ -36,6 +36,12 @@ namespace VoiceCraft.Maui.ViewModels
                 await Database.Instance.SaveSettings();
             }
 
+            if(settings.JitterBufferSize > 2000 ||  settings.JitterBufferSize < 40)
+            {
+                settings.JitterBufferSize = 80;
+                await Database.Instance.SaveSettings();
+            }
+
             if (Settings.InputDevice > AudioManager.Instance.GetInputDeviceCount())
             {
                 Settings.InputDevice = 0;

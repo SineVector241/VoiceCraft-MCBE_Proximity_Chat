@@ -67,7 +67,7 @@ namespace VoiceCraft.Maui.Services
             Settings = Database.Instance.Settings;
             Server = server;
 
-            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.ClientPort)
+            Client = new VoiceCraftClient(new WaveFormat(SampleRate, Channels), FrameSizeMS, Settings.ClientPort, Settings.JitterBufferSize)
             {
                 LinearProximity = Settings.LinearVolume,
                 UseCustomProtocol = Settings.CustomClientProtocol,

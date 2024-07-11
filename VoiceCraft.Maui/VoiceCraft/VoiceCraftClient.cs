@@ -16,6 +16,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         private readonly OpusEncoder Encoder;
         private readonly int FrameSizeMS;
         private readonly int ClientPort;
+        private readonly int JitterBufferSize;
         private string EnvironmentId = string.Empty;
 
         //Variables
@@ -73,7 +74,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         public event ChannelLeft? OnChannelLeft;
         #endregion
 
-        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20, int ClientPort = 8080)
+        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20, int ClientPort = 8080, int jitterBufferSize = 80)
         {
             this.ClientPort = ClientPort;
             MCWSS = new Network.Sockets.MCWSS(ClientPort);
@@ -82,6 +83,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             AudioFormat = audioFormat;
             PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
             FrameSizeMS = frameSizeMS;
+            JitterBufferSize = jitterBufferSize;
 
             Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Core.Enums.PreDefCtl.OPUS_APPLICATION_VOIP)
             {
@@ -271,7 +273,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketParticipantJoined(Core.Packets.VoiceCraft.ParticipantJoined data, Network.NetPeer peer)
         {
-            var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS) { Deafened = data.IsDeafened, Muted = data.IsMuted };
+            var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS, JitterBufferSize) { Deafened = data.IsDeafened, Muted = data.IsMuted };
             if (Participants.TryAdd(data.Key, participant))
             {
                 AudioOutput.AddMixerInput(participant.AudioOutput);

@@ -187,10 +187,10 @@ namespace VoiceCraft.Core.Audio.Streams
         private readonly JitterBuffer JitterBuffer;
         private readonly OpusDecoder Decoder;
 
-        public VoiceCraftJitterBuffer(WaveFormat waveFormat, int frameSizeMS = 20)
+        public VoiceCraftJitterBuffer(WaveFormat waveFormat, int frameSizeMS = 20, int jitterBufferSize = 80)
         {
             FrameSizeMS = frameSizeMS;
-            JitterBuffer = new JitterBuffer(waveFormat, 80, 2000, frameSizeMS);
+            JitterBuffer = new JitterBuffer(waveFormat, jitterBufferSize, 2000, frameSizeMS);
             Decoder = new OpusDecoder(waveFormat.SampleRate, waveFormat.Channels);
         }
 
