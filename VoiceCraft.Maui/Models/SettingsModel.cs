@@ -11,6 +11,8 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         int clientPort = 8080;
         [ObservableProperty]
+        int jitterBufferSize = 80;
+        [ObservableProperty]
         float softLimiterGain = 5.0f;
         [ObservableProperty]
         float microphoneDetectionPercentage = 0.04f;

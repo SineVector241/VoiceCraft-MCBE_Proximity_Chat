@@ -82,7 +82,7 @@
                                     Background="#4f00F000"
                                     StrokeThickness="0">
                                 <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="4" />
+                                    <RoundRectangle CornerRadius="5.5" />
                                 </Border.StrokeShape>
                                 <Label FontSize="Small"
                                        HorizontalTextAlignment="Center"

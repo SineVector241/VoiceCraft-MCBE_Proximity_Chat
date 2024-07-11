@@ -54,7 +54,7 @@
                                     Background="#2fFFFFFF"
                                     StrokeThickness="0">
                                 <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="4" />
+                                    <RoundRectangle CornerRadius="5.5" />
                                 </Border.StrokeShape>
                                 <toolkit:Icon Source="view_list.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
                             </Border>
@@ -185,7 +185,7 @@
                                                         Background="#2fFFFFFF"
                                                         StrokeThickness="0">
                                                     <Border.StrokeShape>
-                                                        <RoundRectangle CornerRadius="4" />
+                                                        <RoundRectangle CornerRadius="5.5" />
                                                     </Border.StrokeShape>
                                                     <toolkit:Icon Source="volume_high.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}" />
                                                 </Border>
@@ -344,7 +344,7 @@
                                                         Background="#2fFFFFFF"
                                                         StrokeThickness="0">
                                                     <Border.StrokeShape>
-                                                        <RoundRectangle CornerRadius="4" />
+                                                        <RoundRectangle CornerRadius="5.5" />
                                                     </Border.StrokeShape>
                                                     <toolkit:Icon Source="arrow_right_thick.png" TintColor="{AppThemeBinding Dark='White', Light='Black'}">
                                                         <toolkit:Icon.Style>
