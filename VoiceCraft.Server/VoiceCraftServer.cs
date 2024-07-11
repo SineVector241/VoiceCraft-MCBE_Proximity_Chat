@@ -658,7 +658,7 @@ namespace VoiceCraft.Server
         private void MCCommGetChannels(Core.Packets.MCComm.GetChannels packet, HttpListenerContext ctx)
         {
             packet.Channels.Clear();
-            for (ushort i = 0; i < ServerProperties.Channels.Count; i++)
+            for (byte i = 0; i < ServerProperties.Channels.Count; i++)
             {
                 packet.Channels.Add(i, ServerProperties.Channels[i]);
             }
