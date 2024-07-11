@@ -698,6 +698,13 @@ namespace VoiceCraft.Server
                 return;
             }
 
+            if(packet.ClearSettings)
+            {
+                channel.OverrideSettings = null;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
             if (channel.OverrideSettings == null)
                 channel.OverrideSettings = new ChannelOverride();
 
