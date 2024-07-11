@@ -7,6 +7,7 @@ namespace VoiceCraft.Server
 {
     public class ServerApp
     {
+        const string Version = "1.0.6";
         VoiceCraftServer Server { get; set; }
 
         public ServerApp()
@@ -19,9 +20,9 @@ namespace VoiceCraft.Server
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
 #if DEBUG
-            Console.WriteLine($"[v1.0.6][{VoiceCraftServer.Version}]=========================[DEBUG]\n");
+            Console.WriteLine($"[App: {Version}][Server: {VoiceCraftServer.Version}]==============[DEBUG]\n");
 #else
-            Console.WriteLine($"[v1.0.6][{VoiceCraftServer.Version}]=======================[RELEASE]\n");
+            Console.WriteLine($"[App: {Version}][Server: {VoiceCraftServer.Version}]============[RELEASE]\n");
 #endif
 
             var properties = Properties.LoadProperties();

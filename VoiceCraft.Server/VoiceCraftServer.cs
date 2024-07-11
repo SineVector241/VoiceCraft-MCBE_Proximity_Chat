@@ -12,7 +12,7 @@ namespace VoiceCraft.Server
     //Participant - Receiving Participant
     public class VoiceCraftServer : Disposable
     {
-        public const string Version = "v1.0.5";
+        public const string Version = "1.0.5";
         public ConcurrentDictionary<NetPeer, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<NetPeer, VoiceCraftParticipant>();
         public Network.Sockets.VoiceCraft VoiceCraftSocket { get; set; }
         public Network.Sockets.MCComm MCComm { get; set; }
