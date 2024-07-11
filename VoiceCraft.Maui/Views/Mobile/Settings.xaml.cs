@@ -50,18 +50,18 @@ public partial class Settings : ContentPage
                 if (int.TryParse(cleaned, out var res))
                 {
                     var clamped = Math.Clamp(res, 40, 2000);
-                    viewModel.Settings.ClientPort = clamped;
+                    viewModel.Settings.JitterBufferSize = clamped;
                     entry.Text = clamped.ToString();
                 }
                 else
                 {
-                    viewModel.Settings.ClientPort = 80;
+                    viewModel.Settings.JitterBufferSize = 80;
                 }
             }
             else if (result > 2000 || result < 40)
             {
                 var clamped = Math.Clamp(result, 40, 2000);
-                viewModel.Settings.ClientPort = clamped;
+                viewModel.Settings.JitterBufferSize = clamped;
             }
         }
     }
