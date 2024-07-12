@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 using VoiceCraft.Core;
@@ -30,7 +31,7 @@ namespace VoiceCraft.Network.Sockets
         public delegate void Started();
         public delegate void Stopped(string? reason = null);
         public delegate void ServerConnected(string token, string address);
-        public delegate void ServerDisconnected(int timeoutDiff, string token);
+        public delegate void ServerDisconnected(string reason, string token);
         public delegate void PacketData<T>(T packet, HttpListenerContext ctx);
 
         public delegate void InboundPacket(MCCommPacket packet);
@@ -46,6 +47,7 @@ namespace VoiceCraft.Network.Sockets
         public event ServerDisconnected? OnServerDisconnected;
 
         public event PacketData<Login>? OnLoginReceived;
+        public event PacketData<Logout>? OnLogoutReceived;
         public event PacketData<Accept>? OnAcceptReceived;
         public event PacketData<Deny>? OnDenyReceived;
         public event PacketData<Bind>? OnBindReceived;
@@ -78,6 +80,7 @@ namespace VoiceCraft.Network.Sockets
         public MCComm()
         {
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Login, typeof(Login));
+            PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Logout, typeof(Logout));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Accept, typeof(Accept));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Deny, typeof(Deny));
             PacketRegistry.RegisterPacket((byte)MCCommPacketTypes.Bind, typeof(Bind));
@@ -110,6 +113,7 @@ namespace VoiceCraft.Network.Sockets
                 WebServer.Prefixes.Add($"http://*:{Port}/");
                 WebServer.Start();
                 OnLoginReceived += LoginReceived;
+                OnLogoutReceived += LogoutReceived;
                 ActivityChecker = Task.Run(ActivityCheck);
                 OnStarted?.Invoke();
                 await ListenAsync();
@@ -126,6 +130,7 @@ namespace VoiceCraft.Network.Sockets
             {
                 WebServer.Stop();
                 OnLoginReceived -= LoginReceived;
+                OnLogoutReceived -= LogoutReceived;
                 Sessions.Clear();
                 ActivityChecker = null;
                 OnStopped?.Invoke();
@@ -197,6 +202,7 @@ namespace VoiceCraft.Network.Sockets
                 switch ((MCCommPacketTypes)packet.PacketId)
                 {
                     case MCCommPacketTypes.Login: OnLoginReceived?.Invoke((Login)packet, ctx); break;
+                    case MCCommPacketTypes.Logout: OnLogoutReceived?.Invoke((Logout)packet, ctx); break;
                     case MCCommPacketTypes.Accept: OnAcceptReceived?.Invoke((Accept)packet, ctx); break;
                     case MCCommPacketTypes.Deny: OnDenyReceived?.Invoke((Deny)packet, ctx); break;
                     case MCCommPacketTypes.Bind: OnBindReceived?.Invoke((Bind)packet, ctx); break;
@@ -245,6 +251,17 @@ namespace VoiceCraft.Network.Sockets
             }
         }
 
+        private void LogoutReceived(Logout packet, HttpListenerContext ctx)
+        {
+            if (Sessions.TryRemove(packet.Token, out var session))
+            {
+                SendResponse(ctx, HttpStatusCode.OK, new Accept());
+                OnServerDisconnected?.Invoke("Server disconnected", packet.Token);
+                return;
+            }
+            SendResponse(ctx, HttpStatusCode.OK, new Deny() { Reason = "Invalid Token!" });
+        }
+
         private async Task ActivityCheck()
         {
             while(WebServer.IsListening)
@@ -253,7 +270,8 @@ namespace VoiceCraft.Network.Sockets
                 {
                     if(Environment.TickCount64 - session.Value > Timeout && Sessions.TryRemove(session))
                     {
-                        OnServerDisconnected?.Invoke((int)(Environment.TickCount64 - session.Value), session.Key);
+                        var timeoutDiff = (int)(Environment.TickCount64 - session.Value);
+                        OnServerDisconnected?.Invoke($"Server timed out, Timeout: {timeoutDiff}", session.Key);
                     }
                 }
 

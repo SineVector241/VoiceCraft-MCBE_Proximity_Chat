@@ -16,6 +16,7 @@ namespace VoiceCraft.Core.Packets
     public enum MCCommPacketTypes : byte
     {
         Login,
+        Logout,
         Accept,
         Deny,
         Bind,

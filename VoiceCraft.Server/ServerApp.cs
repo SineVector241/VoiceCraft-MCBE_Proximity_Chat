@@ -156,9 +156,9 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Success, $"MCComm Server Connected - Token: {token}, Address: {address}", nameof(MCComm));
         }
 
-        private void MCCommServerDisconnected(int timeoutDiff, string token)
+        private void MCCommServerDisconnected(string reason, string token)
         {
-            Logger.LogToConsole(LogType.Warn, $"MCComm Server Disconnected - Token: {token}, Timeout: {timeoutDiff}", nameof(MCComm));
+            Logger.LogToConsole(LogType.Warn, $"MCComm Server Disconnected - Reason: {reason}, Token: {token}", nameof(MCComm));
         }
 
         private void VoiceCraftSocketInbound(Core.Packets.VoiceCraftPacket packet, Network.NetPeer peer)
