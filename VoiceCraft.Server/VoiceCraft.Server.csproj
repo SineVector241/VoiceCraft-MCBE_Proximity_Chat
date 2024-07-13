@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ATL\ATL.csproj" />
     <ProjectReference Include="..\VoiceCraft.Network\VoiceCraft.Network.csproj" />
   </ItemGroup>
 
