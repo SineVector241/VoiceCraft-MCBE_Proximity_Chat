@@ -452,9 +452,9 @@ namespace VoiceCraft.Server
             {
                 client.Position = data.Position;
                 client.Rotation = data.Rotation;
-                client.CaveDensity = data.CaveDensity;
+                client.EchoFactor = data.EchoFactor;
+                client.Muffled = data.Muffled;
                 client.Dead = data.IsDead;
-                client.InWater = data.InWater;
             }
         }
 
@@ -500,19 +500,19 @@ namespace VoiceCraft.Server
                         foreach(var participant in list)
                         {
                             var volume = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled) ? 1.0f : 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
-                            var echo = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || !voiceEffects ? 0.0f : Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume);
-                            var muffled = !participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) && voiceEffects && (participant.Value.InWater || client.InWater);
+                            var echo = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || !voiceEffects ? 0.0f : Math.Clamp(participant.Value.EchoFactor + client.EchoFactor, 0.0f, 1.0f) * (1.0f - volume);
+                            var muffle = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || !voiceEffects ? false : (participant.Value.Muffled || client.Muffled);
                             var rotation = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled)? 1.5f : (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
 
                             participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ServerAudio()
-                            { 
-                                Key = client.Key, 
-                                PacketCount = data.PacketCount, 
-                                Volume = volume, 
-                                EchoFactor = echo, 
-                                Rotation = rotation, 
-                                Muffled = muffled, 
-                                Audio = data.Audio 
+                            {
+                                Key = client.Key,
+                                PacketCount = data.PacketCount,
+                                Volume = volume,
+                                EchoFactor = echo,
+                                Muffled = muffle,
+                                Rotation = rotation,
+                                Audio = data.Audio
                             });
                         }
                     }
@@ -534,8 +534,8 @@ namespace VoiceCraft.Server
                                 PacketCount = data.PacketCount,
                                 Volume = 1.0f,
                                 EchoFactor = 0.0f,
-                                Rotation = 1.5f,
                                 Muffled = false,
+                                Rotation = 1.5f,
                                 Audio = data.Audio
                             });
                         }
@@ -646,9 +646,9 @@ namespace VoiceCraft.Server
                     participant.Value.Position = player.Location;
                     participant.Value.EnvironmentId = player.DimensionId;
                     participant.Value.Rotation = player.Rotation;
-                    participant.Value.CaveDensity = player.CaveDensity;
+                    participant.Value.EchoFactor = player.EchoFactor;
+                    participant.Value.Muffled = player.Muffled;
                     participant.Value.Dead = player.IsDead;
-                    participant.Value.InWater = player.InWater;
                 }
             }
 

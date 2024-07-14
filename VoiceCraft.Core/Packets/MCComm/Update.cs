@@ -15,8 +15,8 @@ namespace VoiceCraft.Core.Packets.MCComm
         public string DimensionId { get; set; } = string.Empty;
         public Vector3 Location { get; set; } = new Vector3();
         public float Rotation { get; set; }
-        public float CaveDensity { get; set; }
+        public float EchoFactor { get; set; }
+        public bool Muffled { get; set; }
         public bool IsDead { get; set; }
-        public bool InWater { get; set; }
     }
 }

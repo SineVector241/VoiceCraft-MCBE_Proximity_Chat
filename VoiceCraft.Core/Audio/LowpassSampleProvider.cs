@@ -7,6 +7,7 @@ namespace VoiceCraft.Core.Audio
     {
         private ISampleProvider source;
         private BiQuadFilter filter;
+
         public bool Enabled { get; set; } = true;
         public LowpassSampleProvider(ISampleProvider source, int cutOffFreq, int bandWidth)
         {

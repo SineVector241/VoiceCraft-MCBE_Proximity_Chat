@@ -468,7 +468,7 @@ namespace VoiceCraft.Maui.VoiceCraft
                 envId = string.Concat(envId, levelId.Truncate(30, string.Empty));
             }
 
-            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, CaveDensity = caveDensity, InWater = isUnderwater });
+            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, EchoFactor = caveDensity, Muffled = isUnderwater });
 
             if (EnvironmentId != envId)
             {

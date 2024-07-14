@@ -15,7 +15,8 @@ namespace VoiceCraft.Server.Data
         //Minecraft Data
         public Vector3 Position { get; set; }
         public float Rotation { get; set; }
-        public float CaveDensity { get; set; }
+        public float EchoFactor { get; set; }
+        public bool Muffled { get; set; }
         public bool Dead
         {
             get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.Dead) != 0;
@@ -28,21 +29,6 @@ namespace VoiceCraft.Server.Data
                 else
                 {
                     ChecksBitmask &= ~((uint)DataBitmask.Dead << (int)BitmaskLocations.DataBitmask);
-                }
-            }
-        }
-        public bool InWater
-        {
-            get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.InWater) != 0;
-            set
-            {
-                if (value)
-                {
-                    ChecksBitmask |= (uint)DataBitmask.InWater << (int)BitmaskLocations.DataBitmask;
-                }
-                else
-                {
-                    ChecksBitmask &= ~((uint)DataBitmask.InWater << (int)BitmaskLocations.DataBitmask);
                 }
             }
         }
@@ -258,6 +244,5 @@ namespace VoiceCraft.Server.Data
     public enum DataBitmask : uint
     {
         Dead = 1,
-        InWater = 2,
     }
 }
