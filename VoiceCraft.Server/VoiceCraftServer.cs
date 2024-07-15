@@ -501,7 +501,7 @@ namespace VoiceCraft.Server
                         {
                             var volume = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled) ? 1.0f : 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
                             var echo = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || !voiceEffects ? 0.0f : Math.Clamp(participant.Value.EchoFactor + client.EchoFactor, 0.0f, 1.0f) * (1.0f - volume);
-                            var muffle = !participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || voiceEffects && (participant.Value.Muffled || client.Muffled);
+                            var muffle = !participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) && voiceEffects && (participant.Value.Muffled || client.Muffled);
                             var rotation = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled)? 1.5f : (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
 
                             participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ServerAudio()
