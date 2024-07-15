@@ -16,7 +16,6 @@ namespace VoiceCraft.Server.Data
         public Vector3 Position { get; set; }
         public float Rotation { get; set; }
         public float EchoFactor { get; set; }
-        public bool Muffled { get; set; }
         public bool Dead
         {
             get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.Dead) != 0;
@@ -32,6 +31,23 @@ namespace VoiceCraft.Server.Data
                 }
             }
         }
+
+        public bool Muffled
+        {
+            get => ((ChecksBitmask >> (int)BitmaskLocations.DataBitmask) & (uint)DataBitmask.Muffled) != 0;
+            set
+            {
+                if (value)
+                {
+                    ChecksBitmask |= (uint)DataBitmask.Muffled << (int)BitmaskLocations.DataBitmask;
+                }
+                else
+                {
+                    ChecksBitmask &= ~((uint)DataBitmask.Muffled << (int)BitmaskLocations.DataBitmask);
+                }
+            }
+        }
+
         public string EnvironmentId { get; set; } = string.Empty;
         public string MinecraftId { get; set; } = string.Empty;
         public uint ChecksBitmask { get; set; } = (uint)BitmaskMap.Default;
@@ -244,5 +260,6 @@ namespace VoiceCraft.Server.Data
     public enum DataBitmask : uint
     {
         Dead = 1,
+        Muffled = 2,
     }
 }
