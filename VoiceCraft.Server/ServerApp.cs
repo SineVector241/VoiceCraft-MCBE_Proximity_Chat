@@ -59,7 +59,9 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("exit", ExitCommand);
             CommandHandler.RegisterCommand("list", ListCommand);
             CommandHandler.RegisterCommand("mute", MuteCommand);
-            CommandHandler.RegisterCommand("unmute", UnmuteCommand);
+            CommandHandler.RegisterCommand("unmute", DeafenCommand);
+            CommandHandler.RegisterCommand("deafen", UndeafenCommand);
+            CommandHandler.RegisterCommand("undeafen", UnmuteCommand);
             CommandHandler.RegisterCommand("kick", KickCommand);
             CommandHandler.RegisterCommand("ban", BanCommand);
             CommandHandler.RegisterCommand("unban", UnbanCommand);
@@ -189,6 +191,8 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "List - Lists the connected participants", "Commands");
             Logger.LogToConsole(LogType.Info, "Mute [key: ushort] - Mutes a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Unmute [key: ushort] - Unmutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Deafen [key: ushort] - Deafens a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Undeafen [key: ushort] - Undeafens a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Kick [key: ushort] - Kicks a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Ban [key: ushort] - Bans a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans an IP address.", "Commands");
@@ -258,8 +262,60 @@ namespace VoiceCraft.Server
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
                 {
-                    participant.Value.Muted = false;
+                    participant.Value.ServerMuted = false;
                     Logger.LogToConsole(LogType.Success, $"Unmuted participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void DeafenCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: deafen <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.ServerDeafened = true;
+                    Logger.LogToConsole(LogType.Success, $"Deafened participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void UndeafenCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: undeafen <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.ServerDeafened = false;
+                    Logger.LogToConsole(LogType.Success, $"Undeafened participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
                 }
                 else
                 {
