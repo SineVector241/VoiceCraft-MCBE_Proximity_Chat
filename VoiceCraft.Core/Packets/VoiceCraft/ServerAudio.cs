@@ -5,8 +5,6 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
 {
     public class ServerAudio : VoiceCraftPacket
     {
-        const int Packed8BitLimit = 256; //2 ^ 8
-        const int Packed16BitLimit = 65536; //2 ^ 16
         public override byte PacketId => (byte)VoiceCraftPacketTypes.ServerAudio;
         public override bool IsReliable => false;
 
@@ -29,18 +27,16 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             PacketCount = BitConverter.ToUInt32(dataStream, offset); //read packet count - 4 bytes.
             offset += sizeof(uint);
 
-            var packedVolume = BitConverter.ToUInt16(dataStream, offset); //read volume - 2 bytes.
-            Volume = packedVolume / (float)Packed16BitLimit;
-            offset += sizeof(ushort);
+            Volume = BitConverter.ToSingle(dataStream, offset); //read volume - 4 bytes.
+            offset += sizeof(float);
 
             Rotation = BitConverter.ToSingle(dataStream, offset); //read rotation - 4 bytes.
             offset += sizeof(float);
 
-            var packedEcho = dataStream[offset]; //read echo factor = 1 byte.
-            EchoFactor = packedEcho / (float)Packed8BitLimit;
-            offset++;
+            EchoFactor = BitConverter.ToSingle(dataStream, offset); //read echo factor - 4 bytes.
+            offset += sizeof(float);
 
-            Muffled = BitConverter.ToBoolean(dataStream, offset);
+            Muffled = BitConverter.ToBoolean(dataStream, offset); //read muffled - 1 byte.
             offset += sizeof(bool);
 
             var audioLength = BitConverter.ToInt32(dataStream, offset); //Read audio length - 4 bytes.
@@ -62,9 +58,9 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             base.WritePacket(ref dataStream);
             dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
-            dataStream.AddRange(BitConverter.GetBytes((ushort)(Volume * Packed16BitLimit)));
+            dataStream.AddRange(BitConverter.GetBytes(Volume));
             dataStream.AddRange(BitConverter.GetBytes(Rotation));
-            dataStream.Add((byte)(EchoFactor * Packed8BitLimit));
+            dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
             dataStream.AddRange(BitConverter.GetBytes(Muffled));
             dataStream.AddRange(BitConverter.GetBytes(Audio.Length));
             dataStream.AddRange(Audio);
