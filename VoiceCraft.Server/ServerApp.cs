@@ -75,7 +75,7 @@ namespace VoiceCraft.Server
 
         public void Start()
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Starting...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Starting...";
             Server.Start();
 
             while (true)
@@ -100,7 +100,7 @@ namespace VoiceCraft.Server
         #region Server Event Methods
         private void ServerStarted()
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Started.";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Started.";
 
             if(Server.ServerProperties.ConnectionType == ConnectionTypes.Server || Server.ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
                 Logger.LogToConsole(LogType.Success, $"Server Started - Key: {Server.ServerProperties.PermanentServerKey}", nameof(VoiceCraftServer));
@@ -115,7 +115,7 @@ namespace VoiceCraft.Server
 
         private void ServerFailed(Exception ex)
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Failed.";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Failed.";
             Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}, Exception Type: {ex.GetType().Name}", nameof(VoiceCraftServer));
             Logger.LogToConsole(LogType.Error, "Shutting down server in 10 seconds...", nameof(VoiceCraftServer));
             Task.Delay(10000).Wait();
@@ -125,7 +125,7 @@ namespace VoiceCraft.Server
         private void OnStopped(string? reason = null)
         {
             Logger.LogToConsole(LogType.Warn, $"Server Stopped - Reason: {reason}", nameof(VoiceCraftServer));
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Shutting Down...";
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
             Server.Dispose();
             Environment.Exit(0);
@@ -206,7 +206,7 @@ namespace VoiceCraft.Server
 
         void ExitCommand(string[] args)
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Shutting Down...";
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
             Server.Stop("Shutdown.");
             Server.Dispose();
