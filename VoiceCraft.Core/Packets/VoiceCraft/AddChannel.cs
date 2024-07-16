@@ -11,6 +11,7 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
 
         public bool RequiresPassword { get; set; }
         public byte ChannelId { get; set; }
+        public bool Locked { get; set; }
         public string Name { get; set; } = string.Empty;
 
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
@@ -22,6 +23,9 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
 
             ChannelId = dataStream[offset]; //Read Channel Id - 1 byte.
             offset++;
+
+            Locked = BitConverter.ToBoolean(dataStream, offset);
+            offset += sizeof(bool);
 
             var nameLength = BitConverter.ToInt32(dataStream, offset); //Read Name Length - 4 bytes.
             offset += sizeof(int);
@@ -39,6 +43,7 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             base.WritePacket(ref dataStream);
             dataStream.AddRange(BitConverter.GetBytes(RequiresPassword));
             dataStream.Add(ChannelId);
+            dataStream.AddRange(BitConverter.GetBytes(Locked));
             dataStream.AddRange(BitConverter.GetBytes(Name.Length));
             if(Name.Length > 0)
                 dataStream.AddRange(Encoding.UTF8.GetBytes(Name));

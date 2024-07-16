@@ -43,7 +43,7 @@
                         Margin="5"
                         HorizontalOptions="Fill"
                         VerticalOptions="StartAndExpand">
-                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+                    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="290, *">
                             <Label Grid.Column="0"
                                    FontAttributes="Bold"
@@ -189,7 +189,30 @@
                             </Entry>
                         </Grid>
 
-                        <Grid Grid.Row="10" ColumnDefinitions="290, 0.4*, 0.6*">
+                        <Grid Grid.Row="10"
+                              Margin="0,5"
+                              ColumnDefinitions="290, 0.4*, 0.6*">
+                            <Label Grid.Column="0"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   Text="Jitter Buffer Size (MS)"
+                                   VerticalTextAlignment="Center" />
+
+                            <Entry Grid.Column="1"
+                                   Keyboard="Numeric"
+                                   Text="{Binding Settings.JitterBufferSize}"
+                                   Unfocused="BufferEntryUnfocused">
+                                <Entry.Behaviors>
+                                    <mtoolkit:NumericValidationBehavior Flags="ValidateOnValueChanged"
+                                                                        InvalidStyle="{StaticResource InvalidEntryStyle}"
+                                                                        MaximumDecimalPlaces="0"
+                                                                        MaximumValue="2000"
+                                                                        MinimumValue="40" />
+                                </Entry.Behaviors>
+                            </Entry>
+                        </Grid>
+
+                        <Grid Grid.Row="11" ColumnDefinitions="290, 0.4*, 0.6*">
                             <Label Grid.Column="0"
                                    FontAttributes="Bold"
                                    FontSize="Small"
@@ -204,7 +227,7 @@
                                     Value="{Binding Settings.SoftLimiterGain}" />
                         </Grid>
 
-                        <Grid Grid.Row="11" ColumnDefinitions="290, 0.4*, 0.6*">
+                        <Grid Grid.Row="12" ColumnDefinitions="290, 0.4*, 0.6*">
                             <Label Grid.Column="0"
                                    FontAttributes="Bold"
                                    FontSize="Small"
@@ -238,7 +261,7 @@
                                         Background="#2fFFFFFF"
                                         StrokeThickness="0">
                                     <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="4" />
+                                        <RoundRectangle CornerRadius="5.5" />
                                     </Border.StrokeShape>
 
                                     <Label Grid.Column="0"

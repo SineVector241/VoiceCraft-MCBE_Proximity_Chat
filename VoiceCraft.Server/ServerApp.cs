@@ -7,6 +7,7 @@ namespace VoiceCraft.Server
 {
     public class ServerApp
     {
+        const string Version = "1.0.6";
         VoiceCraftServer Server { get; set; }
 
         public ServerApp()
@@ -19,9 +20,9 @@ namespace VoiceCraft.Server
             Console.WriteLine(@"  \ V / (_) | | (_|  __/ |___| | | (_| |  _| |_");
             Console.WriteLine(@"   \_/ \___/|_|\___\___|\____|_|  \__,_|_|  \__|");
 #if DEBUG
-            Console.WriteLine($"[v1.0.4][{VoiceCraftServer.Version}]=========================[DEBUG]\n");
+            Console.WriteLine($"[App: {Version}][Server: {VoiceCraftServer.Version}]==============[DEBUG]\n");
 #else
-            Console.WriteLine($"[v1.0.4][{VoiceCraftServer.Version}]=======================[RELEASE]\n");
+            Console.WriteLine($"[App: {Version}][Server: {VoiceCraftServer.Version}]============[RELEASE]\n");
 #endif
 
             var properties = Properties.LoadProperties();
@@ -30,7 +31,7 @@ namespace VoiceCraft.Server
 
             foreach (var channel in Server.ServerProperties.Channels)
             {
-                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}", "Channel");
+                Logger.LogToConsole(LogType.Success, $"Channel Added - Name: {channel.Name}, Password?: {!string.IsNullOrWhiteSpace(channel.Password)}, Locked: {channel.Locked}, Hidden: {channel.Hidden}", "Channel");
             }
 
             //Server Events
@@ -58,7 +59,9 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("exit", ExitCommand);
             CommandHandler.RegisterCommand("list", ListCommand);
             CommandHandler.RegisterCommand("mute", MuteCommand);
-            CommandHandler.RegisterCommand("unmute", UnmuteCommand);
+            CommandHandler.RegisterCommand("unmute", DeafenCommand);
+            CommandHandler.RegisterCommand("deafen", UndeafenCommand);
+            CommandHandler.RegisterCommand("undeafen", UnmuteCommand);
             CommandHandler.RegisterCommand("kick", KickCommand);
             CommandHandler.RegisterCommand("ban", BanCommand);
             CommandHandler.RegisterCommand("unban", UnbanCommand);
@@ -72,7 +75,7 @@ namespace VoiceCraft.Server
 
         public void Start()
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Starting...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Starting...";
             Server.Start();
 
             while (true)
@@ -97,7 +100,7 @@ namespace VoiceCraft.Server
         #region Server Event Methods
         private void ServerStarted()
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Started.";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Started.";
 
             if(Server.ServerProperties.ConnectionType == ConnectionTypes.Server || Server.ServerProperties.ConnectionType == ConnectionTypes.Hybrid)
                 Logger.LogToConsole(LogType.Success, $"Server Started - Key: {Server.ServerProperties.PermanentServerKey}", nameof(VoiceCraftServer));
@@ -112,7 +115,7 @@ namespace VoiceCraft.Server
 
         private void ServerFailed(Exception ex)
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Failed.";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Failed.";
             Logger.LogToConsole(LogType.Error, $"Server Failed - Reason: {ex.Message}, Exception Type: {ex.GetType().Name}", nameof(VoiceCraftServer));
             Logger.LogToConsole(LogType.Error, "Shutting down server in 10 seconds...", nameof(VoiceCraftServer));
             Task.Delay(10000).Wait();
@@ -122,7 +125,7 @@ namespace VoiceCraft.Server
         private void OnStopped(string? reason = null)
         {
             Logger.LogToConsole(LogType.Warn, $"Server Stopped - Reason: {reason}", nameof(VoiceCraftServer));
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Shutting Down...";
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
             Server.Dispose();
             Environment.Exit(0);
@@ -155,9 +158,9 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Success, $"MCComm Server Connected - Token: {token}, Address: {address}", nameof(MCComm));
         }
 
-        private void MCCommServerDisconnected(int timeoutDiff, string token)
+        private void MCCommServerDisconnected(string reason, string token)
         {
-            Logger.LogToConsole(LogType.Warn, $"MCComm Server Disconnected - Token: {token}, Timeout: {timeoutDiff}", nameof(MCComm));
+            Logger.LogToConsole(LogType.Warn, $"MCComm Server Disconnected - Reason: {reason}, Token: {token}", nameof(MCComm));
         }
 
         private void VoiceCraftSocketInbound(Core.Packets.VoiceCraftPacket packet, Network.NetPeer peer)
@@ -188,6 +191,8 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "List - Lists the connected participants", "Commands");
             Logger.LogToConsole(LogType.Info, "Mute [key: ushort] - Mutes a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Unmute [key: ushort] - Unmutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Deafen [key: ushort] - Deafens a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Undeafen [key: ushort] - Undeafens a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Kick [key: ushort] - Kicks a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Ban [key: ushort] - Bans a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans an IP address.", "Commands");
@@ -201,7 +206,7 @@ namespace VoiceCraft.Server
 
         void ExitCommand(string[] args)
         {
-            Console.Title = $"VoiceCraft - {VoiceCraftServer.Version}: Shutting Down...";
+            Console.Title = $"VoiceCraft - App: {Version}, Server: {VoiceCraftServer.Version}: Shutting Down...";
             Logger.LogToConsole(LogType.Info, "Shutting down server...", "Server");
             Server.Stop("Shutdown.");
             Server.Dispose();
@@ -215,7 +220,7 @@ namespace VoiceCraft.Server
             {
                 var participant = Server.Participants.ElementAt(i);
                 if (participant.Value != null)
-                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}", "Commands");
+                    Logger.LogToConsole(LogType.Info, $"{i} - Binded: {participant.Value.Binded}, ServerMuted: {participant.Value.ServerMuted}, Name: {participant.Value.Name ?? "N.A."}, Key: {participant.Value.Key}, EnvironmentId: {participant.Value.EnvironmentId}, Position: {participant.Value.Position}", "Commands");
             }
         }
 
@@ -257,8 +262,60 @@ namespace VoiceCraft.Server
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
                 {
-                    participant.Value.Muted = false;
+                    participant.Value.ServerMuted = false;
                     Logger.LogToConsole(LogType.Success, $"Unmuted participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void DeafenCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: deafen <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.ServerDeafened = true;
+                    Logger.LogToConsole(LogType.Success, $"Deafened participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void UndeafenCommand(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Usage: undeafen <key: ushort>");
+            }
+
+            if (ushort.TryParse(args[0], out ushort value))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    participant.Value.ServerDeafened = false;
+                    Logger.LogToConsole(LogType.Success, $"Undeafened participant: {(string.IsNullOrWhiteSpace(participant.Value.Name) ? value : participant.Value.Name)}", "Commands");
                 }
                 else
                 {
@@ -364,7 +421,7 @@ namespace VoiceCraft.Server
             {
                 if (value > 120 || value < 1)
                     throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
-                Server.ServerProperties.ProximityDistance = value;
+                Server.ServerProperties.DefaultSettings.ProximityDistance = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity distance: {value}", "Commands");
             }
             else
@@ -382,7 +439,7 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                Server.ServerProperties.ProximityToggle = value;
+                Server.ServerProperties.DefaultSettings.ProximityToggle = value;
                 Logger.LogToConsole(LogType.Success, $"Set proximity toggle: {value}", "Commands");
             }
             else
@@ -418,7 +475,7 @@ namespace VoiceCraft.Server
 
             if (bool.TryParse(args[0], out bool value))
             {
-                Server.ServerProperties.VoiceEffects = value;
+                Server.ServerProperties.DefaultSettings.VoiceEffects = value;
                 Logger.LogToConsole(LogType.Success, $"Set effects toggle: {value}", "Commands");
             }
             else

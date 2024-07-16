@@ -58,19 +58,19 @@
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-ios|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-maccatalyst|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows10.0.19041.0|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
@@ -81,30 +81,30 @@
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-ios|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-maccatalyst|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android34.0|AnyCPU'">
 	  <AndroidPackageFormat>apk</AndroidPackageFormat>
 	  <AndroidKeyStore>False</AndroidKeyStore>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android34.0|AnyCPU'">
 	  <AndroidKeyStore>False</AndroidKeyStore>
-	  <ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -147,15 +147,15 @@
 
 	<ItemGroup>
 		<PackageReference Include="AlohaKit" Version="1.0.74" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.2" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.20" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.20" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.70" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.70" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OpusSharp" Version="1.0.4" />
-		<PackageReference Include="SimpleToolkit.Core" Version="4.0.0" />
+		<PackageReference Include="SimpleToolkit.Core" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -10,12 +10,13 @@ namespace VoiceCraft.Maui.VoiceCraft
     public class VoiceCraftClient : Core.Disposable
     {
         //Private Variables
-        public const string Version = "v1.0.4";
+        public const string Version = "1.0.5";
         private ConnectionState State;
         private uint PacketCount;
         private readonly OpusEncoder Encoder;
         private readonly int FrameSizeMS;
         private readonly int ClientPort;
+        private readonly int JitterBufferSize;
         private string EnvironmentId = string.Empty;
 
         //Variables
@@ -73,7 +74,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         public event ChannelLeft? OnChannelLeft;
         #endregion
 
-        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20, int ClientPort = 8080)
+        public VoiceCraftClient(WaveFormat audioFormat, int frameSizeMS = 20, int ClientPort = 8080, int jitterBufferSize = 80)
         {
             this.ClientPort = ClientPort;
             MCWSS = new Network.Sockets.MCWSS(ClientPort);
@@ -82,6 +83,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             AudioFormat = audioFormat;
             PlaybackFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, 2);
             FrameSizeMS = frameSizeMS;
+            JitterBufferSize = jitterBufferSize;
 
             Encoder = new OpusEncoder(AudioFormat.SampleRate, AudioFormat.Channels, OpusSharp.Core.Enums.PreDefCtl.OPUS_APPLICATION_VOIP)
             {
@@ -271,7 +273,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketParticipantJoined(Core.Packets.VoiceCraft.ParticipantJoined data, Network.NetPeer peer)
         {
-            var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS) { Deafened = data.IsDeafened, Muted = data.IsMuted };
+            var participant = new VoiceCraftParticipant(data.Name, AudioFormat, FrameSizeMS, JitterBufferSize) { Deafened = data.IsDeafened, Muted = data.IsMuted };
             if (Participants.TryAdd(data.Key, participant))
             {
                 AudioOutput.AddMixerInput(participant.AudioOutput);
@@ -290,7 +292,7 @@ namespace VoiceCraft.Maui.VoiceCraft
 
         private void VoiceCraftSocketAddChannel(Core.Packets.VoiceCraft.AddChannel data, Network.NetPeer peer)
         {
-            var channel = new Channel() { Name = data.Name, Password = data.RequiresPassword ? "Required" : string.Empty };
+            var channel = new Channel() { Name = data.Name, Locked = data.Locked, Password = data.RequiresPassword ? "Required" : string.Empty };
             if(Channels.TryAdd(data.ChannelId, channel))
             {
                 OnChannelAdded?.Invoke(channel);
@@ -345,17 +347,21 @@ namespace VoiceCraft.Maui.VoiceCraft
         {
             if(Channels.TryGetValue(data.ChannelId, out var channel) && channel != JoinedChannel)
             {
-                ClearParticipants();
                 JoinedChannel = channel;
                 OnChannelJoined?.Invoke(channel);
+            }
+            else if(JoinedChannel != null)
+            {
+                OnChannelLeft?.Invoke(JoinedChannel);
+                JoinedChannel = null;
             }
         }
 
         private void VoiceCraftSocketLeaveChannel(Core.Packets.VoiceCraft.LeaveChannel data, Network.NetPeer peer)
         {
+            ClearParticipants();
             if (JoinedChannel != null)
             {
-                ClearParticipants();
                 OnChannelLeft?.Invoke(JoinedChannel);
                 JoinedChannel = null;
             }
@@ -462,7 +468,7 @@ namespace VoiceCraft.Maui.VoiceCraft
                 envId = string.Concat(envId, levelId.Truncate(30, string.Empty));
             }
 
-            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, CaveDensity = caveDensity, InWater = isUnderwater });
+            VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, EchoFactor = caveDensity, Muffled = isUnderwater });
 
             if (EnvironmentId != envId)
             {

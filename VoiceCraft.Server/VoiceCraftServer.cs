@@ -12,7 +12,7 @@ namespace VoiceCraft.Server
     //Participant - Receiving Participant
     public class VoiceCraftServer : Disposable
     {
-        public const string Version = "v1.0.4";
+        public const string Version = "1.0.5";
         public ConcurrentDictionary<NetPeer, VoiceCraftParticipant> Participants { get; set; } = new ConcurrentDictionary<NetPeer, VoiceCraftParticipant>();
         public Network.Sockets.VoiceCraft VoiceCraftSocket { get; set; }
         public Network.Sockets.MCComm MCComm { get; set; }
@@ -72,9 +72,22 @@ namespace VoiceCraft.Server
             MCComm.OnFailed += MCCommFailed;
             MCComm.OnBindReceived += MCCommBind;
             MCComm.OnUpdateReceived += MCCommUpdate;
-            MCComm.OnGetSettingsReceived += MCCommGetSettings;
-            MCComm.OnUpdateSettingsReceived += MCCommUpdateSettings;
-            MCComm.OnRemoveParticipantReceived += MCCommRemoveParticipant;
+            MCComm.OnGetChannelsReceived += MCCommGetChannels;
+            MCComm.OnGetChannelSettingsReceived += MCCommGetChannelSettings;
+            MCComm.OnSetChannelSettingsReceived += MCCommSetChannelSettings;
+            MCComm.OnGetDefaultSettingsReceived += MCCommGetDefaultSettings;
+            MCComm.OnSetDefaultSettingsReceived += MCCommSetDefaultSettings;
+            MCComm.OnGetParticipantsReceived += MCCommGetParticipants;
+            MCComm.OnDisconnectParticipantReceived += MCCommDisconnectParticipant;
+            MCComm.OnGetParticipantBitmaskReceived += MCCommGetParticipantBitmask;
+            MCComm.OnSetParticipantBitmaskReceived += MCCommSetParticipantBitmask;
+            MCComm.OnMuteParticipantReceived += MCCommMuteParticipant;
+            MCComm.OnUnmuteParticipantReceived += MCCommUnmuteParticipant;
+            MCComm.OnDeafenParticipantReceived += MCCommDeafenParticipant;
+            MCComm.OnUndeafenParticipantReceived += MCCommUndeafenParticipant;
+            MCComm.OnANDModParticipantBitmaskReceived += MCCommANDModParticipantBitmask;
+            MCComm.OnORModParticipantBitmaskReceived += MCCommORModParticipantBitmask;
+            MCComm.OnXORModParticipantBitmaskReceived += MCCommXORModParticipantBitmask;
             MCComm.OnChannelMoveReceived += MCCommChannelMove;
         }
 
@@ -120,57 +133,59 @@ namespace VoiceCraft.Server
             }
         }
 
-        public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[] excludes, Channel? inChannel = null, bool bindedOnly = true)
+        public void Broadcast(VoiceCraftPacket packet, VoiceCraftParticipant[]? excludes = null, Channel[]? inChannels = null)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
-            var list = Participants.Where(x => !excludes.Contains(x.Value) && x.Value.Channel == inChannel);
+            var list = Participants.Where(x => (excludes == null || !excludes.Contains(x.Value)) && (inChannels == null || inChannels.Contains(x.Value.Channel)));
             foreach (var participant in list)
             {
-                if(participant.Value.Binded && bindedOnly || !bindedOnly)
-                {
-                    participant.Key.AddToSendBuffer(packet.Clone());
-                }
+                participant.Key.AddToSendBuffer(packet.Clone());
             }
         }
 
-        public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel? channel = null)
+        public void MoveParticipantToChannel(NetPeer peer, VoiceCraftParticipant client, Channel channel)
         {
             ObjectDisposedException.ThrowIf(IsDisposed, nameof(VoiceCraftServer));
 
-            if (client.Channel == channel) return; //Client is already in the channel.
+            if (client.Channel == channel) return; //Client is already in the channel, do nothing.
 
-            if(client.Channel != null)
-                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel()); //Tell the client to leave the previous channel
+            //Tell the client to leave the previous channel/reset even if the channel is hidden.
+            peer.AddToSendBuffer(new Core.Packets.VoiceCraft.LeaveChannel());
 
-            Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() 
-            { 
-                Key = client.Key 
-            }, [client], client.Channel);
+            //Tell the other clients that the participant has left the channel.
+            Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
+            {
+                Key = client.Key
+            }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
+
+            //Set the client channel
             client.Channel = channel;
 
-            if (client.Channel != null)
-                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel)}); //Tell the client to join the channel
+            //Tell the client it has joined the channel if it's not hidden.
+            if (!channel.Hidden)
+                peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(channel) });
 
+            //Tell the other clients in the channel to add the client.
             Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined()
             {
                 IsDeafened = client.Deafened,
                 IsMuted = client.Muted,
                 Key = client.Key,
                 Name = client.Name
-            }, [client], client.Channel);
+            }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
 
-            var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
-            foreach (var participant in list)
+            //Send new participants back to the client.
+            foreach (var participant in Participants.Values.Where(x => x != client && x.Binded && x.Channel == client.Channel))
             {
                 peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
                 {
-                    IsDeafened = participant.Value.Deafened,
-                    IsMuted = participant.Value.Muted,
-                    Key = participant.Value.Key,
-                    Name = participant.Value.Name
+                    IsDeafened = participant.Deafened,
+                    IsMuted = participant.Muted,
+                    Key = participant.Key,
+                    Name = participant.Name
                 });
-            } //Send participants back to binded client.
+            }
         }
 
         private short GetAvailableKey(short preferredKey)
@@ -279,7 +294,7 @@ namespace VoiceCraft.Server
                 peer.DenyLogin("Server only accepts server sided positioning!");
                 return;
             }
-            var participant = new VoiceCraftParticipant(string.Empty)
+            var participant = new VoiceCraftParticipant(string.Empty, ServerProperties.DefaultChannel)
             {
                 ClientSided = PositioningTypes.ClientSided == packet.PositioningType,
                 Key = GetAvailableKey(packet.Key)
@@ -296,7 +311,7 @@ namespace VoiceCraft.Server
                 Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft()
                 { 
                     Key = client.Key 
-                }, [], client.Channel); //Broadcast to all other participants.
+                }, Participants.Values.Where(x => !x.Binded).ToArray(), [client.Channel]); //Broadcast to all other participants.
                 OnParticipantLeft?.Invoke(client, reason);
             }
         }
@@ -314,31 +329,40 @@ namespace VoiceCraft.Server
                     IsMuted = client.Muted,
                     Key = client.Key,
                     Name = client.Name
-                }, [client], client.Channel); //Broadcast to all other participants.
+                }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]); //Broadcast to all other participants.
 
-                var list = Participants.Where(x => x.Value != client && x.Value.Binded && x.Value.Channel == client.Channel);
-                foreach (var participant in list)
+                foreach (var participant in Participants.Values.Where(x => x != client && x.Binded && x.Channel == client.Channel))
                 {
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
                     {
-                        IsDeafened = participant.Value.Deafened,
-                        IsMuted = participant.Value.Muted,
-                        Key = participant.Value.Key,
-                        Name = participant.Value.Name
+                        IsDeafened = participant.Deafened,
+                        IsMuted = participant.Muted,
+                        Key = participant.Key,
+                        Name = participant.Name
                     });
                 } //Send participants back to binded client.
 
                 byte channelId = 0;
                 foreach(var channel in ServerProperties.Channels)
                 {
+                    if(channel.Hidden)
+                    {
+                        channelId++;
+                        continue; //Do not send a hidden channel.
+                    }
+
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                     {
                         Name = channel.Name,
+                        Locked = channel.Locked,
                         RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
                         ChannelId = channelId
                     });
                     channelId++;
                 } //Send channel list back to binded client.
+
+                if(!client.Channel.Hidden)
+                    peer.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Channel) }); //Tell the client that it is in a channel.
 
                 OnParticipantBinded?.Invoke(client);
             }
@@ -346,10 +370,10 @@ namespace VoiceCraft.Server
 
         private void VoiceCraftSocketUnbinded(Core.Packets.VoiceCraft.Unbinded data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.ClientSided && client.Binded) //data.Binded is the client requesting to unbind.
+            if (Participants.TryGetValue(peer, out var client) && client.ClientSided && client.Binded)
             {
                 client.Binded = false;
-                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.ParticipantLeft() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
                 OnParticipantLeft?.Invoke(client, "Unbinded.");
             }
         }
@@ -359,7 +383,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && !client.Muted)
             {
                 client.Muted = true;
-                Broadcast(new Core.Packets.VoiceCraft.Mute() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Mute() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
             }
         }
 
@@ -368,7 +392,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && client.Muted)
             {
                 client.Muted = false;
-                Broadcast(new Core.Packets.VoiceCraft.Unmute() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Unmute() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
             }
         }
 
@@ -377,7 +401,7 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && !client.Deafened)
             {
                 client.Deafened = true;
-                Broadcast(new Core.Packets.VoiceCraft.Deafen() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Deafen() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
             }
         }
 
@@ -386,15 +410,17 @@ namespace VoiceCraft.Server
             if (Participants.TryGetValue(peer, out var client) && client.Deafened)
             {
                 client.Deafened = false;
-                Broadcast(new Core.Packets.VoiceCraft.Undeafen() { Key = client.Key }, [client], client.Channel);
+                Broadcast(new Core.Packets.VoiceCraft.Undeafen() { Key = client.Key }, Participants.Values.Where(x => x == client || !x.Binded).ToArray(), [client.Channel]);
             }
         }
 
         private void OnJoinChannel(Core.Packets.VoiceCraft.JoinChannel data, NetPeer peer)
         {
-            var channel = ServerProperties.Channels.ElementAtOrDefault(data.ChannelId);
-            if (Participants.TryGetValue(peer, out var client) && client.Binded && channel != null)
+            if (data.ChannelId < ServerProperties.Channels.Count && Participants.TryGetValue(peer, out var client) && client.Binded)
             {
+                var channel = ServerProperties.Channels[data.ChannelId];
+                if (channel.Locked) return; //Locked Channel, Do Nothing.
+
                 if(channel.Password != data.Password && !string.IsNullOrWhiteSpace(channel.Password))
                 {
                     peer.AddToSendBuffer(new Core.Packets.VoiceCraft.Deny() { Reason = "Invalid Channel Password!" });
@@ -406,9 +432,9 @@ namespace VoiceCraft.Server
 
         private void OnLeaveChannel(Core.Packets.VoiceCraft.LeaveChannel data, NetPeer peer)
         {
-            if (Participants.TryGetValue(peer, out var client) && client.Binded && client.Channel != null)
+            if (Participants.TryGetValue(peer, out var client) && client.Binded)
             {
-                MoveParticipantToChannel(peer, client, null);
+                MoveParticipantToChannel(peer, client, ServerProperties.DefaultChannel);
             }
         }
 
@@ -426,9 +452,9 @@ namespace VoiceCraft.Server
             {
                 client.Position = data.Position;
                 client.Rotation = data.Rotation;
-                client.CaveDensity = data.CaveDensity;
+                client.EchoFactor = data.EchoFactor;
+                client.Muffled = data.Muffled;
                 client.Dead = data.IsDead;
-                client.InWater = data.InWater;
             }
         }
 
@@ -443,43 +469,50 @@ namespace VoiceCraft.Server
         private void OnClientAudio(Core.Packets.VoiceCraft.ClientAudio data, NetPeer peer)
         {
             _ = Task.Run(() => {
-                if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted)
+                if (Participants.TryGetValue(peer, out var client) && client.Binded && !client.Muted && !client.Deafened && !client.ServerMuted && !client.ServerDeafened)
                 {
                     client.LastSpoke = Environment.TickCount64;
-                    var proximityToggle = client.Channel?.OverrideSettings?.ProximityToggle ?? ServerProperties.ProximityToggle;
+                    var defaultSettings = ServerProperties.DefaultSettings;
+                    var proximityToggle = client.Channel.OverrideSettings?.ProximityToggle ?? defaultSettings.ProximityToggle;
                     if (proximityToggle)
                     {
-                        if (client.Dead || string.IsNullOrWhiteSpace(client.EnvironmentId)) return;
-                        var proximityDistance = client.Channel?.OverrideSettings?.ProximityDistance ?? ServerProperties.ProximityDistance;
-                        var voiceEffects = client.Channel?.OverrideSettings?.VoiceEffects ?? ServerProperties.VoiceEffects;
+                        if (!VoiceCraftParticipant.TalkSettingsDisabled(client.ChecksBitmask, BitmaskSettings.DeathDisabled) && client.Dead || 
+                            !VoiceCraftParticipant.TalkSettingsDisabled(client.ChecksBitmask, BitmaskSettings.EnvironmentDisabled) && string.IsNullOrWhiteSpace(client.EnvironmentId)) 
+                            return;
+
+                        var proximityDistance = client.Channel.OverrideSettings?.ProximityDistance ?? defaultSettings.ProximityDistance;
+                        var voiceEffects = client.Channel.OverrideSettings?.VoiceEffects ?? defaultSettings.VoiceEffects;
 
                         var list = Participants.Where(x =>
                         x.Value != client &&
                         x.Value.Binded &&
                         !x.Value.Deafened &&
-                        !x.Value.Dead &&
+                        !x.Value.ServerDeafened &&
                         x.Value.Channel == client.Channel &&
-                        !string.IsNullOrWhiteSpace(x.Value.EnvironmentId) &&
-                        x.Value.EnvironmentId == client.EnvironmentId &&
-                        Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance); //Get Participants
 
-                        for (ushort i = 0; i < list.Count(); i++)
+                        //Bitmask Checks here
+                        (x.Value.GetIntersectedListenBitmasks(client.ChecksBitmask) != 0) && //Matching Bitmasks
+                        (x.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.DeathDisabled) || !x.Value.Dead) &&
+                        (x.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.EnvironmentDisabled) || (!string.IsNullOrWhiteSpace(x.Value.EnvironmentId) && x.Value.EnvironmentId == client.EnvironmentId)) &&
+                        (x.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled) || Vector3.Distance(x.Value.Position, client.Position) <= proximityDistance)
+                        ); //Get Participants
+
+                        foreach(var participant in list)
                         {
-                            var participant = list.ElementAt(i);
-                            var volume = 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
-                            var echo = voiceEffects ? Math.Max(participant.Value.CaveDensity, client.CaveDensity) * (1.0f - volume) : 0.0f;
-                            var muffled = voiceEffects && (participant.Value.InWater || client.InWater);
-                            var rotation = (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
+                            var volume = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled) ? 1.0f : 1.0f - Math.Clamp(Vector3.Distance(participant.Value.Position, client.Position) / proximityDistance, 0.0f, 1.0f);
+                            var echo = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) || !voiceEffects ? 0.0f : Math.Clamp(participant.Value.EchoFactor + client.EchoFactor, 0.0f, 1.0f) * (1.0f - volume);
+                            var muffle = !participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.VoiceEffectsDisabled) && voiceEffects && (participant.Value.Muffled || client.Muffled);
+                            var rotation = participant.Value.IntersectedListenSettingsDisabled(client.ChecksBitmask, BitmaskSettings.ProximityDisabled)? 1.5f : (float)(Math.Atan2(participant.Value.Position.Z - client.Position.Z, participant.Value.Position.X - client.Position.X) - (participant.Value.Rotation * Math.PI / 180));
 
                             participant.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ServerAudio()
-                            { 
-                                Key = client.Key, 
-                                PacketCount = data.PacketCount, 
-                                Volume = volume, 
-                                EchoFactor = echo, 
-                                Rotation = rotation, 
-                                Muffled = muffled, 
-                                Audio = data.Audio 
+                            {
+                                Key = client.Key,
+                                PacketCount = data.PacketCount,
+                                Volume = volume,
+                                EchoFactor = echo,
+                                Muffled = muffle,
+                                Rotation = rotation,
+                                Audio = data.Audio
                             });
                         }
                     }
@@ -489,7 +522,8 @@ namespace VoiceCraft.Server
                         x.Value != client &&
                         x.Value.Binded &&
                         !x.Value.Deafened &&
-                        x.Value.Channel == client.Channel);
+                        x.Value.Channel == client.Channel &&
+                        x.Value.GetIntersectedListenBitmasks(client.ChecksBitmask) != 0);
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
@@ -500,8 +534,8 @@ namespace VoiceCraft.Server
                                 PacketCount = data.PacketCount,
                                 Volume = 1.0f,
                                 EchoFactor = 0.0f,
-                                Rotation = 1.5f,
                                 Muffled = false,
+                                Rotation = 1.5f,
                                 Audio = data.Audio
                             });
                         }
@@ -562,7 +596,7 @@ namespace VoiceCraft.Server
                 IsMuted = client.Value.Muted,
                 Key = client.Value.Key,
                 Name = client.Value.Name
-            }, [client.Value], client.Value.Channel); //Broadcast to all other participants.
+            }, Participants.Values.Where(x => x == client.Value || !x.Binded).ToArray(), [client.Value.Channel]); //Broadcast to all other participants.
 
             var list = Participants.Where(x => x.Value != client.Value && x.Value.Binded && x.Value.Channel == client.Value.Channel);
             foreach (var participant in list)
@@ -579,14 +613,24 @@ namespace VoiceCraft.Server
             byte channelId = 0;
             foreach (var channel in ServerProperties.Channels)
             {
+                if (channel.Hidden)
+                {
+                    channelId++;
+                    continue; //Do not send a hidden channel.
+                }
+
                 client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
                 {
                     Name = channel.Name,
+                    Locked = channel.Locked,
                     RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
                     ChannelId = channelId
                 });
                 channelId++;
             } //Send channel list back to binded client.
+
+            if (!client.Value.Channel.Hidden)
+                client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Value.Channel)}); //Tell the client that it is in a channel.
 
             OnParticipantBinded?.Invoke(client.Value);
         }
@@ -602,26 +646,84 @@ namespace VoiceCraft.Server
                     participant.Value.Position = player.Location;
                     participant.Value.EnvironmentId = player.DimensionId;
                     participant.Value.Rotation = player.Rotation;
-                    participant.Value.CaveDensity = player.CaveDensity;
+                    participant.Value.EchoFactor = player.EchoFactor;
+                    participant.Value.Muffled = player.Muffled;
                     participant.Value.Dead = player.IsDead;
-                    participant.Value.InWater = player.InWater;
                 }
             }
 
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate() { SpeakingPlayers = Participants.Where(x => Environment.TickCount64 - x.Value.LastSpoke >= 500).Select(x => x.Value.MinecraftId).ToList() });
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.AckUpdate() { SpeakingPlayers = Participants.Values.Where(x => Environment.TickCount64 - x.LastSpoke <= 500).Select(x => x.MinecraftId).ToList() });
         }
 
-        private void MCCommGetSettings(Core.Packets.MCComm.GetSettings packet, HttpListenerContext ctx)
+        private void MCCommGetChannels(Core.Packets.MCComm.GetChannels packet, HttpListenerContext ctx)
         {
-            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.UpdateSettings()
-            { 
-                ProximityDistance = ServerProperties.ProximityDistance, 
-                ProximityToggle = ServerProperties.ProximityToggle, 
-                VoiceEffects = ServerProperties.VoiceEffects 
-            });
+            packet.Channels.Clear();
+            for (byte i = 0; i < ServerProperties.Channels.Count; i++)
+            {
+                packet.Channels.Add(i, ServerProperties.Channels[i]);
+            }
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
         }
 
-        private void MCCommUpdateSettings(Core.Packets.MCComm.UpdateSettings packet, HttpListenerContext ctx)
+        private void MCCommGetChannelSettings(Core.Packets.MCComm.GetChannelSettings packet, HttpListenerContext ctx)
+        {
+            if(packet.ChannelId >= ServerProperties.Channels.Count)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
+
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            packet.ProximityDistance = channel.OverrideSettings?.ProximityDistance ?? ServerProperties.DefaultSettings.ProximityDistance;
+            packet.ProximityToggle = channel.OverrideSettings?.ProximityToggle ?? ServerProperties.DefaultSettings.ProximityToggle;
+            packet.VoiceEffects = channel.OverrideSettings?.VoiceEffects ?? ServerProperties.DefaultSettings.VoiceEffects;
+            packet.Token = string.Empty;
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
+        }
+
+        private void MCCommSetChannelSettings(Core.Packets.MCComm.SetChannelSettings packet, HttpListenerContext ctx)
+        {
+            if (packet.ChannelId >= ServerProperties.Channels.Count)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
+
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Proximity distance must be between 1 and 120!" });
+                return;
+            }
+
+            if(packet.ClearSettings)
+            {
+                channel.OverrideSettings = null;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            if (channel.OverrideSettings == null)
+                channel.OverrideSettings = new ChannelOverride();
+
+            channel.OverrideSettings.ProximityDistance = packet.ProximityDistance;
+            channel.OverrideSettings.ProximityToggle = packet.ProximityToggle;
+            channel.OverrideSettings.VoiceEffects = packet.VoiceEffects;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+        }
+
+        private void MCCommGetDefaultSettings(Core.Packets.MCComm.GetDefaultSettings packet, HttpListenerContext ctx)
+        {
+            packet.ProximityDistance = ServerProperties.DefaultSettings.ProximityDistance;
+            packet.ProximityToggle = ServerProperties.DefaultSettings.ProximityToggle;
+            packet.VoiceEffects = ServerProperties.DefaultSettings.VoiceEffects;
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
+        }
+
+        private void MCCommSetDefaultSettings(Core.Packets.MCComm.SetDefaultSettings packet, HttpListenerContext ctx)
         {
             if (packet.ProximityDistance < 1 || packet.ProximityDistance > 120)
             {
@@ -629,18 +731,145 @@ namespace VoiceCraft.Server
                 return;
             }
 
-            ServerProperties.ProximityDistance = packet.ProximityDistance;
-            ServerProperties.ProximityToggle = packet.ProximityToggle;
-            ServerProperties.VoiceEffects = packet.VoiceEffects;
+            ServerProperties.DefaultSettings.ProximityDistance = packet.ProximityDistance;
+            ServerProperties.DefaultSettings.ProximityToggle = packet.ProximityToggle;
+            ServerProperties.DefaultSettings.VoiceEffects = packet.VoiceEffects;
+
             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
 
-        private void MCCommRemoveParticipant(Core.Packets.MCComm.RemoveParticipant packet, HttpListenerContext ctx)
+        private void MCCommGetParticipants(Core.Packets.MCComm.GetParticipants packet, HttpListenerContext ctx)
+        {
+            packet.Players = Participants.Values.Where(x => x.Binded).Select(x => x.MinecraftId).ToList();
+            packet.Token = string.Empty;
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
+        }
+
+        private void MCCommDisconnectParticipant(Core.Packets.MCComm.DisconnectParticipant packet, HttpListenerContext ctx)
         {
             var participant = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (participant.Value != null)
             {
                 participant.Key.Disconnect("MCComm server kicked.", true);
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommGetParticipantBitmask(Core.Packets.MCComm.GetParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                packet.Bitmask = client.Value.ChecksBitmask;
+                packet.Token = string.Empty;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, packet);
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommSetParticipantBitmask(Core.Packets.MCComm.SetParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask = packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommMuteParticipant(Core.Packets.MCComm.MuteParticipant packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ServerMuted = true;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommUnmuteParticipant(Core.Packets.MCComm.UnmuteParticipant packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ServerMuted = false;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommDeafenParticipant(Core.Packets.MCComm.DeafenParticipant packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ServerDeafened = true;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommUndeafenParticipant(Core.Packets.MCComm.UndeafenParticipant packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ServerDeafened = false;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommANDModParticipantBitmask(Core.Packets.MCComm.ANDModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask &= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommORModParticipantBitmask(Core.Packets.MCComm.ORModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask |= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+                return;
+            }
+
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
+        }
+
+        private void MCCommXORModParticipantBitmask(Core.Packets.MCComm.XORModParticipantBitmask packet, HttpListenerContext ctx)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
+            if (client.Value != null)
+            {
+                client.Value.ChecksBitmask ^= packet.Bitmask;
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
                 return;
             }
 
@@ -650,26 +879,27 @@ namespace VoiceCraft.Server
         private void MCCommChannelMove(Core.Packets.MCComm.ChannelMove packet, HttpListenerContext ctx)
         {
             var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
-            var channel = ServerProperties.Channels.ElementAtOrDefault(packet.ChannelId);
 
+            if (packet.ChannelId >= ServerProperties.Channels.Count)
+            {
+                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
+                return;
+            }
             if (client.Value == null)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Could not find participant!" });
                 return;
             }
-            else if (channel == null && packet.ChannelId != -1)
-            {
-                MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Channel does not exist!" });
-                return;
-            }
-            else if (channel == client.Value.Channel)
+
+            var channel = ServerProperties.Channels[packet.ChannelId];
+            if (channel == client.Value.Channel)
             {
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Deny() { Reason = "Participant is already in the channel!" });
                 return;
             }
 
-             MoveParticipantToChannel(client.Key, client.Value, channel);
-             MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
+            MoveParticipantToChannel(client.Key, client.Value, channel);
+            MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
         }
         #endregion
 

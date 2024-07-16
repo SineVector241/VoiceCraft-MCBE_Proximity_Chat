@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using VoiceCraft.Maui.ViewModels;
 
 namespace VoiceCraft.Maui.Views.Desktop;
@@ -35,6 +36,33 @@ public partial class Settings : ContentPage
             {
                 var clamped = Math.Clamp(result, 1025, 65535);
                 viewModel.Settings.ClientPort = clamped;
+            }
+        }
+    }
+
+    private void BufferEntryUnfocused(object sender, FocusEventArgs e)
+    {
+        if (sender is Entry entry)
+        {
+            var valid = int.TryParse(entry.Text, out var result);
+            if (!valid)
+            {
+                var cleaned = new string(entry.Text.Where(char.IsDigit).ToArray());
+                if (int.TryParse(cleaned, out var res))
+                {
+                    var clamped = Math.Clamp(res, 40, 2000);
+                    viewModel.Settings.JitterBufferSize = clamped;
+                    entry.Text = clamped.ToString();
+                }
+                else
+                {
+                    viewModel.Settings.JitterBufferSize = 80;
+                }
+            }
+            else if (result > 2000 || result < 40)
+            {
+                var clamped = Math.Clamp(result, 40, 2000);
+                viewModel.Settings.JitterBufferSize = clamped;
             }
         }
     }

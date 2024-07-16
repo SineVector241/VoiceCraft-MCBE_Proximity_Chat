@@ -39,7 +39,7 @@ namespace VoiceCraft.Maui.VoiceCraft
         private EchoSampleProvider EchoProvider { get; }
         private LowpassSampleProvider LowpassProvider { get; }
         public MonoToStereoSampleProvider AudioOutput { get; }
-        public VoiceCraftParticipant(string name, WaveFormat audioFormat, int frameSizeMS) : base(name)
+        public VoiceCraftParticipant(string name, WaveFormat audioFormat, int frameSizeMS, int jitterBufferSize) : base(name)
         {
             AudioFormat = audioFormat;
             FrameSizeMS = frameSizeMS;
@@ -48,7 +48,7 @@ namespace VoiceCraft.Maui.VoiceCraft
             LastSpoke = 0;
 
             //Setup and wire everything up.
-            JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat, frameSizeMS);
+            JitterBuffer = new VoiceCraftJitterBuffer(AudioFormat, frameSizeMS, jitterBufferSize);
             VoiceCraftStream = new VoiceCraftStream(AudioFormat, JitterBuffer);
             FloatProvider = new Wave16ToFloatProvider(VoiceCraftStream);
             SmoothVolumeProvider = new SmoothVolumeSampleProvider(FloatProvider.ToSampleProvider(), 20);

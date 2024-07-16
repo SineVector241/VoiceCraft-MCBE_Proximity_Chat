@@ -11,11 +11,12 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
         public short Key { get; set; }
         public uint PacketCount { get; set; }
         public float Volume { get; set; }
-        public float EchoFactor { get; set; }
         public float Rotation { get; set; }
+        public float EchoFactor { get; set; }
         public bool Muffled { get; set; }
         public byte[] Audio { get; set; } = Array.Empty<byte>();
 
+        //16 byte overhead
         public override int ReadPacket(ref byte[] dataStream, int offset = 0)
         {
             offset = base.ReadPacket(ref dataStream, offset);
@@ -29,10 +30,10 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             Volume = BitConverter.ToSingle(dataStream, offset); //read volume - 4 bytes.
             offset += sizeof(float);
 
-            EchoFactor = BitConverter.ToSingle(dataStream, offset); //read echo factor - 4 bytes.
+            Rotation = BitConverter.ToSingle(dataStream, offset); //read rotation - 4 bytes.
             offset += sizeof(float);
 
-            Rotation = BitConverter.ToSingle(dataStream, offset); //read rotation - 4 bytes.
+            EchoFactor = BitConverter.ToSingle(dataStream, offset); //read echo factor - 4 bytes.
             offset += sizeof(float);
 
             Muffled = BitConverter.ToBoolean(dataStream, offset); //read muffled - 1 byte.
@@ -58,8 +59,8 @@ namespace VoiceCraft.Core.Packets.VoiceCraft
             dataStream.AddRange(BitConverter.GetBytes(Key));
             dataStream.AddRange(BitConverter.GetBytes(PacketCount));
             dataStream.AddRange(BitConverter.GetBytes(Volume));
-            dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
             dataStream.AddRange(BitConverter.GetBytes(Rotation));
+            dataStream.AddRange(BitConverter.GetBytes(EchoFactor));
             dataStream.AddRange(BitConverter.GetBytes(Muffled));
             dataStream.AddRange(BitConverter.GetBytes(Audio.Length));
             dataStream.AddRange(Audio);

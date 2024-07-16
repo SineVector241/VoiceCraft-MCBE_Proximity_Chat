@@ -16,14 +16,32 @@ namespace VoiceCraft.Core.Packets
     public enum MCCommPacketTypes : byte
     {
         Login,
+        Logout,
         Accept,
         Deny,
         Bind,
         Update,
-        UpdateSettings,
-        GetSettings,
-        RemoveParticipant,
-        ChannelMove,
-        AckUpdate
+        AckUpdate,
+        GetChannels,
+        GetChannelSettings,
+        SetChannelSettings,
+        GetDefaultSettings,
+        SetDefaultSettings,
+
+        //Participant Stuff
+        GetParticipants,
+        DisconnectParticipant,
+        GetParticipantBitmask,
+        SetParticipantBitmask,
+        MuteParticipant,
+        UnmuteParticipant,
+        DeafenParticipant,
+        UndeafenParticipant,
+
+        ANDModParticipantBitmask,
+        ORModParticipantBitmask,
+        XORModParticipantBitmask,
+
+        ChannelMove
     }
 }
