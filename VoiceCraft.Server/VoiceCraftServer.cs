@@ -523,7 +523,7 @@ namespace VoiceCraft.Server
                         x.Value.Binded &&
                         !x.Value.Deafened &&
                         x.Value.Channel == client.Channel &&
-                        (((x.Value.ChecksBitmask >> 6) & (client.ChecksBitmask >> 11)) != 0));
+                        x.Value.GetIntersectedListenBitmasks(client.ChecksBitmask) != 0);
 
                         for (ushort i = 0; i < list.Count(); i++)
                         {
