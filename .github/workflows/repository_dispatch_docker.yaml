@@ -1,0 +1,16 @@
+name: Repository Dispatch Docker
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: SineVector241/VoiceCraft-MCBE_Proximity_Chat_Docker
+          event-type: voicecraft-new-release
