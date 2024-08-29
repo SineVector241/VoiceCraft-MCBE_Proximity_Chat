@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Sockets;
 using System.Numerics;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
@@ -186,6 +187,68 @@ namespace VoiceCraft.Server
                     Name = participant.Name
                 });
             }
+        }
+
+        public void BindParticipant(short key, string name)
+        {
+            var client = Participants.FirstOrDefault(x => x.Value.Key == key);
+            if (client.Value == null)
+            {
+                throw new Exception("Could not find key!");
+            }
+            if (client.Value.Binded)
+            {
+                throw new Exception("Key has already been binded to a participant!");
+            }
+
+            client.Value.Name = name;
+            client.Value.MinecraftId = name;
+            client.Value.Binded = true;
+            client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.Binded() { Name = client.Value.Name });
+
+            Broadcast(new Core.Packets.VoiceCraft.ParticipantJoined()
+            {
+                IsDeafened = client.Value.Deafened,
+                IsMuted = client.Value.Muted,
+                Key = client.Value.Key,
+                Name = client.Value.Name
+            }, Participants.Values.Where(x => x == client.Value || !x.Binded).ToArray(), [client.Value.Channel]); //Broadcast to all other participants.
+
+            var list = Participants.Where(x => x.Value != client.Value && x.Value.Binded && x.Value.Channel == client.Value.Channel);
+            foreach (var participant in list)
+            {
+                client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.ParticipantJoined()
+                {
+                    IsDeafened = participant.Value.Deafened,
+                    IsMuted = participant.Value.Muted,
+                    Key = participant.Value.Key,
+                    Name = participant.Value.Name
+                });
+            } //Send participants back to binded client.
+
+            byte channelId = 0;
+            foreach (var channel in ServerProperties.Channels)
+            {
+                if (channel.Hidden)
+                {
+                    channelId++;
+                    continue; //Do not send a hidden channel.
+                }
+
+                client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.AddChannel()
+                {
+                    Name = channel.Name,
+                    Locked = channel.Locked,
+                    RequiresPassword = !string.IsNullOrWhiteSpace(channel.Password),
+                    ChannelId = channelId
+                });
+                channelId++;
+            } //Send channel list back to binded client.
+
+            if (!client.Value.Channel.Hidden)
+                client.Key.AddToSendBuffer(new Core.Packets.VoiceCraft.JoinChannel() { ChannelId = (byte)ServerProperties.Channels.IndexOf(client.Value.Channel) }); //Tell the client that it is in a channel.
+
+            OnParticipantBinded?.Invoke(client.Value);
         }
 
         private short GetAvailableKey(short preferredKey)
