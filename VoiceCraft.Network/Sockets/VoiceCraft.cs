@@ -156,13 +156,17 @@ namespace VoiceCraft.Network.Sockets
                 {
                     RemoteEndpoint = new IPEndPoint(ip, port);
                 }
+                else if (IP == "localhost")
+                {
+                    RemoteEndpoint = new IPEndPoint(IPAddress.Loopback, port);
+                }
                 else
                 {
                     var addresses = await Dns.GetHostAddressesAsync(IP, CTS.Token);
                     if (addresses.Length == 0) throw new ArgumentException("Unable to retrieve address from the specified host name.", nameof(IP));
                     RemoteEndpoint = new IPEndPoint(addresses[0], port);
                 }
-
+                
                 ActivityChecker = Task.Run(ActivityCheck);
                 Send(new Login() { Key = preferredKey, PositioningType = positioningType, Version = version });
                 await ClientReceiveAsync();
