@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
 using System.Numerics;
 using VoiceCraft.Core;
 using VoiceCraft.Core.Packets;
@@ -23,7 +22,7 @@ namespace VoiceCraft.Server
 
         #region Delegates
         public delegate void Started();
-        public delegate void SocketStarted(Type socket);
+        public delegate void SocketStarted(Type socket, string version);
         public delegate void Stopped(string? reason = null);
         public delegate void Failed(Exception ex);
 
@@ -273,7 +272,7 @@ namespace VoiceCraft.Server
         #region VoiceCraft Event Methods
         private void VoiceCraftSocketStarted()
         {
-            OnSocketStarted?.Invoke(typeof(Network.Sockets.VoiceCraft));
+            OnSocketStarted?.Invoke(typeof(Network.Sockets.VoiceCraft), Version);
 
             if(ServerProperties.ConnectionType == ConnectionTypes.Client)
             {
@@ -611,7 +610,7 @@ namespace VoiceCraft.Server
         #region MCComm Event Methods
         private void MCCommStarted()
         {
-            OnSocketStarted?.Invoke(typeof(Network.Sockets.MCComm));
+            OnSocketStarted?.Invoke(typeof(Network.Sockets.MCComm), Network.Sockets.MCComm.Version);
 
             IsStarted = true;
             OnStarted?.Invoke();
@@ -840,6 +839,9 @@ namespace VoiceCraft.Server
             var client = Participants.FirstOrDefault(x => x.Value.MinecraftId == packet.PlayerId);
             if (client.Value != null)
             {
+                if (packet.IgnoreDataBitmask)
+                    packet.Bitmask &= (uint)~BitmaskMap.DataBitmask;
+
                 client.Value.ChecksBitmask = packet.Bitmask;
                 MCComm.SendResponse(ctx, HttpStatusCode.OK, new Core.Packets.MCComm.Accept());
                 return;

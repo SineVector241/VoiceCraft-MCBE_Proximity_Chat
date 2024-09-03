@@ -71,7 +71,6 @@ namespace VoiceCraft.Maui.Services
             {
                 LinearProximity = Settings.LinearVolume,
                 UseCustomProtocol = Settings.CustomClientProtocol,
-                AllowAccurateEnvironmentId = Settings.AllowAccurateEnvironmentId,
                 DirectionalHearing = Settings.DirectionalAudioEnabled
             };
 

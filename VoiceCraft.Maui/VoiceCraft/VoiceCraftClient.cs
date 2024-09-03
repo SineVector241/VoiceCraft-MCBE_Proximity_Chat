@@ -35,7 +35,6 @@ namespace VoiceCraft.Maui.VoiceCraft
         public bool LinearProximity { get; set; }
         public bool DirectionalHearing { get; set; }
         public bool UseCustomProtocol { get; set; }
-        public bool AllowAccurateEnvironmentId { get; set; }
         public MixingSampleProvider AudioOutput { get; }
         public WaveFormat AudioFormat { get; }
         public WaveFormat PlaybackFormat { get; }
@@ -462,11 +461,8 @@ namespace VoiceCraft.Maui.VoiceCraft
             if (State != ConnectionState.Connected) return;
 
             var envId = dimensionId.Truncate(30, string.Empty);
-            if (AllowAccurateEnvironmentId)
-            {
-                envId = string.Concat(envId, serverId.Truncate(30, string.Empty));
-                envId = string.Concat(envId, levelId.Truncate(30, string.Empty));
-            }
+            envId = string.Concat(envId, serverId.Truncate(30, string.Empty));
+            envId = string.Concat(envId, levelId.Truncate(30, string.Empty));
 
             VoiceCraftSocket.Send(new Core.Packets.VoiceCraft.FullUpdatePosition() { Position = position, Rotation = rotation, EchoFactor = caveDensity, Muffled = isUnderwater });
 

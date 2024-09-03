@@ -7,7 +7,7 @@ namespace VoiceCraft.Server
 {
     public class ServerApp
     {
-        const string Version = "1.0.6";
+        const string Version = "1.0.7";
         VoiceCraftServer Server { get; set; }
 
         public ServerApp()
@@ -109,9 +109,9 @@ namespace VoiceCraft.Server
                 Logger.LogToConsole(LogType.Success, $"Server Started!", nameof(VoiceCraftServer));
         }
 
-        private void ServerSocketStarted(Type socket)
+        private void ServerSocketStarted(Type socket, string version)
         {
-            Logger.LogToConsole(LogType.Success, $"{socket.Name} Socket Started", socket.Name);
+            Logger.LogToConsole(LogType.Success, $"{socket.Name} Socket Started - Version: {version}", socket.Name);
         }
 
         private void ServerFailed(Exception ex)
