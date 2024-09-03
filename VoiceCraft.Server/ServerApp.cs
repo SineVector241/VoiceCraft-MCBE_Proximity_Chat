@@ -40,6 +40,7 @@ namespace VoiceCraft.Server
             Server.OnFailed += ServerFailed;
             Server.OnStopped += OnStopped;
             Server.OnParticipantJoined += ParticipantJoined;
+            Server.OnParticipantBinded += ParticipantBinded;
             Server.OnParticipantLeft += ParticipantLeft;
 
             //MCComm Socket
@@ -135,6 +136,11 @@ namespace VoiceCraft.Server
         private void ParticipantJoined(VoiceCraftParticipant participant)
         {
             Logger.LogToConsole(LogType.Success, $"Participant Connected - Key: {participant.Key}", nameof(VoiceCraftServer));
+        }
+
+        private void ParticipantBinded(VoiceCraftParticipant participant)
+        {
+            Logger.LogToConsole(LogType.Success, $"Participant Binded - Key: {participant.Key}", nameof(VoiceCraftServer));
         }
 
         private void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null)
