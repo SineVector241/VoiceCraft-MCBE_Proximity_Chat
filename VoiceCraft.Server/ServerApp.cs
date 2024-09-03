@@ -7,7 +7,7 @@ namespace VoiceCraft.Server
 {
     public class ServerApp
     {
-        const string Version = "1.0.6";
+        const string Version = "1.0.7";
         VoiceCraftServer Server { get; set; }
 
         public ServerApp()
@@ -40,6 +40,7 @@ namespace VoiceCraft.Server
             Server.OnFailed += ServerFailed;
             Server.OnStopped += OnStopped;
             Server.OnParticipantJoined += ParticipantJoined;
+            Server.OnParticipantBinded += ParticipantBinded;
             Server.OnParticipantLeft += ParticipantLeft;
 
             //MCComm Socket
@@ -71,6 +72,7 @@ namespace VoiceCraft.Server
             CommandHandler.RegisterCommand("setmotd", SetMotdCommand);
             CommandHandler.RegisterCommand("toggleeffects", ToggleEffectsCommand);
             CommandHandler.RegisterCommand("debug", DebugCommand);
+            CommandHandler.RegisterCommand("fakebindparticipant", FakeBindParticipant);
         }
 
         public void Start()
@@ -108,9 +110,9 @@ namespace VoiceCraft.Server
                 Logger.LogToConsole(LogType.Success, $"Server Started!", nameof(VoiceCraftServer));
         }
 
-        private void ServerSocketStarted(Type socket)
+        private void ServerSocketStarted(Type socket, string version)
         {
-            Logger.LogToConsole(LogType.Success, $"{socket.Name} Socket Started", socket.Name);
+            Logger.LogToConsole(LogType.Success, $"{socket.Name} Socket Started - Version: {version}", socket.Name);
         }
 
         private void ServerFailed(Exception ex)
@@ -134,6 +136,11 @@ namespace VoiceCraft.Server
         private void ParticipantJoined(VoiceCraftParticipant participant)
         {
             Logger.LogToConsole(LogType.Success, $"Participant Connected - Key: {participant.Key}", nameof(VoiceCraftServer));
+        }
+
+        private void ParticipantBinded(VoiceCraftParticipant participant)
+        {
+            Logger.LogToConsole(LogType.Success, $"Participant Binded - Key: {participant.Key}", nameof(VoiceCraftServer));
         }
 
         private void ParticipantLeft(VoiceCraftParticipant participant, string? reason = null)
@@ -189,19 +196,20 @@ namespace VoiceCraft.Server
             Logger.LogToConsole(LogType.Info, "Help - Shows a list of available commands.", "Commands");
             Logger.LogToConsole(LogType.Info, "Exit - Shuts down the server.", "Commands");
             Logger.LogToConsole(LogType.Info, "List - Lists the connected participants", "Commands");
-            Logger.LogToConsole(LogType.Info, "Mute [key: ushort] - Mutes a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Unmute [key: ushort] - Unmutes a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Deafen [key: ushort] - Deafens a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Undeafen [key: ushort] - Undeafens a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Kick [key: ushort] - Kicks a participant.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Ban [key: ushort] - Bans a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Mute [key: short] - Mutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Unmute [key: short] - Unmutes a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Deafen [key: short] - Deafens a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Undeafen [key: short] - Undeafens a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Kick [key: short] - Kicks a participant.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Ban [key: short] - Bans a participant.", "Commands");
             Logger.LogToConsole(LogType.Info, "Unban [IPAddress: string] - Unbans an IP address.", "Commands");
             Logger.LogToConsole(LogType.Info, "Banlist - Shows a list of banned IP addresses.", "Commands");
-            Logger.LogToConsole(LogType.Info, "SetProximity [Distance: int] - Sets the proximity distance.", "Commands");
-            Logger.LogToConsole(LogType.Info, "ToggleProximity [Toggle: boolean] - Toggles proximity chat on or off", "Commands");
-            Logger.LogToConsole(LogType.Info, "SetMotd [Message: string] - Sets the server MOTD.", "Commands");
-            Logger.LogToConsole(LogType.Info, "ToggleEffects [Toggle: boolean] - Toggles the voice effect on or off.", "Commands");
-            Logger.LogToConsole(LogType.Info, "Debug [Type: int] - Toggles individual debug logging on or off. 0 - VoiceCraftInbound, 1 - VoiceCraftOutbound, 2 - MCCommInbound, 3 - MCCommOutbound", "Commands");
+            Logger.LogToConsole(LogType.Info, "SetProximity [distance: int] - Sets the proximity distance.", "Commands");
+            Logger.LogToConsole(LogType.Info, "ToggleProximity [toggle: boolean] - Toggles proximity chat on or off", "Commands");
+            Logger.LogToConsole(LogType.Info, "SetMotd [message: string] - Sets the server MOTD.", "Commands");
+            Logger.LogToConsole(LogType.Info, "ToggleEffects [toggle: boolean] - Toggles the voice effect on or off.", "Commands");
+            Logger.LogToConsole(LogType.Info, "Debug [type: int] - Toggles individual debug logging on or off. 0 - VoiceCraftInbound, 1 - VoiceCraftOutbound, 2 - MCCommInbound, 3 - MCCommOutbound", "Commands");
+            Logger.LogToConsole(LogType.Info, "FakeBindParticipant [key: short] [name: string] - Fake binds a player.", "Commands");
         }
 
         void ExitCommand(string[] args)
@@ -216,7 +224,7 @@ namespace VoiceCraft.Server
         void ListCommand(string[] args)
         {
             Logger.LogToConsole(LogType.Info, $"Connected participants: {Server.Participants.Count}", "Commands");
-            for (ushort i = 0; i < Server.Participants.Count; i++)
+            for (short i = 0; i < Server.Participants.Count; i++)
             {
                 var participant = Server.Participants.ElementAt(i);
                 if (participant.Value != null)
@@ -228,10 +236,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: mute <key: ushort>");
+                throw new ArgumentException("Usage: mute <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -254,10 +262,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: unmute <key: ushort>");
+                throw new ArgumentException("Usage: unmute <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -280,10 +288,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: deafen <key: ushort>");
+                throw new ArgumentException("Usage: deafen <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -306,10 +314,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: undeafen <key: ushort>");
+                throw new ArgumentException("Usage: undeafen <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -332,10 +340,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: kick <key: ushort>");
+                throw new ArgumentException("Usage: kick <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -358,10 +366,10 @@ namespace VoiceCraft.Server
         {
             if (args.Length != 1)
             {
-                throw new ArgumentException("Usage: ban <key: ushort>");
+                throw new ArgumentException("Usage: ban <key: short>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
                 if (participant.Value != null)
@@ -417,7 +425,7 @@ namespace VoiceCraft.Server
                 throw new ArgumentException("Usage: setproximity <distance: int>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 if (value > 120 || value < 1)
                     throw new ArgumentException("Invalid distance! Distance can only be between 1 and 120!");
@@ -491,7 +499,7 @@ namespace VoiceCraft.Server
                 throw new ArgumentException("Usage: debug <type: int>");
             }
 
-            if (ushort.TryParse(args[0], out ushort value))
+            if (short.TryParse(args[0], out short value))
             {
                 switch (value)
                 {
@@ -513,6 +521,31 @@ namespace VoiceCraft.Server
                         break;
                     default:
                         throw new Exception("Invalid type specified!");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid arguments!");
+            }
+        }
+
+        void FakeBindParticipant(string[] args)
+        {
+            if (args.Length != 2)
+            {
+                throw new ArgumentException("Usage: bind <key: short> <name: string>");
+            }
+
+            if (short.TryParse(args[0], out short value) && !string.IsNullOrWhiteSpace(args[1]))
+            {
+                var participant = Server.Participants.FirstOrDefault(x => x.Value.Key == value);
+                if (participant.Value != null)
+                {
+                    Server.BindParticipant(value, args[1]);
+                }
+                else
+                {
+                    throw new Exception("Could not find participant!");
                 }
             }
             else

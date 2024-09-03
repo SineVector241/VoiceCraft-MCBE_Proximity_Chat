@@ -10,6 +10,7 @@ namespace VoiceCraft.Network.Sockets
     public class MCComm : Disposable
     {
         #region Variables
+        public const string Version = "1.0.0";
         private HttpListener WebServer = new HttpListener();
         public string LoginKey { get; private set; } = string.Empty;
         public PacketRegistry PacketRegistry { get; set; } = new PacketRegistry();
@@ -168,7 +169,7 @@ namespace VoiceCraft.Network.Sockets
                         HandlePacket(packet, ctx);
                     }
                 }
-                catch(HttpListenerException)
+                catch (HttpListenerException)
                 {
                     return; //Done with the socket.
                 }
@@ -177,7 +178,7 @@ namespace VoiceCraft.Network.Sockets
                     if (LogExceptions)
                         OnExceptionError?.Invoke(ex);
 
-                    if(ctx != null)
+                    if (ctx != null)
                         SendResponse(ctx, HttpStatusCode.BadRequest, new Deny() { Reason = "Invalid Data!" });
                 }
             }
@@ -187,7 +188,7 @@ namespace VoiceCraft.Network.Sockets
         {
             try
             {
-                if(packet.PacketId != (byte)MCCommPacketTypes.Login)
+                if (packet.PacketId != (byte)MCCommPacketTypes.Login)
                 {
                     if (Sessions.TryGetValue(packet.Token, out var session))
                         Sessions.TryUpdate(packet.Token, Environment.TickCount64, session);
@@ -237,17 +238,20 @@ namespace VoiceCraft.Network.Sockets
 
         private void LoginReceived(Login packet, HttpListenerContext ctx)
         {
-            if (packet.LoginKey == LoginKey)
-            {
-                var token = Guid.NewGuid().ToString();
-                Sessions.TryAdd(token, Environment.TickCount64);
-                SendResponse(ctx, HttpStatusCode.OK, new Accept() { Token = token });
-                OnServerConnected?.Invoke(token, ctx.Request.RemoteEndPoint.Address.ToString());
-            }
-            else
+            if (packet.LoginKey != LoginKey)
             {
                 SendResponse(ctx, HttpStatusCode.OK, new Deny() { Reason = "Invalid Login Key!" });
+                return;
             }
+            if (packet.Version != Version)
+            {
+                SendResponse(ctx, HttpStatusCode.OK, new Deny() { Reason = "Invalid Version!" });
+                return;
+            }
+            var token = Guid.NewGuid().ToString();
+            Sessions.TryAdd(token, Environment.TickCount64);
+            SendResponse(ctx, HttpStatusCode.OK, new Accept() { Token = token });
+            OnServerConnected?.Invoke(token, ctx.Request.RemoteEndPoint.Address.ToString());
         }
 
         private void LogoutReceived(Logout packet, HttpListenerContext ctx)
@@ -263,11 +267,11 @@ namespace VoiceCraft.Network.Sockets
 
         private async Task ActivityCheck()
         {
-            while(WebServer.IsListening)
+            while (WebServer.IsListening)
             {
-                foreach(var session in Sessions)
+                foreach (var session in Sessions)
                 {
-                    if(Environment.TickCount64 - session.Value > Timeout && Sessions.TryRemove(session))
+                    if (Environment.TickCount64 - session.Value > Timeout && Sessions.TryRemove(session))
                     {
                         var timeoutDiff = (int)(Environment.TickCount64 - session.Value);
                         OnServerDisconnected?.Invoke($"Server timed out, Timeout: {timeoutDiff}", session.Key);
@@ -280,7 +284,7 @@ namespace VoiceCraft.Network.Sockets
 
         protected override void Dispose(bool disposing)
         {
-            if(disposing)
+            if (disposing)
             {
                 if (WebServer.IsListening)
                     Stop();

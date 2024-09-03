@@ -4,5 +4,6 @@
     {
         public override byte PacketId => (byte)MCCommPacketTypes.Login;
         public string LoginKey { get; set; } = string.Empty;
+        public string Version {  get; set; } = string.Empty;
     }
 }

@@ -23,8 +23,6 @@ namespace VoiceCraft.Maui.Models
         [ObservableProperty]
         bool customClientProtocol;
         [ObservableProperty]
-        bool allowAccurateEnvironmentId;
-        [ObservableProperty]
         bool linearVolume = true;
         [ObservableProperty]
         bool softLimiterEnabled = true;

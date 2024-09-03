@@ -28,7 +28,7 @@
 		<ApplicationId>com.sine.voicecraft.maui</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
@@ -53,58 +53,60 @@
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
+		<ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-ios|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-maccatalyst|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows10.0.19041.0|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
+		<ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-ios|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-maccatalyst|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">
 	  <ApplicationTitle>VoiceCraft</ApplicationTitle>
 	  <ApplicationId>com.sine.voicecraft.maui</ApplicationId>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android34.0|AnyCPU'">
 	  <AndroidPackageFormat>apk</AndroidPackageFormat>
 	  <AndroidKeyStore>False</AndroidKeyStore>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android34.0|AnyCPU'">
 	  <AndroidKeyStore>False</AndroidKeyStore>
-	  <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+	  <ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
