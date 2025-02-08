@@ -12,7 +12,7 @@ jobs:
       - name: Setup Dotnet
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '9.x'
 
       - name: Install VoiceCraft.Client.Windows WorkLoads
         run: dotnet workload restore ./VoiceCraft.Client/VoiceCraft.Client.Windows/VoiceCraft.Client.Windows.csproj
