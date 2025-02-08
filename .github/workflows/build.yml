@@ -1,26 +1,27 @@
 name: BuildTest
-on: []
+on:
+   pull_request:
+      branches: [ "dev" ]
+   workflow_dispatch:
+   
 jobs:
    build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup Dotnet
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '9.x'
 
-      - name: Install VoiceCraft.Core Dependencies
-        run: dotnet workload restore ./VoiceCraft.Core/VoiceCraft.Core.csproj
-      - name: Build VoiceCraft.Core
-        run: dotnet build ./VoiceCraft.Core/VoiceCraft.Core.csproj
-
-      - name: Install VoiceCraft.Network Dependencies
-        run: dotnet workload restore ./VoiceCraft.Network/VoiceCraft.Network.csproj
-      - name: Build VoiceCraft.Network
-        run: dotnet build ./VoiceCraft.Network/VoiceCraft.Network.csproj
-
-      - name: Install VoiceCraft.Server Dependencies
-        run: dotnet workload restore ./VoiceCraft.Server/VoiceCraft.Server.csproj
-      - name: Build VoiceCraft.Server
-        run: dotnet build ./VoiceCraft.Server/VoiceCraft.Server.csproj
+      - name: Install VoiceCraft.Client.Windows WorkLoads
+        run: dotnet workload restore ./VoiceCraft.Client/VoiceCraft.Client.Windows/VoiceCraft.Client.Windows.csproj
+      - name: Build VoiceCraft.Client.Windows
+        run: dotnet build ./VoiceCraft.Client/VoiceCraft.Client.Windows/VoiceCraft.Client.Windows.csproj
+      - name: Zip VoiceCraft.Client.Windows
+        run: tar.exe -a -c -f VoiceCraft.Client.Windows.zip ./VoiceCraft.Client/VoiceCraft.Client.Windows/bin/Debug/net9.0-windows
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoiceCraft.Client.Windows.zip
+          path: ./VoiceCraft.Client.Windows.zip
