@@ -1,11 +1,11 @@
-namespace VoiceCraft.Core.Network.Packets
+namespace VoiceCraft.Core.Network
 {
     public enum PositioningType : byte
     {
         Server,
         Client
     }
-    
+
     public enum LoginType : byte
     {
         Pinger,
@@ -28,5 +28,10 @@ namespace VoiceCraft.Core.Network.Packets
         SetLocalEntity,
         EntityCreated,
         EntityDestroyed,
+
+        //Components
+        AddComponent,
+        RemoveComponent,
+        UpdateComponent
     }
 }

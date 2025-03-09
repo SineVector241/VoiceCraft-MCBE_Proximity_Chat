@@ -1,10 +1,10 @@
-using VoiceCraft.Core.Network.Packets;
+using VoiceCraft.Core.Network;
 
-namespace VoiceCraft.Core
+namespace VoiceCraft.Server
 {
     public class ServerProperties
     {
-        public uint UpdateIntervalMs { get; set; } = 10; //10ms per update.
+        public bool Discovery { get; set; } = false;
         public string Motd { get; set; } = "VoiceCraft Proximity Chat!";
         public PositioningType PositioningType { get; set; } = PositioningType.Client;
     }

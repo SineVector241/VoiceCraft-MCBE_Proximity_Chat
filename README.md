@@ -1,28 +1,54 @@
-# VoiceCraftProximityChat
+# VoiceCraft Proximity Chat
 
-Standalone Proximity Voice chat for Minecraft Bedrock Edition.
+Proximity voice chat for Minecraft Bedrock Edition supporting Windows, Android, iOS, Linux and MacOS.
 
-![VoiceCraft](./VoiceCraft.Maui/Resources/AppIcon/vc.png)
+![VoiceCraft](./VoiceCraft.Client/VoiceCraft.Client/Assets/vc.png)
 
-THIS VERSION DOES NOT REQUIRE THE USE OF DISCORD OR ANY THIRD PARTY VC SOFTWARE. EVERYTHING IS BUILT-IN AND WORKS WITH THE VANILLA BDS SOFTWARE.
+> [!NOTE]
+> VOICECRAFT DOES NOT REQUIRE THE USE OF ANY THIRD PARTY SERVICE!
 
 ## Project Description
-VoiceCraft proximity chat is a VOIP program developed on .NET 8.0 MAUI framework and .NET 7.0 Console, started by SineVector241, this project enables Voice Proximity chat for the game Minecraft on the bedrock platform which gives a more immersive, communicative experience. This project will also expand into supporting more platforms such as IOS and MAC devices. This project only allows for a self-hosted framework giving the owners more control on how they want it to be setup however the project may also expand into allowing multiple server instances on a single server that does not require a self-hosted framework and allows other users to host for other Minecraft server owners.
 
-## Other VoiceCraft Resources
-https://github.com/SineVector241/VoiceCraft-MCBE_ProximityChat_Addon
-https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat_Docker/pkgs/container/voicecraft
-https://hub.docker.com/r/sinevector241/voicecraft/tags
+VoiceCraft is a cross platform proximity voice chat solution for minecraft bedrock edition. VoiceCraft supports a wide range of devices to increase it's availability to players and can indirectly support any other devices such as consoles through the binding system.
 
-## Installation Guide
-Please refer to the [wiki](https://github.com/SineVector241/VoiceCraft-MCBE_Proximity_Chat/wiki) for installations.
+VoiceCraft is coded in C# for both the server and applications using the Avalonia framework. VoiceCraft also uses the Opus codec for voice data compression and SpeexDSP for voice enhancements.
 
-## Discord Server
-[![Discord Shield](https://discordapp.com/api/guilds/847396393068265472/widget.png?style=shield)](https://discord.gg/fJGsRY5hh9)
+There is also a comprehensive API system in place that addon developer's can use to customize VoiceCraft's behavior, audio effects, audio simulations and more!
 
-## Pictures
-![Voice](./Images/VC.png)
-![Servers](./Images/Servers.png)
-![Settings](./Images/Settings.png)
 
-ANDROID PICTURES TO-DO
+## Supported Devices
+
+- ✅ Fully and natively supported.
+- ❎ Can be supported but no reason to.
+- ❌ Not planned, Not supported.
+
+|Device     |x64|x86|arm32|arm64|
+|-----------|---|---|-----|-----|
+|Linux      |✅ |✅ |✅   |✅   |
+|Android    |❎ |❎ |✅   |✅   |
+|Windows    |✅ |✅ |✅   |✅   |
+|iOS        |❎ |❎ |✅   |✅   |
+|MacOS      |✅ |✅ |✅   |✅   |
+|XBOX       |❌ |❌ |❌   |❌   |
+|PlayStation|❌ |❌ |❌   |❌   |
+|Switch     |❌ |❌ |❌   |❌   |
+
+## Hosts
+
+- Atrioxhosting €0.44/m: https://atrioxhost.com/voicecraft
+
+## Project Dependencies
+
+> [!NOTE]
+> Some dependencies are not used in full for example VoiceCraft only depends on NAudio.Core for all platforms but also depends on NAudio.WinForms and NAudio.WinMM for windows.
+
+- [Avalonia](https://github.com/AvaloniaUI/Avalonia)
+- [SpeexDSPSharp](https://github.com/AvionBlock/SpeexDSPSharp)
+- [OpusSharp](https://github.com/AvionBlock/OpusSharp)
+- [Friflo.Engine.ECS](https://github.com/friflo/Friflo.Engine.ECS?tab=readme-ov-file)
+- [Notification.Avalonia](https://github.com/AvaloniaCommunity/Notification.Avalonia)
+- [LiteNetLib](https://github.com/RevenantX/LiteNetLib)
+- [Jeek.Avalonia.Localization](https://github.com/tifish/Jeek.Avalonia.Localization)
+- [NAudio](https://github.com/naudio/NAudio)
+- [NWaves](https://github.com/ar1st0crat/NWaves)
+- [OpenTK (OpenAL)](https://github.com/opentk/opentk)

@@ -1,8 +1,8 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
-using VoiceCraft.Core.Components;
-using VoiceCraft.Core.ECS;
+using VoiceCraft.Core.Network;
 using VoiceCraft.Core.Network.Packets;
+using VoiceCraft.Server.EventHandlers;
 
 namespace VoiceCraft.Server
 {
@@ -10,79 +10,38 @@ namespace VoiceCraft.Server
     {
         // ReSharper disable once InconsistentNaming
         private const int PINGER_BROADCAST_INTERVAL_MS = 5000;
-
         public static readonly Version Version = new(1, 1, 0);
 
         public event Action? OnStarted;
         public event Action? OnStopped;
-        public event Action<NetPeer>? OnClientConnected;
-        public event Action<NetPeer, DisconnectInfo>? OnClientDisconnected;
-        public event Action<Entity>? OnEntityCreated;
-        public event Action<Entity>? OnEntityDestroyed;
-
-        //Server Properties
-        public string Motd { get; set; } = "VoiceCraft Proximity Chat!";
-        public bool DiscoveryEnabled { get; set; }
-        public PositioningType PositioningType { get; set; }
 
         //Public Properties
-        private readonly EventBasedNetListener _listener;
+        public ServerProperties Properties { get; }
+        public EventBasedNetListener Listener { get; }
+        public WorldHandler World { get; } = new();
+        
         private readonly NetManager _netManager;
-        private readonly CancellationTokenSource _cts;
-        private readonly NetDataWriter _dataWriter;
-        private readonly World _world;
-        private readonly List<Entity> _allEntities = [];
+        private readonly NetDataWriter _dataWriter = new();
+        private readonly WorldEventHandler _worldEventHandler;
+        private readonly NetworkEventHandler _networkEventHandler;
         private bool _isDisposed;
         private int _lastPingBroadcast = Environment.TickCount;
 
-        public VoiceCraftServer()
+        public VoiceCraftServer(ServerProperties? properties = null)
         {
-            _dataWriter = new NetDataWriter();
-            _cts = new CancellationTokenSource();
-            _listener = new EventBasedNetListener();
-            _netManager = new NetManager(_listener)
+            Properties = properties ?? new ServerProperties();
+            Listener = new EventBasedNetListener();
+            _worldEventHandler = new WorldEventHandler(this);
+            _networkEventHandler = new NetworkEventHandler(this);
+            _netManager = new NetManager(Listener)
             {
                 AutoRecycle = true
             };
-            _world = new World();
-
-            _listener.ConnectionRequestEvent += OnConnectionRequestEvent;
-            _listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
-            _listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
-            _listener.NetworkReceiveEvent += ListenerOnNetworkReceiveEvent;
         }
 
         ~VoiceCraftServer()
         {
             Dispose(false);
-        }
-
-        private Entity CreateEntity()
-        {
-            var entity = _world.CreateEntity();
-            _allEntities.Add(entity);
-            var packet = new EntityCreatedPacket() { Id = entity.Id };
-            var entities = _world.GetEntitiesWithComponent<NetworkClientComponent>();
-            foreach (var networkEntity in entities)
-            {
-                SendPacket(networkEntity.GetComponent<NetworkClientComponent>().Peer, packet);
-            }
-
-            OnEntityCreated?.Invoke(entity);
-            return entity;
-        }
-
-        private void DestroyEntity(Entity entity)
-        { 
-            _world.DestroyEntity(entity);
-            _allEntities.Remove(entity);
-            var packet = new EntityDestroyedPacket() { Id = entity.Id };
-            var entities = _world.GetEntitiesWithComponent<NetworkClientComponent>();
-            foreach (var networkEntity in entities)
-            {
-                SendPacket(networkEntity.GetComponent<NetworkClientComponent>().Peer, packet);
-            }
-            OnEntityDestroyed?.Invoke(entity);
         }
 
         #region Public Methods
@@ -97,20 +56,43 @@ namespace VoiceCraft.Server
         public void Update()
         {
             _netManager.PollEvents();
+            World.Trim();
 
             if (Environment.TickCount - _lastPingBroadcast < PINGER_BROADCAST_INTERVAL_MS) return;
             _lastPingBroadcast = Environment.TickCount;
             var serverInfoPacket = new InfoPacket()
             {
-                Motd = Motd,
-                Discovery = DiscoveryEnabled,
-                PositioningType = PositioningType,
+                Motd = Properties.Motd,
+                Discovery = Properties.Discovery,
+                PositioningType = Properties.PositioningType,
             };
 
             SendPacket(
                 _netManager.ConnectedPeerList
                     .Where(peer => peer.ConnectionState == ConnectionState.Connected && (LoginType?)peer.Tag == LoginType.Pinger).ToArray(),
                 serverInfoPacket);
+        }
+        
+        public bool SendPacket<T>(NetPeer peer, T packet, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered) where T : VoiceCraftPacket
+        {
+            if (peer.ConnectionState != ConnectionState.Connected) return false;
+
+            _dataWriter.Reset();
+            _dataWriter.Put((byte)packet.PacketType);
+            packet.Serialize(_dataWriter);
+            peer.Send(_dataWriter, deliveryMethod);
+            return true;
+        }
+
+        public bool SendPacket<T>(NetPeer[] peers, T packet, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered) where T : VoiceCraftPacket
+        {
+            var status = true;
+            foreach (var peer in peers)
+            {
+                status = SendPacket(peer, packet, deliveryMethod);
+            }
+
+            return status;
         }
 
         public void Stop()
@@ -122,149 +104,14 @@ namespace VoiceCraft.Server
 
         #endregion
 
-        #region Private Methods
-
-        private bool SendPacket<T>(NetPeer peer, T packet, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered) where T : VoiceCraftPacket
-        {
-            if (peer.ConnectionState != ConnectionState.Connected) return false;
-
-            _dataWriter.Reset();
-            _dataWriter.Put((byte)packet.PacketType);
-            packet.Serialize(_dataWriter);
-            peer.Send(_dataWriter, deliveryMethod);
-            return true;
-        }
-
-        private bool SendPacket<T>(NetPeer[] peers, T packet, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered) where T : VoiceCraftPacket
-        {
-            var status = true;
-            foreach (var peer in peers)
-            {
-                status = SendPacket(peer, packet, deliveryMethod);
-            }
-
-            return status;
-        }
-
-        #endregion
-
-        #region Network Events
-
-        private void OnConnectionRequestEvent(ConnectionRequest request)
-        {
-            if (request.Data.IsNull)
-            {
-                request.Reject();
-                return;
-            }
-
-            try
-            {
-                var loginPacket = new LoginPacket();
-                loginPacket.Deserialize(request.Data);
-                OnLoginPacketReceived(loginPacket, request);
-            }
-            catch
-            {
-                request.Reject();
-            }
-        }
-
-        private void ListenerOnPeerConnectedEvent(NetPeer peer)
-        {
-            OnClientConnected?.Invoke(peer);
-            if ((LoginType?)peer.Tag != LoginType.Pinger) return;
-            var serverInfoPacket = new InfoPacket()
-            {
-                Motd = Motd,
-                Discovery = DiscoveryEnabled,
-                PositioningType = PositioningType,
-            };
-            SendPacket(peer, serverInfoPacket);
-        }
-
-        private void ListenerOnPeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectinfo)
-        {
-            var entities = _world.GetEntitiesWithComponent<NetworkClientComponent>();
-            var client = entities.FirstOrDefault(x => Equals(x.GetComponent<NetworkClientComponent>().Peer, peer));
-            if (client != null)
-            {
-                DestroyEntity(client);
-            }
-            OnClientDisconnected?.Invoke(peer, disconnectinfo);
-        }
-
-        private void ListenerOnNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliverymethod)
-        {
-            var packetType = reader.GetByte();
-            var pt = (PacketType)packetType;
-            switch (pt)
-            {
-                //Unused Packet Types.
-                case PacketType.Login:
-                case PacketType.Info:
-                case PacketType.Audio:
-                case PacketType.EntityCreated:
-                case PacketType.EntityDestroyed:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            reader.Recycle();
-        }
-
-        #endregion
-
-        #region Packet Events
-        private void OnLoginPacketReceived(LoginPacket loginPacket, ConnectionRequest request)
-        {
-            if (Version.Parse(loginPacket.Version).Major != Version.Major)
-            {
-                request.Reject();
-                return;
-            }
-
-            switch (loginPacket.LoginType)
-            {
-                case LoginType.Login:
-                    var loginPeer = request.Accept();
-                    loginPeer.Tag = loginPacket.LoginType;
-                    var createEntityPacket = new EntityCreatedPacket();
-                    foreach (var entity in _allEntities)
-                    {
-                        createEntityPacket.Id = entity.Id;
-                        SendPacket(loginPeer, createEntityPacket);
-                    }
-                    
-                    var peerEntity = CreateEntity();
-                    peerEntity.AddComponent(new NetworkClientComponent(peerEntity, loginPeer)); 
-                    var setEntityPacket = new SetLocalEntityPacket { Id = peerEntity.Id };
-                    SendPacket(loginPeer, setEntityPacket);
-                    break;
-                case LoginType.Pinger:
-                case LoginType.Discovery:
-                    var peer = request.Accept();
-                    peer.Tag = loginPacket.LoginType;
-                    break;
-                default:
-                    request.Reject();
-                    break;
-            }
-        }
-
-        #endregion
-
         #region Dispose
-
+        
         private void Dispose(bool disposing)
         {
             if (_isDisposed) return;
             if (disposing)
             {
                 _netManager.Stop();
-                _cts.Cancel();
-                _cts.Dispose();
             }
 
             _isDisposed = true;
@@ -275,7 +122,7 @@ namespace VoiceCraft.Server
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
+        
         #endregion
     }
 }
