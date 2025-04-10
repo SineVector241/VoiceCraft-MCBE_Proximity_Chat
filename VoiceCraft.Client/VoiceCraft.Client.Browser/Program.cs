@@ -23,7 +23,8 @@ internal sealed partial class Program
     private static Task Main(string[] args)
     {
 
-        OpenALLibraryNameContainer.OverridePath = "libal";
+        OpenALLibraryNameContainer.OverridePath = "openal";
+        // OpenALLibraryNameContainer.OverridePath = "libalol";
         // OpenALLibraryNameContainer.OverridePath = "__Internal";
         // OpenALLibraryNameContainer.OverridePath = "__Internal_emscripten";
 
